@@ -1,0 +1,72 @@
+# The fugo documentation site, https://getfugo.github.io/: built with fugo itself
+# (`tools/docs/build.sh`, or `fugo server -s docs`). No Node.js tools: the stylesheet is
+# Sass compiled by `to_css`, the script bundled by `js_build`, both in process.
+
+baseURL = "https://getfugo.github.io/"
+title = "fugo"
+languageCode = "en-US"
+defaultContentLanguage = "en"
+enableRobotsTXT = true
+enableEmoji = true
+disableKinds = ["taxonomy", "term"]
+timeZone = "UTC"
+
+[params]
+description = "fugo is a fast static site generator written in Rust: Markdown content, page bundles and taxonomies with Tera templates, in a single binary."
+tagline = "The Rust-powered static site generator"
+repository = "https://github.com/getfugo/fugo"
+editURL = "https://github.com/getfugo/fugo/edit/main/docs/content/"
+socialImage = "brand/social-preview.jpg"
+
+[outputs]
+home = ["html", "rss", "searchindex"]
+section = ["html"]
+page = ["html"]
+
+[outputFormats.searchindex]
+mediaType = "application/json"
+baseName = "search-index"
+isPlainText = true
+notAlternative = true
+
+[markup]
+  [markup.goldmark]
+    [markup.goldmark.parser]
+      [markup.goldmark.parser.attribute]
+        block = true
+        title = true
+    [markup.goldmark.renderer]
+      unsafe = true
+  [markup.highlight]
+    noClasses = false
+    lineNos = false
+    codeFences = true
+    guessSyntax = false
+  [markup.tableOfContents]
+    startLevel = 2
+    endLevel = 3
+    ordered = false
+
+[menus]
+  [[menus.main]]
+    name = "Docs"
+    pageRef = "/getting-started/"
+    weight = 10
+  [[menus.main]]
+    name = "Reference"
+    pageRef = "/reference/"
+    weight = 20
+  [[menus.main]]
+    name = "Migrating"
+    pageRef = "/migrating/"
+    weight = 30
+
+[sitemap]
+  changeFreq = "weekly"
+
+[[module.mounts]]
+  source = "assets"
+  target = "assets"
+[[module.mounts]]
+  source = "../brand"
+  target = "assets/brand"

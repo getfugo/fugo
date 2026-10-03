@@ -1,0 +1,4 @@
+{#- Highlights the inner content as the language of the first argument, with the options of the second. -#}
+{%- set code_lang = shortcode | arg(index=0, default="") %}
+{%- set options = shortcode | arg(index=1, default="") %}
+{{- inner_deindent | trim_chars(chars="\n\r") | highlight(lang=code_lang, options=options) -}}

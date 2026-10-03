@@ -1,0 +1,11 @@
+{#- Renders math (a passthrough element) with KaTeX, as Go's transform.ToMath inside try.
+`optional=true` is that try: an error is a warning (id to_math, with KaTeX's message) and none,
+and log_error is Go's errorf. -#}
+{%- set opts = {"output": "htmlAndMathml", "displayMode": type == "block"} %}
+{%- set math = inner | to_math(options=opts, optional=true) %}
+{%- if math is none %}
+  {{ log_error(message="Unable to render mathematical markup to HTML using the to_math filter. The KaTeX display engine threw the error in the to_math warning: see " ~ position ~ ".") }}
+{%- else %}
+  {{- math }}
+  {{- store_set(key="hasMath", value=true) }}
+{%- endif -%}

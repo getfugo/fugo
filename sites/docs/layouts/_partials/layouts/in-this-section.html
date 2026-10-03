@@ -1,0 +1,36 @@
+{%- set current_section = page.current_section | deref %}
+{%- set regular_pages = current_section.regular_pages %}
+{%- if regular_pages %}
+  {% set has_toc_or_related = store_get(key="hasToc") or store_get(key="hasRelated") %}
+  <div
+    class="overflow-y-auto {% if has_toc_or_related %}
+      max-h-96
+    {% else %}
+      sticky top-[8rem] max-h-[70vh]
+    {% endif %} relative mt-2 mb-8"
+    data-turbo-preserve-scroll-container="in-this-section">
+    <h2
+      class="text-base font-semibold tracking-tight text-gray-600  dark:text-gray-400">
+      In this section
+    </h2>
+
+    <ul id="in-sthis-section" class="mt-2">
+      {%- for p in regular_pages %}
+        <li>
+          <a
+            class="text-sm {% if p.id == page.id %}
+              font-bold text-blue-600 hover:text-blue-600
+              dark:hover:text-blue-200 dark:text-blue-200 focus:font-bold
+              scroll-active
+            {% else %}
+              text-blue-600 hover:text-blue-500 dark:text-blue-500
+              dark:hover:text-blue-400
+            {% endif %}"
+            href="{{ p.rel_permalink }}"
+            >{{ p.link_title }}</a
+          >
+        </li>
+      {%- endfor %}
+    </ul>
+  </div>
+{%- endif %}

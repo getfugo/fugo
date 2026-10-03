@@ -1,0 +1,9 @@
+<dialog class="search" data-search aria-label="Search the documentation">
+  <form class="search__form" method="dialog" role="search">
+    <svg aria-hidden="true"><use href="#icon-search"></use></svg>
+    <input class="search__input" type="search" placeholder="Search the documentation" autocomplete="off" spellcheck="false" aria-label="Search" data-search-input>
+    <button class="search__close" type="submit" aria-label="Close">Esc</button>
+  </form>
+  <ol class="search__results" data-search-results data-index="{{ "search-index.json" | rel_url }}"></ol>
+  <p class="search__hint" data-search-hint>Type to search titles, headings and text.</p>
+</dialog>

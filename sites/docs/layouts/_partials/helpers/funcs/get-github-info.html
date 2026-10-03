@@ -1,0 +1,33 @@
+{#-
+  Returns the GitHub repository info of the documented project (a map; empty when the request failed):
+  `partial_cached(name="helpers/funcs/get-github-info.html", key="-")`.
+  The docs patch variants replace it with a fixed map (no network).
+-#}
+{%- set url = "https://api.github.com/repos/gohugoio/hugo" %}
+{%- set cache_key = url ~ (now() | date(format="%Y-%m-%d")) %}
+{%- set headers = {} %}
+{%- set token = get_env(name="FUGO_GH_TOKEN") %}
+{%- if token %}
+  {%- set headers = {"Authorization": "Bearer " ~ token} %}
+{%- endif %}
+{%- set opts = {"headers": headers, "key": cache_key} %}
+{%- set github_repo_info = {} %}
+{#- `optional=true`: a failed request logs a warning and gives none (Go: `try` + warnf). #}
+{%- set remote = get_remote(url=url, options=opts, optional=true) %}
+{%- if remote %}
+  {%- set info = remote | unmarshal %}
+  {%- if info %}
+    {%- set github_repo_info = {
+      "html_url": info.html_url,
+      "stargazers_url": info.stargazers_url,
+      "watchers_count": info.watchers_count,
+      "stargazers_count": info.stargazers_count,
+      "forks_count": info.forks_count,
+      "contributors_url": info.contributors_url,
+      "releases_url": info.releases_url
+    } %}
+  {%- else %}
+    {{- log_error(message="Unable to get remote resource \"" ~ url ~ "\"") }}
+  {%- endif %}
+{%- endif %}
+{{- return_value(value=github_repo_info) }}

@@ -1,0 +1,11 @@
+HTTP/1.1 200 OK
+Content-Length: 9
+Content-Type: application/vnd.t15+json; charset=utf-8
+Date: Sun, 27 Sep 2026 10:25:09 GMT
+X-Custom: custom-value
+X-Etags-1: 98151363f90eeacb0580b4092b0c6b79
+X-Etags-2: 98151363f90eeacb0580b4092b0c6b79
+X-Multi: one
+X-Multi: two
+
+{"vnd":1}

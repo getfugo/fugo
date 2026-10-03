@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  {% for s in sites %}
+  <sitemap>
+    <loc>{{ s.sitemap_abs_url }}</loc>
+    {% if s.last_mod %}
+      <lastmod>{{ s.last_mod | date(format="%Y-%m-%dT%H:%M:%S%:z") }}</lastmod>
+    {% endif %}
+  </sitemap>
+  {% endfor %}
+</sitemapindex>

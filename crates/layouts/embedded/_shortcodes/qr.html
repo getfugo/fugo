@@ -1,0 +1,44 @@
+{#-
+  A QR code image of the text argument (else the inner content). Named arguments: text,
+  level (low, medium, quartile, high; default medium), scale (an integer >= 2; default 4),
+  targetDir, alt, class, id, title, loading.
+-#}
+{%- set valid_levels = ["low", "medium", "quartile", "high"] %}
+{%- set minimum_scale = 2 %}
+
+{%- set text = (shortcode | arg(name="text", default="")) or (inner | trim) %}
+{%- set level = (shortcode | arg(name="level", default="")) or "medium" %}
+{%- set scale = (shortcode | arg(name="scale", default=0)) or 4 %}
+{%- set target_dir = shortcode | arg(name="targetDir", default="") %}
+{%- set alt = shortcode | arg(name="alt", default="") %}
+{%- set cls = shortcode | arg(name="class", default="") %}
+{%- set img_id = shortcode | arg(name="id", default="") %}
+{%- set img_title = shortcode | arg(name="title", default="") %}
+{%- set loading = shortcode | arg(name="loading", default="") %}
+
+{%- set errors = false %}
+{%- if not text %}
+  {{- log_error(message='The "' ~ shortcode.name ~ '" shortcode requires a "text" argument. See ' ~ shortcode.position) }}
+  {%- set errors = true %}
+{%- endif %}
+{%- if level not in valid_levels %}
+  {{- log_error(message='The "level" argument passed to the "' ~ shortcode.name ~ '" shortcode must be one of ' ~ (valid_levels | delimit(sep=", ", last=", or ")) ~ '. See ' ~ shortcode.position) }}
+  {%- set errors = true %}
+{%- endif %}
+{%- if scale is not integer or scale < minimum_scale %}
+  {{- log_error(message='The "scale" argument passed to the "' ~ shortcode.name ~ '" shortcode must be an integer greater than or equal to ' ~ minimum_scale ~ '. See ' ~ shortcode.position) }}
+  {%- set errors = true %}
+{%- endif %}
+
+{%- if not errors %}
+  {%- set img = qr_code(text=text, level=level, scale=scale, target_dir=target_dir) %}
+  {%- if img -%}
+    <img src="{{ img.rel_permalink }}" width="{{ img.width }}" height="{{ img.height }}"
+      {%- if alt %} alt="{{ alt }}"{% endif %}
+      {%- if cls %} class="{{ cls }}"{% endif %}
+      {%- if img_id %} id="{{ img_id }}"{% endif %}
+      {%- if img_title %} title="{{ img_title }}"{% endif -%}
+      {%- if loading %} loading="{{ loading }}"{% endif -%}
+    >
+  {%- endif %}
+{%- endif -%}

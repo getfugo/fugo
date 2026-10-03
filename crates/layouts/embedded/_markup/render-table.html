@@ -1,0 +1,31 @@
+<table
+  {%- for k, v in attributes %}
+    {%- if v %} {{ k }}="{{ v }}"{% endif %}
+  {%- endfor %}>
+  <thead>
+    {%- for row in thead %}
+      <tr>
+        {%- for cell in row %}
+          <th
+            {%- if cell.alignment != "none" %} style="text-align: {{ cell.alignment }}"{% endif -%}
+          >
+            {{- cell.text -}}
+          </th>
+        {%- endfor %}
+      </tr>
+    {%- endfor %}
+  </thead>
+  <tbody>
+    {%- for row in tbody %}
+      <tr>
+        {%- for cell in row %}
+          <td
+            {%- if cell.alignment != "none" %} style="text-align: {{ cell.alignment }}"{% endif -%}
+          >
+            {{- cell.text -}}
+          </td>
+        {%- endfor %}
+      </tr>
+    {%- endfor %}
+  </tbody>
+</table>

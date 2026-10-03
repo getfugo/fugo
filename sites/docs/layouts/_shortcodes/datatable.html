@@ -1,0 +1,37 @@
+{#- Renders a table of site.data.docs.<package>.<listname>: the positional arguments are the
+package, the list name, then the fields to show (`_key`: the entry's key, headed "type").
+
+@example {{< datatable "config" "mediaTypes" "_key" "suffixes" >}}
+
+Go kept the values in the page's Scratch, so a field an entry lacks shows the value of the
+previous entry that had it; `carry` keeps that behaviour. Arrays print as Go prints them.
+-#}
+{% set package = shortcode | arg(index=0, default="") %}
+{% set listname = shortcode | arg(index=1, default="") %}
+{% set list = site.data.docs[package][listname] %}
+{% set fields = shortcode.args[2:] %}
+{% set_global carry = {} %}
+
+
+<div class="overflow-x-auto">
+  <table>
+    <thead>
+      <tr>
+        {% for f in fields %}
+          <th>{{ "type" if f == "_key" else f }}</th>
+        {% endfor %}
+      </tr>
+    </thead>
+    <tbody>
+      {% for k1, v1 in list %}
+        <tr>
+          {% set_global carry = carry | merge(with=v1) %}
+          {% for f in fields %}
+            {% set s = k1 if f == "_key" else carry | get(key=f, default="") %}
+            <td>{% if s is array %}[{{ s | join(sep=" ") }}]{% else %}{{ s }}{% endif %}</td>
+          {% endfor %}
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>

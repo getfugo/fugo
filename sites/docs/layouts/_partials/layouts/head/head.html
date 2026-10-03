@@ -1,0 +1,39 @@
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+{{ build.generator }}
+
+{% if build.is_production %}
+  <meta name="robots" content="index, follow" />
+{% else %}
+  <meta name="robots" content="noindex, nofollow" />
+{% endif %}
+
+<title>
+  {% if page.title %}{{ page.title }} |{% endif %}
+  {{ site.title }}
+</title>
+
+<link rel=apple-touch-icon sizes=180x180 href=/apple-touch-icon.png>
+<link rel=icon type=image/png href=/favicon-32x32.png sizes=32x32>
+<link rel=icon type=image/png href=/favicon-16x16.png sizes=16x16>
+<link rel=manifest href=/manifest.json>
+<link rel=mask-icon href=/safari-pinned-tab.svg color=#0594cb>
+
+<meta name="turbo-prefetch" content="true">
+<meta name="view-transition" content="same-origin">
+
+{% for f in page.alternative_output_formats -%}
+  <link
+    rel="{{ f.rel }}"
+    type="{{ f.media_type.type }}"
+    href="{{ f.rel_permalink }}" />
+{% endfor -%}
+
+<meta name="description" content="{{ page.description or site.params.description or "" }}">
+
+{% include "_partials/opengraph/opengraph.html" %}
+{% include "_partials/schema.html" %}
+{% include "_partials/twitter_cards.html" %}
+
+{% if build.is_production %}
+  {% include "_partials/helpers/gtag.html" %}
+{% endif %}

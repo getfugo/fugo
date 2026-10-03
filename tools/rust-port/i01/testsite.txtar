@@ -1,0 +1,119 @@
+The files added to a copy of testsite (testdata/upstream/testsite) by
+tools/rust-port/i01/sites.py (the config and layouts of the nh-publisher site oracle's canonify
+variant, plus a few pages). The config's `[build.buildStats]` went with the stats file (T75): the
+Go build of this site wrote one next to its config, which the golden data still records.
+-- config.toml --
+baseURL = "https://example.org/"
+title = "Testsite"
+canonifyURLs = true
+enableRobotsTXT = true
+defaultContentLanguage = "en"
+[languages.en]
+languageName = "English"
+contentDir = "content"
+weight = 1
+[languages.nn]
+languageName = "Nynorsk"
+contentDir = "content_nn"
+weight = 2
+[markup.goldmark.renderer]
+unsafe = true
+[markup.highlight]
+codeFences = false
+[outputs]
+home = ["html", "rss", "json"]
+section = ["html", "rss"]
+[pagination]
+pagerSize = 2
+-- layouts/_partials/page.html --
+<!DOCTYPE html>
+<html lang="{{ .Lang }}">
+<head>
+<meta charset="utf-8">
+<title>{{ .Title }}</title>
+<link rel="stylesheet" href="/css/site.css">
+<link rel='icon' href='/favicon.ico'>
+<script src="/js/app.js"></script>
+<script>var u = "/x"; var s = 'src="/y"'; if (a < b) { f( 1 ) }</script>
+<style>.a { background : url(/img/a.png) } .b{color:rgb(10%,20%,30%);margin:0px 0px}</style>
+</head>
+<body class="kind-{{ .Kind }} lang-{{ .Lang }}" id="top">
+<nav class="nav main"><a href="/">Home</a> <a href='{{ .RelPermalink }}'>Self</a> <a href=/unquoted/>U</a> <a href="//cdn.example.com/x.js">cdn</a> <a HREF="/upper">Up</a>
+<a href="{{ "about/" | relURL }}">rel</a> <a href="{{ "about/" | absURL }}">abs</a>
+{{ range .Translations }}<a hreflang="{{ .Lang }}" href="{{ .RelPermalink }}">{{ .Language.LanguageName }}</a>{{ end }}
+<img src="/img/a.png" srcset="/img/a.png 1x, /img/a@2x.png 2x" alt="a" class="img responsive">
+</nav>
+<main>{{ .Content }}{{ if .IsNode }}{{ range .Paginator.Pages }}<article class="summary"><a href="{{ .RelPermalink }}">{{ .Title }}</a>{{ .Summary }} {{ .WordCount }} {{ .ReadingTime }}</article>{{ end }}
+{{ with .Paginator }}{{ if .HasNext }}<a class="next" href="{{ .Next.URL }}">next</a>{{ end }}{{ end }}{{ else }}{{ with .PrevInSection }}<a class="prev" href="{{ .RelPermalink }}">{{ .Title }}</a>{{ end }}{{ end }}</main>
+<ul class="tags">{{ range $k, $v := .Site.Taxonomies.tags }}<li><a href="{{ $v.Page.RelPermalink }}">{{ $k }} ({{ $v.Count }})</a></li>{{ end }}</ul>
+<div x-data="{open:false}" :class="{ 'is-open': open, 'is-closed': !open }">x</div>
+<pre class="code"><code class="language-html">&lt;div class="not-collected"&gt;</code></pre>
+<footer class="footer" id="footer">&copy; {{ now.Year }} <span class="d{{ .Lang }}">{{ .Date.Format "2006-01-02" }}</span> {{ .Lastmod.Format "Jan 2, 2006" }}</footer>
+</body>
+</html>
+-- layouts/single.html --
+{{ partial "page.html" . }}
+-- layouts/list.html --
+{{ partial "page.html" . }}
+-- layouts/404.html --
+<html><body class="nf"><a href="/">home</a><img src='/img/404.png' class="nf-img"></body></html>
+-- layouts/home.json --
+{"title": {{ .Title | jsonify }}, "n": 1.50000, "pages": [{{ range $i, $p := .Site.RegularPages }}{{ if $i }}, {{ end }}{ "url" : {{ .RelPermalink | jsonify }}, "title": {{ .Title | jsonify }} }{{ end }}]}
+-- static/css/site.css --
+a { color : red }
+-- content/_index.md --
+---
+title: Home
+---
+Home with [a link](/about/) and ![img](/img/x.png).
+-- content/about.md --
+---
+title: About
+aliases: [/old-about/, /older/about.html]
+---
+About <span class="raw-html" id="raw">raw</span>. [Rel](/docs/a/) [Abs](https://example.org/x)
+
+```html
+<div class="fenced">
+```
+-- content/posts/_index.md --
+---
+title: Posts
+---
+-- content/posts/one.md --
+---
+title: "One & <Two>"
+date: 2021-01-02
+tags: [a, b]
+---
+Post with <a href='/posts/two/'>two</a>. Ünïcödé.
+
+<!--more-->
+
+The rest.
+-- content/posts/two.md --
+---
+title: Two
+date: 2021-01-03
+tags: [b]
+aliases: [/posts/2/]
+---
+Second <q class="quote">q</q>.
+-- content/posts/three.md --
+---
+title: Three
+date: 2021-01-04
+tags: [c]
+---
+Third.
+-- content_nn/_index.md --
+---
+title: Heim
+---
+Heim [lenkje](/nn/om/).
+-- content_nn/om.md --
+---
+title: Om
+aliases: [/nn/gamal/]
+---
+Om <b class="nn-b">oss</b>.

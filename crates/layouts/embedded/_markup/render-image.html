@@ -1,0 +1,21 @@
+{#- Resolves a relative destination to a page resource or an asset. -#}
+{%- set u = destination | parse_url -%}
+{%- set src = u.string -%}
+{%- if not u.is_absolute -%}
+  {%- set path = u.path | strip_prefix(prefix="./") -%}
+  {%- if path -%}
+    {%- set target = (page_inner.resources | get_resource(name=path)) or get_asset(path=path) -%}
+    {%- if target -%}
+      {%- set src = target.rel_permalink -%}
+      {%- if u.query %}{% set src = src ~ "?" ~ u.query %}{% endif -%}
+      {%- if u.fragment %}{% set src = src ~ "#" ~ u.fragment %}{% endif -%}
+    {%- endif -%}
+  {%- endif -%}
+{%- endif -%}
+<img src="{{ src }}" alt="{{ plain_text }}"
+  {%- if title %} title="{{ title }}"{% endif -%}
+  {%- for k, v in attributes -%}
+    {%- if v %} {{ k }}="{{ v }}"{% endif -%}
+  {%- endfor -%}
+>
+{#- -#}

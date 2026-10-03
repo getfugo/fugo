@@ -1,0 +1,101 @@
+---
+source: crates/view/tests/it/views.rs
+expression: "&g.summaries[page(m, PageKind::Term, \"/tags/a\", 0)]"
+---
+aliases: []
+bundle_type: ~
+content: ""
+date:
+  rfc3339: "2021-04-01T00:00:00+00:00"
+  unix: 1617235200
+description: ""
+draft: false
+expiry_date: ~
+file: ~
+fragments:
+  headings: []
+  identifiers: []
+fuzzy_word_count: 0
+git_info: ~
+id: 13
+is_home: false
+is_node: true
+is_page: false
+is_section: false
+is_translated: true
+keywords: []
+kind: term
+lang: en
+language:
+  code: en
+  direction: ltr
+  lang: en
+  name: English
+  params:
+    description: A site
+  weight: 1
+lastmod:
+  rfc3339: "2021-04-01T00:00:00+00:00"
+  unix: 1617235200
+layout: ~
+len: 0
+link_title: A
+name: a
+output_formats:
+  html:
+    is_html: true
+    is_plain_text: false
+    media_type:
+      delimiter: "."
+      main_type: text
+      sub_type: html
+      suffixes:
+        - html
+        - htm
+      type: text/html
+    name: html
+    permalink: "https://example.org/tags/a/"
+    rel: canonical
+    rel_permalink: /tags/a/
+  rss:
+    is_html: false
+    is_plain_text: false
+    media_type:
+      delimiter: "."
+      main_type: application
+      sub_type: rss
+      suffixes:
+        - xml
+        - rss
+      type: application/rss+xml
+    name: rss
+    permalink: "https://example.org/tags/a/index.xml"
+    rel: alternate
+    rel_permalink: /tags/a/index.xml
+params:
+  draft: false
+  iscjklanguage: false
+path: /tags/a
+permalink: "https://example.org/tags/a/"
+plain: ""
+publish_date:
+  rfc3339: "2021-04-01T00:00:00+00:00"
+  unix: 1617235200
+raw_content: ""
+reading_time: 0
+rel_permalink: /tags/a/
+resources: []
+section: tags
+sitemap:
+  change_freq: ""
+  disable: false
+  priority: -1
+summary: ""
+table_of_contents: ""
+terms:
+  tags: []
+title: A
+truncated: false
+type: tags
+weight: 0
+word_count: 0

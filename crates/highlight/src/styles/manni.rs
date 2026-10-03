@@ -1,0 +1,53 @@
+//! Chroma's `manni.xml` style, converted to Rust (crate README, "Lexer and style files").
+
+use crate::style::StyleDef;
+use crate::token::TokenType as T;
+
+#[rustfmt::skip]
+pub(crate) static STYLE: StyleDef = StyleDef {
+    name: "manni",
+    entries: &[
+        (T::Error, "#aa0000 bg:#ffaaaa"),
+        (T::Background, "bg:#f0f3f3"),
+        (T::Keyword, "bold #006699"),
+        (T::KeywordPseudo, "nobold"),
+        (T::KeywordType, "#007788"),
+        (T::NameAttribute, "#330099"),
+        (T::NameBuiltin, "#336666"),
+        (T::NameClass, "bold #00aa88"),
+        (T::NameConstant, "#336600"),
+        (T::NameDecorator, "#9999ff"),
+        (T::NameEntity, "bold #999999"),
+        (T::NameException, "bold #cc0000"),
+        (T::NameFunction, "#cc00ff"),
+        (T::NameLabel, "#9999ff"),
+        (T::NameNamespace, "bold #00ccff"),
+        (T::NameTag, "bold #330099"),
+        (T::NameVariable, "#003333"),
+        (T::LiteralString, "#cc3300"),
+        (T::LiteralStringDoc, "italic"),
+        (T::LiteralStringEscape, "bold #cc3300"),
+        (T::LiteralStringInterpol, "#aa0000"),
+        (T::LiteralStringOther, "#cc3300"),
+        (T::LiteralStringRegex, "#33aaaa"),
+        (T::LiteralStringSymbol, "#ffcc33"),
+        (T::LiteralNumber, "#ff6600"),
+        (T::Operator, "#555555"),
+        (T::OperatorWord, "bold #000000"),
+        (T::Comment, "italic #0099ff"),
+        (T::CommentSpecial, "bold"),
+        (T::CommentPreproc, "noitalic #009999"),
+        (T::GenericDeleted, "bg:#ffcccc border:#cc0000"),
+        (T::GenericEmph, "italic"),
+        (T::GenericError, "#ff0000"),
+        (T::GenericHeading, "bold #003300"),
+        (T::GenericInserted, "bg:#ccffcc border:#00cc00"),
+        (T::GenericOutput, "#aaaaaa"),
+        (T::GenericPrompt, "bold #000099"),
+        (T::GenericStrong, "bold"),
+        (T::GenericSubheading, "bold #003300"),
+        (T::GenericTraceback, "#99cc66"),
+        (T::GenericUnderline, "underline"),
+        (T::TextWhitespace, "#bbbbbb"),
+    ],
+};

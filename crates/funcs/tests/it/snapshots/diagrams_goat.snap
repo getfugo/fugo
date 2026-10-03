@@ -1,0 +1,26 @@
+---
+source: crates/funcs/tests/it/goat.rs
+expression: out
+---
+64x57
+<g transform='translate(8,16)'>
+<path d='M 0,0 L 24,0' fill='none' stroke='currentColor'></path>
+<path d='M 32,16 L 48,16' fill='none' stroke='currentColor'></path>
+<path d='M 0,32 L 24,32' fill='none' stroke='currentColor'></path>
+<path d='M 0,0 L 0,32' fill='none' stroke='currentColor'></path>
+<path d='M 24,0 L 24,32' fill='none' stroke='currentColor'></path>
+<polygon points='56.000000,16.000000 44.000000,10.400000 44.000000,21.600000' fill='currentColor' transform='rotate(0.000000, 48.000000, 16.000000)'></polygon>
+<text text-anchor='middle' x='16' y='20' fill='currentColor' style='font-size:1em'>A</text>
+</g>
+
+<svg class='diagram' xmlns='http://www.w3.org/2000/svg' version='1.1' height='57' width='64' font-family='Menlo,Lucida Console,monospace'>
+<g transform='translate(8,16)'>
+<path d='M 0,0 L 24,0' fill='none' stroke='currentColor'></path>
+<path d='M 32,16 L 48,16' fill='none' stroke='currentColor'></path>
+<path d='M 0,32 L 24,32' fill='none' stroke='currentColor'></path>
+<path d='M 0,0 L 0,32' fill='none' stroke='currentColor'></path>
+<path d='M 24,0 L 24,32' fill='none' stroke='currentColor'></path>
+<polygon points='56.000000,16.000000 44.000000,10.400000 44.000000,21.600000' fill='currentColor' transform='rotate(0.000000, 48.000000, 16.000000)'></polygon>
+<text text-anchor='middle' x='16' y='20' fill='currentColor' style='font-size:1em'>A</text>
+</g>
+</svg>

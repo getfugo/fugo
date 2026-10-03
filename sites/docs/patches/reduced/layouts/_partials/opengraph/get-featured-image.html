@@ -1,0 +1,32 @@
+{#-
+  Returns the featured image of `page`: a `*feature*`, `*cover*` or `*thumbnail*` bundle
+  image, else the site card with the link title drawn on it:
+  `partial(name="opengraph/get-featured-image.html")`.
+-#}
+{%- set images = page.resources | by_type(type="image") %}
+{%- set featured = images | find_resource(pattern="*feature*") %}
+{%- if not featured %}
+  {%- set featured = images | find_resource(pattern="{*cover*,*thumbnail*}") %}
+{%- endif %}
+{%- if not featured %}
+  {%- set featured = get_asset(path="/opengraph/gohugoio-card-base-1.png") %}
+  {%- set size = 80 %}
+  {%- set title = page.link_title %}
+  {%- if title | length > 20 %}
+    {%- set size = 70 %}
+  {%- endif %}
+
+  {%- set text = title %}
+  {%- set text_options = {
+    "color": "#FFF",
+    "size": size,
+    "line_spacing": 10,
+    "x": 65, "y": 80,
+    "font": get_asset(path="/opengraph/mulish-black.ttf")
+  } %}
+
+  {%- set text_filter = text_options | merge(with={"op": "text", "text": text}) %}
+  {%- set featured = featured | image_filter(filters=[{"op": "grayscale"}]) %}
+{%- endif %}
+
+{{- return_value(value=featured) }}

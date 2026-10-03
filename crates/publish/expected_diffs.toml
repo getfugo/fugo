@@ -1,0 +1,154 @@
+# Reviewed differences between ssg-publish and the Go oracles (testdata/oracle).
+#
+# The oracle tests (tests/it) classify every difference; a class listed here is accepted with
+# exactly the count given (a changed count fails the test, so the file stays reviewed), and any
+# other difference fails. Keys: [<family>.<class>].
+
+# ── transform/absurl/cases.jsonl.gz (canonifyURLs / relativeURLs) ──
+
+[absurl.go-panic]
+count = 90
+reason = """
+Inputs on which Go's replacer panics (a slice bounds error after its position moves backwards,
+e.g. a document starting with `"/x"`). This port rewrites them like any other input.
+"""
+
+[absurl.leading-candidate]
+count = 819
+reason = """
+Documents that start with a root-relative URL (`/x`, `"/x`, `&#34;/x`). Go's replacer
+initialises the next position of every prefix to 0 instead of "not searched yet", so position 0
+counts as a candidate of all five prefixes and gets the base URL written up to four times.
+This port rewrites only URLs that follow a prefix (`src=`, `href=`, …). Rendered pages start
+with `<!doctype` or `<?xml`, so real outputs never hit this.
+"""
+
+[absurl.prefix-inside-rewrite]
+count = 53
+reason = """
+A prefix occurring inside a rewritten `srcset` list (`srcset="/a.png?href=/b 1x"`). Go keeps a
+stale next position for that prefix and jumps back into input it has already written,
+duplicating bytes (or panicking). This port continues after the rewritten list.
+"""
+
+# ── transform/absurl/inject.jsonl.gz (LiveReload script, generator tag) ──
+
+[inject.generator-tag-never-injected]
+count = 14
+reason = """
+Go's `metainject` generator transformer adds `<meta name="generator">` to the home page only
+when its disable-generator-injection setting is set (the Go build inverted the flag), which no
+site does; the port has no generator injection.
+"""
+
+# ── commands/staticcopy/staticcopy.json.gz (static sync; one check per case count and per
+#    publish-directory entry) ──
+
+[staticcopy.shadowed-files-counted]
+count = 1
+reason = """
+The file count of `staticDir = ["static", "static-b"]`, both holding `a.txt`: Go reports 3,
+This port 2. Within one module Go's root-mapping file system lists a path once per static
+mount holding it, and the sync copies (and counts) each; the later mount's copy is the one
+left (ssg-vfs gives the same winner, so the published files are equal). A directory that
+several modules (project and themes) hold is merged by name first, so there each path counts
+once. This port counts each published file once.
+"""
+
+[staticcopy.empty-dirs-not-copied]
+count = 6
+reason = """
+Empty directories of the static tree (`emptydir/`, `nested/deeper/emptyleaf/`). Go's
+directory sync creates them; this port copies files (the vfs walk yields files), so a
+directory without files is not created. It has no effect on a served site.
+"""
+
+[staticcopy.missing-static-dir]
+count = 1
+reason = """
+A project without a `static` directory. fsync reports "file does not exist" (which Go
+ignores); this port copies nothing and reports zero files.
+"""
+
+# ── publisher/collector/collector.jsonl.gz (HtmlElements, for purge_css) ──
+#
+# Go's collector cuts the output into element strings with its own quote-tracking scanner and
+# parses each string alone with x/net/html's tree builder in a body context; this port tokenizes
+# the whole output once as HTML (html5gum) and records every start tag. The upstream
+# `TestClassCollector` table (collector-doc-upstream, 170 checks) matches exactly. The other
+# families are adversarial inputs written to pin down Go's scanner and differ in the classes
+# explained in [collector-reasons]. The `closed` records test Go's private `isClosedByTag`
+# helper and have no counterpart.
+
+[collector-reasons]
+character-split-across-writes = "Go's writer stops at a character split between two writes; this port scans whole outputs."
+invalid-utf8 = "Go stops at the first byte that is not UTF-8 (or a literal U+FFFD); outputs are Rust strings."
+markup-declarations = "CDATA, processing instructions, doctypes, odd comments (<!--->), << and < /x: Go records ![cdata[x]], ?php or <div as tags, or skips the following markup; HTML reads them as comments or text."
+tree-builder-context = "th, td, tr, caption, col, colgroup, frame, head, image, select, template, svg, math, table: x/net/html drops, renames or re-parents them in a body context, so Go loses their classes and ids; this port keeps them."
+raw-text-skip = "Go skips the content of any tag whose name starts with pre/textarea/script/style (<prefix>, <textareax>) up to a closing tag that may contain spaces (</ style>); this port skips exactly pre, textarea, script and style, closed the HTML way."
+unbalanced-quotes = "Go's scanner tracks quotes across tags and text (title=it's), hiding the rest of the document."
+non-ascii-tag-name = "Go lower-cases tag names with Unicode rules but x/net/html with ASCII rules, then finds no element of that name and drops its classes and ids."
+nul-or-numeric-reference = "HTML replaces NUL and invalid numeric references (&#0;, &#xD800;, &#x;) differently from x/net/html."
+repeated-attribute = "x/net/html keeps every copy of a repeated attribute (class=a class=b, two :class); HTML keeps the first."
+tag-name-spelling = "Tag names cut the Go way at Unicode white space or kept whole with slashes (<rdar://x>, <div U+00A0 class=x>)."
+group = "A group of documents through one collector differs when one of its documents does (the classes above)."
+
+[collector-el]
+markup-declarations = { count = 1404 }
+non-ascii-tag-name = { count = 716 }
+nul-or-numeric-reference = { count = 678 }
+raw-text-skip = { count = 219 }
+repeated-attribute = { count = 1447 }
+tag-name-spelling = { count = 345 }
+tree-builder-context = { count = 2793 }
+unbalanced-quotes = { count = 520 }
+
+[collector-doc-hand]
+invalid-utf8 = { count = 15 }
+markup-declarations = { count = 21 }
+non-ascii-tag-name = { count = 5 }
+raw-text-skip = { count = 10 }
+repeated-attribute = { count = 9 }
+tag-name-spelling = { count = 3 }
+tree-builder-context = { count = 9 }
+unbalanced-quotes = { count = 8 }
+
+[collector-doc-html5lib]
+markup-declarations = { count = 44 }
+tag-name-spelling = { count = 1 }
+unbalanced-quotes = { count = 1 }
+
+[collector-doc-elements]
+markup-declarations = { count = 460 }
+non-ascii-tag-name = { count = 280 }
+nul-or-numeric-reference = { count = 323 }
+raw-text-skip = { count = 117 }
+repeated-attribute = { count = 706 }
+tag-name-spelling = { count = 115 }
+tree-builder-context = { count = 1403 }
+unbalanced-quotes = { count = 334 }
+
+[collector-doc-random]
+markup-declarations = { count = 1469 }
+non-ascii-tag-name = { count = 3 }
+raw-text-skip = { count = 1 }
+tag-name-spelling = { count = 3 }
+tree-builder-context = { count = 235 }
+unbalanced-quotes = { count = 1 }
+
+[collector-chunks]
+character-split-across-writes = { count = 44 }
+invalid-utf8 = { count = 6 }
+markup-declarations = { count = 366 }
+non-ascii-tag-name = { count = 4 }
+raw-text-skip = { count = 8 }
+repeated-attribute = { count = 6 }
+tag-name-spelling = { count = 5 }
+tree-builder-context = { count = 49 }
+unbalanced-quotes = { count = 7 }
+
+[collector-group]
+group-elements = { count = 5 }
+group-hand = { count = 5 }
+group-html5lib = { count = 3 }
+group-random = { count = 5 }

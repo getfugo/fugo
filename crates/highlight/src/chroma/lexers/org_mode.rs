@@ -1,0 +1,66 @@
+//! Chroma's `org_mode.xml` lexer, converted to Rust (crate README, "Lexer and style files").
+
+use crate::chroma::defs::prelude::*;
+
+#[rustfmt::skip]
+pub(crate) static LEXER: LexerDef = LexerDef {
+    file: "org_mode",
+    config: ConfigDef {
+        name: "Org Mode",
+        aliases: &["org", "orgmode"],
+        filenames: &["*.org"],
+        mime_types: &["text/org"],
+        ..ConfigDef::EMPTY
+    },
+    states: &[
+        ("root", &[
+            rule(r"^# .*$").token(T::Comment),
+            rule(r"^(\*)( COMMENT)( .*)$").groups(&[T::GenericHeading, T::NameEntity, T::GenericStrong]),
+            rule(r"^(\*\*+)( COMMENT)( .*)$").groups(&[T::GenericSubheading, T::NameEntity, T::Text]),
+            rule(r"^(\*)( DONE)( .*)$").groups(&[T::GenericHeading, T::LiteralStringRegex, T::GenericStrong]),
+            rule(r"^(\*\*+)( DONE)( .*)$").groups(&[T::GenericSubheading, T::LiteralStringRegex, T::Text]),
+            rule(r"^(\*)( TODO)( .*)$").groups(&[T::GenericHeading, T::Error, T::GenericStrong]),
+            rule(r"^(\*\*+)( TODO)( .*)$").groups(&[T::GenericSubheading, T::Error, T::Text]),
+            rule(r"^(\*)( .+?)( :[a-zA-Z0-9_@:]+:)$").groups(&[T::GenericHeading, T::GenericStrong, T::GenericEmph]),
+            rule(r"^(\*)( .+)$").groups(&[T::GenericHeading, T::GenericStrong]),
+            rule(r"^(\*\*+)( .+?)( :[a-zA-Z0-9_@:]+:)$").groups(&[T::GenericSubheading, T::Text, T::GenericEmph]),
+            rule(r"^(\*\*+)( .+)$").groups(&[T::GenericSubheading, T::Text]),
+            rule(r"^( *)([+-] )(\[[ X]\])( .+)$").bygroups(&[E::Token(T::Text), E::Token(T::Keyword), E::Token(T::Keyword), E::UsingSelf("inline")]),
+            rule(r"^( +)(\* )(\[[ X]\])( .+)$").bygroups(&[E::Token(T::Text), E::Token(T::Keyword), E::Token(T::Keyword), E::UsingSelf("inline")]),
+            rule(r"^( *)([+-] )([^ \n]+ ::)( .+)$").bygroups(&[E::Token(T::Text), E::Token(T::Keyword), E::Token(T::Keyword), E::UsingSelf("inline")]),
+            rule(r"^( +)(\* )([^ \n]+ ::)( .+)$").bygroups(&[E::Token(T::Text), E::Token(T::Keyword), E::Token(T::Keyword), E::UsingSelf("inline")]),
+            rule(r"^( *)([+-] )(.+)$").bygroups(&[E::Token(T::Text), E::Token(T::Keyword), E::UsingSelf("inline")]),
+            rule(r"^( +)(\* )(.+)$").bygroups(&[E::Token(T::Text), E::Token(T::Keyword), E::UsingSelf("inline")]),
+            rule(r"^( *)([0-9]+[.)])( \[@[0-9]+\])( .+)$").bygroups(&[E::Token(T::Text), E::Token(T::Keyword), E::Token(T::GenericEmph), E::UsingSelf("inline")]),
+            rule(r"^( *)([0-9]+[.)])( .+)$").bygroups(&[E::Token(T::Text), E::Token(T::Keyword), E::UsingSelf("inline")]),
+            rule(r"(?i)^( *#\+begin: )([^ ]+)([\w\W]*?\n)([\w\W]*?)(^ *#\+end: *$)").bygroups(&[E::Token(T::Comment), E::Token(T::CommentSpecial), E::Token(T::Comment), E::UsingSelf("inline"), E::Token(T::Comment)]),
+            rule(r"(?i)^( *#\+begin_comment *\n)([\w\W]*?)(^ *#\+end_comment *$)").groups(&[T::Comment, T::Comment, T::Comment]),
+            rule(r"(?i)^( *#\+begin_src )([^ \n]+)(.*?\n)([\w\W]*?)(^ *#\+end_src *$)").using_by_group(2, 4, &[E::Token(T::Comment), E::Token(T::CommentSpecial), E::Token(T::Comment), E::Token(T::Text), E::Token(T::Comment)]),
+            rule(r"(?i)^( *#\+begin_export )(\w+)( *\n)([\w\W]*?)(^ *#\+end_export *$)").using_by_group(2, 4, &[E::Token(T::Comment), E::Token(T::CommentSpecial), E::Token(T::Text), E::Token(T::Text), E::Token(T::Comment)]),
+            rule(r"(?i)^( *#\+begin_)(\w+)( *\n)([\w\W]*?)(^ *#\+end_\2)( *$)").groups(&[T::Comment, T::Comment, T::Text, T::Text, T::Comment, T::Text]),
+            rule(r"^(#\+\w+)(:.*)$").groups(&[T::CommentSpecial, T::Comment]),
+            rule(r"(?i)^( *:\w+: *\n)([\w\W]*?)(^ *:end: *$)").groups(&[T::Comment, T::CommentSpecial, T::Comment]),
+            rule(r"^(.*)(\\\\)$").bygroups(&[E::UsingSelf("inline"), E::Token(T::Operator)]),
+            rule(r"(?i)^( *(?:DEADLINE|SCHEDULED): )(<[^<>]+?> *)$").groups(&[T::Comment, T::CommentSpecial]),
+            rule(r"(?i)^( *CLOSED: )(\[[^][]+?\] *)$").groups(&[T::Comment, T::CommentSpecial]),
+            include("inline"),
+        ]),
+        ("inline", &[
+            rule(r"(\s*)(\*[^ \n*][^*]+?[^ \n*]\*)((?=\W|\n|$))").groups(&[T::Text, T::GenericStrong, T::Text]),
+            rule(r"(\s*)(/[^/]+?/)((?=\W|\n|$))").groups(&[T::Text, T::GenericEmph, T::Text]),
+            rule(r"(\s*)(=[^\n=]+?=)((?=\W|\n|$))").groups(&[T::Text, T::NameClass, T::Text]),
+            rule(r"(\s*)(~[^\n~]+?~)((?=\W|\n|$))").groups(&[T::Text, T::NameClass, T::Text]),
+            rule(r"(\s*)(\+[^+]+?\+)((?=\W|\n|$))").groups(&[T::Text, T::GenericDeleted, T::Text]),
+            rule(r"(\s*)(_[^_]+?_)((?=\W|\n|$))").groups(&[T::Text, T::GenericUnderline, T::Text]),
+            rule(r"(<)([^<>]+?)(>)").groups(&[T::Text, T::LiteralString, T::Text]),
+            rule(r"[{]{3}[^}]+[}]{3}").token(T::NameBuiltin),
+            rule(r"([^[])(\[fn:)([^]]+?)(\])([^]])").groups(&[T::Text, T::NameBuiltinPseudo, T::LiteralString, T::NameBuiltinPseudo, T::Text]),
+            rule(r"(\[\[)([^][]+?)(\]\[)([^][]+)(\]\])").groups(&[T::Text, T::NameAttribute, T::Text, T::NameTag, T::Text]),
+            rule(r"(\[\[)([^][]+?)(\]\])").groups(&[T::Text, T::NameAttribute, T::Text]),
+            rule(r"(<<)([^<>]+?)(>>)").groups(&[T::Text, T::NameAttribute, T::Text]),
+            rule(r"^( *)(\|[ -].*?[ -]\|)$").groups(&[T::Text, T::LiteralString]),
+            rule(r"\n").token(T::Text),
+            rule(r".").token(T::Text),
+        ]),
+    ],
+};

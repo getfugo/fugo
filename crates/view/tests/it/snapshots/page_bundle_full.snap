@@ -1,0 +1,1103 @@
+---
+source: crates/view/tests/it/views.rs
+expression: "g.full(page(m, PageKind::Page, \"/posts/bundle\", 0))"
+---
+aliases: []
+all_translations:
+  - aliases: []
+    bundle_type: leaf
+    content: "<p>html Bundle</p>"
+    date:
+      rfc3339: "2021-05-01T00:00:00+00:00"
+      unix: 1619827200
+    description: ""
+    draft: false
+    expiry_date: ~
+    file:
+      base_file_name: index
+      content_base_name: bundle
+      dir: posts/bundle/
+      is_content_adapter: false
+      path: posts/bundle/index.md
+      unique_id: 1a964f19ff74fe3e463e68506699c878
+    fragments:
+      headings: []
+      identifiers: []
+    fuzzy_word_count: 100
+    git_info: ~
+    id: 3
+    is_home: false
+    is_node: false
+    is_page: true
+    is_section: false
+    is_translated: false
+    keywords: []
+    kind: page
+    lang: en
+    language:
+      code: en
+      direction: ltr
+      lang: en
+      name: English
+      params:
+        description: A site
+      weight: 1
+    lastmod:
+      rfc3339: "2021-05-01T00:00:00+00:00"
+      unix: 1619827200
+    layout: ~
+    len: 18
+    link_title: Bundle
+    name: Bundle
+    output_formats:
+      html:
+        is_html: true
+        is_plain_text: false
+        media_type:
+          delimiter: "."
+          main_type: text
+          sub_type: html
+          suffixes:
+            - html
+            - htm
+          type: text/html
+        name: html
+        permalink: "https://example.org/posts/bundle/"
+        rel: canonical
+        rel_permalink: /posts/bundle/
+    params:
+      date: "2021-05-01T00:00:00+00:00"
+      draft: false
+      iscjklanguage: false
+      lastmod: "2021-05-01T00:00:00+00:00"
+      publishdate: "2021-05-01T00:00:00+00:00"
+      resources:
+        - name: cover
+          params:
+            credit: me
+          src: img.png
+          title: Cover
+      title: Bundle
+    path: /posts/bundle
+    permalink: "https://example.org/posts/bundle/"
+    plain: html Bundle
+    publish_date:
+      rfc3339: "2021-05-01T00:00:00+00:00"
+      unix: 1619827200
+    raw_content: "Bundle body.\n"
+    reading_time: 1
+    rel_permalink: /posts/bundle/
+    resources:
+      - __rid: 1
+        data:
+          integrity: ~
+        height: ~
+        media_type:
+          delimiter: "."
+          main_type: image
+          sub_type: png
+          suffixes:
+            - png
+          type: image/png
+        name: cover
+        page_id: ~
+        params:
+          credit: me
+        permalink: "https://example.org/posts/bundle/img.png"
+        rel_permalink: /posts/bundle/img.png
+        resource_type: image
+        title: Cover
+        width: ~
+      - __rid: 2
+        data:
+          integrity: ~
+        height: ~
+        media_type:
+          delimiter: "."
+          main_type: text
+          sub_type: plain
+          suffixes:
+            - txt
+          type: text/plain
+        name: data.txt
+        page_id: ~
+        params: {}
+        permalink: "https://example.org/posts/bundle/data.txt"
+        rel_permalink: /posts/bundle/data.txt
+        resource_type: text
+        title: data.txt
+        width: ~
+      - __rid: 3
+        data:
+          integrity: ~
+        height: ~
+        media_type:
+          delimiter: ""
+          main_type: application
+          sub_type: octet-stream
+          suffixes: []
+          type: application/octet-stream
+        name: notes.md
+        page_id: 4
+        params:
+          draft: false
+          iscjklanguage: false
+          title: Notes
+        permalink: ""
+        rel_permalink: ""
+        resource_type: page
+        title: Notes
+        width: ~
+    section: posts
+    sitemap:
+      change_freq: ""
+      disable: false
+      priority: -1
+    summary: html summary
+    table_of_contents: "<nav id=\"TableOfContents\"></nav>"
+    terms:
+      tags: []
+    title: Bundle
+    truncated: false
+    type: posts
+    weight: 0
+    word_count: 2
+alternative_output_formats: []
+ancestors:
+  - aliases: []
+    bundle_type: branch
+    content: "<p>html Posts</p>"
+    date:
+      rfc3339: "2021-01-01T00:00:00+00:00"
+      unix: 1609459200
+    description: ""
+    draft: false
+    expiry_date: ~
+    file:
+      base_file_name: _index
+      content_base_name: posts
+      dir: posts/
+      is_content_adapter: false
+      path: posts/_index.md
+      unique_id: a74dbcb35ee06db2c5314e7ff0d9268f
+    fragments:
+      headings: []
+      identifiers: []
+    fuzzy_word_count: 100
+    git_info: ~
+    id: 2
+    is_home: false
+    is_node: true
+    is_page: false
+    is_section: true
+    is_translated: true
+    keywords: []
+    kind: section
+    lang: en
+    language:
+      code: en
+      direction: ltr
+      lang: en
+      name: English
+      params:
+        description: A site
+      weight: 1
+    lastmod:
+      rfc3339: "2021-01-01T00:00:00+00:00"
+      unix: 1609459200
+    layout: ~
+    len: 17
+    link_title: Posts
+    name: Posts
+    output_formats:
+      html:
+        is_html: true
+        is_plain_text: false
+        media_type:
+          delimiter: "."
+          main_type: text
+          sub_type: html
+          suffixes:
+            - html
+            - htm
+          type: text/html
+        name: html
+        permalink: "https://example.org/posts/"
+        rel: canonical
+        rel_permalink: /posts/
+      rss:
+        is_html: false
+        is_plain_text: false
+        media_type:
+          delimiter: "."
+          main_type: application
+          sub_type: rss
+          suffixes:
+            - xml
+            - rss
+          type: application/rss+xml
+        name: rss
+        permalink: "https://example.org/posts/index.xml"
+        rel: alternate
+        rel_permalink: /posts/index.xml
+    params:
+      date: "2021-01-01T00:00:00+00:00"
+      draft: false
+      iscjklanguage: false
+      lastmod: "2021-01-01T00:00:00+00:00"
+      publishdate: "2021-01-01T00:00:00+00:00"
+      title: Posts
+    path: /posts
+    permalink: "https://example.org/posts/"
+    plain: html Posts
+    publish_date:
+      rfc3339: "2021-01-01T00:00:00+00:00"
+      unix: 1609459200
+    raw_content: "All posts.\n"
+    reading_time: 1
+    rel_permalink: /posts/
+    resources: []
+    section: posts
+    sitemap:
+      change_freq: ""
+      disable: false
+      priority: -1
+    summary: html summary
+    table_of_contents: "<nav id=\"TableOfContents\"></nav>"
+    terms:
+      tags: []
+    title: Posts
+    truncated: false
+    type: posts
+    weight: 0
+    word_count: 2
+  - aliases: []
+    bundle_type: branch
+    content: "<p>html Home</p>"
+    date:
+      rfc3339: "2021-05-01T00:00:00+00:00"
+      unix: 1619827200
+    description: ""
+    draft: false
+    expiry_date: ~
+    file:
+      base_file_name: _index
+      content_base_name: ""
+      dir: ""
+      is_content_adapter: false
+      path: _index.md
+      unique_id: 3976528693a0108357f4928017600865
+    fragments:
+      headings: []
+      identifiers: []
+    fuzzy_word_count: 100
+    git_info: ~
+    id: 0
+    is_home: true
+    is_node: true
+    is_page: false
+    is_section: false
+    is_translated: true
+    keywords: []
+    kind: home
+    lang: en
+    language:
+      code: en
+      direction: ltr
+      lang: en
+      name: English
+      params:
+        description: A site
+      weight: 1
+    lastmod:
+      rfc3339: "2021-05-01T00:00:00+00:00"
+      unix: 1619827200
+    layout: ~
+    len: 16
+    link_title: Home
+    name: Home
+    output_formats:
+      headers:
+        is_html: false
+        is_plain_text: true
+        media_type:
+          delimiter: "."
+          main_type: text
+          sub_type: plain
+          suffixes:
+            - txt
+          type: text/plain
+        name: headers
+        permalink: "https://example.org/_headers.txt"
+        rel: alternate
+        rel_permalink: /_headers.txt
+      html:
+        is_html: true
+        is_plain_text: false
+        media_type:
+          delimiter: "."
+          main_type: text
+          sub_type: html
+          suffixes:
+            - html
+            - htm
+          type: text/html
+        name: html
+        permalink: "https://example.org/"
+        rel: canonical
+        rel_permalink: /
+      json:
+        is_html: false
+        is_plain_text: true
+        media_type:
+          delimiter: "."
+          main_type: application
+          sub_type: json
+          suffixes:
+            - json
+          type: application/json
+        name: json
+        permalink: "https://example.org/index.json"
+        rel: alternate
+        rel_permalink: /index.json
+      rss:
+        is_html: false
+        is_plain_text: false
+        media_type:
+          delimiter: "."
+          main_type: application
+          sub_type: rss
+          suffixes:
+            - xml
+            - rss
+          type: application/rss+xml
+        name: rss
+        permalink: "https://example.org/index.xml"
+        rel: alternate
+        rel_permalink: /index.xml
+    params:
+      draft: false
+      iscjklanguage: false
+      title: Home
+    path: /
+    permalink: "https://example.org/"
+    plain: html Home
+    publish_date:
+      rfc3339: "2021-05-01T00:00:00+00:00"
+      unix: 1619827200
+    raw_content: "Welcome.\n"
+    reading_time: 1
+    rel_permalink: /
+    resources: []
+    section: ""
+    sitemap:
+      change_freq: ""
+      disable: false
+      priority: -1
+    summary: html summary
+    table_of_contents: "<nav id=\"TableOfContents\"></nav>"
+    terms:
+      tags: []
+    title: Home
+    truncated: false
+    type: page
+    weight: 0
+    word_count: 2
+bundle_type: leaf
+content: "<p>html Bundle</p>"
+current_section:
+  aliases: []
+  bundle_type: branch
+  content: "<p>html Posts</p>"
+  date:
+    rfc3339: "2021-01-01T00:00:00+00:00"
+    unix: 1609459200
+  description: ""
+  draft: false
+  expiry_date: ~
+  file:
+    base_file_name: _index
+    content_base_name: posts
+    dir: posts/
+    is_content_adapter: false
+    path: posts/_index.md
+    unique_id: a74dbcb35ee06db2c5314e7ff0d9268f
+  fragments:
+    headings: []
+    identifiers: []
+  fuzzy_word_count: 100
+  git_info: ~
+  id: 2
+  is_home: false
+  is_node: true
+  is_page: false
+  is_section: true
+  is_translated: true
+  keywords: []
+  kind: section
+  lang: en
+  language:
+    code: en
+    direction: ltr
+    lang: en
+    name: English
+    params:
+      description: A site
+    weight: 1
+  lastmod:
+    rfc3339: "2021-01-01T00:00:00+00:00"
+    unix: 1609459200
+  layout: ~
+  len: 17
+  link_title: Posts
+  name: Posts
+  output_formats:
+    html:
+      is_html: true
+      is_plain_text: false
+      media_type:
+        delimiter: "."
+        main_type: text
+        sub_type: html
+        suffixes:
+          - html
+          - htm
+        type: text/html
+      name: html
+      permalink: "https://example.org/posts/"
+      rel: canonical
+      rel_permalink: /posts/
+    rss:
+      is_html: false
+      is_plain_text: false
+      media_type:
+        delimiter: "."
+        main_type: application
+        sub_type: rss
+        suffixes:
+          - xml
+          - rss
+        type: application/rss+xml
+      name: rss
+      permalink: "https://example.org/posts/index.xml"
+      rel: alternate
+      rel_permalink: /posts/index.xml
+  params:
+    date: "2021-01-01T00:00:00+00:00"
+    draft: false
+    iscjklanguage: false
+    lastmod: "2021-01-01T00:00:00+00:00"
+    publishdate: "2021-01-01T00:00:00+00:00"
+    title: Posts
+  path: /posts
+  permalink: "https://example.org/posts/"
+  plain: html Posts
+  publish_date:
+    rfc3339: "2021-01-01T00:00:00+00:00"
+    unix: 1609459200
+  raw_content: "All posts.\n"
+  reading_time: 1
+  rel_permalink: /posts/
+  resources: []
+  section: posts
+  sitemap:
+    change_freq: ""
+    disable: false
+    priority: -1
+  summary: html summary
+  table_of_contents: "<nav id=\"TableOfContents\"></nav>"
+  terms:
+    tags: []
+  title: Posts
+  truncated: false
+  type: posts
+  weight: 0
+  word_count: 2
+date:
+  rfc3339: "2021-05-01T00:00:00+00:00"
+  unix: 1619827200
+description: ""
+draft: false
+expiry_date: ~
+file:
+  base_file_name: index
+  content_base_name: bundle
+  dir: posts/bundle/
+  is_content_adapter: false
+  path: posts/bundle/index.md
+  unique_id: 1a964f19ff74fe3e463e68506699c878
+first_section:
+  aliases: []
+  bundle_type: branch
+  content: "<p>html Posts</p>"
+  date:
+    rfc3339: "2021-01-01T00:00:00+00:00"
+    unix: 1609459200
+  description: ""
+  draft: false
+  expiry_date: ~
+  file:
+    base_file_name: _index
+    content_base_name: posts
+    dir: posts/
+    is_content_adapter: false
+    path: posts/_index.md
+    unique_id: a74dbcb35ee06db2c5314e7ff0d9268f
+  fragments:
+    headings: []
+    identifiers: []
+  fuzzy_word_count: 100
+  git_info: ~
+  id: 2
+  is_home: false
+  is_node: true
+  is_page: false
+  is_section: true
+  is_translated: true
+  keywords: []
+  kind: section
+  lang: en
+  language:
+    code: en
+    direction: ltr
+    lang: en
+    name: English
+    params:
+      description: A site
+    weight: 1
+  lastmod:
+    rfc3339: "2021-01-01T00:00:00+00:00"
+    unix: 1609459200
+  layout: ~
+  len: 17
+  link_title: Posts
+  name: Posts
+  output_formats:
+    html:
+      is_html: true
+      is_plain_text: false
+      media_type:
+        delimiter: "."
+        main_type: text
+        sub_type: html
+        suffixes:
+          - html
+          - htm
+        type: text/html
+      name: html
+      permalink: "https://example.org/posts/"
+      rel: canonical
+      rel_permalink: /posts/
+    rss:
+      is_html: false
+      is_plain_text: false
+      media_type:
+        delimiter: "."
+        main_type: application
+        sub_type: rss
+        suffixes:
+          - xml
+          - rss
+        type: application/rss+xml
+      name: rss
+      permalink: "https://example.org/posts/index.xml"
+      rel: alternate
+      rel_permalink: /posts/index.xml
+  params:
+    date: "2021-01-01T00:00:00+00:00"
+    draft: false
+    iscjklanguage: false
+    lastmod: "2021-01-01T00:00:00+00:00"
+    publishdate: "2021-01-01T00:00:00+00:00"
+    title: Posts
+  path: /posts
+  permalink: "https://example.org/posts/"
+  plain: html Posts
+  publish_date:
+    rfc3339: "2021-01-01T00:00:00+00:00"
+    unix: 1609459200
+  raw_content: "All posts.\n"
+  reading_time: 1
+  rel_permalink: /posts/
+  resources: []
+  section: posts
+  sitemap:
+    change_freq: ""
+    disable: false
+    priority: -1
+  summary: html summary
+  table_of_contents: "<nav id=\"TableOfContents\"></nav>"
+  terms:
+    tags: []
+  title: Posts
+  truncated: false
+  type: posts
+  weight: 0
+  word_count: 2
+fragments:
+  headings: []
+  identifiers: []
+fuzzy_word_count: 100
+git_info: ~
+id: 3
+is_home: false
+is_node: false
+is_page: true
+is_section: false
+is_translated: false
+keywords: []
+kind: page
+lang: en
+language:
+  code: en
+  direction: ltr
+  lang: en
+  name: English
+  params:
+    description: A site
+  weight: 1
+lastmod:
+  rfc3339: "2021-05-01T00:00:00+00:00"
+  unix: 1619827200
+layout: ~
+len: 18
+link_title: Bundle
+name: Bundle
+next: ~
+next_in_section: ~
+output_formats:
+  html:
+    is_html: true
+    is_plain_text: false
+    media_type:
+      delimiter: "."
+      main_type: text
+      sub_type: html
+      suffixes:
+        - html
+        - htm
+      type: text/html
+    name: html
+    permalink: "https://example.org/posts/bundle/"
+    rel: canonical
+    rel_permalink: /posts/bundle/
+pages: []
+params:
+  date: "2021-05-01T00:00:00+00:00"
+  draft: false
+  iscjklanguage: false
+  lastmod: "2021-05-01T00:00:00+00:00"
+  publishdate: "2021-05-01T00:00:00+00:00"
+  resources:
+    - name: cover
+      params:
+        credit: me
+      src: img.png
+      title: Cover
+  title: Bundle
+parent:
+  aliases: []
+  bundle_type: branch
+  content: "<p>html Posts</p>"
+  date:
+    rfc3339: "2021-01-01T00:00:00+00:00"
+    unix: 1609459200
+  description: ""
+  draft: false
+  expiry_date: ~
+  file:
+    base_file_name: _index
+    content_base_name: posts
+    dir: posts/
+    is_content_adapter: false
+    path: posts/_index.md
+    unique_id: a74dbcb35ee06db2c5314e7ff0d9268f
+  fragments:
+    headings: []
+    identifiers: []
+  fuzzy_word_count: 100
+  git_info: ~
+  id: 2
+  is_home: false
+  is_node: true
+  is_page: false
+  is_section: true
+  is_translated: true
+  keywords: []
+  kind: section
+  lang: en
+  language:
+    code: en
+    direction: ltr
+    lang: en
+    name: English
+    params:
+      description: A site
+    weight: 1
+  lastmod:
+    rfc3339: "2021-01-01T00:00:00+00:00"
+    unix: 1609459200
+  layout: ~
+  len: 17
+  link_title: Posts
+  name: Posts
+  output_formats:
+    html:
+      is_html: true
+      is_plain_text: false
+      media_type:
+        delimiter: "."
+        main_type: text
+        sub_type: html
+        suffixes:
+          - html
+          - htm
+        type: text/html
+      name: html
+      permalink: "https://example.org/posts/"
+      rel: canonical
+      rel_permalink: /posts/
+    rss:
+      is_html: false
+      is_plain_text: false
+      media_type:
+        delimiter: "."
+        main_type: application
+        sub_type: rss
+        suffixes:
+          - xml
+          - rss
+        type: application/rss+xml
+      name: rss
+      permalink: "https://example.org/posts/index.xml"
+      rel: alternate
+      rel_permalink: /posts/index.xml
+  params:
+    date: "2021-01-01T00:00:00+00:00"
+    draft: false
+    iscjklanguage: false
+    lastmod: "2021-01-01T00:00:00+00:00"
+    publishdate: "2021-01-01T00:00:00+00:00"
+    title: Posts
+  path: /posts
+  permalink: "https://example.org/posts/"
+  plain: html Posts
+  publish_date:
+    rfc3339: "2021-01-01T00:00:00+00:00"
+    unix: 1609459200
+  raw_content: "All posts.\n"
+  reading_time: 1
+  rel_permalink: /posts/
+  resources: []
+  section: posts
+  sitemap:
+    change_freq: ""
+    disable: false
+    priority: -1
+  summary: html summary
+  table_of_contents: "<nav id=\"TableOfContents\"></nav>"
+  terms:
+    tags: []
+  title: Posts
+  truncated: false
+  type: posts
+  weight: 0
+  word_count: 2
+path: /posts/bundle
+permalink: "https://example.org/posts/bundle/"
+plain: html Bundle
+prev:
+  aliases: []
+  bundle_type: ~
+  content: "<p>html Two</p>"
+  date:
+    rfc3339: "2021-04-01T00:00:00+00:00"
+    unix: 1617235200
+  description: ""
+  draft: false
+  expiry_date: ~
+  file:
+    base_file_name: two
+    content_base_name: two
+    dir: posts/
+    is_content_adapter: false
+    path: posts/two.md
+    unique_id: a3719f6a33f9d05c193ce8985823a666
+  fragments:
+    headings: []
+    identifiers: []
+  fuzzy_word_count: 100
+  git_info: ~
+  id: 7
+  is_home: false
+  is_node: false
+  is_page: true
+  is_section: false
+  is_translated: false
+  keywords: []
+  kind: page
+  lang: en
+  language:
+    code: en
+    direction: ltr
+    lang: en
+    name: English
+    params:
+      description: A site
+    weight: 1
+  lastmod:
+    rfc3339: "2021-04-01T00:00:00+00:00"
+    unix: 1617235200
+  layout: ~
+  len: 15
+  link_title: Second
+  name: Two
+  output_formats:
+    html:
+      is_html: true
+      is_plain_text: false
+      media_type:
+        delimiter: "."
+        main_type: text
+        sub_type: html
+        suffixes:
+          - html
+          - htm
+        type: text/html
+      name: html
+      permalink: "https://example.org/posts/two/"
+      rel: canonical
+      rel_permalink: /posts/two/
+  params:
+    date: "2021-04-01T00:00:00+00:00"
+    draft: false
+    iscjklanguage: false
+    lastmod: "2021-04-01T00:00:00+00:00"
+    linktitle: Second
+    publishdate: "2021-04-01T00:00:00+00:00"
+    tags:
+      - a
+    title: Two
+  path: /posts/two
+  permalink: "https://example.org/posts/two/"
+  plain: html Two
+  publish_date:
+    rfc3339: "2021-04-01T00:00:00+00:00"
+    unix: 1617235200
+  raw_content: "Two body.\n"
+  reading_time: 1
+  rel_permalink: /posts/two/
+  resources: []
+  section: posts
+  sitemap:
+    change_freq: ""
+    disable: false
+    priority: -1
+  summary: html summary
+  table_of_contents: "<nav id=\"TableOfContents\"></nav>"
+  terms:
+    tags:
+      - id: 13
+        kind: term
+        lang: en
+        link_title: A
+        path: /tags/a
+        permalink: "https://example.org/tags/a/"
+        rel_permalink: /tags/a/
+        title: A
+  title: Two
+  truncated: false
+  type: posts
+  weight: 0
+  word_count: 2
+prev_in_section:
+  aliases: []
+  bundle_type: ~
+  content: "<p>html Two</p>"
+  date:
+    rfc3339: "2021-04-01T00:00:00+00:00"
+    unix: 1617235200
+  description: ""
+  draft: false
+  expiry_date: ~
+  file:
+    base_file_name: two
+    content_base_name: two
+    dir: posts/
+    is_content_adapter: false
+    path: posts/two.md
+    unique_id: a3719f6a33f9d05c193ce8985823a666
+  fragments:
+    headings: []
+    identifiers: []
+  fuzzy_word_count: 100
+  git_info: ~
+  id: 7
+  is_home: false
+  is_node: false
+  is_page: true
+  is_section: false
+  is_translated: false
+  keywords: []
+  kind: page
+  lang: en
+  language:
+    code: en
+    direction: ltr
+    lang: en
+    name: English
+    params:
+      description: A site
+    weight: 1
+  lastmod:
+    rfc3339: "2021-04-01T00:00:00+00:00"
+    unix: 1617235200
+  layout: ~
+  len: 15
+  link_title: Second
+  name: Two
+  output_formats:
+    html:
+      is_html: true
+      is_plain_text: false
+      media_type:
+        delimiter: "."
+        main_type: text
+        sub_type: html
+        suffixes:
+          - html
+          - htm
+        type: text/html
+      name: html
+      permalink: "https://example.org/posts/two/"
+      rel: canonical
+      rel_permalink: /posts/two/
+  params:
+    date: "2021-04-01T00:00:00+00:00"
+    draft: false
+    iscjklanguage: false
+    lastmod: "2021-04-01T00:00:00+00:00"
+    linktitle: Second
+    publishdate: "2021-04-01T00:00:00+00:00"
+    tags:
+      - a
+    title: Two
+  path: /posts/two
+  permalink: "https://example.org/posts/two/"
+  plain: html Two
+  publish_date:
+    rfc3339: "2021-04-01T00:00:00+00:00"
+    unix: 1617235200
+  raw_content: "Two body.\n"
+  reading_time: 1
+  rel_permalink: /posts/two/
+  resources: []
+  section: posts
+  sitemap:
+    change_freq: ""
+    disable: false
+    priority: -1
+  summary: html summary
+  table_of_contents: "<nav id=\"TableOfContents\"></nav>"
+  terms:
+    tags:
+      - id: 13
+        kind: term
+        lang: en
+        link_title: A
+        path: /tags/a
+        permalink: "https://example.org/tags/a/"
+        rel_permalink: /tags/a/
+        title: A
+  title: Two
+  truncated: false
+  type: posts
+  weight: 0
+  word_count: 2
+publish_date:
+  rfc3339: "2021-05-01T00:00:00+00:00"
+  unix: 1619827200
+raw_content: "Bundle body.\n"
+reading_time: 1
+regular_pages: []
+regular_pages_recursive: []
+rel_permalink: /posts/bundle/
+resources:
+  - __rid: 1
+    data:
+      integrity: ~
+    height: ~
+    media_type:
+      delimiter: "."
+      main_type: image
+      sub_type: png
+      suffixes:
+        - png
+      type: image/png
+    name: cover
+    page_id: ~
+    params:
+      credit: me
+    permalink: "https://example.org/posts/bundle/img.png"
+    rel_permalink: /posts/bundle/img.png
+    resource_type: image
+    title: Cover
+    width: ~
+  - __rid: 2
+    data:
+      integrity: ~
+    height: ~
+    media_type:
+      delimiter: "."
+      main_type: text
+      sub_type: plain
+      suffixes:
+        - txt
+      type: text/plain
+    name: data.txt
+    page_id: ~
+    params: {}
+    permalink: "https://example.org/posts/bundle/data.txt"
+    rel_permalink: /posts/bundle/data.txt
+    resource_type: text
+    title: data.txt
+    width: ~
+  - __rid: 3
+    data:
+      integrity: ~
+    height: ~
+    media_type:
+      delimiter: ""
+      main_type: application
+      sub_type: octet-stream
+      suffixes: []
+      type: application/octet-stream
+    name: notes.md
+    page_id: 4
+    params:
+      draft: false
+      iscjklanguage: false
+      title: Notes
+    permalink: ""
+    rel_permalink: ""
+    resource_type: page
+    title: Notes
+    width: ~
+section: posts
+sections: []
+sitemap:
+  change_freq: ""
+  disable: false
+  priority: -1
+summary: html summary
+table_of_contents: "<nav id=\"TableOfContents\"></nav>"
+taxonomy: ~
+term: ~
+terms:
+  tags: []
+title: Bundle
+translations: []
+truncated: false
+type: posts
+weight: 0
+word_count: 2

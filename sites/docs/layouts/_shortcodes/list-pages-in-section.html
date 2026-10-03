@@ -1,0 +1,68 @@
+{#- Renders a description list of the pages in the given section.
+
+Render a subset of the pages in the section by specifying a predefined filter,
+and whether to include those pages.
+
+Filters are defined in the data directory, in the file named page_filters. Each
+filter is an array of paths to a file, relative to the root of the content
+directory. The build fails if the specified filter does not exist, or if any of
+the pages in the filter do not exist.
+
+@param {string} path The path to the section.
+@param {string} [filter=""] The name of filter list.
+@param {string} [filterType=""] The type of filter, either include or exclude.
+@param {string} [titlePrefix=""] The string to prepend to the link title.
+
+@example {{< list-pages-in-section path=/methods/resources >}}
+@example {{< list-pages-in-section path=/functions/images filter=some_filter filterType=exclude >}}
+@example {{< list-pages-in-section path=/functions/images filter=some_filter filterType=exclude titlePrefix=foo >}}
+#}
+
+{# Initialize. #}
+{% set filter = shortcode | arg(name="filter", default="") | lower %}
+{% set filter_type = ((shortcode | arg(name="filterType", default="")) or "none") | lower %}
+{% set_global filtered_ids = [] %}
+{% set title_prefix = shortcode | arg(name="titlePrefix", default="") %}
+
+{# Build the list of the filtered pages' ids. #}
+{% if filter %}
+  {% set paths = site.data.page_filters | get(key=filter, default=[]) %}
+  {% if paths %}
+    {% for fp in paths %}
+      {% set fpage = get_page(path=fp) %}
+      {% if fpage %}
+        {% set_global filtered_ids = filtered_ids | append(value=fpage.id) %}
+      {% else %}
+        {{ log_error(message="The \"" ~ shortcode.name ~ "\" shortcode was unable to find \"" ~ fp ~ "\" as specified in the page_filters data file. See " ~ shortcode.position) }}
+      {% endif %}
+    {% endfor %}
+  {% else %}
+    {{ log_error(message="The \"" ~ shortcode.name ~ "\" shortcode was unable to find the \"" ~ filter ~ "\" filter in the page_filters data file. See " ~ shortcode.position) }}
+  {% endif %}
+{% endif %}
+
+{# Render. #}
+{% set section_path = shortcode | arg(name="path", default="") %}
+{% if section_path %}
+  {% set section = get_page(path=section_path) %}
+  {% if section %}
+    {% if section.regular_pages %}
+        {% for p in section.regular_pages | by_title %}
+          {% if (filter_type == "include" and p.id in filtered_ids)
+            or (filter_type == "exclude" and p.id not in filtered_ids)
+            or filter_type == "none"
+          %}
+            {% set link_title = title_prefix ~ p.link_title %}
+[{{ link_title }}]({{ p.rel_permalink }}){# Do not indent. #}
+: {{ p.description }}{# Do not indent. #}
+          {% endif %}
+        {% endfor %}
+    {% else %}
+      {{ log_warn(message="The \"" ~ shortcode.name ~ "\" shortcode found no pages in the \"" ~ section_path ~ "\" section. See " ~ shortcode.position) }}
+    {% endif %}
+  {% else %}
+    {{ log_error(message="The \"" ~ shortcode.name ~ "\" shortcode was unable to find \"" ~ section_path ~ "\". See " ~ shortcode.position) }}
+  {% endif %}
+{% else %}
+  {{ log_error(message="The \"" ~ shortcode.name ~ "\" shortcode requires a 'path' parameter indicating the path to the section. See " ~ shortcode.position) }}
+{% endif %}

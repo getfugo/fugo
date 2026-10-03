@@ -1,0 +1,6 @@
+# Netlify redirects. See https://www.netlify.com/docs/redirects/
+{% for p in site.pages -%}
+{% for alias in p.aliases %}
+{{ alias | pad_end(width=35) }}	{{ p.rel_permalink -}}
+{% endfor -%}
+{%- endfor -%}

@@ -1,0 +1,6 @@
+<h{{ level }} id="{{ anchor }}"
+  {%- for k, v in attributes %}{% if k != "id" and v %} {{ k }}="{{ v }}"{% endif %}{% endfor %}>
+  {{- text -}}
+  {%- if level > 1 %}<a class="anchor" href="#{{ anchor }}" aria-label="Link to this section">#</a>{% endif -%}
+</h{{ level }}>
+{#- -#}

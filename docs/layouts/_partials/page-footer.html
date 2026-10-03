@@ -1,0 +1,25 @@
+{#- Reading order is the section's default order (weight first). `prev_in_section` is the page
+    that follows this one in that list, `next_in_section` the one before it (Go's naming). -#}
+<footer class="page-footer">
+  {%- if page.file and not page.file.is_content_adapter and site.params.editurl %}
+  <p class="page-footer__edit">
+    <a href="{{ site.params.editurl ~ page.file.path }}">
+      <svg aria-hidden="true"><use href="#icon-edit"></use></svg> Edit this page
+    </a>
+  </p>
+  {%- endif %}
+  {%- if page.kind == "page" %}
+  <nav class="pager" aria-label="Pages of this section">
+    {%- if page.next_in_section %}
+    <a class="pager__prev" href="{{ page.next_in_section.rel_permalink }}">
+      <span>Previous</span>{{ page.next_in_section.link_title }}
+    </a>
+    {%- endif %}
+    {%- if page.prev_in_section %}
+    <a class="pager__next" href="{{ page.prev_in_section.rel_permalink }}">
+      <span>Next</span>{{ page.prev_in_section.link_title }}
+    </a>
+    {%- endif %}
+  </nav>
+  {%- endif %}
+</footer>

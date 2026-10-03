@@ -1,0 +1,15 @@
+HTTP/1.1 200 OK
+Content-Length: 76
+Content-Type: text/plain; charset=utf-8
+Date: Sun, 27 Sep 2026 10:25:09 GMT
+X-Custom: custom-value
+X-Etags-1: 0b1cb2754e116c9abcff8bad4bb51698
+X-Etags-2: 0b1cb2754e116c9abcff8bad4bb51698
+X-Multi: one
+X-Multi: two
+
+method=POST
+path=/echo
+query=
+User-Agent=Hugo Static Site Generator
+body=AB

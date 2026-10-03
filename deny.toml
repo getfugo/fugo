@@ -1,0 +1,43 @@
+# Licence policy of the Rust workspace (docs/rust-port/REWRITE_PLAN.md §5), in cargo-deny
+# format. tools/dev/licence-check.sh evaluates it (SPDX expressions, Python stdlib) at T00
+# and at every phase end; `cargo deny check licenses bans` can replace the script later without
+# redefining the policy.
+
+[graph]
+targets = ["x86_64-unknown-linux-gnu"]
+all-features = true
+
+[licenses]
+version = 2
+# An OR expression passes if any branch passes; AND needs every branch.
+allow = [
+    "MIT",
+    "Apache-2.0",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "ISC",
+    "Zlib",
+    "CC0-1.0",
+    "Unlicense",
+    "BSL-1.0",
+    "Unicode-3.0",
+    "CDLA-Permissive-2.0", # webpki roots
+    "MPL-2.0",             # lightningcss / cssparser (file-level copyleft)
+]
+confidence-threshold = 0.93
+# Per-crate additions to the allowlist.
+exceptions = [
+    # comrak's dependency; Unicode-DFS-2016 is the permissive predecessor of Unicode-3.0.
+    { crate = "finl_unicode", allow = ["Unicode-DFS-2016"] },
+]
+
+[bans]
+multiple-versions = "allow"
+wildcards = "deny"
+allow-wildcard-paths = true
+deny = [
+    { name = "giallo", reason = "EUPL-1.2" },
+    { name = "imagequant", reason = "GPL-3.0" },
+    { name = "zenwebp", reason = "AGPL" },
+    { name = "nom-exif", reason = "non-standard licence" },
+]

@@ -1,0 +1,43 @@
+[package]
+name = "ssg-minify"
+description = "Output minification"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+autotests = false
+
+[lib]
+doctest = false
+
+[[test]]
+name = "it"
+path = "tests/it/main.rs"
+
+[lints]
+workspace = true
+
+[dependencies]
+ssg-workspace-hack.workspace = true
+ssg-base.workspace = true
+ssg-config.workspace = true
+minify-html.workspace = true
+lightningcss.workspace = true
+browserslist-rs.workspace = true
+oxc_allocator.workspace = true
+oxc_codegen.workspace = true
+oxc_minifier.workspace = true
+oxc_parser.workspace = true
+oxc_span.workspace = true
+quick-xml.workspace = true
+regex.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+
+[dev-dependencies]
+tempfile.workspace = true
+ssg-testkit.workspace = true
+serde.workspace = true
+html5gum.workspace = true
+roxmltree.workspace = true

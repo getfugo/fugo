@@ -1,0 +1,1158 @@
+Every file of the Go build of the testsite: `python3 tools/rust-port/i01/sites.py make testsite
+<dir>`, then `hugo -d public` in <dir> with Go hugo built offline from this repository (026ce07c).
+Go's 56th output, `hugo_stats.json`, is in the project directory, not in `public`. The footer
+year is `now.Year` (2026), which the Rust test pins with its clock. Regenerate after a change to
+the testsite: build it again and write `public` as txtar (sorted paths).
+-- 404.html --
+<html><body class="nf"><a href="https://example.org/">home</a><img src='https://example.org/img/404.png' class="nf-img"></body></html>
+-- about/index.html --
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>About</title>
+<link rel="stylesheet" href="https://example.org/css/site.css">
+<link rel='icon' href='https://example.org/favicon.ico'>
+<script src="https://example.org/js/app.js"></script>
+<script>var u = "/x"; var s = 'src="https://example.org/y"'; if (a < b) { f( 1 ) }</script>
+<style>.a { background : url(/img/a.png) } .b{color:rgb(10%,20%,30%);margin:0px 0px}</style>
+</head>
+<body class="kind-page lang-en" id="top">
+<nav class="nav main"><a href="https://example.org/">Home</a> <a href='https://example.org/about/'>Self</a> <a href=https://example.org/unquoted/>U</a> <a href="//cdn.example.com/x.js">cdn</a> <a HREF="/upper">Up</a>
+<a href="https://example.org/about/">rel</a> <a href="https://example.org/about/">abs</a>
+
+<img src="https://example.org/img/a.png" srcset="https://example.org/img/a.png 1x, https://example.org/img/a@2x.png 2x" alt="a" class="img responsive">
+</nav>
+<main><p>About <span class="raw-html" id="raw">raw</span>. <a href="https://example.org/docs/a/">Rel</a> <a href="https://example.org/x">Abs</a></p>
+<pre><code class="language-html">&lt;div class=&quot;fenced&quot;&gt;
+</code></pre>
+</main>
+<ul class="tags"><li><a href="https://example.org/tags/a/">a (1)</a></li><li><a href="https://example.org/tags/b/">b (2)</a></li><li><a href="https://example.org/tags/c/">c (1)</a></li></ul>
+<div x-data="{open:false}" :class="{ 'is-open': open, 'is-closed': !open }">x</div>
+<pre class="code"><code class="language-html">&lt;div class="not-collected"&gt;</code></pre>
+<footer class="footer" id="footer">&copy; 2026 <span class="den">0001-01-01</span> Jan 1, 0001</footer>
+</body>
+</html>
+
+-- categories/index.html --
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Categories</title>
+<link rel="stylesheet" href="https://example.org/css/site.css">
+<link rel='icon' href='https://example.org/favicon.ico'>
+<script src="https://example.org/js/app.js"></script>
+<script>var u = "/x"; var s = 'src="https://example.org/y"'; if (a < b) { f( 1 ) }</script>
+<style>.a { background : url(/img/a.png) } .b{color:rgb(10%,20%,30%);margin:0px 0px}</style>
+</head>
+<body class="kind-taxonomy lang-en" id="top">
+<nav class="nav main"><a href="https://example.org/">Home</a> <a href='https://example.org/categories/'>Self</a> <a href=https://example.org/unquoted/>U</a> <a href="//cdn.example.com/x.js">cdn</a> <a HREF="/upper">Up</a>
+<a href="https://example.org/about/">rel</a> <a href="https://example.org/about/">abs</a>
+<a hreflang="nn" href="https://example.org/nn/categories/">Nynorsk</a>
+<img src="https://example.org/img/a.png" srcset="https://example.org/img/a.png 1x, https://example.org/img/a@2x.png 2x" alt="a" class="img responsive">
+</nav>
+<main>
+</main>
+<ul class="tags"><li><a href="https://example.org/tags/a/">a (1)</a></li><li><a href="https://example.org/tags/b/">b (2)</a></li><li><a href="https://example.org/tags/c/">c (1)</a></li></ul>
+<div x-data="{open:false}" :class="{ 'is-open': open, 'is-closed': !open }">x</div>
+<pre class="code"><code class="language-html">&lt;div class="not-collected"&gt;</code></pre>
+<footer class="footer" id="footer">&copy; 2026 <span class="den">0001-01-01</span> Jan 1, 0001</footer>
+</body>
+</html>
+
+-- categories/index.xml --
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Categories on Testsite</title>
+    <link>https://example.org/categories/</link>
+    <description>Recent content in Categories on Testsite</description>
+    <generator>Hugo</generator>
+    <language>en</language>
+    <atom:link href="https://example.org/categories/index.xml" rel="self" type="application/rss+xml" />
+  </channel>
+</rss>
+-- categories/page/1/index.html --
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>https://example.org/categories/</title>
+    <link rel="canonical" href="https://example.org/categories/">
+    <meta name="robots" content="noindex">
+    <meta charset="utf-8">
+    <meta http-equiv="refresh" content="0; url=https://example.org/categories/">
+  </head>
+</html>
+-- css/site.css --
+a { color : red }
+-- en/index.html --
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>https://example.org/</title>
+    <link rel="canonical" href="https://example.org/">
+    <meta name="robots" content="noindex">
+    <meta charset="utf-8">
+    <meta http-equiv="refresh" content="0; url=https://example.org/">
+  </head>
+</html>
+-- en/sitemap.xml --
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+  xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  <url>
+    <loc>https://example.org/tags/c/</loc>
+    <lastmod>2021-01-04T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>https://example.org/</loc>
+    <lastmod>2021-01-04T00:00:00+00:00</lastmod>
+    <xhtml:link
+                rel="alternate"
+                hreflang="nn"
+                href="https://example.org/nn/"
+                />
+    <xhtml:link
+                rel="alternate"
+                hreflang="en"
+                href="https://example.org/"
+                />
+  </url><url>
+    <loc>https://example.org/posts/</loc>
+    <lastmod>2021-01-04T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>https://example.org/tags/</loc>
+    <lastmod>2021-01-04T00:00:00+00:00</lastmod>
+    <xhtml:link
+                rel="alternate"
+                hreflang="nn"
+                href="https://example.org/nn/tags/"
+                />
+    <xhtml:link
+                rel="alternate"
+                hreflang="en"
+                href="https://example.org/tags/"
+                />
+  </url><url>
+    <loc>https://example.org/posts/three/</loc>
+    <lastmod>2021-01-04T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>https://example.org/tags/b/</loc>
+    <lastmod>2021-01-03T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>https://example.org/posts/two/</loc>
+    <lastmod>2021-01-03T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>https://example.org/tags/a/</loc>
+    <lastmod>2021-01-02T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>https://example.org/posts/one/</loc>
+    <lastmod>2021-01-02T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>https://example.org/first-post/</loc>
+    <lastmod>2018-02-28T00:00:00+00:00</lastmod>
+    <xhtml:link
+                rel="alternate"
+                hreflang="nn"
+                href="https://example.org/nn/first-post/"
+                />
+    <xhtml:link
+                rel="alternate"
+                hreflang="en"
+                href="https://example.org/first-post/"
+                />
+  </url><url>
+    <loc>https://example.org/about/</loc>
+  </url><url>
+    <loc>https://example.org/categories/</loc>
+    <xhtml:link
+                rel="alternate"
+                hreflang="nn"
+                href="https://example.org/nn/categories/"
+                />
+    <xhtml:link
+                rel="alternate"
+                hreflang="en"
+                href="https://example.org/categories/"
+                />
+  </url>
+</urlset>
+-- first-post/index.html --
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>My First Post</title>
+<link rel="stylesheet" href="https://example.org/css/site.css">
+<link rel='icon' href='https://example.org/favicon.ico'>
+<script src="https://example.org/js/app.js"></script>
+<script>var u = "/x"; var s = 'src="https://example.org/y"'; if (a < b) { f( 1 ) }</script>
+<style>.a { background : url(/img/a.png) } .b{color:rgb(10%,20%,30%);margin:0px 0px}</style>
+</head>
+<body class="kind-page lang-en" id="top">
+<nav class="nav main"><a href="https://example.org/">Home</a> <a href='https://example.org/first-post/'>Self</a> <a href=https://example.org/unquoted/>U</a> <a href="//cdn.example.com/x.js">cdn</a> <a HREF="/upper">Up</a>
+<a href="https://example.org/about/">rel</a> <a href="https://example.org/about/">abs</a>
+<a hreflang="nn" href="https://example.org/nn/first-post/">Nynorsk</a>
+<img src="https://example.org/img/a.png" srcset="https://example.org/img/a.png 1x, https://example.org/img/a@2x.png 2x" alt="a" class="img responsive">
+</nav>
+<main><a class="prev" href="https://example.org/about/">About</a></main>
+<ul class="tags"><li><a href="https://example.org/tags/a/">a (1)</a></li><li><a href="https://example.org/tags/b/">b (2)</a></li><li><a href="https://example.org/tags/c/">c (1)</a></li></ul>
+<div x-data="{open:false}" :class="{ 'is-open': open, 'is-closed': !open }">x</div>
+<pre class="code"><code class="language-html">&lt;div class="not-collected"&gt;</code></pre>
+<footer class="footer" id="footer">&copy; 2026 <span class="den">2018-02-28</span> Feb 28, 2018</footer>
+</body>
+</html>
+
+-- index.html --
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Home</title>
+<link rel="stylesheet" href="https://example.org/css/site.css">
+<link rel='icon' href='https://example.org/favicon.ico'>
+<script src="https://example.org/js/app.js"></script>
+<script>var u = "/x"; var s = 'src="https://example.org/y"'; if (a < b) { f( 1 ) }</script>
+<style>.a { background : url(/img/a.png) } .b{color:rgb(10%,20%,30%);margin:0px 0px}</style>
+</head>
+<body class="kind-home lang-en" id="top">
+<nav class="nav main"><a href="https://example.org/">Home</a> <a href='https://example.org/'>Self</a> <a href=https://example.org/unquoted/>U</a> <a href="//cdn.example.com/x.js">cdn</a> <a HREF="/upper">Up</a>
+<a href="https://example.org/about/">rel</a> <a href="https://example.org/about/">abs</a>
+<a hreflang="nn" href="https://example.org/nn/">Nynorsk</a>
+<img src="https://example.org/img/a.png" srcset="https://example.org/img/a.png 1x, https://example.org/img/a@2x.png 2x" alt="a" class="img responsive">
+</nav>
+<main><p>Home with <a href="https://example.org/about/">a link</a> and <img src="https://example.org/img/x.png" alt="img">.</p>
+<article class="summary"><a href="https://example.org/posts/three/">Three</a><p>Third.</p> 1 1</article><article class="summary"><a href="https://example.org/posts/two/">Two</a><p>Second <q class="quote">q</q>.</p> 2 1</article>
+<a class="next" href="https://example.org/page/2/">next</a></main>
+<ul class="tags"><li><a href="https://example.org/tags/a/">a (1)</a></li><li><a href="https://example.org/tags/b/">b (2)</a></li><li><a href="https://example.org/tags/c/">c (1)</a></li></ul>
+<div x-data="{open:false}" :class="{ 'is-open': open, 'is-closed': !open }">x</div>
+<pre class="code"><code class="language-html">&lt;div class="not-collected"&gt;</code></pre>
+<footer class="footer" id="footer">&copy; 2026 <span class="den">2021-01-04</span> Jan 4, 2021</footer>
+</body>
+</html>
+
+-- index.json --
+{"title": "Home", "n": 1.50000, "pages": [{ "url" : "/posts/three/", "title": "Three" }, { "url" : "/posts/two/", "title": "Two" }, { "url" : "/posts/one/", "title": "One \u0026 \u003cTwo\u003e" }, { "url" : "/first-post/", "title": "My First Post" }, { "url" : "/about/", "title": "About" }]}
+-- index.xml --
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Home on Testsite</title>
+    <link>https://example.org/</link>
+    <description>Recent content in Home on Testsite</description>
+    <generator>Hugo</generator>
+    <language>en</language>
+    <lastBuildDate>Mon, 04 Jan 2021 00:00:00 +0000</lastBuildDate>
+    <atom:link href="https://example.org/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Three</title>
+      <link>https://example.org/posts/three/</link>
+      <pubDate>Mon, 04 Jan 2021 00:00:00 +0000</pubDate>
+      <guid>https://example.org/posts/three/</guid>
+      <description>&lt;p&gt;Third.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Two</title>
+      <link>https://example.org/posts/two/</link>
+      <pubDate>Sun, 03 Jan 2021 00:00:00 +0000</pubDate>
+      <guid>https://example.org/posts/two/</guid>
+      <description>&lt;p&gt;Second &lt;q class=&#34;quote&#34;&gt;q&lt;/q&gt;.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>One &amp; &lt;Two&gt;</title>
+      <link>https://example.org/posts/one/</link>
+      <pubDate>Sat, 02 Jan 2021 00:00:00 +0000</pubDate>
+      <guid>https://example.org/posts/one/</guid>
+      <description>&lt;p&gt;Post with &lt;a href=&#39;https://example.org/posts/two/&#39;&gt;two&lt;/a&gt;. Ünïcödé.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>My First Post</title>
+      <link>https://example.org/first-post/</link>
+      <pubDate>Wed, 28 Feb 2018 00:00:00 +0000</pubDate>
+      <guid>https://example.org/first-post/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>About</title>
+      <link>https://example.org/about/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>https://example.org/about/</guid>
+      <description>&lt;p&gt;About &lt;span class=&#34;raw-html&#34; id=&#34;raw&#34;&gt;raw&lt;/span&gt;. &lt;a href=&#34;https://example.org/docs/a/&#34;&gt;Rel&lt;/a&gt; &lt;a href=&#34;https://example.org/x&#34;&gt;Abs&lt;/a&gt;&lt;/p&gt;&#xA;&lt;pre&gt;&lt;code class=&#34;language-html&#34;&gt;&amp;lt;div class=&amp;quot;fenced&amp;quot;&amp;gt;&#xA;&lt;/code&gt;&lt;/pre&gt;</description>
+    </item>
+  </channel>
+</rss>
+-- nn/404.html --
+<html><body class="nf"><a href="https://example.org/">home</a><img src='https://example.org/img/404.png' class="nf-img"></body></html>
+-- nn/categories/index.html --
+<!DOCTYPE html>
+<html lang="nn">
+<head>
+<meta charset="utf-8">
+<title>Categories</title>
+<link rel="stylesheet" href="https://example.org/css/site.css">
+<link rel='icon' href='https://example.org/favicon.ico'>
+<script src="https://example.org/js/app.js"></script>
+<script>var u = "/x"; var s = 'src="https://example.org/y"'; if (a < b) { f( 1 ) }</script>
+<style>.a { background : url(/img/a.png) } .b{color:rgb(10%,20%,30%);margin:0px 0px}</style>
+</head>
+<body class="kind-taxonomy lang-nn" id="top">
+<nav class="nav main"><a href="https://example.org/">Home</a> <a href='https://example.org/nn/categories/'>Self</a> <a href=https://example.org/unquoted/>U</a> <a href="//cdn.example.com/x.js">cdn</a> <a HREF="/upper">Up</a>
+<a href="https://example.org/about/">rel</a> <a href="https://example.org/about/">abs</a>
+<a hreflang="en" href="https://example.org/categories/">English</a>
+<img src="https://example.org/img/a.png" srcset="https://example.org/img/a.png 1x, https://example.org/img/a@2x.png 2x" alt="a" class="img responsive">
+</nav>
+<main>
+</main>
+<ul class="tags"></ul>
+<div x-data="{open:false}" :class="{ 'is-open': open, 'is-closed': !open }">x</div>
+<pre class="code"><code class="language-html">&lt;div class="not-collected"&gt;</code></pre>
+<footer class="footer" id="footer">&copy; 2026 <span class="dnn">0001-01-01</span> Jan 1, 0001</footer>
+</body>
+</html>
+
+-- nn/categories/index.xml --
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Categories on Testsite</title>
+    <link>https://example.org/nn/categories/</link>
+    <description>Recent content in Categories on Testsite</description>
+    <generator>Hugo</generator>
+    <language>nn</language>
+    <atom:link href="https://example.org/nn/categories/index.xml" rel="self" type="application/rss+xml" />
+  </channel>
+</rss>
+-- nn/categories/page/1/index.html --
+<!DOCTYPE html>
+<html lang="nn">
+  <head>
+    <title>https://example.org/nn/categories/</title>
+    <link rel="canonical" href="https://example.org/nn/categories/">
+    <meta name="robots" content="noindex">
+    <meta charset="utf-8">
+    <meta http-equiv="refresh" content="0; url=https://example.org/nn/categories/">
+  </head>
+</html>
+-- nn/first-post/index.html --
+<!DOCTYPE html>
+<html lang="nn">
+<head>
+<meta charset="utf-8">
+<title>Min første dag</title>
+<link rel="stylesheet" href="https://example.org/css/site.css">
+<link rel='icon' href='https://example.org/favicon.ico'>
+<script src="https://example.org/js/app.js"></script>
+<script>var u = "/x"; var s = 'src="https://example.org/y"'; if (a < b) { f( 1 ) }</script>
+<style>.a { background : url(/img/a.png) } .b{color:rgb(10%,20%,30%);margin:0px 0px}</style>
+</head>
+<body class="kind-page lang-nn" id="top">
+<nav class="nav main"><a href="https://example.org/">Home</a> <a href='https://example.org/nn/first-post/'>Self</a> <a href=https://example.org/unquoted/>U</a> <a href="//cdn.example.com/x.js">cdn</a> <a HREF="/upper">Up</a>
+<a href="https://example.org/about/">rel</a> <a href="https://example.org/about/">abs</a>
+<a hreflang="en" href="https://example.org/first-post/">English</a>
+<img src="https://example.org/img/a.png" srcset="https://example.org/img/a.png 1x, https://example.org/img/a@2x.png 2x" alt="a" class="img responsive">
+</nav>
+<main><a class="prev" href="https://example.org/nn/om/">Om</a></main>
+<ul class="tags"></ul>
+<div x-data="{open:false}" :class="{ 'is-open': open, 'is-closed': !open }">x</div>
+<pre class="code"><code class="language-html">&lt;div class="not-collected"&gt;</code></pre>
+<footer class="footer" id="footer">&copy; 2026 <span class="dnn">1972-02-28</span> Feb 28, 1972</footer>
+</body>
+</html>
+
+-- nn/gamal/index.html --
+<!DOCTYPE html>
+<html lang="nn">
+  <head>
+    <title>https://example.org/nn/om/</title>
+    <link rel="canonical" href="https://example.org/nn/om/">
+    <meta name="robots" content="noindex">
+    <meta charset="utf-8">
+    <meta http-equiv="refresh" content="0; url=https://example.org/nn/om/">
+  </head>
+</html>
+-- nn/index.html --
+<!DOCTYPE html>
+<html lang="nn">
+<head>
+<meta charset="utf-8">
+<title>Heim</title>
+<link rel="stylesheet" href="https://example.org/css/site.css">
+<link rel='icon' href='https://example.org/favicon.ico'>
+<script src="https://example.org/js/app.js"></script>
+<script>var u = "/x"; var s = 'src="https://example.org/y"'; if (a < b) { f( 1 ) }</script>
+<style>.a { background : url(/img/a.png) } .b{color:rgb(10%,20%,30%);margin:0px 0px}</style>
+</head>
+<body class="kind-home lang-nn" id="top">
+<nav class="nav main"><a href="https://example.org/">Home</a> <a href='https://example.org/nn/'>Self</a> <a href=https://example.org/unquoted/>U</a> <a href="//cdn.example.com/x.js">cdn</a> <a HREF="/upper">Up</a>
+<a href="https://example.org/about/">rel</a> <a href="https://example.org/about/">abs</a>
+<a hreflang="en" href="https://example.org/">English</a>
+<img src="https://example.org/img/a.png" srcset="https://example.org/img/a.png 1x, https://example.org/img/a@2x.png 2x" alt="a" class="img responsive">
+</nav>
+<main><p>Heim <a href="https://example.org/nn/om/">lenkje</a>.</p>
+<article class="summary"><a href="https://example.org/nn/first-post/">Min første dag</a> 0 0</article><article class="summary"><a href="https://example.org/nn/om/">Om</a><p>Om <b class="nn-b">oss</b>.</p> 2 1</article>
+</main>
+<ul class="tags"></ul>
+<div x-data="{open:false}" :class="{ 'is-open': open, 'is-closed': !open }">x</div>
+<pre class="code"><code class="language-html">&lt;div class="not-collected"&gt;</code></pre>
+<footer class="footer" id="footer">&copy; 2026 <span class="dnn">1972-02-28</span> Feb 28, 1972</footer>
+</body>
+</html>
+
+-- nn/index.json --
+{"title": "Heim", "n": 1.50000, "pages": [{ "url" : "/nn/first-post/", "title": "Min første dag" }, { "url" : "/nn/om/", "title": "Om" }]}
+-- nn/index.xml --
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Heim on Testsite</title>
+    <link>https://example.org/nn/</link>
+    <description>Recent content in Heim on Testsite</description>
+    <generator>Hugo</generator>
+    <language>nn</language>
+    <lastBuildDate>Mon, 28 Feb 1972 00:00:00 +0000</lastBuildDate>
+    <atom:link href="https://example.org/nn/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Min første dag</title>
+      <link>https://example.org/nn/first-post/</link>
+      <pubDate>Mon, 28 Feb 1972 00:00:00 +0000</pubDate>
+      <guid>https://example.org/nn/first-post/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>Om</title>
+      <link>https://example.org/nn/om/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>https://example.org/nn/om/</guid>
+      <description>&lt;p&gt;Om &lt;b class=&#34;nn-b&#34;&gt;oss&lt;/b&gt;.&lt;/p&gt;</description>
+    </item>
+  </channel>
+</rss>
+-- nn/om/index.html --
+<!DOCTYPE html>
+<html lang="nn">
+<head>
+<meta charset="utf-8">
+<title>Om</title>
+<link rel="stylesheet" href="https://example.org/css/site.css">
+<link rel='icon' href='https://example.org/favicon.ico'>
+<script src="https://example.org/js/app.js"></script>
+<script>var u = "/x"; var s = 'src="https://example.org/y"'; if (a < b) { f( 1 ) }</script>
+<style>.a { background : url(/img/a.png) } .b{color:rgb(10%,20%,30%);margin:0px 0px}</style>
+</head>
+<body class="kind-page lang-nn" id="top">
+<nav class="nav main"><a href="https://example.org/">Home</a> <a href='https://example.org/nn/om/'>Self</a> <a href=https://example.org/unquoted/>U</a> <a href="//cdn.example.com/x.js">cdn</a> <a HREF="/upper">Up</a>
+<a href="https://example.org/about/">rel</a> <a href="https://example.org/about/">abs</a>
+
+<img src="https://example.org/img/a.png" srcset="https://example.org/img/a.png 1x, https://example.org/img/a@2x.png 2x" alt="a" class="img responsive">
+</nav>
+<main><p>Om <b class="nn-b">oss</b>.</p>
+</main>
+<ul class="tags"></ul>
+<div x-data="{open:false}" :class="{ 'is-open': open, 'is-closed': !open }">x</div>
+<pre class="code"><code class="language-html">&lt;div class="not-collected"&gt;</code></pre>
+<footer class="footer" id="footer">&copy; 2026 <span class="dnn">0001-01-01</span> Jan 1, 0001</footer>
+</body>
+</html>
+
+-- nn/page/1/index.html --
+<!DOCTYPE html>
+<html lang="nn">
+  <head>
+    <title>https://example.org/nn/</title>
+    <link rel="canonical" href="https://example.org/nn/">
+    <meta name="robots" content="noindex">
+    <meta charset="utf-8">
+    <meta http-equiv="refresh" content="0; url=https://example.org/nn/">
+  </head>
+</html>
+-- nn/sitemap.xml --
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+  xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  <url>
+    <loc>https://example.org/nn/</loc>
+    <lastmod>1972-02-28T00:00:00+00:00</lastmod>
+    <xhtml:link
+                rel="alternate"
+                hreflang="en"
+                href="https://example.org/"
+                />
+    <xhtml:link
+                rel="alternate"
+                hreflang="nn"
+                href="https://example.org/nn/"
+                />
+  </url><url>
+    <loc>https://example.org/nn/first-post/</loc>
+    <lastmod>1972-02-28T00:00:00+00:00</lastmod>
+    <xhtml:link
+                rel="alternate"
+                hreflang="en"
+                href="https://example.org/first-post/"
+                />
+    <xhtml:link
+                rel="alternate"
+                hreflang="nn"
+                href="https://example.org/nn/first-post/"
+                />
+  </url><url>
+    <loc>https://example.org/nn/categories/</loc>
+    <xhtml:link
+                rel="alternate"
+                hreflang="en"
+                href="https://example.org/categories/"
+                />
+    <xhtml:link
+                rel="alternate"
+                hreflang="nn"
+                href="https://example.org/nn/categories/"
+                />
+  </url><url>
+    <loc>https://example.org/nn/om/</loc>
+  </url><url>
+    <loc>https://example.org/nn/tags/</loc>
+    <xhtml:link
+                rel="alternate"
+                hreflang="en"
+                href="https://example.org/tags/"
+                />
+    <xhtml:link
+                rel="alternate"
+                hreflang="nn"
+                href="https://example.org/nn/tags/"
+                />
+  </url>
+</urlset>
+-- nn/tags/index.html --
+<!DOCTYPE html>
+<html lang="nn">
+<head>
+<meta charset="utf-8">
+<title>Tags</title>
+<link rel="stylesheet" href="https://example.org/css/site.css">
+<link rel='icon' href='https://example.org/favicon.ico'>
+<script src="https://example.org/js/app.js"></script>
+<script>var u = "/x"; var s = 'src="https://example.org/y"'; if (a < b) { f( 1 ) }</script>
+<style>.a { background : url(/img/a.png) } .b{color:rgb(10%,20%,30%);margin:0px 0px}</style>
+</head>
+<body class="kind-taxonomy lang-nn" id="top">
+<nav class="nav main"><a href="https://example.org/">Home</a> <a href='https://example.org/nn/tags/'>Self</a> <a href=https://example.org/unquoted/>U</a> <a href="//cdn.example.com/x.js">cdn</a> <a HREF="/upper">Up</a>
+<a href="https://example.org/about/">rel</a> <a href="https://example.org/about/">abs</a>
+<a hreflang="en" href="https://example.org/tags/">English</a>
+<img src="https://example.org/img/a.png" srcset="https://example.org/img/a.png 1x, https://example.org/img/a@2x.png 2x" alt="a" class="img responsive">
+</nav>
+<main>
+</main>
+<ul class="tags"></ul>
+<div x-data="{open:false}" :class="{ 'is-open': open, 'is-closed': !open }">x</div>
+<pre class="code"><code class="language-html">&lt;div class="not-collected"&gt;</code></pre>
+<footer class="footer" id="footer">&copy; 2026 <span class="dnn">0001-01-01</span> Jan 1, 0001</footer>
+</body>
+</html>
+
+-- nn/tags/index.xml --
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Tags on Testsite</title>
+    <link>https://example.org/nn/tags/</link>
+    <description>Recent content in Tags on Testsite</description>
+    <generator>Hugo</generator>
+    <language>nn</language>
+    <atom:link href="https://example.org/nn/tags/index.xml" rel="self" type="application/rss+xml" />
+  </channel>
+</rss>
+-- nn/tags/page/1/index.html --
+<!DOCTYPE html>
+<html lang="nn">
+  <head>
+    <title>https://example.org/nn/tags/</title>
+    <link rel="canonical" href="https://example.org/nn/tags/">
+    <meta name="robots" content="noindex">
+    <meta charset="utf-8">
+    <meta http-equiv="refresh" content="0; url=https://example.org/nn/tags/">
+  </head>
+</html>
+-- old-about/index.html --
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>https://example.org/about/</title>
+    <link rel="canonical" href="https://example.org/about/">
+    <meta name="robots" content="noindex">
+    <meta charset="utf-8">
+    <meta http-equiv="refresh" content="0; url=https://example.org/about/">
+  </head>
+</html>
+-- older/about.html --
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>https://example.org/about/</title>
+    <link rel="canonical" href="https://example.org/about/">
+    <meta name="robots" content="noindex">
+    <meta charset="utf-8">
+    <meta http-equiv="refresh" content="0; url=https://example.org/about/">
+  </head>
+</html>
+-- page/1/index.html --
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>https://example.org/</title>
+    <link rel="canonical" href="https://example.org/">
+    <meta name="robots" content="noindex">
+    <meta charset="utf-8">
+    <meta http-equiv="refresh" content="0; url=https://example.org/">
+  </head>
+</html>
+-- page/2/index.html --
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Home</title>
+<link rel="stylesheet" href="https://example.org/css/site.css">
+<link rel='icon' href='https://example.org/favicon.ico'>
+<script src="https://example.org/js/app.js"></script>
+<script>var u = "/x"; var s = 'src="https://example.org/y"'; if (a < b) { f( 1 ) }</script>
+<style>.a { background : url(/img/a.png) } .b{color:rgb(10%,20%,30%);margin:0px 0px}</style>
+</head>
+<body class="kind-home lang-en" id="top">
+<nav class="nav main"><a href="https://example.org/">Home</a> <a href='https://example.org/'>Self</a> <a href=https://example.org/unquoted/>U</a> <a href="//cdn.example.com/x.js">cdn</a> <a HREF="/upper">Up</a>
+<a href="https://example.org/about/">rel</a> <a href="https://example.org/about/">abs</a>
+<a hreflang="nn" href="https://example.org/nn/">Nynorsk</a>
+<img src="https://example.org/img/a.png" srcset="https://example.org/img/a.png 1x, https://example.org/img/a@2x.png 2x" alt="a" class="img responsive">
+</nav>
+<main><p>Home with <a href="https://example.org/about/">a link</a> and <img src="https://example.org/img/x.png" alt="img">.</p>
+<article class="summary"><a href="https://example.org/posts/one/">One &amp; &lt;Two&gt;</a><p>Post with <a href='https://example.org/posts/two/'>two</a>. Ünïcödé.</p> 6 1</article><article class="summary"><a href="https://example.org/first-post/">My First Post</a> 0 0</article>
+<a class="next" href="https://example.org/page/3/">next</a></main>
+<ul class="tags"><li><a href="https://example.org/tags/a/">a (1)</a></li><li><a href="https://example.org/tags/b/">b (2)</a></li><li><a href="https://example.org/tags/c/">c (1)</a></li></ul>
+<div x-data="{open:false}" :class="{ 'is-open': open, 'is-closed': !open }">x</div>
+<pre class="code"><code class="language-html">&lt;div class="not-collected"&gt;</code></pre>
+<footer class="footer" id="footer">&copy; 2026 <span class="den">2021-01-04</span> Jan 4, 2021</footer>
+</body>
+</html>
+
+-- page/3/index.html --
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Home</title>
+<link rel="stylesheet" href="https://example.org/css/site.css">
+<link rel='icon' href='https://example.org/favicon.ico'>
+<script src="https://example.org/js/app.js"></script>
+<script>var u = "/x"; var s = 'src="https://example.org/y"'; if (a < b) { f( 1 ) }</script>
+<style>.a { background : url(/img/a.png) } .b{color:rgb(10%,20%,30%);margin:0px 0px}</style>
+</head>
+<body class="kind-home lang-en" id="top">
+<nav class="nav main"><a href="https://example.org/">Home</a> <a href='https://example.org/'>Self</a> <a href=https://example.org/unquoted/>U</a> <a href="//cdn.example.com/x.js">cdn</a> <a HREF="/upper">Up</a>
+<a href="https://example.org/about/">rel</a> <a href="https://example.org/about/">abs</a>
+<a hreflang="nn" href="https://example.org/nn/">Nynorsk</a>
+<img src="https://example.org/img/a.png" srcset="https://example.org/img/a.png 1x, https://example.org/img/a@2x.png 2x" alt="a" class="img responsive">
+</nav>
+<main><p>Home with <a href="https://example.org/about/">a link</a> and <img src="https://example.org/img/x.png" alt="img">.</p>
+<article class="summary"><a href="https://example.org/about/">About</a><p>About <span class="raw-html" id="raw">raw</span>. <a href="https://example.org/docs/a/">Rel</a> <a href="https://example.org/x">Abs</a></p>
+<pre><code class="language-html">&lt;div class=&quot;fenced&quot;&gt;
+</code></pre> 6 1</article>
+</main>
+<ul class="tags"><li><a href="https://example.org/tags/a/">a (1)</a></li><li><a href="https://example.org/tags/b/">b (2)</a></li><li><a href="https://example.org/tags/c/">c (1)</a></li></ul>
+<div x-data="{open:false}" :class="{ 'is-open': open, 'is-closed': !open }">x</div>
+<pre class="code"><code class="language-html">&lt;div class="not-collected"&gt;</code></pre>
+<footer class="footer" id="footer">&copy; 2026 <span class="den">2021-01-04</span> Jan 4, 2021</footer>
+</body>
+</html>
+
+-- posts/2/index.html --
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>https://example.org/posts/two/</title>
+    <link rel="canonical" href="https://example.org/posts/two/">
+    <meta name="robots" content="noindex">
+    <meta charset="utf-8">
+    <meta http-equiv="refresh" content="0; url=https://example.org/posts/two/">
+  </head>
+</html>
+-- posts/index.html --
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Posts</title>
+<link rel="stylesheet" href="https://example.org/css/site.css">
+<link rel='icon' href='https://example.org/favicon.ico'>
+<script src="https://example.org/js/app.js"></script>
+<script>var u = "/x"; var s = 'src="https://example.org/y"'; if (a < b) { f( 1 ) }</script>
+<style>.a { background : url(/img/a.png) } .b{color:rgb(10%,20%,30%);margin:0px 0px}</style>
+</head>
+<body class="kind-section lang-en" id="top">
+<nav class="nav main"><a href="https://example.org/">Home</a> <a href='https://example.org/posts/'>Self</a> <a href=https://example.org/unquoted/>U</a> <a href="//cdn.example.com/x.js">cdn</a> <a HREF="/upper">Up</a>
+<a href="https://example.org/about/">rel</a> <a href="https://example.org/about/">abs</a>
+
+<img src="https://example.org/img/a.png" srcset="https://example.org/img/a.png 1x, https://example.org/img/a@2x.png 2x" alt="a" class="img responsive">
+</nav>
+<main><article class="summary"><a href="https://example.org/posts/three/">Three</a><p>Third.</p> 1 1</article><article class="summary"><a href="https://example.org/posts/two/">Two</a><p>Second <q class="quote">q</q>.</p> 2 1</article>
+<a class="next" href="https://example.org/posts/page/2/">next</a></main>
+<ul class="tags"><li><a href="https://example.org/tags/a/">a (1)</a></li><li><a href="https://example.org/tags/b/">b (2)</a></li><li><a href="https://example.org/tags/c/">c (1)</a></li></ul>
+<div x-data="{open:false}" :class="{ 'is-open': open, 'is-closed': !open }">x</div>
+<pre class="code"><code class="language-html">&lt;div class="not-collected"&gt;</code></pre>
+<footer class="footer" id="footer">&copy; 2026 <span class="den">2021-01-04</span> Jan 4, 2021</footer>
+</body>
+</html>
+
+-- posts/index.xml --
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Posts on Testsite</title>
+    <link>https://example.org/posts/</link>
+    <description>Recent content in Posts on Testsite</description>
+    <generator>Hugo</generator>
+    <language>en</language>
+    <lastBuildDate>Mon, 04 Jan 2021 00:00:00 +0000</lastBuildDate>
+    <atom:link href="https://example.org/posts/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Three</title>
+      <link>https://example.org/posts/three/</link>
+      <pubDate>Mon, 04 Jan 2021 00:00:00 +0000</pubDate>
+      <guid>https://example.org/posts/three/</guid>
+      <description>&lt;p&gt;Third.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Two</title>
+      <link>https://example.org/posts/two/</link>
+      <pubDate>Sun, 03 Jan 2021 00:00:00 +0000</pubDate>
+      <guid>https://example.org/posts/two/</guid>
+      <description>&lt;p&gt;Second &lt;q class=&#34;quote&#34;&gt;q&lt;/q&gt;.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>One &amp; &lt;Two&gt;</title>
+      <link>https://example.org/posts/one/</link>
+      <pubDate>Sat, 02 Jan 2021 00:00:00 +0000</pubDate>
+      <guid>https://example.org/posts/one/</guid>
+      <description>&lt;p&gt;Post with &lt;a href=&#39;https://example.org/posts/two/&#39;&gt;two&lt;/a&gt;. Ünïcödé.&lt;/p&gt;</description>
+    </item>
+  </channel>
+</rss>
+-- posts/one/index.html --
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>One &amp; &lt;Two&gt;</title>
+<link rel="stylesheet" href="https://example.org/css/site.css">
+<link rel='icon' href='https://example.org/favicon.ico'>
+<script src="https://example.org/js/app.js"></script>
+<script>var u = "/x"; var s = 'src="https://example.org/y"'; if (a < b) { f( 1 ) }</script>
+<style>.a { background : url(/img/a.png) } .b{color:rgb(10%,20%,30%);margin:0px 0px}</style>
+</head>
+<body class="kind-page lang-en" id="top">
+<nav class="nav main"><a href="https://example.org/">Home</a> <a href='https://example.org/posts/one/'>Self</a> <a href=https://example.org/unquoted/>U</a> <a href="//cdn.example.com/x.js">cdn</a> <a HREF="/upper">Up</a>
+<a href="https://example.org/about/">rel</a> <a href="https://example.org/about/">abs</a>
+
+<img src="https://example.org/img/a.png" srcset="https://example.org/img/a.png 1x, https://example.org/img/a@2x.png 2x" alt="a" class="img responsive">
+</nav>
+<main><p>Post with <a href='https://example.org/posts/two/'>two</a>. Ünïcödé.</p>
+<p>The rest.</p></main>
+<ul class="tags"><li><a href="https://example.org/tags/a/">a (1)</a></li><li><a href="https://example.org/tags/b/">b (2)</a></li><li><a href="https://example.org/tags/c/">c (1)</a></li></ul>
+<div x-data="{open:false}" :class="{ 'is-open': open, 'is-closed': !open }">x</div>
+<pre class="code"><code class="language-html">&lt;div class="not-collected"&gt;</code></pre>
+<footer class="footer" id="footer">&copy; 2026 <span class="den">2021-01-02</span> Jan 2, 2021</footer>
+</body>
+</html>
+
+-- posts/page/1/index.html --
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>https://example.org/posts/</title>
+    <link rel="canonical" href="https://example.org/posts/">
+    <meta name="robots" content="noindex">
+    <meta charset="utf-8">
+    <meta http-equiv="refresh" content="0; url=https://example.org/posts/">
+  </head>
+</html>
+-- posts/page/2/index.html --
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Posts</title>
+<link rel="stylesheet" href="https://example.org/css/site.css">
+<link rel='icon' href='https://example.org/favicon.ico'>
+<script src="https://example.org/js/app.js"></script>
+<script>var u = "/x"; var s = 'src="https://example.org/y"'; if (a < b) { f( 1 ) }</script>
+<style>.a { background : url(/img/a.png) } .b{color:rgb(10%,20%,30%);margin:0px 0px}</style>
+</head>
+<body class="kind-section lang-en" id="top">
+<nav class="nav main"><a href="https://example.org/">Home</a> <a href='https://example.org/posts/'>Self</a> <a href=https://example.org/unquoted/>U</a> <a href="//cdn.example.com/x.js">cdn</a> <a HREF="/upper">Up</a>
+<a href="https://example.org/about/">rel</a> <a href="https://example.org/about/">abs</a>
+
+<img src="https://example.org/img/a.png" srcset="https://example.org/img/a.png 1x, https://example.org/img/a@2x.png 2x" alt="a" class="img responsive">
+</nav>
+<main><article class="summary"><a href="https://example.org/posts/one/">One &amp; &lt;Two&gt;</a><p>Post with <a href='https://example.org/posts/two/'>two</a>. Ünïcödé.</p> 6 1</article>
+</main>
+<ul class="tags"><li><a href="https://example.org/tags/a/">a (1)</a></li><li><a href="https://example.org/tags/b/">b (2)</a></li><li><a href="https://example.org/tags/c/">c (1)</a></li></ul>
+<div x-data="{open:false}" :class="{ 'is-open': open, 'is-closed': !open }">x</div>
+<pre class="code"><code class="language-html">&lt;div class="not-collected"&gt;</code></pre>
+<footer class="footer" id="footer">&copy; 2026 <span class="den">2021-01-04</span> Jan 4, 2021</footer>
+</body>
+</html>
+
+-- posts/three/index.html --
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Three</title>
+<link rel="stylesheet" href="https://example.org/css/site.css">
+<link rel='icon' href='https://example.org/favicon.ico'>
+<script src="https://example.org/js/app.js"></script>
+<script>var u = "/x"; var s = 'src="https://example.org/y"'; if (a < b) { f( 1 ) }</script>
+<style>.a { background : url(/img/a.png) } .b{color:rgb(10%,20%,30%);margin:0px 0px}</style>
+</head>
+<body class="kind-page lang-en" id="top">
+<nav class="nav main"><a href="https://example.org/">Home</a> <a href='https://example.org/posts/three/'>Self</a> <a href=https://example.org/unquoted/>U</a> <a href="//cdn.example.com/x.js">cdn</a> <a HREF="/upper">Up</a>
+<a href="https://example.org/about/">rel</a> <a href="https://example.org/about/">abs</a>
+
+<img src="https://example.org/img/a.png" srcset="https://example.org/img/a.png 1x, https://example.org/img/a@2x.png 2x" alt="a" class="img responsive">
+</nav>
+<main><p>Third.</p>
+<a class="prev" href="https://example.org/posts/two/">Two</a></main>
+<ul class="tags"><li><a href="https://example.org/tags/a/">a (1)</a></li><li><a href="https://example.org/tags/b/">b (2)</a></li><li><a href="https://example.org/tags/c/">c (1)</a></li></ul>
+<div x-data="{open:false}" :class="{ 'is-open': open, 'is-closed': !open }">x</div>
+<pre class="code"><code class="language-html">&lt;div class="not-collected"&gt;</code></pre>
+<footer class="footer" id="footer">&copy; 2026 <span class="den">2021-01-04</span> Jan 4, 2021</footer>
+</body>
+</html>
+
+-- posts/two/index.html --
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Two</title>
+<link rel="stylesheet" href="https://example.org/css/site.css">
+<link rel='icon' href='https://example.org/favicon.ico'>
+<script src="https://example.org/js/app.js"></script>
+<script>var u = "/x"; var s = 'src="https://example.org/y"'; if (a < b) { f( 1 ) }</script>
+<style>.a { background : url(/img/a.png) } .b{color:rgb(10%,20%,30%);margin:0px 0px}</style>
+</head>
+<body class="kind-page lang-en" id="top">
+<nav class="nav main"><a href="https://example.org/">Home</a> <a href='https://example.org/posts/two/'>Self</a> <a href=https://example.org/unquoted/>U</a> <a href="//cdn.example.com/x.js">cdn</a> <a HREF="/upper">Up</a>
+<a href="https://example.org/about/">rel</a> <a href="https://example.org/about/">abs</a>
+
+<img src="https://example.org/img/a.png" srcset="https://example.org/img/a.png 1x, https://example.org/img/a@2x.png 2x" alt="a" class="img responsive">
+</nav>
+<main><p>Second <q class="quote">q</q>.</p>
+<a class="prev" href="https://example.org/posts/one/">One &amp; &lt;Two&gt;</a></main>
+<ul class="tags"><li><a href="https://example.org/tags/a/">a (1)</a></li><li><a href="https://example.org/tags/b/">b (2)</a></li><li><a href="https://example.org/tags/c/">c (1)</a></li></ul>
+<div x-data="{open:false}" :class="{ 'is-open': open, 'is-closed': !open }">x</div>
+<pre class="code"><code class="language-html">&lt;div class="not-collected"&gt;</code></pre>
+<footer class="footer" id="footer">&copy; 2026 <span class="den">2021-01-03</span> Jan 3, 2021</footer>
+</body>
+</html>
+
+-- robots.txt --
+User-agent: *
+-- sitemap.xml --
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  
+  <sitemap>
+    <loc>https://example.org/en/sitemap.xml</loc>
+    
+      <lastmod>2021-01-04T00:00:00+00:00</lastmod>
+    
+  </sitemap>
+  
+  <sitemap>
+    <loc>https://example.org/nn/sitemap.xml</loc>
+    
+      <lastmod>1972-02-28T00:00:00+00:00</lastmod>
+    
+  </sitemap>
+  
+</sitemapindex>
+-- tags/a/index.html --
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>A</title>
+<link rel="stylesheet" href="https://example.org/css/site.css">
+<link rel='icon' href='https://example.org/favicon.ico'>
+<script src="https://example.org/js/app.js"></script>
+<script>var u = "/x"; var s = 'src="https://example.org/y"'; if (a < b) { f( 1 ) }</script>
+<style>.a { background : url(/img/a.png) } .b{color:rgb(10%,20%,30%);margin:0px 0px}</style>
+</head>
+<body class="kind-term lang-en" id="top">
+<nav class="nav main"><a href="https://example.org/">Home</a> <a href='https://example.org/tags/a/'>Self</a> <a href=https://example.org/unquoted/>U</a> <a href="//cdn.example.com/x.js">cdn</a> <a HREF="/upper">Up</a>
+<a href="https://example.org/about/">rel</a> <a href="https://example.org/about/">abs</a>
+
+<img src="https://example.org/img/a.png" srcset="https://example.org/img/a.png 1x, https://example.org/img/a@2x.png 2x" alt="a" class="img responsive">
+</nav>
+<main><article class="summary"><a href="https://example.org/posts/one/">One &amp; &lt;Two&gt;</a><p>Post with <a href='https://example.org/posts/two/'>two</a>. Ünïcödé.</p> 6 1</article>
+</main>
+<ul class="tags"><li><a href="https://example.org/tags/a/">a (1)</a></li><li><a href="https://example.org/tags/b/">b (2)</a></li><li><a href="https://example.org/tags/c/">c (1)</a></li></ul>
+<div x-data="{open:false}" :class="{ 'is-open': open, 'is-closed': !open }">x</div>
+<pre class="code"><code class="language-html">&lt;div class="not-collected"&gt;</code></pre>
+<footer class="footer" id="footer">&copy; 2026 <span class="den">2021-01-02</span> Jan 2, 2021</footer>
+</body>
+</html>
+
+-- tags/a/index.xml --
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>A on Testsite</title>
+    <link>https://example.org/tags/a/</link>
+    <description>Recent content in A on Testsite</description>
+    <generator>Hugo</generator>
+    <language>en</language>
+    <lastBuildDate>Sat, 02 Jan 2021 00:00:00 +0000</lastBuildDate>
+    <atom:link href="https://example.org/tags/a/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>One &amp; &lt;Two&gt;</title>
+      <link>https://example.org/posts/one/</link>
+      <pubDate>Sat, 02 Jan 2021 00:00:00 +0000</pubDate>
+      <guid>https://example.org/posts/one/</guid>
+      <description>&lt;p&gt;Post with &lt;a href=&#39;https://example.org/posts/two/&#39;&gt;two&lt;/a&gt;. Ünïcödé.&lt;/p&gt;</description>
+    </item>
+  </channel>
+</rss>
+-- tags/a/page/1/index.html --
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>https://example.org/tags/a/</title>
+    <link rel="canonical" href="https://example.org/tags/a/">
+    <meta name="robots" content="noindex">
+    <meta charset="utf-8">
+    <meta http-equiv="refresh" content="0; url=https://example.org/tags/a/">
+  </head>
+</html>
+-- tags/b/index.html --
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>B</title>
+<link rel="stylesheet" href="https://example.org/css/site.css">
+<link rel='icon' href='https://example.org/favicon.ico'>
+<script src="https://example.org/js/app.js"></script>
+<script>var u = "/x"; var s = 'src="https://example.org/y"'; if (a < b) { f( 1 ) }</script>
+<style>.a { background : url(/img/a.png) } .b{color:rgb(10%,20%,30%);margin:0px 0px}</style>
+</head>
+<body class="kind-term lang-en" id="top">
+<nav class="nav main"><a href="https://example.org/">Home</a> <a href='https://example.org/tags/b/'>Self</a> <a href=https://example.org/unquoted/>U</a> <a href="//cdn.example.com/x.js">cdn</a> <a HREF="/upper">Up</a>
+<a href="https://example.org/about/">rel</a> <a href="https://example.org/about/">abs</a>
+
+<img src="https://example.org/img/a.png" srcset="https://example.org/img/a.png 1x, https://example.org/img/a@2x.png 2x" alt="a" class="img responsive">
+</nav>
+<main><article class="summary"><a href="https://example.org/posts/two/">Two</a><p>Second <q class="quote">q</q>.</p> 2 1</article><article class="summary"><a href="https://example.org/posts/one/">One &amp; &lt;Two&gt;</a><p>Post with <a href='https://example.org/posts/two/'>two</a>. Ünïcödé.</p> 6 1</article>
+</main>
+<ul class="tags"><li><a href="https://example.org/tags/a/">a (1)</a></li><li><a href="https://example.org/tags/b/">b (2)</a></li><li><a href="https://example.org/tags/c/">c (1)</a></li></ul>
+<div x-data="{open:false}" :class="{ 'is-open': open, 'is-closed': !open }">x</div>
+<pre class="code"><code class="language-html">&lt;div class="not-collected"&gt;</code></pre>
+<footer class="footer" id="footer">&copy; 2026 <span class="den">2021-01-03</span> Jan 3, 2021</footer>
+</body>
+</html>
+
+-- tags/b/index.xml --
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>B on Testsite</title>
+    <link>https://example.org/tags/b/</link>
+    <description>Recent content in B on Testsite</description>
+    <generator>Hugo</generator>
+    <language>en</language>
+    <lastBuildDate>Sun, 03 Jan 2021 00:00:00 +0000</lastBuildDate>
+    <atom:link href="https://example.org/tags/b/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Two</title>
+      <link>https://example.org/posts/two/</link>
+      <pubDate>Sun, 03 Jan 2021 00:00:00 +0000</pubDate>
+      <guid>https://example.org/posts/two/</guid>
+      <description>&lt;p&gt;Second &lt;q class=&#34;quote&#34;&gt;q&lt;/q&gt;.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>One &amp; &lt;Two&gt;</title>
+      <link>https://example.org/posts/one/</link>
+      <pubDate>Sat, 02 Jan 2021 00:00:00 +0000</pubDate>
+      <guid>https://example.org/posts/one/</guid>
+      <description>&lt;p&gt;Post with &lt;a href=&#39;https://example.org/posts/two/&#39;&gt;two&lt;/a&gt;. Ünïcödé.&lt;/p&gt;</description>
+    </item>
+  </channel>
+</rss>
+-- tags/b/page/1/index.html --
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>https://example.org/tags/b/</title>
+    <link rel="canonical" href="https://example.org/tags/b/">
+    <meta name="robots" content="noindex">
+    <meta charset="utf-8">
+    <meta http-equiv="refresh" content="0; url=https://example.org/tags/b/">
+  </head>
+</html>
+-- tags/c/index.html --
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>C</title>
+<link rel="stylesheet" href="https://example.org/css/site.css">
+<link rel='icon' href='https://example.org/favicon.ico'>
+<script src="https://example.org/js/app.js"></script>
+<script>var u = "/x"; var s = 'src="https://example.org/y"'; if (a < b) { f( 1 ) }</script>
+<style>.a { background : url(/img/a.png) } .b{color:rgb(10%,20%,30%);margin:0px 0px}</style>
+</head>
+<body class="kind-term lang-en" id="top">
+<nav class="nav main"><a href="https://example.org/">Home</a> <a href='https://example.org/tags/c/'>Self</a> <a href=https://example.org/unquoted/>U</a> <a href="//cdn.example.com/x.js">cdn</a> <a HREF="/upper">Up</a>
+<a href="https://example.org/about/">rel</a> <a href="https://example.org/about/">abs</a>
+
+<img src="https://example.org/img/a.png" srcset="https://example.org/img/a.png 1x, https://example.org/img/a@2x.png 2x" alt="a" class="img responsive">
+</nav>
+<main><article class="summary"><a href="https://example.org/posts/three/">Three</a><p>Third.</p> 1 1</article>
+</main>
+<ul class="tags"><li><a href="https://example.org/tags/a/">a (1)</a></li><li><a href="https://example.org/tags/b/">b (2)</a></li><li><a href="https://example.org/tags/c/">c (1)</a></li></ul>
+<div x-data="{open:false}" :class="{ 'is-open': open, 'is-closed': !open }">x</div>
+<pre class="code"><code class="language-html">&lt;div class="not-collected"&gt;</code></pre>
+<footer class="footer" id="footer">&copy; 2026 <span class="den">2021-01-04</span> Jan 4, 2021</footer>
+</body>
+</html>
+
+-- tags/c/index.xml --
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>C on Testsite</title>
+    <link>https://example.org/tags/c/</link>
+    <description>Recent content in C on Testsite</description>
+    <generator>Hugo</generator>
+    <language>en</language>
+    <lastBuildDate>Mon, 04 Jan 2021 00:00:00 +0000</lastBuildDate>
+    <atom:link href="https://example.org/tags/c/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Three</title>
+      <link>https://example.org/posts/three/</link>
+      <pubDate>Mon, 04 Jan 2021 00:00:00 +0000</pubDate>
+      <guid>https://example.org/posts/three/</guid>
+      <description>&lt;p&gt;Third.&lt;/p&gt;</description>
+    </item>
+  </channel>
+</rss>
+-- tags/c/page/1/index.html --
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>https://example.org/tags/c/</title>
+    <link rel="canonical" href="https://example.org/tags/c/">
+    <meta name="robots" content="noindex">
+    <meta charset="utf-8">
+    <meta http-equiv="refresh" content="0; url=https://example.org/tags/c/">
+  </head>
+</html>
+-- tags/index.html --
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Tags</title>
+<link rel="stylesheet" href="https://example.org/css/site.css">
+<link rel='icon' href='https://example.org/favicon.ico'>
+<script src="https://example.org/js/app.js"></script>
+<script>var u = "/x"; var s = 'src="https://example.org/y"'; if (a < b) { f( 1 ) }</script>
+<style>.a { background : url(/img/a.png) } .b{color:rgb(10%,20%,30%);margin:0px 0px}</style>
+</head>
+<body class="kind-taxonomy lang-en" id="top">
+<nav class="nav main"><a href="https://example.org/">Home</a> <a href='https://example.org/tags/'>Self</a> <a href=https://example.org/unquoted/>U</a> <a href="//cdn.example.com/x.js">cdn</a> <a HREF="/upper">Up</a>
+<a href="https://example.org/about/">rel</a> <a href="https://example.org/about/">abs</a>
+<a hreflang="nn" href="https://example.org/nn/tags/">Nynorsk</a>
+<img src="https://example.org/img/a.png" srcset="https://example.org/img/a.png 1x, https://example.org/img/a@2x.png 2x" alt="a" class="img responsive">
+</nav>
+<main><article class="summary"><a href="https://example.org/tags/c/">C</a> 0 0</article><article class="summary"><a href="https://example.org/tags/b/">B</a> 0 0</article>
+<a class="next" href="https://example.org/tags/page/2/">next</a></main>
+<ul class="tags"><li><a href="https://example.org/tags/a/">a (1)</a></li><li><a href="https://example.org/tags/b/">b (2)</a></li><li><a href="https://example.org/tags/c/">c (1)</a></li></ul>
+<div x-data="{open:false}" :class="{ 'is-open': open, 'is-closed': !open }">x</div>
+<pre class="code"><code class="language-html">&lt;div class="not-collected"&gt;</code></pre>
+<footer class="footer" id="footer">&copy; 2026 <span class="den">2021-01-04</span> Jan 4, 2021</footer>
+</body>
+</html>
+
+-- tags/index.xml --
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Tags on Testsite</title>
+    <link>https://example.org/tags/</link>
+    <description>Recent content in Tags on Testsite</description>
+    <generator>Hugo</generator>
+    <language>en</language>
+    <lastBuildDate>Mon, 04 Jan 2021 00:00:00 +0000</lastBuildDate>
+    <atom:link href="https://example.org/tags/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>C</title>
+      <link>https://example.org/tags/c/</link>
+      <pubDate>Mon, 04 Jan 2021 00:00:00 +0000</pubDate>
+      <guid>https://example.org/tags/c/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>B</title>
+      <link>https://example.org/tags/b/</link>
+      <pubDate>Sun, 03 Jan 2021 00:00:00 +0000</pubDate>
+      <guid>https://example.org/tags/b/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>A</title>
+      <link>https://example.org/tags/a/</link>
+      <pubDate>Sat, 02 Jan 2021 00:00:00 +0000</pubDate>
+      <guid>https://example.org/tags/a/</guid>
+      <description></description>
+    </item>
+  </channel>
+</rss>
+-- tags/page/1/index.html --
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>https://example.org/tags/</title>
+    <link rel="canonical" href="https://example.org/tags/">
+    <meta name="robots" content="noindex">
+    <meta charset="utf-8">
+    <meta http-equiv="refresh" content="0; url=https://example.org/tags/">
+  </head>
+</html>
+-- tags/page/2/index.html --
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Tags</title>
+<link rel="stylesheet" href="https://example.org/css/site.css">
+<link rel='icon' href='https://example.org/favicon.ico'>
+<script src="https://example.org/js/app.js"></script>
+<script>var u = "/x"; var s = 'src="https://example.org/y"'; if (a < b) { f( 1 ) }</script>
+<style>.a { background : url(/img/a.png) } .b{color:rgb(10%,20%,30%);margin:0px 0px}</style>
+</head>
+<body class="kind-taxonomy lang-en" id="top">
+<nav class="nav main"><a href="https://example.org/">Home</a> <a href='https://example.org/tags/'>Self</a> <a href=https://example.org/unquoted/>U</a> <a href="//cdn.example.com/x.js">cdn</a> <a HREF="/upper">Up</a>
+<a href="https://example.org/about/">rel</a> <a href="https://example.org/about/">abs</a>
+<a hreflang="nn" href="https://example.org/nn/tags/">Nynorsk</a>
+<img src="https://example.org/img/a.png" srcset="https://example.org/img/a.png 1x, https://example.org/img/a@2x.png 2x" alt="a" class="img responsive">
+</nav>
+<main><article class="summary"><a href="https://example.org/tags/a/">A</a> 0 0</article>
+</main>
+<ul class="tags"><li><a href="https://example.org/tags/a/">a (1)</a></li><li><a href="https://example.org/tags/b/">b (2)</a></li><li><a href="https://example.org/tags/c/">c (1)</a></li></ul>
+<div x-data="{open:false}" :class="{ 'is-open': open, 'is-closed': !open }">x</div>
+<pre class="code"><code class="language-html">&lt;div class="not-collected"&gt;</code></pre>
+<footer class="footer" id="footer">&copy; 2026 <span class="den">2021-01-04</span> Jan 4, 2021</footer>
+</body>
+</html>
+

@@ -1,0 +1,57 @@
+{#-
+  An embedded X post, fetched with X's oEmbed API. Named arguments: user, id. With
+  `privacy.x.simple`, the post is rendered without X's script (and with inline CSS unless
+  `services.x.disableInlineCSS`).
+-#}
+{%- set pc = site.config.privacy.x %}
+{%- if not pc.disable %}
+  {%- set post_id = shortcode | arg(name="id", default="") %}
+  {%- set user = shortcode | arg(name="user", default="") %}
+  {%- if post_id and user %}
+    {%- set post_url = "https://x.com/" ~ user ~ "/status/" ~ post_id %}
+    {%- if pc.simple %}
+      {%- set query = querify(params={"url": post_url, "dnt": pc.enable_dnt, "omit_script": true}) %}
+      {%- set warn_id = "shortcode-x-simple-getremote" %}
+    {%- else %}
+      {%- set query = querify(params={"url": post_url, "dnt": pc.enable_dnt}) %}
+      {%- set warn_id = "shortcode-x-getremote" %}
+    {%- endif %}
+    {%- set remote = get_remote(url="https://publish.x.com/oembed?" ~ query, optional=true) %}
+    {%- if remote %}
+      {%- if pc.simple and not site.config.services.x.disable_inline_css and not store_get(key="__h_simple_x_css") %}
+        {{- store_set(key="__h_simple_x_css", value=true) -}}
+    <style type="text/css">
+      .twitter-tweet {
+        font:
+          14px/1.45 -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          Roboto,
+          Oxygen-Sans,
+          Ubuntu,
+          Cantarell,
+          "Helvetica Neue",
+          sans-serif;
+        border-left: 4px solid #2b7bb9;
+        padding-left: 1.5em;
+        color: #555;
+      }
+      .twitter-tweet a {
+        color: #2b7bb9;
+        text-decoration: none;
+      }
+      blockquote.twitter-tweet a:hover,
+      blockquote.twitter-tweet a:focus {
+        text-decoration: underline;
+      }
+    </style>
+      {%- endif %}
+      {%- set post = remote | unmarshal %}
+      {{- (post.html or "") | safe -}}
+    {%- else %}
+      {{- log_warn(message='The "' ~ shortcode.name ~ '" shortcode was unable to retrieve the remote data. See ' ~ shortcode.position, id=warn_id) }}
+    {%- endif %}
+  {%- else %}
+    {{- log_error(message='The "' ~ shortcode.name ~ '" shortcode requires two named parameters: user and id. See ' ~ shortcode.position) }}
+  {%- endif %}
+{%- endif -%}

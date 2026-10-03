@@ -1,0 +1,103 @@
+---
+source: crates/funcs/tests/it/snapshots.rs
+expression: out
+---
+anchorize: hello-world creme-brulee
+append: "[1,2,3]"
+arg/index: "b [] d"
+arg/name: x.png true
+b64_decode: fugo
+b64_encode: ZXhhbXBsZQ==
+by_type: "notes/index.md,"
+complement: "[1,3]"
+concat: "[1,2,3,4]"
+date: "February 29, 2024 08:00"
+date/locale: วันอังคาร 14 พ.ย. 2023
+date/none: "[]"
+date/style-th: 14 กรกฎาคม ค.ศ. 2024
+default_if_empty/empty-string: fallback
+default_if_empty/false-is-set: "false"
+default_if_empty/undefined: d
+default_if_empty/zero: "9"
+delimit: "a, b and c"
+dump: "{\n  &quot;a&quot;: &quot;x&quot;,\n  &quot;b&quot;: [\n    1\n  ]\n}"
+emojify: "I ❤️ Rust :no_such_emoji:"
+file_exists: true false
+filesize_format: 117.74 MiB
+find_resource: img/b.png
+find_resources: "img/a.jpg,img/b.png,"
+fnv32a: "2347908769"
+format_number: "1,234,567.89"
+format_number/th: "1,234.5"
+from_pairs: "{\"3\":true,\"a\":{\"x\":2},\"b1\":4}"
+get_env: "[]"
+get_path: y
+get_path/missing: "true"
+get_resource: img/a.jpg
+html_escape: "&lt;a href=&#39;x&#39;&gt;&amp;&lt;/a&gt;"
+html_unescape: "&lt;b&gt; &amp;amp; &#39; é"
+humanize: My first post / 3rd
+intersect: "[2,3]"
+join_url: "https://example.org/docs/a/b/"
+jsonify: "{\"a\":\"\\u003c\\u003e\\u0026\",\"n\":null,\"z\":[1,2,1e+21,1e-7]}"
+jsonify/indent: "{\n  \"a\": 1,\n  \"b\": {\n    \"c\": []\n  }\n}"
+log_error: "[]"
+log_warn: "[]"
+matching: "true"
+max: "7.5"
+md5: 1a79a4d60de6718e8e5b326e338ae533
+merge: "{\"a\":2,\"b\":1,\"n\":{\"x\":1,\"y\":2}}"
+min: "-2"
+now: "2024-07-14T10:31:59+00:00 1720953119"
+ordinalize: 22nd 13th
+pad_end: "[ab   ]"
+pad_start: "[   ab]"
+parse_url: "{\"fragment\":\"frag\",\"host\":\"example.org\",\"is_absolute\":true,\"path\":\"/a b/\",\"query\":\"q=1\",\"scheme\":\"https\",\"string\":\"https://example.org/a%20b/?q=1#frag\"}"
+path_base: c.md
+path_base_name: c
+path_clean: a/c
+path_dir: a/b
+path_ext: ".gz"
+path_join: a/c
+plainify: "Hello world\nagain\n"
+pluralize_word: categories people
+querify: a=1&amp;c=x%26y&amp;q=a+b
+read_file: "Hello from a project file.\n"
+regex_find: "[\"1\",\"22\"]"
+regex_replace: a&lt;1&gt;b&lt;22&gt;
+remarshal/json: "{\n   &quot;a&quot;: 1,\n   &quot;b&quot;: &quot;x&quot;\n}\n"
+remarshal/json_dates_html: "{\n   \"d\": \"2023-01-01\",\n   \"h\": \"\\u003ci\\u003e\\u0026\\u003c/i\\u003e\",\n   \"t\": \"2023-01-01T07:32:00.5\",\n   \"z\": \"2023-01-01T07:32:00+07:00\"\n}\n"
+remarshal/toml: "b = [1, 2]\n\n[a]\n  c = &#39;x&#39;\n"
+remarshal/toml_quoting_dates: "d = 2023-01-01\nf = 2\nl = [1.0, 'x']\nz = 2023-01-01T07:32:00Z\n\n['text/html']\n  q = \"it's\"\n  s = 'a.b'\n"
+remarshal/yaml: "a:\n  c: x\nb:\n- 1\n- 2\n"
+remarshal/yaml_quoting: "a: :dir\nb: '{{ x }}'\nc: \"true\"\nd: \"\"\ne: |-\n  l1\n  l2\nk9: 2\nk10: 1\nl: \"2023-01-01\"\nz: 2023-01-01T07:32:00Z\n"
+sets/pages-by-id: "apple,"
+sha1: c3499c2729730a7f807efb8676a92dcb6f8a3f8f
+sha256: 50d858e0985ecc7f60418aaf0cc5ab587f42c2570a884095a9e8ccacd0f6545c
+singularize_word: category
+sort_by/date-desc: "apple,Zebra,Äpfel,"
+sort_by/param: "apple,Äpfel,Zebra,"
+sort_by/title: "Äpfel,apple,Zebra,"
+sort_by/values: "a,ä,b,B"
+sort_keys: "a=2 b=1 "
+strip_prefix: name
+strip_suffix: name
+substr: ้าว
+substr/negative: def
+symdiff: "[1,2,4]"
+title_case: The Lord of the Rings
+title_case/chicago: The Lord of the Rings
+to_date: "{\"rfc3339\":\"2024-02-29T08:00:00+07:00\",\"unix\":1709168400}"
+trim_chars: a-b
+trim_end_chars: a
+trim_start_chars: a
+truncate_html: "<p>Some <em>long …</em></p>"
+truncate_html/plain: Some...
+union: "[1,2,3]"
+urldecode: a b c
+urlencode: a%20b/c%3Fd
+urlencode_strict: a%20b%2Fc%3Fd
+urlize: hello-world-%C3%BCn%C3%AFcode
+version_at_least: true false true
+xml_escape: "&lt;p class=&#34;x&#34;&gt;&#39;&amp;&#39;&lt;/p&gt;"
+xxhash: e6eda53558c41c5e

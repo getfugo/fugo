@@ -1,0 +1,5 @@
+HTTP/1.1 200 OK
+Date: Mon, 13 Oct 2025 15:00:00 GMT
+Content-Type: application/json; charset=utf-8
+
+{"url":"https:\/\/x.com\/sandiegozoo\/status\/1453110110599868418","author_name":"San Diego Zoo Wildlife Alliance","author_url":"https:\/\/x.com\/sandiegozoo","html":"\u003Cblockquote class=\"twitter-tweet\"\u003E\u003Cp lang=\"en\" dir=\"ltr\"\u003EOwl bet you&#39;ll lose this staring contest \uD83E\uDD89 \u003Ca href=\"https:\/\/t.co\/eJh4f2zncC\"\u003Epic.twitter.com\/eJh4f2zncC\u003C\/a\u003E\u003C\/p\u003E&mdash; San Diego Zoo Wildlife Alliance (@sandiegozoo) \u003Ca href=\"https:\/\/x.com\/sandiegozoo\/status\/1453110110599868418?ref_src=twsrc%5Etfw\"\u003EOctober 26, 2021\u003C\/a\u003E\u003C\/blockquote\u003E\n\u003Cscript async src=\"https:\/\/platform.x.com\/widgets.js\" charset=\"utf-8\"\u003E\u003C\/script\u003E\n\n","width":550,"height":null,"type":"rich","cache_age":"3153600000","provider_name":"X","provider_url":"https:\/\/x.com","version":"1.0"}

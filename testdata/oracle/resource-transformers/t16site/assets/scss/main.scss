@@ -1,0 +1,27 @@
+@import "build:vars";
+@import "partials/vars";
+@import "components/button";
+@import "components/cards";
+@import "mixins";
+@import "legacy";
+@import "fakescss/scss/grid";
+@import "plain.css";
+
+// A line comment.
+/* A block comment. */
+.main {
+  width: 100% / 3;
+  margin: percentage(1 / 7);
+  color: darken($brand, 12.5%);
+  background: lighten($brand, 20%);
+  padding: $space * 1.5 math-ish(3px);
+  &:hover { color: mix($brand, #fff, 33%); }
+  .inner { @include rounded(4px); content: "\2192 →"; }
+  @media (min-width: 768px) { width: 50%; }
+}
+%placeholder { font-weight: bold; }
+.ext { @extend %placeholder; }
+@each $name, $v in (small: 0.875, large: 1.25) {
+  .text-#{$name} { font-size: $v * 1rem; line-height: 1 / 3 * $v; }
+}
+.vars { color: $primary; width: $size; font-family: $font; z-index: $n; opacity: $f; }

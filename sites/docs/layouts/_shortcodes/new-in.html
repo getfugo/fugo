@@ -1,0 +1,55 @@
+{#- Renders a callout or badge indicating the version in which a feature was added.
+
+To render a callout, include descriptive text between the opening and closing
+tags. To render a badge, omit the descriptive text and call the shortcode with a
+self-closing tag.
+
+When comparing the current version to the specified version, the "new in"
+button will be hidden if any of the following conditions is true:
+
+- The major version difference exceeds the major_version_diff_threshold
+- The minor version difference exceeds the minor_version_diff_threshold
+
+@param {string} 0 The semantic version string, with or without a leading v.
+
+@example  {{< new-in 0.100.0 />}}
+
+@example  {{< new-in 0.100.0 >}}
+          Some descriptive text here.
+          {{< /new-in >}}
+-#}
+{%- set major_version_diff_threshold = 0 %}
+{%- set minor_version_diff_threshold = 30 %}
+{%- set display_expiration_warning = true %}
+
+{%- set version = shortcode | arg(index=0, default="") | str | trim_start_chars(chars="vV") %}
+{%- if version %}
+  {%- set current = "0.149.0-DEV" | split(pat=".") %}{# the recorded Go build's version #}
+  {%- set given = version | split(pat=".") %}
+  {%- set major_version_diff = (current[0] | int) - (given[0] | int) %}
+  {%- set minor_version_diff = (current[1] | int) - (given[1] | int) %}
+  {%- if major_version_diff > major_version_diff_threshold or minor_version_diff > minor_version_diff_threshold %}
+    {%- if display_expiration_warning %}
+      {{- log_warn(message="This call to the \"" ~ shortcode.name ~ "\" shortcode should be removed: " ~ shortcode.position ~ ". The button is now hidden because the specified version (" ~ version ~ ") is older than the display threshold.") }}
+    {%- endif %}
+  {%- else %}
+    {%- set href = "https://github.com/gohugoio/hugo/releases/tag/v" ~ version %}
+    {%- if inner %}
+      {%- set text = ("New in [v" ~ version ~ "](" ~ href ~ ")\n\n" ~ (inner | trim)) | render_string(display="block") %}
+      {{ <alert color="green" icon="exclamation" text={text} /> }}
+    {%- else %}
+      <span
+        class="not-prose inline-flex items-center px-2 mr-1 rounded text-sm font-medium bg-green-200 dark:bg-green-400 fill-green-600">
+        <a
+          class="text-green-800 dark:text-black hover:text-green-600 no-underline"
+          href="{{ href }}"
+          target="_blank">
+          New in
+          v{{ version }}
+        </a>
+      </span>
+    {%- endif %}
+  {%- endif %}
+{%- else %}
+  {{- log_error(message="The \"" ~ shortcode.name ~ "\" shortcode requires a single positional parameter indicating version. See " ~ shortcode.position) }}
+{%- endif %}

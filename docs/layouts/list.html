@@ -1,0 +1,17 @@
+{% extends "single.html" %}
+{% block after_content %}
+  {%- if not page.params.hide_children %}
+  <ul class="cards">
+    {%- for p in page.pages %}
+    <li class="card">
+      <a href="{{ p.rel_permalink }}">
+        <span class="card__title">{{ p.link_title }}</span>
+        {%- if p.description %}
+        <span class="card__text">{{ p.description }}</span>
+        {%- endif %}
+      </a>
+    </li>
+    {%- endfor %}
+  </ul>
+  {%- endif %}
+{% endblock after_content %}

@@ -1,0 +1,59 @@
+A site whose layouts break every `templates check` rule once (tests/it/check.rs).
+-- config.toml --
+baseURL = "https://example.org/"
+title = "Bad"
+-- content/_index.md --
+---
+title: Home
+---
+Hi {{< missing >}} and {{< note >}}x{{< /note >}}
+
+```go
+x
+```
+-- content/posts/a.md --
+---
+title: A
+layout: nosuch
+type: nosuchtype
+---
+A
+-- layouts/baseof.html --
+<html>{% block main %}{% endblock %}</html>
+-- layouts/home.html --
+{% extends "baseof.html" %}
+{% block main %}
+{% set p = get_page(path="/posts") %}{{ p.title }}
+{% if page.params.x == none %}x{% endif %}
+{% set m = {"b": 1, "a": 2} %}
+{% for k, v in m %}{{ k }}{% endfor %}
+{% for k, v in m | sort_keys %}{{ k }}{% endfor %}
+{% include "Partials/head.html" %}
+{{ partial(name="card.html", title="x") }}
+{{ partial(name="nope.html") }}
+{{ x | split(sep="/") }}
+{{ foo }}
+{% endblock %}
+-- layouts/section.html --
+{% extends "baseof.html" %}
+{% block main %}{{ get_page(path="/posts").title }}{% endblock %}
+-- layouts/taxonomy.html --
+{{ {"a": {"b": 1}} }}
+-- layouts/single.html --
+{% extends "baseof.html" %}
+{% block main %}{{ page.title }}{{ x | nosuchfilter }}{% endblock %}
+-- layouts/posts/list.html --
+{% extends "baseof.html" %}
+{% block main %}{{ page.title }}{{ pages_of_section or "" }}{% endblock %}
+-- layouts/_markup/render-link.html --
+<a href="{{ destination }}">{{ text }}</a>{{ page.title }}{{ page_inner.title }}
+-- layouts/_partials/card.html --
+{% component card(title) %}{{ title }}{{ ref(path="/") }}{% endcomponent card %}
+-- layouts/_partials/head.html --
+<head></head>
+-- layouts/_shortcodes/note.html --
+{{ page.content }}{{ inner }}
+-- layouts/_default/list.html --
+{{ .Title }}
+-- layouts/term.html --
+{{ range .Pages }}{{ end }}

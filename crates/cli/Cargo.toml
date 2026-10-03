@@ -1,0 +1,65 @@
+[package]
+name = "ssg-cli"
+description = "The command line"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+autotests = false
+
+[lib]
+doctest = false
+test = false # tests live only in tests/it (one test binary, REWRITE_PLAN.md §2.2)
+
+[[bin]]
+name = "fugo" # the program's name (also `ssg_base::app_name!`)
+path = "src/main.rs"
+test = false
+doctest = false
+
+[[test]]
+name = "it"
+path = "tests/it/main.rs"
+
+[lints]
+workspace = true
+
+[features]
+# The SHOULD template functions the legacy docs site needs (A-D2), on in the shipped binary:
+# `diagrams_goat` (GoAT port) and `to_math` (KaTeX in QuickJS, rquickjs).
+# `--no-default-features` builds without them; the functions then fail when called.
+# `npm`: the project's npm packages (package.json) are installed before a build (ssg-npm:
+# Deno's installer), for `js_build` and Sass imports from node_modules. Without it, a site
+# installs them itself (npm, pnpm, yarn).
+default = ["goat", "math", "npm"]
+goat = ["ssg-funcs/goat"]
+math = ["ssg-funcs/math"]
+npm = ["dep:ssg-npm"]
+
+[dependencies]
+ssg-workspace-hack.workspace = true
+ssg-base.workspace = true
+ssg-config.workspace = true
+ssg-vfs.workspace = true
+ssg-site.workspace = true
+ssg-pageparser.workspace = true
+ssg-layouts.workspace = true
+ssg-funcs.workspace = true
+ssg-render.workspace = true
+ssg-build.workspace = true
+ssg-serve.workspace = true
+ssg-npm = { workspace = true, optional = true }
+tera.workspace = true
+clap.workspace = true
+anyhow.workspace = true
+jiff.workspace = true
+serde_json.workspace = true
+toml.workspace = true
+
+[dev-dependencies]
+ssg-testkit.workspace = true
+# The getresource cache key for the embedded x/vimeo snapshots.
+ssg-resources.workspace = true
+insta.workspace = true
+tempfile.workspace = true

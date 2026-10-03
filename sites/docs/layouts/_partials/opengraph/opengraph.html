@@ -1,0 +1,86 @@
+{#- The summary is plain text in the description: Go's attribute escaper strips its tags. -#}
+<meta property="og:title" content="{{ page.title }}">
+<meta
+  property="og:description"
+  content="{% if page.description %}
+    {{ page.description }}
+  {% else %}
+    {% if page.is_page %}
+      {{ page.summary | plainify | html_unescape }}
+    {% else %}
+      {% if site.params.description %}{{ site.params.description }}{% endif %}
+    {% endif %}
+  {% endif %}">
+<meta
+  property="og:type"
+  content="{% if page.is_page %}
+    article
+  {% else %}
+    website
+  {% endif %}">
+<meta property="og:url" content="{{ page.permalink }}">
+
+{%- if page.params.images -%}
+  {%- for image in page.params.images[:6] %}
+    <meta property="og:image" content="{{ image | abs_url }}">
+  {% endfor -%}
+{%- else -%}
+  {%- set featured = partial(name="opengraph/get-featured-image.html") %}
+  {%- if featured -%}
+    <meta property="og:image" content="{{ featured.permalink }}">
+  {%- else -%}
+    {%- if site.params.images %}
+      <meta property="og:image" content="{{ site.params.images | first | abs_url }}">
+    {% endif -%}
+  {%- endif -%}
+{%- endif -%}
+
+{%- if page.is_page %}
+  {%- set iso8601 = "%Y-%m-%dT%H:%M:%S%:z" -%}
+  <meta property="article:section" content="{{ page.section }}">
+  {% if page.publish_date %}
+    <meta
+      property="article:published_time"
+      content="{{ page.publish_date | date(format=iso8601) }}">
+  {% endif %}
+  {% if page.lastmod %}
+    <meta
+      property="article:modified_time"
+      content="{{ page.lastmod | date(format=iso8601) }}">
+  {% endif %}
+{%- endif -%}
+
+{%- if page.params.audio %}<meta property="og:audio" content="{{ page.params.audio }}">{% endif %}
+{%- if page.params.locale %}
+  <meta property="og:locale" content="{{ page.params.locale }}">
+{% endif %}
+{%- if site.params.title %}
+  <meta property="og:site_name" content="{{ site.params.title }}">
+{% endif %}
+{%- if page.params.videos %}
+  {%- for video in page.params.videos %}
+    <meta property="og:video" content="{{ video | abs_url }}">
+  {% endfor %}
+
+{% endif %}
+
+{#- If it is part of a series, link to related articles #}
+{%- set permalink = page.permalink %}
+{%- set site_series = site.taxonomies.series or {} %}
+{% if page.params.series %}
+  {%- for name in page.params.series %}
+    {%- set series = site_series | get(key=name | urlize, default=none) %}
+    {%- set series_pages = series.pages if series else [] %}
+    {%- for p in series_pages[:6] %}
+      {%- if p.permalink != permalink %}
+        <meta property="og:see_also" content="{{ p.permalink }}">
+      {% endif %}
+    {%- endfor %}
+  {% endfor %}
+
+{% endif %}
+
+{#- Facebook Page Admin ID for Domain Insights #}
+{%- if site.params.social?.facebook_admin %}
+  <meta property="fb:admins" content="{{ site.params.social.facebook_admin }}">
+{% endif %}

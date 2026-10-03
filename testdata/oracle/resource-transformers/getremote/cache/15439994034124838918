@@ -1,0 +1,11 @@
+HTTP/1.1 200 OK
+Content-Length: 40
+Content-Type: application/json; charset=UTF-8
+Date: Sun, 27 Sep 2026 10:25:09 GMT
+X-Custom: custom-value
+X-Etags-1: 43dd2c935ce1e9d99addb454dec4af72
+X-Etags-2: 43dd2c935ce1e9d99addb454dec4af72
+X-Multi: one
+X-Multi: two
+
+{"items":[1,2,3],"path":"/api/v1/items"}

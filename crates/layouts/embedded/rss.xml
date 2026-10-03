@@ -1,0 +1,64 @@
+{#- RSS 2.0 feed of a home, section, taxonomy or term page. -#}
+{%- set author = site.params.author or "" %}
+{%- if author is map %}
+  {%- set author_email = author.email or "" %}
+  {%- set author_name = author.name or "" %}
+{%- else %}
+  {%- set author_email = "" %}
+  {%- set author_name = author %}
+{%- endif %}
+{%- if author_name %}
+  {%- set author_suffix = " (" ~ author_name ~ ")" %}
+{%- else %}
+  {%- set author_suffix = "" %}
+{%- endif %}
+
+{%- if page.is_home %}
+  {%- set pages = site.regular_pages %}
+{%- elif page.is_section %}
+  {%- set pages = page.regular_pages %}
+{%- else %}
+  {%- set pages = page.pages %}
+{%- endif %}
+{%- set limit = site.config.services.rss.limit %}
+{%- if limit >= 1 %}
+  {%- set pages = pages[:limit] %}
+{%- endif %}
+{%- set rfc822 = "%a, %d %b %Y %H:%M:%S %z" -%}
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>{% if page.title == site.title %}{{ site.title }}{% else %}{% if page.title %}{{ page.title }} on {% endif %}{{ site.title }}{% endif %}</title>
+    <link>{{ page.permalink }}</link>
+    <description>Recent content {% if page.title != site.title and page.title %}in {{ page.title }} {% endif %}on {{ site.title }}</description>
+    <generator>{{ build.name }}</generator>
+    <language>{{ site.language_code }}</language>
+    {%- if author_email %}
+    <managingEditor>{{ author_email }}{{ author_suffix }}</managingEditor>
+    <webMaster>{{ author_email }}{{ author_suffix }}</webMaster>
+    {%- endif %}
+    {%- if site.copyright %}
+    <copyright>{{ site.copyright }}</copyright>
+    {%- endif %}
+    {%- if page.date %}
+      {%- set newest = pages | by_lastmod | reverse | first %}
+      {%- if newest and newest.lastmod %}
+    <lastBuildDate>{{ newest.lastmod | date(format=rfc822) }}</lastBuildDate>
+      {%- endif %}
+    {%- endif %}
+    {%- if page.output_formats.rss %}
+      {%- set feed = page.output_formats.rss %}
+    <atom:link href="{{ feed.permalink }}" rel="self" type="{{ feed.media_type.type }}" />
+    {%- endif %}
+    {%- for p in pages %}
+    <item>
+      <title>{{ p.title }}</title>
+      <link>{{ p.permalink }}</link>
+      <pubDate>{% if p.publish_date %}{{ p.publish_date | date(format=rfc822) }}{% else %}Mon, 01 Jan 0001 00:00:00 +0000{% endif %}</pubDate>
+      {%- if author_email %}<author>{{ author_email }}{{ author_suffix }}</author>{% endif %}
+      <guid>{{ p.permalink }}</guid>
+      <description>{{ p.summary | xml_escape }}</description>
+    </item>
+    {%- endfor %}
+  </channel>
+</rss>

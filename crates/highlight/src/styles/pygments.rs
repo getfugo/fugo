@@ -1,0 +1,51 @@
+//! Chroma's `pygments.xml` style, converted to Rust (crate README, "Lexer and style files").
+
+use crate::style::StyleDef;
+use crate::token::TokenType as T;
+
+#[rustfmt::skip]
+pub(crate) static STYLE: StyleDef = StyleDef {
+    name: "pygments",
+    entries: &[
+        (T::Error, "border:#ff0000"),
+        (T::Keyword, "bold #008000"),
+        (T::KeywordPseudo, "nobold"),
+        (T::KeywordType, "nobold #b00040"),
+        (T::NameAttribute, "#7d9029"),
+        (T::NameBuiltin, "#008000"),
+        (T::NameClass, "bold #0000ff"),
+        (T::NameConstant, "#880000"),
+        (T::NameDecorator, "#aa22ff"),
+        (T::NameEntity, "bold #999999"),
+        (T::NameException, "bold #d2413a"),
+        (T::NameFunction, "#0000ff"),
+        (T::NameLabel, "#a0a000"),
+        (T::NameNamespace, "bold #0000ff"),
+        (T::NameTag, "bold #008000"),
+        (T::NameVariable, "#19177c"),
+        (T::LiteralString, "#ba2121"),
+        (T::LiteralStringDoc, "italic"),
+        (T::LiteralStringEscape, "bold #bb6622"),
+        (T::LiteralStringInterpol, "bold #bb6688"),
+        (T::LiteralStringOther, "#008000"),
+        (T::LiteralStringRegex, "#bb6688"),
+        (T::LiteralStringSymbol, "#19177c"),
+        (T::LiteralNumber, "#666666"),
+        (T::Operator, "#666666"),
+        (T::OperatorWord, "bold #aa22ff"),
+        (T::Comment, "italic #408080"),
+        (T::CommentPreproc, "noitalic #bc7a00"),
+        (T::GenericDeleted, "#a00000"),
+        (T::GenericEmph, "italic"),
+        (T::GenericError, "#ff0000"),
+        (T::GenericHeading, "bold #000080"),
+        (T::GenericInserted, "#00a000"),
+        (T::GenericOutput, "#888888"),
+        (T::GenericPrompt, "bold #000080"),
+        (T::GenericStrong, "bold"),
+        (T::GenericSubheading, "bold #800080"),
+        (T::GenericTraceback, "#0044dd"),
+        (T::GenericUnderline, "underline"),
+        (T::TextWhitespace, "#bbbbbb"),
+    ],
+};

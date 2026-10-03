@@ -1,0 +1,28 @@
+{% set ga_id = site.config.services.google_analytics.id %}
+{% if ga_id %}
+  <script
+    async
+    src="https://www.googletagmanager.com/gtag/js?id={{ ga_id }}"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  {% set site_host = site.base_url | regex_replace(pattern="^https?://(www\\.)?([^/]+).*", rep="$2") %}
+  gtag('config', '{{ ga_id }}', {'anonymize_ip': true, 'dimension1': '{{ site_host }}', 'dimension2': '{{ get_env(name="BRANCH") }}'});
+
+/**
+* Function that tracks a click on an outbound link in Analytics.
+* Setting the transport method to 'beacon' lets the hit be sent
+* using 'navigator.sendBeacon' in browser that support it.
+*/
+var trackOutboundLink = function(id, url) {
+  gtag('event', 'click', {
+    'event_category': 'outbound',
+    'event_label': id,
+    'transport_type': 'beacon'
+  });
+}
+
+</script>
+{% endif %}

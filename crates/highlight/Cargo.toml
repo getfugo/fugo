@@ -1,0 +1,36 @@
+[package]
+name = "ssg-highlight"
+description = "Code highlighting with a port of Chroma (its lexers, regex dialect, HTML formatter and styles): Chroma class names or inline styles, fence options and style CSS"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+autotests = false
+
+[lib]
+doctest = false
+
+[[test]]
+name = "it"
+path = "tests/it/main.rs"
+
+[lints]
+workspace = true
+
+[dependencies]
+ssg-workspace-hack.workspace = true
+ssg-base.workspace = true
+ssg-config.workspace = true
+ssg-markup.workspace = true
+thiserror.workspace = true
+unicode-properties.workspace = true
+
+[dev-dependencies]
+# Acceptance harness (tests/it): the docs fences are read through ssg-markup, the Chroma
+# oracle fixtures are gzipped JSON.
+ssg-testkit.workspace = true
+# The converter of Chroma's XML lexers and styles to Rust (tests/it/xml2rust.rs).
+quick-xml.workspace = true
+serde.workspace = true
+serde_json.workspace = true

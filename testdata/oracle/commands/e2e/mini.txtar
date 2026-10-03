@@ -1,0 +1,217 @@
+A small en/th site for the e2e oracle: the real func map, templates, render hooks, shortcodes,
+pagination, taxonomies (with a term collision), menus, i18n, data, related content, aliases,
+templates.Defer, GetRemote from the file cache + transform.Unmarshal, and resource pipelines
+that do not depend on floating point or external tools (minify, fingerprint, Concat,
+ExecuteAsTemplate, FromString, PostProcess). The full sites (images, LibSass, esbuild,
+PostCSS) are compared by tools/rust-port/i01/compare.sh.
+-- config.toml --
+baseURL = "https://example.org/"
+title = "Mini"
+canonifyURLs = true
+enableRobotsTXT = true
+defaultContentLanguage = "en"
+[build.buildStats]
+enable = true
+[pagination]
+pagerSize = 2
+[outputs]
+home = ["html", "json", "rss"]
+[taxonomies]
+tag = "tags"
+category = "categories"
+[related]
+threshold = 10
+includeNewer = true
+[[related.indices]]
+name = "tags"
+weight = 100
+[languages.en]
+languageName = "English"
+weight = 1
+[[languages.en.menus.main]]
+name = "Posts"
+url = "/posts/"
+weight = 1
+[[languages.en.menus.main]]
+name = "Tags"
+url = "/tags/"
+weight = 2
+[languages.th]
+languageName = "ไทย"
+weight = 2
+[[languages.th.menus.main]]
+name = "โพสต์"
+url = "/posts/"
+weight = 1
+[params]
+api = "https://api.example.org"
+-- layouts/_default/baseof.html --
+<!DOCTYPE html>
+<html lang="{{ .Lang }}">
+<head>
+<meta charset="utf-8">
+<title>{{ block "title" . }}{{ .Title }} | {{ site.Title }}{{ end }}</title>
+{{- /* Go's HasBytesWriter records only the first placeholder kind it meets in a write: on the
+home page the PostProcess placeholder comes first, so its deferred block is never executed
+(Go behaviour); the other pages have no PostProcess placeholder and execute it. */}}
+{{- $css := resources.Get "css/site.css" | minify | fingerprint }}{{ if .IsHome }}{{ $css = $css | resources.PostProcess }}{{ end }}
+<link rel="stylesheet" href="{{ $css.RelPermalink }}" integrity="{{ $css.Data.Integrity }}">
+{{- range .Translations }}<link rel="alternate" hreflang="{{ .Lang }}" href="{{ .Permalink }}">{{ end }}
+</head>
+<body class="{{ .Kind }}">
+<nav class="menu">{{ $p := . }}{{ range .Site.Menus.main }}<a class="{{ if $p.IsMenuCurrent "main" . }}on{{ end }}" href="{{ .URL | relLangURL }}">{{ .Name }}</a>{{ end }}</nav>
+{{ block "main" . }}{{ end }}
+{{ with (templates.Defer (dict "key" "footer")) }}<footer class="deferred">{{ len site.RegularPages }} pages, {{ hugo.Environment }}</footer>{{ end }}
+{{- $a := resources.Get "js/a.js" }}{{ $b := resources.Get "js/b.js" | resources.ExecuteAsTemplate "js/b.js" (dict "api" site.Params.api "lang" .Lang) }}
+{{- $js := slice $a $b | resources.Concat "js/all.js" | minify | fingerprint }}
+<script src="{{ $js.RelPermalink }}"></script>
+</body>
+</html>
+-- layouts/_default/single.html --
+{{ define "main" }}
+<article class="post">
+<h1>{{ .Title }}</h1>
+<p class="meta">{{ .Date.Format "2006-01-02" }} · {{ .WordCount }} {{ i18n "words" .WordCount }} · {{ .ReadingTime }}</p>
+{{ .Content }}
+{{ with .TableOfContents }}<aside class="toc">{{ . }}</aside>{{ end }}
+{{ with .GetTerms "tags" }}<ul class="tags">{{ range . }}<li><a href="{{ .RelPermalink }}">{{ .LinkTitle }}</a></li>{{ end }}</ul>{{ end }}
+{{ with .Site.RegularPages.Related . | first 3 }}<ul class="related">{{ range . }}<li>{{ .Title }}</li>{{ end }}</ul>{{ end }}
+{{ with .Params.video }}{{ partial "video.html" . }}{{ end }}
+{{ with .PrevInSection }}<a class="prev" href="{{ .RelPermalink }}">{{ .Title }}</a>{{ end }}
+</article>
+{{ end }}
+-- layouts/_default/list.html --
+{{ define "main" }}
+<h1>{{ .Title }}</h1>
+{{ .Content }}
+{{ range .Paginator.Pages }}<div class="item"><a href="{{ .RelPermalink }}">{{ .Title }}</a> {{ .Summary }}</div>{{ end }}
+{{ partial "pager.html" . }}
+{{ end }}
+-- layouts/index.html --
+{{ define "title" }}{{ site.Title }}{{ end }}
+{{ define "main" }}
+<h1>{{ i18n "welcome" (dict "Name" site.Title) }}</h1>
+{{ range .Paginator.Pages }}<div class="item">{{ .Title }}</div>{{ end }}
+{{ partial "pager.html" . }}
+<ul class="tags">{{ range .Site.Taxonomies.tags.ByCount }}<li>{{ .Page.Title }} {{ .Count }}</li>{{ end }}</ul>
+<p class="data">{{ range $k, $v := site.Data.authors }}{{ $k }}={{ $v.name }};{{ end }}</p>
+{{ $s := newScratch }}{{ range site.RegularPages }}{{ $s.Add "n" 1 }}{{ end }}<p class="n">{{ $s.Get "n" }}</p>
+{{ $r := resources.FromString "gen/info.txt" (printf "%s %d" site.Title (len site.Pages)) }}<a href="{{ $r.RelPermalink }}">info</a>
+{{ end }}
+-- layouts/_default/index.json --
+{{- $items := slice -}}
+{{- range site.RegularPages -}}{{- $items = $items | append (dict "title" .Title "url" .Permalink "plain" (.Plain | truncate 40)) -}}{{- end -}}
+{{- dict "lang" .Lang "items" $items | jsonify -}}
+-- layouts/_default/term.html --
+{{ define "main" }}<h1>{{ .Title }} ({{ .Data.Term }})</h1>{{ range .Paginator.Pages }}<span>{{ .Title }}</span>{{ end }}{{ partial "pager.html" . }}{{ end }}
+-- layouts/_default/taxonomy.html --
+{{ define "main" }}<h1>{{ .Title }}</h1>{{ range .Data.Terms.Alphabetical }}<a href="{{ .Page.RelPermalink }}">{{ .Page.Title }} {{ .Count }}</a>{{ end }}{{ end }}
+-- layouts/404.html --
+{{ define "main" }}<p class="nf">{{ i18n "notFound" }}</p>{{ end }}
+-- layouts/partials/pager.html --
+{{- with .Paginator }}{{ if gt .TotalPages 1 }}<nav class="pager">{{ range .Pagers }}<a class="{{ if eq . $.Paginator }}cur{{ end }}" href="{{ .URL }}">{{ .PageNumber }}</a>{{ end }}</nav>{{ end }}{{ end -}}
+-- layouts/partials/video.html --
+{{- $url := printf "https://www.googleapis.com/youtube/v3/videos?key=API_KEY&part=snippet,contentDetails,statistics&id=%s" . }}
+{{- with try (resources.GetRemote $url) }}{{ with .Err }}<p class="err">{{ . }}</p>{{ else with .Value }}
+{{- $d := .Content | transform.Unmarshal }}{{ range $d.items }}<div class="video" data-id="{{ .id }}">{{ .snippet.title }} ({{ .statistics.viewCount }} views, {{ .contentDetails.duration }})</div>{{ end }}
+{{- end }}{{ end -}}
+-- layouts/_default/_markup/render-heading.html --
+<h{{ .Level }} id="{{ .Anchor }}">{{ .Text }}<a href="#{{ .Anchor }}">#</a></h{{ .Level }}>
+-- layouts/_default/_markup/render-link.html --
+<a href="{{ .Destination | safeURL }}"{{ if strings.HasPrefix .Destination "http" }} rel="external"{{ end }}>{{ .Text }}</a>
+-- layouts/shortcodes/note.html --
+<div class="note">{{ .Inner | markdownify }}</div>
+-- layouts/shortcodes/param.html --
+<code>{{ .Get 0 }}={{ index .Page.Params (.Get 0) }}</code>
+-- i18n/en.toml --
+notFound = "Not found"
+welcome = "Welcome to {{ .Name }}"
+[words]
+one = "word"
+other = "words"
+-- i18n/th.toml --
+notFound = "ไม่พบหน้า"
+welcome = "ยินดีต้อนรับสู่ {{ .Name }}"
+[words]
+other = "คำ"
+-- data/authors.toml --
+[alice]
+name = "Alice"
+[bob]
+name = "Bob"
+-- assets/css/site.css --
+body { margin: 0 auto; color: #333333; }
+.post h1 { font-size: 2rem; }
+.item + .item { margin-top: 1em; }
+-- assets/js/a.js --
+function greet(name) {
+  return "Hello, " + name + "!";
+}
+-- assets/js/b.js --
+var api = "{{ .api }}";
+var lang = "{{ .lang }}";
+console.log(greet(lang), api);
+-- static/favicon.ico --
+ico
+-- content/_index.md --
+---
+title: Home
+---
+The home page.
+-- content/_index.th.md --
+---
+title: หน้าแรก
+---
+หน้าแรก
+-- content/posts/_index.md --
+---
+title: Posts
+---
+All posts.
+-- content/posts/one.md --
+---
+title: "Post One"
+date: 2025-01-02
+tags: ["Go", "Rust"]
+categories: ["code"]
+video: "10426788187073209306"
+aliases: ["/old/one/"]
+---
+## Intro
+
+Text with a [link](https://example.com) and {{< param video >}}.
+
+{{< note >}}A **bold** note.{{< /note >}}
+
+<!--more-->
+
+## Details
+
+More text.
+-- content/posts/one.th.md --
+---
+title: "โพสต์หนึ่ง"
+date: 2025-01-02
+tags: ["โก", "Rust"]
+---
+ภาษาไทย [ลิงก์](/posts/)
+-- content/posts/two.md --
+---
+title: "Post Two"
+date: 2025-02-03
+tags: ["Rust", "rust"]
+---
+Second post about Rust.
+-- content/posts/three.md --
+---
+title: "Post Three"
+date: 2025-03-04
+tags: ["Go"]
+categories: ["code", "news"]
+---
+Third.
+-- content/about.md --
+---
+title: About
+---
+About this site.

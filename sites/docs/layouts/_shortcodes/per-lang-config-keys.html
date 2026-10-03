@@ -1,0 +1,68 @@
+{#- Renders a responsive grid of the configuration keys that can be defined
+separately for each language.
+-#}
+{%- set site_config_keys = [
+  {"baseURL": "/configuration/all/#baseurl"},
+  {"buildDrafts": "/configuration/all/#builddrafts"},
+  {"buildExpired": "/configuration/all/#buildexpired"},
+  {"buildFuture": "/configuration/all/#buildfuture"},
+  {"canonifyURLs": "/configuration/all/#canonifyurls"},
+  {"capitalizeListTitles": "/configuration/all/#capitalizelisttitles"},
+  {"contentDir": "/configuration/all/#contentdir"},
+  {"copyright": "/configuration/all/#copyright"},
+  {"disableAliases": "/configuration/all/#disablealiases"},
+  {"disableHugoGeneratorInject": "/configuration/all/#disablehugogeneratorinject"},
+  {"disableKinds": "/configuration/all/#disablekinds"},
+  {"disableLiveReload": "/configuration/all/#disablelivereload"},
+  {"disablePathToLower": "/configuration/all/#disablepathtolower"},
+  {"enableEmoji ": "/configuration/all/#enableemoji"},
+  {"frontmatter": "/configuration/front-matter/"},
+  {"hasCJKLanguage": "/configuration/all/#hascjklanguage"},
+  {"languageCode": "/configuration/all/#languagecode"},
+  {"mainSections": "/configuration/all/#mainsections"},
+  {"markup": "/configuration/markup/"},
+  {"mediaTypes": "/configuration/media-types/"},
+  {"menus": "/configuration/menus/"},
+  {"outputFormats": "/configuration/output-formats"},
+  {"outputs": "/configuration/outputs/"},
+  {"page": "/configuration/page/"},
+  {"pagination": "/configuration/pagination/"},
+  {"params": "/configuration/params/"},
+  {"permalinks": "/configuration/permalinks/"},
+  {"pluralizeListTitles": "/configuration/all/#pluralizelisttitles"},
+  {"privacy": "/configuration/privacy/"},
+  {"refLinksErrorLevel": "/configuration/all/#reflinkserrorlevel"},
+  {"refLinksNotFoundURL": "/configuration/all/#reflinksnotfoundurl"},
+  {"related": "/configuration/related-content/"},
+  {"relativeURLs": "/configuration/all/#relativeurls"},
+  {"removePathAccents": "/configuration/all/#removepathaccents"},
+  {"renderSegments": "/configuration/all/#rendersegments"},
+  {"sectionPagesMenu": "/configuration/all/#sectionpagesmenu"},
+  {"security": "/configuration/security/"},
+  {"services": "/configuration/services/"},
+  {"sitemap": "/configuration/sitemap/"},
+  {"staticDir": "/configuration/all/#staticdir"},
+  {"summaryLength": "/configuration/all/#summarylength"},
+  {"taxonomies": "/configuration/taxonomies/"},
+  {"timeZone": "/configuration/all/#timezone"},
+  {"title": "/configuration/all/#title"},
+  {"titleCaseStyle": "/configuration/all/#titlecasestyle"},
+] %}
+
+{%- set a = site_config_keys | length %}
+{%- set b = (a / 2) | round(method="ceil") | int %}
+{%- set c = (a / 3) | round(method="ceil") | int %}
+
+
+<div
+  class="grid grid-flow-col grid-rows-{{ a }} sm:grid-rows-{{ b }} md:grid-rows-{{ c }} gap-1">
+  {%- for entry in site_config_keys %}
+    {% for k, v in entry %}
+      {% set u = v | parse_url %}
+      {% if not get_page(path=u.path) %}
+        {{ log_error(message="The \"" ~ shortcode.name ~ "\" shorcode was unable to find " ~ u.path ~ ". See " ~ shortcode.position ~ ".") }}
+      {% endif %}
+      <a href="{{ v | rel_lang_url }}"><code>{{ k }}</code></a>
+    {% endfor %}
+  {%- endfor %}
+</div>

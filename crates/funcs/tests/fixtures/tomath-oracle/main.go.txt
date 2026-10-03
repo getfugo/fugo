@@ -1,0 +1,91 @@
+// The to_math oracle (crates/funcs/README.md, "to_math fixture"): the Go implementation's
+// transform.ToMath without its caches, run in the Go tree of this repository at commit 44529028
+// (copy this file to <tree>/nhoracle/tomath/main.go; the warpc import below is that tree's
+// module path). It reads cases.js's lines {"expression", "options"} on
+// stdin and writes each with Go's answer: {"expression", "options", "output", "warnings",
+// "err"}. The option defaults, mapstructure.WeakDecode, the strict check and the warpc KaTeX
+// dispatcher are ToMath's (tpl/transform/transform.go); a decoding error is "decode: <error>".
+package main
+
+import (
+	"bufio"
+	"context"
+	"encoding/json"
+	"fmt"
+	"os"
+
+	"github.com/mitchellh/mapstructure"
+	"github.com/neohugo/neohugo/internal/warpc"
+)
+
+type record struct {
+	Expression string         `json:"expression"`
+	Options    map[string]any `json:"options"`
+	Output     string         `json:"output"`
+	Warnings   []string       `json:"warnings"`
+	Err        string         `json:"err"`
+}
+
+func main() {
+	d := warpc.AllDispatchers(warpc.Options{PoolSize: 1})
+	defer d.Close()
+	k, err := d.Katex()
+	if err != nil {
+		panic(err)
+	}
+	in := bufio.NewScanner(os.Stdin)
+	in.Buffer(make([]byte, 1<<20), 1<<24)
+	enc := json.NewEncoder(os.Stdout)
+	enc.SetEscapeHTML(false)
+	var id uint32
+	for in.Scan() {
+		var r record
+		if err := json.Unmarshal(in.Bytes(), &r); err != nil {
+			panic(err)
+		}
+		r.Warnings = []string{}
+		input := warpc.KatexInput{
+			Expression: r.Expression,
+			Options: warpc.KatexOptions{
+				Output:           "mathml",
+				MinRuleThickness: 0.04,
+				ErrorColor:       "#cc0000",
+				ThrowOnError:     true,
+				Strict:           "error",
+			},
+		}
+		if r.Options != nil {
+			if err := mapstructure.WeakDecode(r.Options, &input.Options); err != nil {
+				r.Err = "decode: " + err.Error()
+			}
+		}
+		switch input.Options.Strict {
+		case "error", "ignore", "warn":
+		default:
+			if r.Err == "" {
+				r.Err = fmt.Sprintf("invalid strict mode; expected one of error, ignore, or warn; received %s", input.Options.Strict)
+			}
+		}
+		if r.Err == "" {
+			id++
+			res, err := k.Execute(context.Background(), warpc.Message[warpc.KatexInput]{
+				Header: warpc.Header{Version: 1, ID: id},
+				Data:   input,
+			})
+			if err != nil {
+				r.Err = err.Error()
+			} else {
+				r.Output = res.Data.Output
+				if res.Header.Warnings != nil {
+					r.Warnings = res.Header.Warnings
+				}
+			}
+		}
+		if err := enc.Encode(r); err != nil {
+			panic(err)
+		}
+	}
+	if err := in.Err(); err != nil {
+		panic(err)
+	}
+}

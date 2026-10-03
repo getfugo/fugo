@@ -1,0 +1,43 @@
+{# This is currently not in use, but kept in case I change my mind. #}
+<nav
+  role="navigation"
+  id="explorer"
+  class="overflow-x-hidden w-54"
+  x-data="explorer"
+  data-turbo-permanent
+  @turbo:load.window="onLoad()"
+  @turbo:before-render.window="onBeforeRender()"
+  x-cloak>
+  <ul class="w-full">
+    {% set root = get_page(path="/") %}
+    {{ <docs_explorer_section p={root} level={0} /> }}
+  </ul>
+</nav>
+
+{%- component docs_explorer_section(p, level, @__nh) %}
+  {% set pleft = level + 1 if level > 0 else level %}
+  {% set pl = "pl-" ~ pleft %}
+  {% set pages = p.sections %}
+
+  {% for s in pages %}
+    {% set section = s | deref %}
+    {% set has_children = section.pages | length > 0 %}
+    {% set class = "text-primary hover:text-primary/70" if level == 0 else "text-gray-900 dark:text-gray-400 hover:dark:text-gray-300" %}
+    <li class="w-full">
+      <a
+        @click="toggleNode('{{ section.rel_permalink }}')"
+        href="{{ section.rel_permalink }}"
+        x-ref="{{ section.rel_permalink }}"
+        :class="isCurrent('{{ section.rel_permalink }}') ? 'font-bold underline': 'font-normal'"
+        class="block cursor-pointer {{ pl }} {{ class }} focus:font-bold hover:underline focus:underline tracking-tight leading-7">
+        {{ section.link_title }}
+      </a>
+      {% if has_children %}
+        <ul class="w-full" x-show="isOpen('{{ section.rel_permalink }}')">
+          {{ <docs_explorer_section p={section} level={level + 1} /> }}
+        </ul>
+      {% endif %}
+    </li>
+  {% endfor %}
+
+{%- endcomponent docs_explorer_section %}

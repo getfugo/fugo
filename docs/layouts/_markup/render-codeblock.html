@@ -1,0 +1,14 @@
+{#- A highlighted code block with its language and a copy button (assets/js/main.js). A block
+    without a language, or `text`, is plain. -#}
+{%- set lang = type or "text" %}
+<div class="codeblock" data-lang="{{ lang }}">
+  <div class="codeblock__bar">
+    <span class="codeblock__lang">{{ attributes.title or lang }}</span>
+    <button class="codeblock__copy" type="button" aria-label="Copy the code" data-copy>
+      <svg class="when-idle" aria-hidden="true"><use href="#icon-copy"></use></svg>
+      <svg class="when-done" aria-hidden="true"><use href="#icon-check"></use></svg>
+    </button>
+  </div>
+  {{ inner | highlight(lang=lang, options=options) }}
+</div>
+{#- -#}

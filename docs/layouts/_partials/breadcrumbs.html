@@ -1,0 +1,11 @@
+{%- if not page.is_home %}
+<nav class="breadcrumbs" aria-label="Breadcrumbs">
+  <ol>
+    {%- for a in page.ancestors | reverse %}
+      {%- if not a.is_home %}
+      <li><a href="{{ a.rel_permalink }}">{{ a.link_title }}</a></li>
+      {%- endif %}
+    {%- endfor %}
+  </ol>
+</nav>
+{%- endif %}

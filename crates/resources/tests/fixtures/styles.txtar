@@ -1,0 +1,38 @@
+A small stylesheet for the CSS pipeline tests (`to_css`, `post_process`): Sass partials, a
+component in a subdirectory, colour functions, @each and a slash division.
+-- assets/scss/website.scss --
+@import "variables";
+@import "components/card";
+
+$gutter: 12px !default;
+
+body {
+  font-family: $font-stack;
+  color: darken($primary, 10%);
+  margin: 0 auto;
+  max-width: 72rem;
+}
+
+.pagination {
+  display: flex;
+  li { padding: $gutter / 2; &.active { font-weight: bold; } }
+}
+
+.rating-star { color: mix($primary, #ffcc00, 25%); }
+.never-used-class { color: red; }
+.tag-list a:hover { text-decoration: underline; }
+.breadcrumb, .nav-main { display: flex; flex-wrap: wrap; }
+
+@each $name in brand, category, company {
+  .tax-#{$name} { border-left: 2px solid lighten($primary, 20%); }
+}
+-- assets/scss/_variables.scss --
+$primary: #d2691e;
+$font-stack: "Inter", Helvetica, sans-serif;
+-- assets/scss/components/_card.scss --
+.card {
+  border-radius: 4px;
+  .card-title { font-size: 1.25rem; }
+  img { width: 100%; height: auto; }
+}
+.card-unused { display: none; }

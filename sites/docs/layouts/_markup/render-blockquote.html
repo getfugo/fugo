@@ -1,0 +1,27 @@
+{%- if type == "alert" %}
+  {%- set alerts = {
+    "caution": {"color": "red", "icon": "exclamation-triangle"},
+    "important": {"color": "blue", "icon": "exclamation-circle"},
+    "note": {"color": "blue", "icon": "information-circle"},
+    "tip": {"color": "green", "icon": "light-bulb"},
+    "warning": {"color": "orange", "icon": "exclamation-triangle"},
+  } %}
+
+  {%- set alert_types = alerts | keys | sort %}
+
+  {%- set t = alert_type | lower %}
+  {%- if t in alert_types %}
+    {%- set a = alerts[t] %}
+    {%- if attributes.class %}
+      {{- <alert color={a.color or "blue"} icon={a.icon or "information-circle"} text={text} title={alert_title} class={attributes.class} /> }}
+    {%- else %}
+      {{- <alert color={a.color or "blue"} icon={a.icon or "information-circle"} text={text} title={alert_title} /> }}
+    {%- endif %}
+  {%- else %}
+    {{- log_error(message="Invalid blockquote alert type. Received " ~ alert_type ~ ". Expected one of " ~ (alert_types | delimit(sep=", ", last=", or ")) ~ " (case-insensitive). See " ~ page.path ~ ".") }}
+  {%- endif %}
+{%- else %}
+  <blockquote {%- if attributes.class %}class="{{ attributes.class }}"{%- endif %}>
+    {{ text }}
+  </blockquote>
+{%- endif %}

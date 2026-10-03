@@ -1,0 +1,15 @@
+# The Go implementation's diagrams.Goat (bep/goat v0.5.0 BuildSVG) of every goat code block of docs/content:
+# <file>#<n>, width, height, SHA-256 of .Wrapped (generated; recipe in crates/funcs/tests/it/goat.rs)
+docs/content/en/configuration/http-cache.md#0	128	217	c9553cd70af97b66531e665bb9b8658e137e74e9f42db05077d5e30e4da390fa
+docs/content/en/content-management/diagrams.md#0	680	121	a917ddd61aff859fd84ecc9a58526f7b68a213ff5461de78962dced4b93fd814
+docs/content/en/content-management/diagrams.md#1	712	137	971ef3bbcc3f4f150bf642c3fbe4c49b410b3959691b0864076726cbddba9e59
+docs/content/en/content-management/diagrams.md#2	712	185	451b674a33634272ff8d2af83848a6727b89bdd48fba5b7cfd46a743aba9aa8a
+docs/content/en/content-management/diagrams.md#3	752	393	979891a9583ec1b572d87fb29e478aa83ded2de1dfa38e46ab7dfba00ca8f8a2
+docs/content/en/content-management/diagrams.md#4	728	233	0ea233a4b336940e7026bf6f480ec27ab898a9ecfda327e3ae8db4befac1a943
+docs/content/en/content-management/diagrams.md#5	296	137	b99a4a389e37831359260cab8dea30460fe2a6c04f2ecc87c7295d6c52dfeb36
+docs/content/en/content-management/diagrams.md#6	160	201	31c5e6ea02bfa3d082655ea3a26dd651590e1819abe6e97ca5d7e09d863ee8be
+docs/content/en/content-management/diagrams.md#7	664	601	1096f31d5b03830d4dffb7b94fcc794b14d419cc3c197173128f96fbe65ac12f
+docs/content/en/content-management/diagrams.md#8	408	409	be5635213b67996fe2b3a7f22463d6a4092343601a9a5f8e9db41d9cb45df318
+docs/content/en/functions/diagrams/Goat.md#0	352	57	c31dac411af3eeb6e8de8d0f2641dabdba11848d1bb535ac9dd4420e6de78635
+docs/content/en/functions/diagrams/Goat.md#1	352	57	c31dac411af3eeb6e8de8d0f2641dabdba11848d1bb535ac9dd4420e6de78635
+docs/content/en/functions/diagrams/Goat.md#2	352	57	c31dac411af3eeb6e8de8d0f2641dabdba11848d1bb535ac9dd4420e6de78635

@@ -1,0 +1,94 @@
+---
+source: crates/view/tests/it/views.rs
+expression: "&s.views.meta().summaries[page(m, PageKind::Page, \"/posts/one\", 1)]"
+---
+aliases: []
+bundle_type: ~
+date:
+  rfc3339: "2021-02-01T10:00:00+00:00"
+  unix: 1612173600
+description: ""
+draft: false
+expiry_date: ~
+file:
+  base_file_name: one.fr
+  content_base_name: one
+  dir: posts/
+  is_content_adapter: false
+  path: posts/one.fr.md
+  unique_id: 9b2d70aec25936db80ad3a32b4af9f22
+git_info: ~
+id: 6
+is_home: false
+is_node: false
+is_page: true
+is_section: false
+is_translated: true
+keywords: []
+kind: page
+lang: fr
+language:
+  code: fr
+  direction: ltr
+  lang: fr
+  name: Français
+  params:
+    description: A site
+  weight: 2
+lastmod:
+  rfc3339: "2021-02-01T10:00:00+00:00"
+  unix: 1612173600
+layout: ~
+link_title: Un
+name: Un
+output_formats:
+  html:
+    is_html: true
+    is_plain_text: false
+    media_type:
+      delimiter: "."
+      main_type: text
+      sub_type: html
+      suffixes:
+        - html
+        - htm
+      type: text/html
+    name: html
+    permalink: "https://example.org/fr/posts/one/"
+    rel: canonical
+    rel_permalink: /fr/posts/one/
+params:
+  date: "2021-02-01T10:00:00+00:00"
+  draft: false
+  iscjklanguage: false
+  lastmod: "2021-02-01T10:00:00+00:00"
+  publishdate: "2021-02-01T10:00:00+00:00"
+  tags:
+    - a
+  title: Un
+path: /posts/one
+permalink: "https://example.org/fr/posts/one/"
+publish_date:
+  rfc3339: "2021-02-01T10:00:00+00:00"
+  unix: 1612173600
+raw_content: "Corps.\n"
+rel_permalink: /fr/posts/one/
+resources: []
+section: posts
+sitemap:
+  change_freq: ""
+  disable: false
+  priority: -1
+terms:
+  tags:
+    - id: 19
+      kind: term
+      lang: fr
+      link_title: A
+      path: /tags/a
+      permalink: "https://example.org/fr/tags/a/"
+      rel_permalink: /fr/tags/a/
+      title: A
+title: Un
+type: posts
+weight: 0

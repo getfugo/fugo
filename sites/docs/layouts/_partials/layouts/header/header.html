@@ -1,0 +1,65 @@
+<header
+  x-data="navbar"
+  class="print:hidden sticky top-0 z-50 bg-blue-950 flex flex-none flex-wrap items-center justify-between px-4 py-5 shadow-md shadow-slate-900/5 transition duration-500 sm:px-6 lg:px-8 dark:shadow-none"
+  :class="$store.nav.scroll.atTop ? '': 'bg-blue-950/80'">
+  <div class="relative flex basis-0 items-center mr-2 lg:mr-8">
+    {% if site.home %}
+      <a
+        class="text-white text-xl font-bold upper"
+        href="{{ site.home.rel_permalink }}"
+        aria-label="{{ site.home.link_title }}"
+        >HUGO</a
+      >
+    {% endif %}
+  </div>
+  <div
+    class=" relative flex flex-grow basis-0 items-center min-w-24 max-w-3xl overflow-x-auto">
+    {% for entry in site.menus.global or [] %}
+      <a
+        href="{{ entry.url }}"
+        class="font-semibold text-gray-300 hover:text-gray-400 ml-4"
+        >{{ entry.name }}</a
+      >
+    {% endfor %}
+
+
+    <div class="hidden 2xl:block ml-8 text-xs text-gray-400 dark:text-gray-400">
+      {% set recorded_version = "0.149.0-DEV" %}{# the version the recorded Go build printed #}{% if recorded_version %}
+
+        Built with Hugo
+        {% if "-DEV" in recorded_version %}
+          v{{ recorded_version }}
+        {% else %}
+          <a
+            class="text-blue-600 hover:text-blue-500 ml-1"
+            href="https://github.com/gohugoio/hugo/releases/tag/v{{ recorded_version }}"
+            >v{{ recorded_version }}</a
+          >
+        {% endif %}
+      {% endif %}
+
+    </div>
+  </div>
+
+  <div class="-my-5 pl-2 grow-0">
+    {# Search. #}
+    {% include "_partials/layouts/search/input.html" %}
+  </div>
+  <div
+    class="relative ml-0 md:ml-8 flex content-center basis-0 justify-end gap-0 sm:gap-1 xl:grow-1">
+    {# QR code. #}
+    {% include "_partials/layouts/header/qr.html" %}
+    {# Theme selector. #}
+    {% include "_partials/layouts/header/theme.html" %}
+
+    {# Social. #}
+    <div
+      class="hidden sm:block ml-2 sm:ml-6 h-6 fill-slate-400 group-hover:fill-slate-500 dark:group-hover:fill-slate-300">
+      {% include "_partials/layouts/header/githubstars.html" %}
+    </div>
+    <div
+      class="hidden sm:block ml-2 sm:ml-6 h-6">
+      {% include "_partials/layouts/header/mastodon.html" %}
+    </div>
+  </div>
+</header>

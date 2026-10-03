@@ -1,0 +1,28 @@
+{#-
+  Component `search_button`: the button that opens the search panel; `standalone` (the home
+  page hero) dispatches the toggle event itself.
+-#}
+{%- component search_button(standalone=false) %}
+{% set text_color = "text-gray-300" %}
+{% set fill_color = "fill-slate-400 dark:fill-slate-500" %}
+{% if standalone %}
+  {% set text_color = "text-gray-800 dark:text-gray-300 " %}
+  {% set fill_color = "fill-slate-500 dark:fill-slate-400" %}
+{% endif %}
+
+
+<button
+  {% if standalone %}
+    x-data @click="$dispatch('search-toggle')"
+  {% endif %}
+  type="button"
+  aria-label="Search"
+  class="{{ text_color }} grid cursor-pointer w-full lg:w-56 grid-cols-[auto_1fr_auto] items-center rounded-md px-2 sm:px-4 py-2 text-left text-xs/6 lg:text-sm/6 outline-0 sm:outline-1 -outline-offset-1 outline-gray-600">
+  <svg
+    class="{{ fill_color }} pointer-events-none -ml-0.5 mr-2 size-5 sm:size-4">
+    <use href="#icon--search"></use>
+  </svg>
+  <span class="hidden lg:inline">Search docs</span>
+  <span class="hidden lg:inline">/</span>
+</button>
+{%- endcomponent search_button %}

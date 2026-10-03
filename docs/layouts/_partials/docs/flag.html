@@ -1,0 +1,15 @@
+{#- One command-line option `a` (data/commands.json) as a Markdown definition-list item:
+    its spellings, then its help, default and possible values. -#}
+{%- set value = "" %}
+{%- if a.takes_value and a.value_name %}
+  {%- set value = "[=BOOL]" if a.value_name == "BOOL" else " <" ~ a.value_name ~ ">" %}
+{%- endif %}
+{%- set names = (["`-" ~ a.short ~ "`"] if a.short else []) | concat(with=["`--" ~ a.long ~ value ~ "`"]) | concat(with=["`--" ~ x ~ "`" for x in a.aliases]) %}
+{%- set text = a.help or "" %}
+{%- if a.default and a.takes_value and a.value_name != "BOOL" %}
+  {%- set text = text ~ " Default: `" ~ (a.default | join(sep=",")) ~ "`." %}
+{%- endif %}
+{%- if a.possible_values %}
+  {%- set text = text ~ " One of " ~ (["`" ~ v ~ "`" for v in a.possible_values] | join(sep=", ")) ~ "." %}
+{%- endif %}
+{{- return_value(value=(names | join(sep=", ")) ~ "\n: " ~ text) -}}

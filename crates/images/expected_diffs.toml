@@ -1,0 +1,76 @@
+# Reviewed differences from the Go oracles and golden images (REWRITE_PLAN.md §6.3). Read by
+# tests/it. Each entry: a case or rule the tests check precisely, and its reason (crate
+# README, "Accepted deviations").
+
+[spec]
+# Rules of tests/it/spec.rs (Go accepts these; the Rust grammar rejects or reads them
+# differently).
+unknown_tokens = "an unknown spec token (`bogus`, `1234`) is an error; Go ignores it silently"
+negative_sizes = "a negative size (`-10x20`) is an error; Go accepts it and fails later with an empty image"
+alpha_hex_colors = "`#rgba` / `#rrggbbaa` are CSS (non-premultiplied) colours; Go stores the digits as premultiplied color.RGBA"
+lenient_extensions = "format extensions are case-insensitive and the dot is optional (`JPG`, `.Png`)"
+config_hint = "an unknown `[imaging] hint` is an error; Go accepts any string and then ignores the setting (it always encodes WebP with the photo preset unless the spec names a hint)"
+exif_patterns = "an invalid `[imaging.exif]` field pattern is a configuration error; Go reports it when the first image is decoded"
+
+[process]
+# "<oracle source id> <op>" of oracle/images/process (sizes).
+"file:crates/go-png/tests/fixtures/gotestdata/invalid-trunc.png decode" = "the png crate decodes a PNG truncated after its last IDAT chunk (no IEND); Go reports unexpected EOF"
+"file:crates/go-png/tests/fixtures/gotestdata/invalid-zlib.png decode" = "the png crate does not verify the zlib Adler-32 checksum; Go reports a checksum error"
+
+[exif]
+# Case-id prefixes of oracle/images/exif (synthetic EXIF blocks) whose date or position differ.
+# Every real image file matches.
+"mut" = "byte mutations of a valid block: kamadak-exif rejects a damaged IFD as a whole; Go's imagemeta keeps the tags it can still read"
+"jpeg:II:gpsascii" = "GPS coordinates stored as ASCII text are not read (only the standard RATIONAL form)"
+"jpeg:MM:gpsascii" = "as jpeg:II:gpsascii"
+"webp-noflag" = "an EXIF chunk in a WebP file whose VP8X header does not flag it is read; Go ignores it"
+
+[psnr]
+# Golden images below 30 dB (none since the JPEG encoder is Go's, F9).
+
+[jpeg]
+# Oracle cases (oracle/images/process, Go 1.27.1) with exactly known pixels whose JPEG bytes
+# differ from Go's (tests/it/jpeg.rs; each is within 0.1 % of Go's size). Go 1.26 replaced
+# image/jpeg's DCT (IJG jfdctint, still in the Go 1.24/1.25 sources) with a new fixed-point
+# implementation whose source is not available offline; ours computes the exactly rounded DCT,
+# which Go's output equals but for a rare coefficient near a quantisation boundary (found
+# by flipping candidates until the SHA-256 matched: nrgba 33x17 chroma (1,1), exact 923.54,
+# Go below 923.5; ycbcr444 33x17 chroma (5,0), exact -1199.45, Go at or below -1199.5).
+"gen:nrgba:33x17:png d:jpg" = "one Cr coefficient rounded the other way by Go 1.26+'s DCT (same length)"
+"gen:ycbcr444:33x17:jpg" = "one Cr coefficient rounded the other way by Go 1.26+'s DCT (1204 vs 1203 bytes)"
+"gen:nrgba:640x480:png d:jpg" = "a few coefficients rounded the other way by Go 1.26+'s DCT (145861 vs 145841 bytes)"
+"gen:rgba:640x480:png d:jpg" = "a few coefficients rounded the other way by Go 1.26+'s DCT (145709 vs 145653 bytes)"
+"gen:gray:640x480:png d:jpg" = "a few coefficients rounded the other way by Go 1.26+'s DCT (104529 vs 104536 bytes)"
+"gen:ycbcr444:640x480:jpg" = "a few coefficients rounded the other way by Go 1.26+'s DCT (249519 vs 249484 bytes)"
+"gen:ycbcr420:640x480:jpg" = "a few coefficients rounded the other way by Go 1.26+'s DCT (265639 vs 265635 bytes)"
+"gen:ycbcr420:2048x1536:jpg" = "a few coefficients rounded the other way by Go 1.26+'s DCT (2713096 vs 2713197 bytes)"
+
+[text]
+# Rules of the text filter (tests/it/text_dither.rs, src/text.rs tests).
+coverage = "glyph coverage is ab_glyph's (outlines not rounded to 1/64 px first) and compositing is floating point, not Go's 16-bit integer arithmetic: edge pixels differ slightly (PSNR 37-41 dB against Go's text goldens)"
+strict_options = "unknown option keys, an invalid colour, a size that is not positive or above 10000 px and x/y/linespacing beyond 2^24 px are errors; Go ignores unknown keys and invalid colours, fails later on a bad size and wraps its integers"
+align_case = "alignx/aligny values ignore case; Go accepts lower case only"
+font_identity = "a font is identified by its content hash; Go keys it by the font resource's key"
+gpos_subset = "GPOS kerning subtables x/image cannot parse (unknown coverage or class formats) give no kerning; Go refuses the whole font"
+
+[dither]
+# Method names (and the pattern rule) whose results cannot equal Go's (src/dither.rs,
+# tests/it/text_dither.rs checks that every key but `pattern` is a method).
+pattern = "error-diffusion noise is chaotic in its input, so results are compared through a 7x7 box blur (tone), not pixel for pixel: dither-default is 7.8 dB unblurred, 33.8 dB blurred"
+stevenpigeon = "Steven Pigeon's kernel (hbfs.wordpress.com, 2013) could not be consulted offline: a stand-in with its reach (two pixels ahead, two rows down) is used"
+clustereddot6x6 = "Ulichney, Digital Halftoning, fig. 5.9 not available offline: a 6x6 dot grown from the centre (36 levels + 1)"
+clustereddot6x6_2 = "the table of the page the library cites (archive.is/71e9G) not available offline: the 6x6 dot grown counter-clockwise"
+clustereddot6x6_3 = "the table of the page the library cites (archive.is/71e9G) not available offline: a 6x6 dot grown by rings (Chebyshev distance)"
+clustereddot8x8 = "Lau & Arce, Modern Digital Halftoning, fig. 1.5 not available offline: an 8x8 dot grown from the centre (64 levels + 1)"
+clustereddotdiagonal16x16 = "Ulichney fig. 5.4 (M = 8) not available offline: two 45-degree dots grown together (128 levels + 1)"
+clustereddotdiagonal6x6 = "Ulichney fig. 5.4 (M = 3) not available offline: two 45-degree dots grown together (18 levels + 1)"
+clustereddotdiagonal8x8_2 = "Ulichney fig. 5.4 (M = 4) not available offline: two 45-degree dots grown together (32 levels + 1)"
+clustereddotdiagonal8x8_3 = "the table of the page the library cites (archive.is/71e9G) not available offline: the caca.zoy.org 45-degree 8x8 matrix with its values halved (32 levels + 1)"
+clustereddothorizontalline = "Ulichney fig. 5.13 not available offline: a 6x6 cell filled row by row from the middle rows outwards"
+clustereddotspiral5x5 = "Ulichney fig. 5.13 not available offline: a square spiral from the centre of a 5x5 cell"
+clustereddotverticalline = "the transpose of clustereddothorizontalline (as the library rotates its horizontal-line matrix)"
+horizontal3x5 = "the library's own rotation of vertical5x3; its direction is not documented: the transpose is used"
+
+[qr]
+# QR code images equal Go's bytes (tests/it/qr.rs); only the option rules differ.
+level_case = "a level name may be in any case and is hashed lower-cased into the file name; Go accepts lower case only"

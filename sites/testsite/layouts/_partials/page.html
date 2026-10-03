@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="{{ page.lang }}">
+<head>
+<meta charset="utf-8">
+<title>{{ page.title }}</title>
+<link rel="stylesheet" href="/css/site.css">
+<link rel='icon' href='/favicon.ico'>
+<script src="/js/app.js"></script>
+<script>var u = "/x"; var s = 'src="/y"'; if (a < b) { f( 1 ) }</script>
+<style>.a { background : url(/img/a.png) } .b{color:rgb(10%,20%,30%);margin:0px 0px}</style>
+</head>
+<body class="kind-{{ page.kind }} lang-{{ page.lang }}" id="top">
+<nav class="nav main"><a href="/">Home</a> <a href='{{ page.rel_permalink }}'>Self</a> <a href=/unquoted/>U</a> <a href="//cdn.example.com/x.js">cdn</a> <a HREF="/upper">Up</a>
+<a href="{{ "about/" | rel_url }}">rel</a> <a href="{{ "about/" | abs_url }}">abs</a>
+{% for t in page.translations %}<a hreflang="{{ t.lang }}" href="{{ t.rel_permalink }}">{{ t.language.name }}</a>{% endfor %}
+<img src="/img/a.png" srcset="/img/a.png 1x, /img/a@2x.png 2x" alt="a" class="img responsive">
+</nav>
+<main>{{ page.content }}{% if page.is_node %}{% set pager = paginator() %}{% for p in pager.pages %}<article class="summary"><a href="{{ p.rel_permalink }}">{{ p.title }}</a>{{ p.summary }} {{ p.word_count }} {{ p.reading_time }}</article>{% endfor %}
+{% if pager.has_next %}<a class="next" href="{{ pager.next.url }}">next</a>{% endif %}{% elif page.prev_in_section %}<a class="prev" href="{{ page.prev_in_section.rel_permalink }}">{{ page.prev_in_section.title }}</a>{% endif %}</main>
+<ul class="tags">{% for key, term in site.taxonomies.tags %}<li><a href="{{ term.page.rel_permalink }}">{{ key }} ({{ term.count }})</a></li>{% endfor %}</ul>
+<div x-data="{open:false}" :class="{ 'is-open': open, 'is-closed': !open }">x</div>
+<pre class="code"><code class="language-html">&lt;div class="not-collected"&gt;</code></pre>
+<footer class="footer" id="footer">&copy; {{ now() | date(format="%Y") }} <span class="d{{ page.lang }}">{{ (page.date | date(format="%Y-%m-%d")) if page.date else "0001-01-01" }}</span> {{ (page.lastmod | date(format="%b %-d, %Y")) if page.lastmod else "Jan 1, 0001" }}</footer>
+</body>
+</html>

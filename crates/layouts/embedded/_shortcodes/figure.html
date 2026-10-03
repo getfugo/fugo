@@ -1,0 +1,53 @@
+{#-
+  An HTML figure element. Named arguments: src, link, target, rel, alt, caption (Markdown),
+  title, attr (Markdown), attrlink, class, width, height, loading.
+-#}
+{%- set cls = shortcode | arg(name="class", default="") %}
+{%- set link = shortcode | arg(name="link", default="") %}
+{%- set link_target = shortcode | arg(name="target", default="") %}
+{%- set link_rel = shortcode | arg(name="rel", default="") %}
+{%- set alt = shortcode | arg(name="alt", default="") %}
+{%- set caption = shortcode | arg(name="caption", default="") %}
+{%- set fig_title = shortcode | arg(name="title", default="") %}
+{%- set attr = shortcode | arg(name="attr", default="") %}
+{%- set attrlink = shortcode | arg(name="attrlink", default="") %}
+{%- set width = shortcode | arg(name="width", default="") %}
+{%- set height = shortcode | arg(name="height", default="") %}
+{%- set loading = shortcode | arg(name="loading", default="") %}
+
+{%- set u = (shortcode | arg(name="src", default="")) | parse_url %}
+{%- set src = u.string %}
+{%- if u.path and not u.is_absolute %}
+  {%- set target = (page.resources | get_resource(name=u.path)) or get_asset(path=u.path) %}
+  {%- if target %}{% set src = target.rel_permalink %}{% endif %}
+{%- endif -%}
+
+<figure{% if cls %} class="{{ cls }}"{% endif %}>
+  {%- if link -%}
+    <a href="{{ link }}"{% if link_target %} target="{{ link_target }}"{% endif %}{% if link_rel %} rel="{{ link_rel }}"{% endif %}>
+  {%- endif -%}
+  <img src="{{ src }}"
+    {%- if alt or caption %}
+    alt="{% if alt %}{{ alt }}{% else %}{{ caption | markdownify | plainify }}{% endif %}"
+    {%- endif -%}
+    {%- if width %} width="{{ width }}"{% endif -%}
+    {%- if height %} height="{{ height }}"{% endif -%}
+    {%- if loading %} loading="{{ loading }}"{% endif -%}
+  ><!-- Closing img tag -->
+  {%- if link %}</a>{% endif -%}
+  {%- if fig_title or caption or attr -%}
+    <figcaption>
+      {% if fig_title -%}
+        <h4>{{ fig_title }}</h4>
+      {%- endif -%}
+      {%- if caption or attr -%}<p>
+        {%- if caption %}{{ caption | markdownify }}{% endif -%}
+        {%- if attrlink %}
+          <a href="{{ attrlink }}">
+        {%- endif -%}
+        {%- if attr %}{{ attr | markdownify }}{% endif -%}
+        {%- if attrlink %}</a>{% endif %}</p>
+      {%- endif %}
+    </figcaption>
+  {%- endif %}
+</figure>

@@ -1,0 +1,190 @@
+---
+source: crates/config/tests/it/sites.rs
+expression: summary(&c)
+---
+content:
+  drafts: false
+  expired: false
+  future: false
+defaultLanguageInSubdir: true
+environment: production
+formats:
+  - feed
+  - html
+  - "404"
+  - alias
+  - amp
+  - calendar
+  - css
+  - csv
+  - gotmpl
+  - json
+  - markdown
+  - print
+  - robots
+  - rss
+  - sitemap
+  - sitemapindex
+  - webappmanifest
+minifyOutput: false
+multihost: false
+security:
+  inlineShortcodes: disabled
+sites:
+  - baseURL: "https://example.org/"
+    cascade: 0
+    code: en
+    disableKinds: []
+    lang: en
+    mainSections: ~
+    menus: 0
+    name: ""
+    outputs:
+      "404":
+        - "404"
+      home:
+        - html
+        - feed
+        - rss
+        - print
+      page:
+        - html
+        - print
+      robotstxt:
+        - robots
+      section:
+        - html
+        - feed
+        - rss
+      sitemap:
+        - sitemap
+      sitemapindex:
+        - sitemapindex
+      taxonomy:
+        - html
+        - rss
+      term:
+        - html
+        - rss
+    pagination:
+      disableAliases: false
+      pagerSize: 10
+      path: page
+    params: 0
+    permalinks:
+      page: {}
+      section: {}
+      taxonomy: {}
+      term: {}
+    taxonomies:
+      - tag=tags
+    timeZone: UTC
+    title: English
+    ugly: never
+    urlPrefix: en
+    weight: 1
+  - baseURL: "https://example.org/"
+    cascade: 0
+    code: th
+    disableKinds: []
+    lang: th
+    mainSections: ~
+    menus: 0
+    name: ""
+    outputs:
+      "404":
+        - "404"
+      home:
+        - html
+        - feed
+        - rss
+        - print
+      page:
+        - html
+        - print
+      robotstxt:
+        - robots
+      section:
+        - html
+        - feed
+        - rss
+      sitemap:
+        - sitemap
+      sitemapindex:
+        - sitemapindex
+      taxonomy:
+        - html
+        - rss
+      term:
+        - html
+        - rss
+    pagination:
+      disableAliases: false
+      pagerSize: 10
+      path: page
+    params: 0
+    permalinks:
+      page: {}
+      section: {}
+      taxonomy: {}
+      term: {}
+    taxonomies:
+      - tag=tags
+    timeZone: UTC
+    title: ไทย
+    ugly: never
+    urlPrefix: th
+    weight: 2
+  - baseURL: "https://example.org/"
+    cascade: 0
+    code: fr
+    disableKinds: []
+    lang: fr
+    mainSections: ~
+    menus: 0
+    name: ""
+    outputs:
+      "404":
+        - "404"
+      home:
+        - html
+        - feed
+        - rss
+        - print
+      page:
+        - html
+        - print
+      robotstxt:
+        - robots
+      section:
+        - html
+        - feed
+        - rss
+      sitemap:
+        - sitemap
+      sitemapindex:
+        - sitemapindex
+      taxonomy:
+        - html
+        - rss
+      term:
+        - html
+        - rss
+    pagination:
+      disableAliases: false
+      pagerSize: 10
+      path: page
+    params: 0
+    permalinks:
+      page: {}
+      section: {}
+      taxonomy: {}
+      term: {}
+    taxonomies:
+      - tag=tags
+    timeZone: UTC
+    title: Asm I18n
+    ugly: never
+    urlPrefix: fr
+    weight: 3
+timeout: 60

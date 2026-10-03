@@ -1,0 +1,8 @@
+{#- The i01 variant of hl.html (sites.py DOCS_REPLACE): no highlighting, the code is escaped
+into a plain <code> element.
+
+@example This is {{< hl python >}}inline{{< /hl >}} code.
+-#}
+{%- set code = inner | trim %}
+{%- set code_lang = (shortcode | arg(index=0, default="")) or "go" %}
+{{- ('<code class="' ~ (code_lang | html_escape) ~ '">' ~ (code | html_escape) ~ "</code>") | safe }}

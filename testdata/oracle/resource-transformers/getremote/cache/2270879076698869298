@@ -1,0 +1,11 @@
+HTTP/1.1 200 OK
+Content-Length: 9
+Content-Type: application/vnd.other+json
+Date: Sun, 27 Sep 2026 10:25:09 GMT
+X-Custom: custom-value
+X-Etags-1: 0176f15ffbba261e87be711a8c87adca
+X-Etags-2: 0176f15ffbba261e87be711a8c87adca
+X-Multi: one
+X-Multi: two
+
+{"vnd":2}

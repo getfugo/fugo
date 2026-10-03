@@ -1,0 +1,13 @@
+# Text files are stored with LF and checked out with LF on every platform (eol=lf): the build
+# embeds some of them (crates/layouts/embedded, the highlight styles, livereload.min.js, ...) and
+# the release archives ship others (README.md, LICENSE, ...), so a Windows checkout with
+# core.autocrlf=true must not give them CRLF.
+* text=auto eol=lf
+
+# SVG files should not be modified
+*.svg -text
+
+# Test fixtures and golden/test data must be stored byte-exact
+# (some contain CRLF that text=auto would rewrite).
+testdata/** -text
+tools/rust-port/testdata/** -text

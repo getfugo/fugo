@@ -1,0 +1,49 @@
+[package]
+name = "ssg-images"
+description = "Image processing"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+autotests = false
+
+[lib]
+doctest = false
+
+[[test]]
+name = "it"
+path = "tests/it/main.rs"
+
+[lints]
+workspace = true
+
+[dependencies]
+ssg-workspace-hack.workspace = true
+ssg-base.workspace = true
+ssg-config.workspace = true
+image.workspace = true
+fast_image_resize.workspace = true
+webp.workspace = true
+kamadak-exif.workspace = true
+imageproc.workspace = true
+jiff.workspace = true
+rayon.workspace = true
+regex.workspace = true
+serde.workspace = true
+thiserror.workspace = true
+xxhash-rust.workspace = true
+# The text filter's glyphs and QR code symbols (T72a).
+ab_glyph.workspace = true
+qrcode.workspace = true
+# Planned (T00), not used yet; kept so that Cargo.lock keeps them: color_quant and
+# kmeans_colors are for `.Colors` (README, "Not ported yet"). The smart anchor is a port of
+# muesli/smartcrop (`smartcrop.rs`), not the planned smartcrop2 crate.
+color_quant.workspace = true
+kmeans_colors.workspace = true
+
+[dev-dependencies]
+ssg-testkit.workspace = true
+serde_json.workspace = true
+tempfile.workspace = true
+toml.workspace = true

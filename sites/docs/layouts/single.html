@@ -1,0 +1,71 @@
+{% extends "baseof.html" %}
+
+{% block main %}
+  <article class="max-w-5xl lg:max-w-3xl" id="article">
+    {% include "_partials/layouts/docsheader.html" %}
+    <div class="content">
+      {% if page.params.description %}
+        <div class="lead">
+          {{ page.params.description | markdownify }}
+        </div>
+      {% endif %}
+      {% if page.params.show_publish_date %}
+        {% if page.publish_date %}
+          <p
+            class="text-gray-500 dark:text-gray-400 text-sm/5 md:text-base/2 mb-2 sm:mb-4">
+            {{ <date date={page.publish_date} /> }}
+          </p>
+        {% endif %}
+      {% endif %}
+      {% set categories = get_terms(taxonomy="categories") %}
+      {% if categories %}
+        <div class="mb-4 sm:mb-6 flex flex-wrap gap-2">
+          {% for category in categories %}
+            {% set text = category.link_title %}
+            {#- The last iteration (light) wins, as in the Go layout. #}
+            {% set_global category_class = "" %}
+            {% for dark in [true, false] %}
+              {% set color = partial(name="helpers/funcs/color-from-string.html", text=text, dark=dark) %}
+
+              {% set prefix = "dark:" if dark else "" %}
+              {% set_global category_class = prefix ~ "bg-" ~ color.color ~ "-" ~ color.shade1
+                ~ " " ~ prefix ~ "text-" ~ color.color ~ "-" ~ color.shade2
+                ~ " border " ~ prefix ~ "border-" ~ color.color ~ "-" ~ color.shade3
+              %}
+            {% endfor %}
+
+
+            <a
+              href="{{ category.rel_permalink }}"
+              class="{{ category_class }} text-xs h-auto tracking-widest uppercase font-light not-prose no-underline inline-block py-1 px-3 rounded-xl shadow-xs hover:opacity-80 hover:shadow-none">
+              {{ category.link_title }}
+            </a>
+          {% endfor %}
+        </div>
+      {% endif %}
+
+      {% if page.params.functions_and_methods?.signatures %}
+        <div class="mb-4 not-prose">
+          {%- include "_partials/docs/functions-signatures.html" -%}
+          {%- include "_partials/docs/functions-return-type.html" -%}
+          {%- include "_partials/docs/functions-aliases.html" -%}
+        </div>
+      {% endif %}
+      {{ page.content }}
+      {% include "_partials/layouts/page-edit.html" %}
+    </div>
+  </article>
+{% endblock main %}
+
+{% block rightsidebar_content %}
+  {# in-this-section.html depends on these being rendered first. #}
+  {% set related = partial(name="layouts/related.html") %}
+  {% set toc = partial(name="layouts/toc.html") %}
+  {% if not page.params.hide_in_this_section %}
+    {% include "_partials/layouts/in-this-section.html" %}
+  {% endif %}
+  {{ related }}
+  {% if store_get(key="hasToc") %}
+    {{ toc }}
+  {% endif %}
+{% endblock rightsidebar_content %}

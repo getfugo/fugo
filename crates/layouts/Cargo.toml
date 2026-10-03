@@ -1,0 +1,39 @@
+[package]
+name = "ssg-layouts"
+description = "Layout templates"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+autotests = false
+# Lists `embedded/**` (T32) for `include_str!`; kept under src/ so the crate's files stay in
+# src/, tests/, embedded/ and Cargo.toml.
+build = "src/build.rs"
+
+[lib]
+doctest = false
+
+[[test]]
+name = "it"
+path = "tests/it/main.rs"
+
+[lints]
+workspace = true
+
+[dependencies]
+ssg-workspace-hack.workspace = true
+ssg-base.workspace = true
+ssg-config.workspace = true
+ssg-vfs.workspace = true
+tera.workspace = true
+thiserror.workspace = true
+serde.workspace = true # ssg_base::define_id! derives serde traits
+
+[dev-dependencies]
+ssg-testkit.workspace = true
+# Only `spec` and `register_placeholders` (a path dependency, so default features can be off:
+# see crates/testkit/Cargo.toml).
+ssg-funcs = { path = "../funcs", default-features = false }
+serde_json.workspace = true
+tempfile.workspace = true

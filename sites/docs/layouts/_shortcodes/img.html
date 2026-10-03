@@ -1,0 +1,244 @@
+{#- Renders the given image using the given filter, if any.
+
+When using the text filter, provide the arguments in this order:
+
+0. The text
+1. The horizontal offset, in pixels, relative to the left of the image (default 20)
+2. The vertical offset, in pixels, relative to the top of the image (default 20)
+3. The font size in pixels (default 64)
+4. The line height (default 1.2)
+5. The font color (default #ffffff)
+
+When using the padding filter, provide all arguments in this order:
+
+0. Padding top
+1. Padding right
+2. Padding bottom
+3. Padding right
+4. Canvas color
+
+@param {string} src The path to the image which must be a remote, page, or global resource.
+@param {string} [filter] The filter to apply to the image (case-insensitive).
+@param {string} [filterArgs] A comma-delimited list of arguments to pass to the filter.
+@param {bool} [example=false] If true, renders a before/after example.
+@param {int} [exampleWidth=384] Image width, in pixels, when rendering a before/after example.
+
+@example  {{< img src="zion-national-park.jpg" alt="Zion National Park" >}}
+@example  {{< img src="zion-national-park.jpg" alt="Zion National Park" filter="process" filterArgs="resize 400x webp" >}}
+@example  {{< img src="zion-national-park.jpg" alt="Zion National Park" filter="colorize" filterArgs="180,50,20" example=true exampleWidth=400 >}}
+@example  {{< img src="images/examples/zion-national-park.jpg" alt="Zion National Park" filter="Padding" filterArgs="20,50,20,50,#0705" example=true >}}
+
+Go built each filter with an images.* function and validated its arguments in the defined
+templates "validate-arg-count" and "validate-arg-value", and resolved images in the inline
+partial "get-resource". Here the argument count is checked first (Go failed on the index
+after reporting it), each filter becomes an image_filter map plus a list of range checks, and
+the images (the source, a mask or overlay image, the text filter's font) are resolved in one
+loop.
+-#}
+{#- Initialize. #}
+{%- set example_width = 384 %}
+
+{#- Default values to use with the text filter. #}
+{%- set text_filter_opts = {
+  "xOffset": 20,
+  "yOffset": 20,
+  "fontSize": 64,
+  "lineHeight": 1.2,
+  "fontColor": "#ffffff",
+  "fontPath": "https://github.com/google/fonts/raw/refs/heads/main/ofl/lato/Lato-Regular.ttf",
+} %}
+
+{#- Get and validate parameters. #}
+{%- set alt = shortcode | arg(name="alt", default="") %}
+
+{%- set src = shortcode | arg(name="src", default="") %}
+{%- if not src %}
+  {{- log_error(message="The \"" ~ shortcode.name ~ "\" shortcode requires a file parameter. See " ~ shortcode.position) }}
+{%- endif %}
+
+{%- set filter = shortcode | arg(name="filter", default="") | lower %}
+
+{%- set valid_filters = [
+  "autoorient", "brightness", "colorbalance", "colorize", "contrast", "dither",
+  "gamma", "gaussianblur", "grayscale", "hue", "invert", "mask", "none", "opacity",
+  "overlay", "padding", "pixelate", "process", "saturation", "sepia", "sigmoid", "text",
+  "unsharpmask",
+] %}
+
+{%- if filter and filter not in valid_filters %}
+  {{- log_error(message="The filter passed to the \"" ~ shortcode.name ~ "\" shortcode is invalid. The filter must be one of " ~ (valid_filters | delimit(sep=", ", last=", or ")) ~ ". See " ~ shortcode.position) }}
+{%- endif %}
+
+{%- set filter_args = [] %}
+{%- set raw_args = shortcode | arg(name="filterArgs", default="") %}
+{%- if raw_args %}
+  {%- set filter_args = [a | trim_chars(chars=" ") for a in raw_args | split(pat=",")] %}
+{%- endif %}
+
+{%- set example = (shortcode | arg(name="example", default="")) in ["true", true, 1] %}
+
+{%- set width_arg = shortcode | arg(name="exampleWidth", default="") %}
+{%- if width_arg %}
+  {%- set example_width = width_arg | int %}
+{%- endif %}
+
+{#- Validate the argument count. #}
+{%- set args_required = {
+  "autoorient": 0, "brightness": 1, "colorbalance": 3, "colorize": 3, "contrast": 1,
+  "gamma": 1, "gaussianblur": 1, "grayscale": 0, "hue": 1, "invert": 0, "mask": 1,
+  "opacity": 1, "overlay": 3, "padding": 5, "pixelate": 1, "process": 1, "saturation": 1,
+  "sepia": 1, "sigmoid": 2, "text": 1, "unsharpmask": 3,
+} %}
+{%- set required = args_required | get(key=filter, default=0) %}
+{%- set args_ok = filter_args | length >= required %}
+{%- if not args_ok %}
+  {{- log_error(message="When using the \"" ~ filter ~ "\" filter, the \"" ~ shortcode.name ~ "\" shortcode requires an args parameter with " ~ required ~ " " ~ ("value" if required == 1 else "values") ~ ". See " ~ shortcode.position) }}
+{%- endif %}
+
+{#- Get the images: the source, then a filter's mask, overlay or font. #}
+{%- set sources = [{"src": src, "page": true}] %}
+{%- if args_ok and filter in ["mask", "overlay"] %}
+  {%- set sources = sources | append(value={"src": filter_args[0], "page": false}) %}
+{%- elif args_ok and filter == "text" %}
+  {%- set sources = sources | append(value={"src": text_filter_opts.fontPath, "page": false}) %}
+{%- endif %}
+{%- set_global images = [] %}
+{%- for source in sources %}
+  {%- set u = source.src | parse_url %}
+  {%- if u.is_absolute %}
+    {#- A remote resource. #}
+    {%- set r = get_remote(url=u.string) %}
+    {%- set shown = u.string %}
+  {%- else %}
+    {#- A page resource, else a global resource. #}
+    {%- set r = (page.resources | get_resource(name=u.path | strip_prefix(prefix="./")) if source.page else none) or get_asset(path=u.path) %}
+    {%- set shown = u.path %}
+  {%- endif %}
+  {%- if not r %}
+    {{- log_error(message="The \"" ~ shortcode.name ~ "\" shortcode was unable to resolve " ~ shown ~ ". See " ~ shortcode.position) }}
+  {%- endif %}
+  {%- set_global images = images | append(value=r) %}
+{%- endfor %}
+{%- set i = images[0] %}
+
+{#- Resize if rendering before/after examples. #}
+{%- if example and i %}
+  {%- set i = i | resize(width=example_width) %}
+{%- endif %}
+
+{#- Create the filter, and the range checks of its arguments: [name, value, min, max]. #}
+{%- set f = none %}
+{%- set checks = [] %}
+{%- if args_ok %}
+  {%- set n = [a | float for a in filter_args] if filter not in ["mask", "overlay", "padding", "process", "text"] else [] %}
+  {%- if filter == "autoorient" %}
+    {%- set f = {"op": "auto_orient"} %}
+  {%- elif filter == "brightness" %}
+    {%- set checks = [["percentage", n[0], -100, 100]] %}
+    {%- set f = {"op": "brightness", "percentage": n[0]} %}
+  {%- elif filter == "colorbalance" %}
+    {%- set checks = [["percentage red", n[0], -100, 500], ["percentage green", n[1], -100, 500], ["percentage blue", n[2], -100, 500]] %}
+    {%- set f = {"op": "color_balance", "r": n[0], "g": n[1], "b": n[2]} %}
+  {%- elif filter == "colorize" %}
+    {%- set checks = [["hue", n[0], 0, 360], ["saturation", n[1], 0, 100], ["percentage", n[2], 0, 100]] %}
+    {%- set f = {"op": "colorize", "hue": n[0], "saturation": n[1], "percentage": n[2]} %}
+  {%- elif filter == "contrast" %}
+    {%- set checks = [["percentage", n[0], -100, 100]] %}
+    {%- set f = {"op": "contrast", "percentage": n[0]} %}
+  {%- elif filter == "dither" %}
+    {%- set f = {"op": "dither"} %}
+  {%- elif filter == "gamma" %}
+    {%- set checks = [["gamma", n[0], 0, 100]] %}
+    {%- set f = {"op": "gamma", "gamma": n[0]} %}
+  {%- elif filter == "gaussianblur" %}
+    {%- set checks = [["sigma", n[0], 0, 1000]] %}
+    {%- set f = {"op": "gaussian_blur", "sigma": n[0]} %}
+  {%- elif filter == "grayscale" %}
+    {%- set f = {"op": "grayscale"} %}
+  {%- elif filter == "hue" %}
+    {%- set checks = [["shift", n[0], -180, 180]] %}
+    {%- set f = {"op": "hue", "shift": n[0]} %}
+  {%- elif filter == "invert" %}
+    {%- set f = {"op": "invert"} %}
+  {%- elif filter == "mask" %}
+    {%- set f = {"op": "mask", "image": images[1]} %}
+  {%- elif filter == "opacity" %}
+    {%- set checks = [["opacity", n[0], 0, 1]] %}
+    {%- set f = {"op": "opacity", "opacity": n[0]} %}
+  {%- elif filter == "overlay" %}
+    {%- set f = {"op": "overlay", "image": images[1], "x": filter_args[1] | float | int, "y": filter_args[2] | float | int} %}
+  {%- elif filter == "padding" %}
+    {%- set f = {
+      "op": "padding",
+      "top": filter_args[0] | int,
+      "right": filter_args[1] | int,
+      "bottom": filter_args[2] | int,
+      "left": filter_args[3] | int,
+      "color": filter_args[4],
+    } %}
+  {%- elif filter == "pixelate" %}
+    {%- set checks = [["size", n[0], 0, 1000]] %}
+    {%- set f = {"op": "pixelate", "size": n[0] | int} %}
+  {%- elif filter == "process" %}
+    {%- set f = {"op": "process", "spec": filter_args[0]} %}
+  {%- elif filter == "saturation" %}
+    {%- set checks = [["percentage", n[0], -100, 500]] %}
+    {%- set f = {"op": "saturation", "percentage": n[0]} %}
+  {%- elif filter == "sepia" %}
+    {%- set checks = [["percentage", n[0], 0, 100]] %}
+    {%- set f = {"op": "sepia", "percentage": n[0]} %}
+  {%- elif filter == "sigmoid" %}
+    {%- set checks = [["midpoint", n[0], 0, 1], ["factor", n[1], -10, 10]] %}
+    {%- set f = {"op": "sigmoid", "midpoint": n[0], "factor": n[1]} %}
+  {%- elif filter == "text" %}
+    {%- set a1 = filter_args | nth(n=1) %}
+    {%- set a2 = filter_args | nth(n=2) %}
+    {%- set a3 = filter_args | nth(n=3) %}
+    {%- set a4 = filter_args | nth(n=4) %}
+    {%- set a5 = filter_args | nth(n=5) %}
+    {%- set font_size = ((a3 | int) if a3 else 0) or text_filter_opts.fontSize %}
+    {%- set line_height = max(values=[((a4 | float) if a4 else 0) or text_filter_opts.lineHeight, 1]) %}
+    {%- set f = {
+      "op": "text",
+      "text": filter_args[0],
+      "x": ((a1 | int) if a1 else 0) or text_filter_opts.xOffset,
+      "y": ((a2 | int) if a2 else 0) or text_filter_opts.yOffset,
+      "size": font_size,
+      "linespacing": (line_height - 1) * font_size,
+      "color": a5 or text_filter_opts.fontColor,
+      "font": images[1],
+    } %}
+  {%- elif filter == "unsharpmask" %}
+    {%- set checks = [["sigma", n[0], 0, 500], ["amount", n[1], 0, 100], ["threshold", n[2], 0, 1]] %}
+    {%- set f = {"op": "unsharp_mask", "sigma": n[0], "amount": n[1], "threshold": n[2]} %}
+  {%- endif %}
+{%- endif %}
+
+{#- Validate the argument values. #}
+{%- for c in checks %}
+  {%- if c[1] < c[2] or c[1] > c[3] %}
+    {{- log_error(message="The \"" ~ c[0] ~ "\" argument passed to the \"" ~ shortcode.name ~ "\" shortcode is invalid. Expected a value in the range [" ~ c[2] ~ "," ~ c[3] ~ "], but received " ~ c[1] ~ ". See " ~ shortcode.position) }}
+  {%- endif %}
+{%- endfor %}
+
+{#- Apply filter. #}
+{%- set fi = i | image_filter(filters=[f]) if f and i else i %}
+
+{#- Render. #}
+{%- set img_class = "border-1 border-gray-300 dark:border-gray-500" %}
+{%- if example %}
+  <p>Original</p>
+  <img
+    class="{{ img_class }}"
+    src="{{ i.rel_permalink }}"
+    alt="{{ alt }}">
+  <p>Processed</p>
+  <img
+    class="{{ img_class }}"
+    src="{{ fi.rel_permalink }}"
+    alt="{{ alt }}">
+{%- else -%}
+  <img
+    src="{{ fi.rel_permalink }}"
+    alt="{{ alt }}">
+{%- endif -%}

@@ -1,0 +1,39 @@
+{#- The documentation tree: every top-level section with its pages, and every subsection with
+    its pages, as collapsible `details`; the section and the subsection the page is in are
+    open. The tree is the same on every page but for `open` and `aria-current`, so client-side
+    navigation (assets/js/main.js) keeps the sidebar and only updates that state. Clicking a
+    title follows its link; clicking the chevron opens or closes the list. Lists hold summary
+    values: `deref` gives a section's own pages. -#}
+<nav class="sidebar" aria-label="Documentation">
+  {%- for s in site.sections %}
+    <details class="sidebar__section"{% if page.rel_permalink is starting_with(pat=s.rel_permalink) %} open{% endif %}>
+      <summary>
+        <a href="{{ s.rel_permalink }}"{% if s.id == page.id %} aria-current="page"{% endif %}>{{ s.link_title }}</a>
+        <span class="sidebar__toggle" aria-hidden="true"><svg><use href="#icon-chevron"></use></svg></span>
+      </summary>
+      <ul>
+        {%- set section = s | deref %}
+        {%- for p in section.pages %}
+          <li>
+            {%- if p.kind == "section" %}
+            {%- set sub = p | deref %}
+            <details class="sidebar__sub"{% if page.rel_permalink is starting_with(pat=p.rel_permalink) %} open{% endif %}>
+              <summary>
+                <a href="{{ p.rel_permalink }}"{% if p.id == page.id %} aria-current="page"{% endif %}>{{ p.link_title }}</a>
+                <span class="sidebar__toggle" aria-hidden="true"><svg><use href="#icon-chevron"></use></svg></span>
+              </summary>
+              <ul>
+                {%- for q in sub.pages %}
+                  <li><a href="{{ q.rel_permalink }}"{% if q.id == page.id %} aria-current="page"{% endif %}>{{ q.link_title }}</a></li>
+                {%- endfor %}
+              </ul>
+            </details>
+            {%- else %}
+            <a href="{{ p.rel_permalink }}"{% if p.id == page.id %} aria-current="page"{% endif %}>{{ p.link_title }}</a>
+            {%- endif %}
+          </li>
+        {%- endfor %}
+      </ul>
+    </details>
+  {%- endfor %}
+</nav>

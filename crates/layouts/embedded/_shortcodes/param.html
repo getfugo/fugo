@@ -1,0 +1,9 @@
+{#- Prints the page (or site) param named by the first argument. -#}
+{%- set key = shortcode | arg(index=0, default="") %}
+{%- if key %}
+  {%- set value = param(key=key) %}
+  {%- if value %}{{ value }}
+  {%- else %}{{ log_error(message='Param "' ~ key ~ '" not found: ' ~ shortcode.position) }}
+  {%- endif %}
+{%- else %}{{ log_error(message="Missing param key: " ~ shortcode.position) }}
+{%- endif -%}

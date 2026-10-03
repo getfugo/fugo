@@ -1,0 +1,33 @@
+<header class="site-header">
+  <div class="site-header__inner">
+    {%- if not page.is_home %}
+    <button class="icon-button nav-toggle" type="button" aria-label="Open the navigation" aria-expanded="false" data-nav-toggle>
+      <svg aria-hidden="true"><use href="#icon-menu"></use></svg>
+    </button>
+    {%- endif %}
+    <a class="brand" href="{{ site.home.rel_permalink }}" aria-label="fugo home">
+      {%- set mark = get_asset(path="brand/mark.png") | resize(width=80) %}
+      <img src="{{ mark.rel_permalink }}" width="40" height="40" alt="">
+      <span class="brand__name">fugo</span>
+    </a>
+    <nav class="top-nav" aria-label="Main">
+      {%- for e in site.menus.main or [] %}
+      <a href="{{ e.url }}"{% if e.url and e.url != "/" and page.rel_permalink is starting_with(pat=e.url) %} aria-current="true"{% endif %}>{{ e.name }}</a>
+      {%- endfor %}
+    </nav>
+    <div class="site-header__tools">
+      <button class="search-button" type="button" data-search-open>
+        <svg aria-hidden="true"><use href="#icon-search"></use></svg>
+        <span class="search-button__label">Search</span>
+        <kbd>/</kbd>
+      </button>
+      <a class="icon-button" href="{{ site.params.repository }}" aria-label="fugo on GitHub">
+        <svg aria-hidden="true"><use href="#icon-github"></use></svg>
+      </a>
+      <button class="icon-button" type="button" aria-label="Switch between light and dark mode" data-theme-toggle>
+        <svg class="when-light" aria-hidden="true"><use href="#icon-moon"></use></svg>
+        <svg class="when-dark" aria-hidden="true"><use href="#icon-sun"></use></svg>
+      </button>
+    </div>
+  </div>
+</header>

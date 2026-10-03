@@ -1,0 +1,8 @@
+{#- Component `date`: a <time> element for the date value `date`. -#}
+{%- component date(date, @lang) %}
+{%- set human_date = date | date(format="%B %-d, %Y", locale=lang) %}
+{%- set machine_date = date | date(format="%Y-%m-%dT%H:%M:%S%:z", locale=lang) %}
+<time datetime="{{ machine_date }}">
+  {{ human_date }}
+</time>
+{%- endcomponent date %}

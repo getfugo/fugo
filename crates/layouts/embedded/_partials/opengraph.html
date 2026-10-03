@@ -1,0 +1,77 @@
+{#- Open Graph metadata of `page`: `{% include "_partials/opengraph.html" %}`. -#}
+{%- set iso8601 = "%Y-%m-%dT%H:%M:%S%:z" -%}
+<meta property="og:url" content="{{ page.permalink }}">
+
+{%- set site_name = (site.title or site.params.title or "") | plainify %}
+{%- if site_name %}
+  <meta property="og:site_name" content="{{ site_name }}">
+{%- endif %}
+
+{%- set og_title = (page.title or site.title or site.params.title or "") | plainify %}
+{%- if og_title %}
+  <meta property="og:title" content="{{ og_title }}">
+{%- endif %}
+
+{%- set description = (page.description or page.summary or site.params.description or "") | plainify | html_unescape %}
+{%- if description %}
+  <meta property="og:description" content="{{ description | trim_chars(chars="\n\r\t ") }}">
+{%- endif %}
+
+{%- set locale = page.params.locale or site.language_code %}
+{%- if locale %}
+  <meta property="og:locale" content="{{ locale | replace(from="-", to="_") }}">
+{%- endif %}
+
+{%- if page.is_page %}
+  <meta property="og:type" content="article">
+  {%- if page.section %}
+    <meta property="article:section" content="{{ page.section }}">
+  {%- endif %}
+  {%- if page.publish_date %}
+    <meta property="article:published_time" content="{{ page.publish_date | date(format=iso8601, locale="en") }}">
+  {%- endif %}
+  {%- if page.lastmod %}
+    <meta property="article:modified_time" content="{{ page.lastmod | date(format=iso8601, locale="en") }}">
+  {%- endif %}
+  {%- set tags = get_terms(taxonomy="tags") %}
+  {%- for t in tags[:6] %}
+    <meta property="article:tag" content="{{ t.title | plainify }}">
+  {%- endfor %}
+{%- else %}
+  <meta property="og:type" content="website">
+{%- endif %}
+
+{%- set images = partial(name="_funcs/get-page-images") %}
+{%- for img in images[:6] %}
+    <meta property="og:image" content="{{ img.permalink }}">
+{%- endfor %}
+
+{%- set audio = page.params.audio or [] %}
+{%- if audio is string %}{% set audio = [audio] %}{% endif %}
+{%- for a in audio[:6] %}
+    <meta property="og:audio" content="{{ a | abs_url }}">
+{%- endfor %}
+
+{%- set videos = page.params.videos or [] %}
+{%- if videos is string %}{% set videos = [videos] %}{% endif %}
+{%- for v in videos[:6] %}
+    <meta property="og:video" content="{{ v | abs_url }}">
+{%- endfor %}
+
+{%- for t in get_terms(taxonomy="series") %}
+  {%- set term_page = get_page(path=t.path) %}
+  {%- for p in (term_page?.pages or [])[:7] %}
+    {%- if p.id != page.id %}
+      <meta property="og:see_also" content="{{ p.permalink }}">
+    {%- endif %}
+  {%- endfor %}
+{%- endfor %}
+
+{%- set social = site.params.social or "" %}
+{%- if social is map %}
+  {%- if social.facebook_app_id %}
+    <meta property="fb:app_id" content="{{ social.facebook_app_id }}">
+  {%- elif social.facebook_admin %}
+    <meta property="fb:admins" content="{{ social.facebook_admin }}">
+  {%- endif %}
+{%- endif %}

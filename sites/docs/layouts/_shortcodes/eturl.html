@@ -1,0 +1,26 @@
+{#- Renders an absolute URL to the source code for an embedded template.
+
+Accepts either positional or named parameters, and depends on the
+embedded_template_urls.toml file in the data directory.
+
+@param {string} filename The embedded template's file name, excluding extension.
+
+@example {{% et robots.txt %}}
+@example {{% et filename=robots.txt %}}
+-#}
+{%- set filename = (shortcode | arg(name="filename", default="")) or (shortcode | arg(index=0, default="")) %}
+{%- if filename %}
+  {%- set urls = site.data.embedded_template_urls %}
+  {%- if urls %}
+    {%- set rel = urls | get(key=filename, default="") %}
+    {%- if rel %}
+      {{- join_url(parts=[urls.base_url, rel]) }}
+    {%- else %}
+      {{- log_error(message="The \"" ~ shortcode.name ~ "\" shortcode was unable to find a URL for the embedded template named \"" ~ filename ~ "\". Check the name. See " ~ shortcode.position) }}
+    {%- endif %}
+  {%- else %}
+    {{- log_error(message="The \"" ~ shortcode.name ~ "\" shortcode was unable to find the embedded_template_urls data file in the site's data directory. See " ~ shortcode.position) }}
+  {%- endif %}
+{%- else %}
+  {{- log_error(message="The \"" ~ shortcode.name ~ "\" shortcodes requires a named or positional parameter, the file name of the embedded template, excluding its extension. See " ~ shortcode.position) }}
+{%- endif -%}

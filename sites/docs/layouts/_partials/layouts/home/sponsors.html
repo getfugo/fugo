@@ -1,0 +1,57 @@
+{#-
+  Component `sponsors`: the sponsor banners of `site.data.sponsors`. `gtag` names the
+  placement (`home`, `footer`) in the tracking parameters.
+  Called as `{{ <sponsors gtag="footer" /> }}`.
+-#}
+{%- component sponsors(gtag=none, container_class=none, @site, @build, @__nh) %}
+{% set gtag = gtag | default_if_empty(value="unknown") %}
+{% set is_footer = gtag == "footer" %}
+{% set utm_source = "hugofooter" if is_footer else "hugohome" %}
+{% set container_class = container_class | default_if_empty(value="mx-auto max-w-7xl px-6 lg:px-8") %}
+{% set sponsors = site.data.sponsors %}
+{% if sponsors %}
+  <div class="{{ container_class }}">
+    <h2 class="font-bold text-2xl mb-6 tracking-tighter">Hugo Sponsors</h2>
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-x-8 gap-y-6">
+      {% for banner in sponsors.banners %}
+        <div class="max-w-64" style="background-color: {{ banner.bgcolor }};">
+          {% set query_params = banner.query_params | default_if_empty(value="") %}
+          {% set url = banner.link %}
+          {% if not banner.no_query_params %}
+            {% set query = querify(params={
+              "utm_source": banner.utm_source | default_if_empty(value=utm_source),
+              "utm_medium": banner.utm_medium | default_if_empty(value="banner"),
+              "utm_campaign": banner.utm_campaign | default_if_empty(value="hugosponsor"),
+              "utm_content": banner.utm_content | default_if_empty(value="gohugoio")
+            }) %}
+            {% set url = banner.link ~ "?" ~ query_params ~ query %}
+          {% endif %}
+          {% set logo = get_asset(path=banner.logo) %}
+          {% set gtag_id = ("Sponsor " ~ banner.name ~ " " ~ gtag) | title_case %}
+          <a
+            href="{{ url }}"
+            title="{{ banner.title | default_if_empty(value=banner.name) }}"
+            {% if build.is_production %}
+              onclick="trackOutboundLink({{ "'" ~ gtag_id ~ "', '" ~ url ~ "'" }});"
+            {% endif %}
+            class="group inline-block w-full h-full shadow-md dark:shadow-gray-600"
+            {% if banner.link_attr %}{{ banner.link_attr | safe }}{% endif %}>
+            <div
+              class="flex w-full h-full p-8 items-center justify-center content-center transition duration-500 hover:scale-105 {% if banner.show_on_hover %}
+                invisible group-hover:visible
+              {% endif %}">
+              {% if logo %}
+                {{ logo | resource_content | safe }}
+              {% else %}
+                <span class="text-4xl font-bold text-white">
+                  {{ banner.name }}
+                </span>
+              {% endif %}
+            </div>
+          </a>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+{% endif %}
+{%- endcomponent sponsors %}

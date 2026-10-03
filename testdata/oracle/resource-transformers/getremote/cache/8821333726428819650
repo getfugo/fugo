@@ -1,0 +1,11 @@
+HTTP/1.1 200 OK
+Content-Length: 21
+Content-Type: text/css
+Date: Sun, 27 Sep 2026 10:25:09 GMT
+X-Custom: custom-value
+X-Etags-1: dd73dee8fa9df71f08d9b50cf2275703
+X-Etags-2: dd73dee8fa9df71f08d9b50cf2275703
+X-Multi: one
+X-Multi: two
+
+body { color: red; }

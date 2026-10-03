@@ -1,0 +1,1 @@
+{"title": {{ page.title | jsonify }}, "n": 1.50000, "pages": [{% for p in site.regular_pages %}{% if not loop.first %}, {% endif %}{ "url" : {{ p.rel_permalink | jsonify }}, "title": {{ p.title | jsonify }} }{% endfor %}]}

@@ -1,0 +1,35 @@
+{#- Renders a comma-separated list of links to the root key configuration pages.
+
+Go built a Scratch map of key → page name: every map or array value of
+site.data.docs.config, minus deleted keys, plus overrides. Here the keys are collected in a
+list, the overrides appended, and the list is sorted (Go ranges maps in key order).
+
+@example {{< root-configuration-keys >}}
+-#}
+{%- set overrides = {
+  "HTTPCache": "http-cache",
+  "frontmatter": "front-matter",
+  "related": "related-content",
+  "uglyURLs": "ugly-urls",
+} %}
+{#- author: deprecated; staticDir, ignoreFiles: use mounts instead. HTTPCache: the key is
+"HTTPCache" not "httpCache"; frontmatter: "frontmatter" not "frontMatter"; related: the page
+title is "Related content"; uglyURLs: it can be configured as bool or map; we want to show map. -#}
+{%- set deleted = ["author", "staticDir", "ignoreFiles"] %}
+{%- set config = site.data.docs.config %}
+{%- set keys = [k for k in config | keys if (config[k] is map or config[k] is array) and k not in deleted and k not in overrides]
+  | concat(with=overrides | keys) | sort %}
+
+{%- set_global links = [] %}
+{%- for k in keys %}
+  {%- set v = overrides[k] if k in overrides else k | humanize | anchorize %}
+  {%- set path = "/configuration/" ~ v %}
+  {%- set target = get_page(path=path) %}
+  {%- if target %}
+    {%- set_global links = links | append(value='<a href="' ~ target.rel_permalink ~ '"><code>' ~ k ~ '</code></a>') %}
+  {%- else %}
+    {{- log_error(message="The \"" ~ shortcode.name ~ "\" shortcode was unable to find the page " ~ path ~ ". See " ~ shortcode.position ~ ".") }}
+  {%- endif %}
+{%- endfor %}
+
+{{- links | delimit(sep=", ", last=", and ") | safe -}}

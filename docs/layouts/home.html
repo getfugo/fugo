@@ -1,0 +1,34 @@
+{% extends "baseof.html" %}
+{% block main %}
+<main id="main" class="home">
+  <section class="hero">
+    <div class="hero__inner">
+      {%- set logo = get_asset(path="brand/logo.png") | resize(width=480) %}
+      <img class="hero__logo" src="{{ logo.rel_permalink }}" width="240" height="{{ logo.height // 2 }}" alt="The fugo logo: an orange cat with goggles in a gear, above the word fugo">
+      <div class="hero__text">
+        <h1 class="hero__title">{{ site.params.tagline }}</h1>
+        <p class="hero__lead">{{ page.params.lead }}</p>
+        <div class="hero__actions">
+          <a class="button button--primary" href="{{ "/getting-started/quick-start/" | rel_url }}">Get started <svg aria-hidden="true"><use href="#icon-arrow"></use></svg></a>
+          <a class="button" href="{{ "/installation/" | rel_url }}">Install</a>
+          <a class="button button--ghost" href="{{ site.params.repository }}"><svg aria-hidden="true"><use href="#icon-github"></use></svg> GitHub</a>
+        </div>
+        <pre class="hero__install"><code><span class="prompt">$</span> fugo server</code></pre>
+      </div>
+    </div>
+  </section>
+  <section class="features" aria-label="Features">
+    {%- for f in page.params.features %}
+    <article class="feature">
+      <h2 class="feature__title">{{ f.title }}</h2>
+      <p>{{ f.text | markdownify }}</p>
+    </article>
+    {%- endfor %}
+  </section>
+  {%- if page.content %}
+  <section class="home__content content">
+    {{ page.content }}
+  </section>
+  {%- endif %}
+</main>
+{% endblock main %}

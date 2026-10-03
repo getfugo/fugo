@@ -1,0 +1,42 @@
+{% set documentation = get_page(path="/documentation") %}
+
+
+<nav aria-label="breadcrumb" class="flex breadcrumbs">
+  <ol class="inline-flex items-center flex-wrap tracking-tight">
+    {% set current_section = page.current_section %}
+    {% set ancestors = page.ancestors | reverse %}
+    {% for ancestor in ancestors %}
+      {% set is_current_section = ancestor.id == current_section.id %}
+      {# We currently have a slightly odd structure. #}
+      {% if ancestor.id == site.home.id %}
+        {% set p = documentation %}
+      {% else %}
+        {% set p = ancestor %}
+      {% endif %}
+      <li class="flex items-center">
+        <a
+          href="{{ p.rel_permalink }}"
+          class="truncate text-blue-600 hover:text-blue-500 dark:text-blue-500 dark:hover:text-blue-400 {% if is_current_section %}
+            current-section
+          {% endif %}"
+          >{{ p.link_title }}</a
+        >
+        {% if page.id != documentation.id %}
+          {# Go: template "breadcrumbs-arrow". #}
+          <svg class="fill-gray-500 dark:fill-gray-100 w-3 h-3 mx-2">
+            <use href="#icon--chevron-right"></use>
+          </svg>
+        {% endif %}
+      </li>
+    {% endfor %}
+    {% if page.id != documentation.id %}
+      {% set is_current_section = page.id == current_section.id %}
+      <li
+        class="truncate text-gray-700 dark:text-gray-300 {% if is_current_section %}
+          current-section
+        {% endif %}">
+        {{ page.link_title }}
+      </li>
+    {% endif %}
+  </ol>
+</nav>

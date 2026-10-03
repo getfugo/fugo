@@ -1,0 +1,28 @@
+{#-
+  Components `linkcss` (a stylesheet link to the resource `r`; minified and fingerprinted
+  outside development) and `render_attributes` (the extra attributes of `linkcss` and
+  `linkjs`: ` k="v"`, or ` k` when the value is empty, keys sorted).
+  Called as `{{ <linkcss r={r} /> }}`.
+-#}
+{%- component linkcss(r, attributes={}, @build, @__nh) %}
+{%- if build.is_development %}
+  <link
+    rel="stylesheet"
+    href="{{ r.rel_permalink }}"
+    {{ <render_attributes attributes={attributes} /> }}>
+{%- else %}
+  {%- set f = r | minify | fingerprint %}
+  {%- if f %}
+    <link
+      rel="stylesheet"
+      href="{{ f.rel_permalink }}"
+      integrity="{{ f.data.integrity }}"
+      crossorigin="anonymous"
+      {{ <render_attributes attributes={attributes} /> }}>
+  {%- endif %}
+{%- endif %}
+{%- endcomponent linkcss %}
+
+{%- component render_attributes(attributes={}) %}
+  {%- for k, v in attributes | sort_keys %} {{ k }}{% if v %}="{{ v }}"{% endif %}{% endfor -%}
+{%- endcomponent render_attributes %}

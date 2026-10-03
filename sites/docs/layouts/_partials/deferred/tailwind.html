@@ -1,0 +1,18 @@
+{#-
+  The site stylesheet, deferred by baseof.html (`defer(key="global")`). Context: `data`, `site`,
+  `build`. With `data.tailwind` it is the stylesheet Tailwind built from `css/styles.css` for
+  the whole site, recorded in `assets/css/styles.tailwind.css` (this port has no Tailwind pipeline)
+  and published where Tailwind's output was; `data.tailwind` is false in the docs patch variant
+  i01 (`minify` only).
+-#}
+{%- set r = get_asset(path="css/styles.css") %}
+{%- if r %}
+  {%- if data.tailwind %}
+    {%- set css = asset_from_string(target="css/styles.css", content=get_asset(path="css/styles.tailwind.css") | resource_content) %}
+  {%- else %}
+    {%- set css = r | minify %}
+  {%- endif %}
+  {%- if css %}
+    {{ <linkcss r={css} /> }}
+  {%- endif %}
+{%- endif %}

@@ -1,0 +1,14 @@
+# Clippy configuration (docs/rust-port/REWRITE_PLAN.md §1.2). The lint levels (`all` plus the
+# reviewed pedantic subset) are in [workspace.lints.clippy] of Cargo.toml.
+
+# No thread-locals: the render position travels as an explicit scope value (`__nh`).
+disallowed-macros = [
+    { path = "std::thread_local", reason = "no thread-locals (REWRITE_PLAN.md §1.2); pass the render scope explicitly" },
+]
+disallowed-types = [
+    { path = "std::thread::LocalKey", reason = "no thread-locals (REWRITE_PLAN.md §1.2)" },
+]
+
+# struct_excessive_bools / fn_params_excessive_bools: use enums instead of bundles of bools.
+max-struct-bools = 3
+max-fn-params-bools = 2

@@ -1,0 +1,128 @@
+---
+source: crates/config/tests/it/sites.rs
+expression: summary(&c)
+---
+content:
+  drafts: false
+  expired: false
+  future: false
+defaultLanguageInSubdir: false
+environment: production
+formats:
+  - html
+  - "404"
+  - alias
+  - amp
+  - calendar
+  - css
+  - csv
+  - gotmpl
+  - json
+  - markdown
+  - robots
+  - rss
+  - sitemap
+  - sitemapindex
+  - webappmanifest
+minifyOutput: false
+multihost: true
+security:
+  inlineShortcodes: disabled
+sites:
+  - baseURL: "https://en.example.org/"
+    cascade: 0
+    code: en
+    disableKinds: []
+    lang: en
+    mainSections: ~
+    menus: 0
+    name: ""
+    outputs:
+      "404":
+        - "404"
+      home:
+        - html
+        - rss
+      page:
+        - html
+      robotstxt:
+        - robots
+      section:
+        - html
+        - rss
+      sitemap:
+        - sitemap
+      sitemapindex:
+        - sitemapindex
+      taxonomy:
+        - html
+        - rss
+      term:
+        - html
+        - rss
+    pagination:
+      disableAliases: false
+      pagerSize: 10
+      path: page
+    params: 0
+    permalinks:
+      page: {}
+      section: {}
+      taxonomy: {}
+      term: {}
+    taxonomies:
+      - tag=tags
+    timeZone: UTC
+    title: Asm Multihost
+    ugly: never
+    urlPrefix: ""
+    weight: 1
+  - baseURL: "https://th.example.org/sub/"
+    cascade: 0
+    code: th
+    disableKinds: []
+    lang: th
+    mainSections: ~
+    menus: 0
+    name: ""
+    outputs:
+      "404":
+        - "404"
+      home:
+        - html
+        - rss
+      page:
+        - html
+      robotstxt:
+        - robots
+      section:
+        - html
+        - rss
+      sitemap:
+        - sitemap
+      sitemapindex:
+        - sitemapindex
+      taxonomy:
+        - html
+        - rss
+      term:
+        - html
+        - rss
+    pagination:
+      disableAliases: false
+      pagerSize: 10
+      path: page
+    params: 0
+    permalinks:
+      page: {}
+      section: {}
+      taxonomy: {}
+      term: {}
+    taxonomies:
+      - tag=tags
+    timeZone: UTC
+    title: Asm Multihost
+    ugly: never
+    urlPrefix: th
+    weight: 2
+timeout: 60

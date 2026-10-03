@@ -1,0 +1,26 @@
+<footer class="site-footer">
+  <div class="site-footer__inner">
+    <div class="site-footer__brand">
+      {%- set mark = get_asset(path="brand/mark.png") | resize(width=96) %}
+      <img src="{{ mark.rel_permalink }}" width="48" height="48" alt="">
+      <div>
+        <p class="site-footer__name">fugo</p>
+        <p>{{ site.params.tagline }}</p>
+      </div>
+    </div>
+    <nav class="site-footer__links" aria-label="Project">
+      <a href="{{ site.params.repository }}">GitHub</a>
+      <a href="{{ site.params.repository }}/releases">Releases</a>
+      <a href="{{ site.params.repository }}/discussions">Discussions</a>
+      <a href="{{ site.params.repository }}/issues">Issues</a>
+      <a href="{{ "/about/license/" | rel_url }}">License</a>
+    </nav>
+    <p class="site-footer__legal">
+      fugo is free software under the Apache License 2.0. It is a Rust rewrite of a Go static
+      site generator and reads its content model; parts of this documentation are adapted from
+      that project's documentation (Apache-2.0; its notices are on the
+      <a href="{{ "/about/license/" | rel_url }}">license page</a>).
+      The fugo name and logo are the project's; the license grants no trademark rights.
+    </p>
+  </div>
+</footer>

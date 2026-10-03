@@ -1,0 +1,70 @@
+---
+source: crates/cli/tests/it/embedded.rs
+expression: "read(&site, \"embedded/index.html\")"
+---
+<head>
+<meta property="og:url" content="https://example.org/embedded/">
+  <meta property="og:site_name" content="Testsite">
+  <meta property="og:title" content="Embedded">
+  <meta property="og:description" content="Site description &amp; more">
+  <meta property="og:locale" content="en">
+  <meta property="og:type" content="website">
+    <meta property="og:image" content="https://example.org/img/site.png">
+    <meta property="fb:app_id" content="12345">
+
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="https://example.org/img/site.png">
+  <meta name="twitter:title" content="Embedded">
+  <meta name="twitter:description" content="Site description &amp; more">
+  <meta name="twitter:site" content="@example">
+
+
+  <meta itemprop="name" content="Embedded">
+  <meta itemprop="description" content="Site description &amp; more">
+  <meta itemprop="datePublished" content="2022-03-07T00:00:00+00:00">
+  <meta itemprop="dateModified" content="2022-04-05T06:07:08+02:00">
+  <meta itemprop="image" content="https://example.org/img/site.png">
+
+</head>
+<main>Featured;Bundle;</main>
+<nav>
+
+    <ul class="pagination pagination-default">
+      <li class="page-item disabled">
+        <a aria-disabled="true" aria-label="First" class="page-link" role="button" tabindex="-1"><span aria-hidden="true">&laquo;&laquo;</span></a>
+      </li>
+      <li class="page-item disabled">
+        <a aria-disabled="true" aria-label="Previous" class="page-link" role="button" tabindex="-1"><span aria-hidden="true">&laquo;</span></a>
+      </li>
+      <li class="page-item active">
+        <a aria-current="page" aria-label="Page 1" class="page-link" role="button">1</a>
+      </li>
+      <li class="page-item">
+        <a href="https://example.org/embedded/page/2/" aria-label="Page 2" class="page-link" role="button">2</a>
+      </li>
+      <li class="page-item">
+        <a href="https://example.org/embedded/page/2/" aria-label="Next" class="page-link" role="button"><span aria-hidden="true">&raquo;</span></a>
+      </li>
+      <li class="page-item">
+        <a href="https://example.org/embedded/page/2/" aria-label="Last" class="page-link" role="button"><span aria-hidden="true">&raquo;&raquo;</span></a>
+      </li>
+    </ul>
+</nav>
+<nav>
+
+    <ul class="pagination pagination-terse">
+      <li class="page-item active">
+        <a aria-current="page" aria-label="Page 1" class="page-link" role="button">1</a>
+      </li>
+      <li class="page-item">
+        <a href="https://example.org/embedded/page/2/" aria-label="Page 2" class="page-link" role="button">2</a>
+      </li>
+      <li class="page-item">
+        <a href="https://example.org/embedded/page/2/" aria-label="Next" class="page-link" role="button"><span aria-hidden="true">&raquo;</span></a>
+      </li>
+      <li class="page-item">
+        <a href="https://example.org/embedded/page/2/" aria-label="Last" class="page-link" role="button"><span aria-hidden="true">&raquo;&raquo;</span></a>
+      </li>
+    </ul>
+</nav>

@@ -1,0 +1,26 @@
+<div class="print:hidden">
+  <hr class="border-t border-gray-200 dark:border-gray-800 my-10 lg:my-16">
+
+  <div class="text-gray-800 dark:text-gray-300 font-semibold">
+    Last updated:
+    {{ page.lastmod | date(format="%B %-d, %Y") if page.lastmod else "January 1, 0001" }}{% if page.git_info %}
+      :
+      <a
+        class="text-blue-600 hover:text-blue-500"
+        href="{{ site.params.ghrepo }}commit/{{ page.git_info.hash }}"
+        >{{ page.git_info.subject }} ({{ page.git_info.abbreviated_hash }})</a
+      >
+    {% endif %}
+  </div>
+
+  {% if page.file %}
+    {% if not page.file.is_content_adapter %}
+      {% set href = site.params.ghrepo ~ "edit/master/content/" ~ page.lang ~ "/" ~ page.file.path %}
+      <a
+        href="{{ href }}"
+        class="mt-4 inline-block not-prose bg-blue-600 hover:bg-blue-800 text-white hover:text-white font-bold py-2 px-4 rounded">
+        Improve this page
+      </a>
+    {% endif %}
+  {% endif %}
+</div>

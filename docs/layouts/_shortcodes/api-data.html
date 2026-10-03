@@ -1,0 +1,50 @@
+{#- Markdown from data/template_api.json (generated from fugo's template API): call it with
+    `{{% api-data table="…" %}}` so the page renders the Markdown. Tables: `contexts`,
+    `context-names`, `hook-fields`, `syntax`, `conversion-rules`, `embedded-templates`,
+    `tera-facts`. The values are Markdown, so they are printed `safe`: Markdown escapes them. -#}
+{%- set api = site.data.template_api %}
+{%- set table = shortcode | arg(name="table") %}
+{%- if table == "contexts" %}
+| Template | Top-level names |
+|---|---|
+{% for c in api.contexts -%}
+| {{ (c.title | replace(from="|", to="\\|")) | safe }} | {{ ((["`" ~ n ~ "`" for n in c.names] | join(sep=", ")) | replace(from="|", to="\\|")) | safe }}{% if c.note %}; {{ (c.note | replace(from="|", to="\\|")) | safe }}{% endif %} |
+{% endfor %}
+{%- elif table == "context-names" %}
+| Name | Meaning |
+|---|---|
+{% for n in api.context_names -%}
+| `{{ n.name | safe }}` | {{ (n.doc | replace(from="|", to="\\|")) | safe }} |
+{% endfor %}
+{%- elif table == "hook-fields" %}
+| Render hook | Fields |
+|---|---|
+{% for h in api.hook_fields -%}
+| {{ h.hook | safe }} | {{ (["`" ~ f ~ "`" for f in h.fields] | join(sep=", ")) | safe }} |
+{% endfor %}
+{%- elif table == "syntax" %}
+| Go | Tera |
+|---|---|
+{% for s in api.syntax -%}
+| {{ (s.go | replace(from="|", to="\\|")) | safe }} | {{ (s.tera | replace(from="|", to="\\|")) | safe }} |
+{% endfor %}
+{%- elif table == "conversion-rules" %}
+{%- for r in api.conversion_rules %}
+
+### {{ r.title | safe }}
+
+{% for rule in r.rules -%}
+- {{ rule | safe }}
+{% endfor %}
+{%- endfor %}
+{%- elif table == "embedded-templates" %}
+{% for t in api.embedded_templates -%}
+- `{{ t | safe }}`
+{% endfor %}
+{%- elif table == "tera-facts" %}
+{% for f in api.tera_facts -%}
+- {{ f | safe }}
+{% endfor %}
+{%- else %}
+{{- log_error(message="api-data: unknown table " ~ table) }}
+{%- endif %}

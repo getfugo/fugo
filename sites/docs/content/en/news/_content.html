@@ -1,0 +1,25 @@
+{#- The Tera port of docs/content/en/news/_content.gotmpl: a content adapter that adds the
+    latest GitHub releases to the news section. They are listed in the section only
+    (`list: local`) and have no pages of their own (`render: never`): the news list and the
+    RSS feeds link to the release page on GitHub (`params.permalink`). -#}
+
+{#- Get releases from GitHub. -#}
+{%- set u = "https://api.github.com/repos/gohugoio/hugo/releases" %}
+{%- set releases = partial(name="helpers/funcs/get-remote-data.html", url=u) %}
+{%- set releases = [r for r in releases if r.draft == false and r.prerelease == false] %}
+
+{#- Add pages. -#}
+{%- for r in releases[:24] %}
+  {#- Correct the v0.138.0 release date. See https://github.com/gohugoio/hugo/issues/13066. -#}
+  {%- set publish_date = "2024-11-06T11:22:34Z" if r.name == "v0.138.0" else r.published_at %}
+  {{- add_page(page={
+    "build": {"render": "never", "list": "local"},
+    "content": {"mediaType": "text/markdown", "value": ""},
+    "dates": {"publishDate": publish_date | to_date},
+    "kind": "page",
+    "params": {"permalink": r.html_url},
+    "path": r.name | replace(from=".", to="-"),
+    "slug": r.name,
+    "title": "Release " ~ r.name,
+  }) }}
+{%- endfor %}

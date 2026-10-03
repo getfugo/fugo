@@ -1,0 +1,242 @@
+// The exporter of ssg-highlight's `src/chroma/golexers/exported/` (crate README): writes the
+// configuration and rules of Chroma v2.19.0's lexers written in Go as Chroma XML (serialise.go's
+// format), with <emitfunc name=…/>, <mutatorfunc name=…/> for Go functions and <nil/> for a
+// nil emitter in bygroups; Raku gets its configuration and plain-text rules.
+//
+//	export <dir>
+//
+// Then rename the Go lexer's `UsingLexer.func1` emitter to `goTextTemplateString`
+// (`sed -i 's/UsingLexer.func1/goTextTemplateString/' <dir>/go.xml`) and convert the files to
+// Rust (`FUGO_HL_XML2RUST=<dir>:crates/highlight/src/chroma/golexers/exported`, crate
+// README). Build it like chroma.go.txt.
+package main
+
+import (
+	"bytes"
+	"encoding/xml"
+	"fmt"
+	"os"
+	"path/filepath"
+	"reflect"
+	"runtime"
+	"sort"
+	"strconv"
+	"strings"
+	"unsafe"
+
+	"github.com/alecthomas/chroma/v2"
+	"github.com/alecthomas/chroma/v2/lexers"
+)
+
+func field(v interface{}, name string) interface{} {
+	rv := reflect.ValueOf(v)
+	for rv.Kind() == reflect.Ptr || rv.Kind() == reflect.Interface {
+		rv = rv.Elem()
+	}
+	f := rv.FieldByName(name)
+	if !f.IsValid() {
+		panic(fmt.Sprintf("%T has no field %s", v, name))
+	}
+	return reflect.NewAt(f.Type(), unsafe.Pointer(f.UnsafeAddr())).Elem().Interface()
+}
+
+func esc(s string) string {
+	var b bytes.Buffer
+	xml.EscapeText(&b, []byte(s))
+	return b.String()
+}
+
+func funcName(f interface{}) string {
+	n := runtime.FuncForPC(reflect.ValueOf(f).Pointer()).Name()
+	n = strings.TrimPrefix(n, "github.com/alecthomas/chroma/v2/lexers.")
+	n = strings.TrimPrefix(n, "github.com/alecthomas/chroma/v2.")
+	return n
+}
+
+func emitter(b *bytes.Buffer, e chroma.Emitter, ind string) {
+	if e == nil {
+		fmt.Fprintf(b, "%s<nil/>\n", ind)
+		return
+	}
+	switch t := e.(type) {
+	case chroma.TokenType:
+		fmt.Fprintf(b, "%s<token type=\"%s\"/>\n", ind, t.String())
+		return
+	case chroma.EmitterFunc:
+		fmt.Fprintf(b, "%s<emitfunc name=\"%s\"/>\n", ind, funcName(t))
+		return
+	}
+	switch reflect.TypeOf(e).String() {
+	case "*chroma.byGroupsEmitter":
+		fmt.Fprintf(b, "%s<bygroups>\n", ind)
+		for _, s := range field(e, "Emitters").(chroma.Emitters) {
+			emitter(b, s, ind+"  ")
+		}
+		fmt.Fprintf(b, "%s</bygroups>\n", ind)
+	case "*chroma.usingEmitter":
+		fmt.Fprintf(b, "%s<using lexer=\"%s\"/>\n", ind, esc(field(e, "Lexer").(string)))
+	case "*chroma.usingSelfEmitter":
+		fmt.Fprintf(b, "%s<usingself state=\"%s\"/>\n", ind, esc(field(e, "State").(string)))
+	case "*chroma.usingByGroup":
+		fmt.Fprintf(b, "%s<usingbygroup>\n", ind)
+		fmt.Fprintf(b, "%s  <sublexer_name_group>%d</sublexer_name_group>\n", ind, field(e, "SublexerNameGroup").(int))
+		fmt.Fprintf(b, "%s  <code_group>%d</code_group>\n", ind, field(e, "CodeGroup").(int))
+		fmt.Fprintf(b, "%s  <emitters>\n", ind)
+		for _, s := range field(e, "Emitters").(chroma.Emitters) {
+			emitter(b, s, ind+"    ")
+		}
+		fmt.Fprintf(b, "%s  </emitters>\n", ind)
+		fmt.Fprintf(b, "%s</usingbygroup>\n", ind)
+	default:
+		panic(fmt.Sprintf("unknown emitter %T", e))
+	}
+}
+
+func mutator(b *bytes.Buffer, m chroma.Mutator, ind string) {
+	if m == nil {
+		return
+	}
+	if f, ok := m.(chroma.MutatorFunc); ok {
+		fmt.Fprintf(b, "%s<mutatorfunc name=\"%s\"/>\n", ind, funcName(f))
+		return
+	}
+	switch reflect.TypeOf(m).String() {
+	case "*chroma.includeMutator":
+		fmt.Fprintf(b, "%s<include state=\"%s\"/>\n", ind, esc(field(m, "State").(string)))
+	case "*chroma.combinedMutator":
+		fmt.Fprintf(b, "%s<combined", ind)
+		for _, s := range field(m, "States").([]string) {
+			fmt.Fprintf(b, " state=\"%s\"", esc(s))
+		}
+		b.WriteString("/>\n")
+	case "*chroma.pushMutator":
+		fmt.Fprintf(b, "%s<push", ind)
+		for _, s := range field(m, "States").([]string) {
+			fmt.Fprintf(b, " state=\"%s\"", esc(s))
+		}
+		b.WriteString("/>\n")
+	case "*chroma.popMutator":
+		fmt.Fprintf(b, "%s<pop depth=\"%d\"/>\n", ind, field(m, "Depth").(int))
+	case "*chroma.multiMutator":
+		fmt.Fprintf(b, "%s<mutators>\n", ind)
+		for _, s := range field(m, "Mutators").([]chroma.Mutator) {
+			mutator(b, s, ind+"  ")
+		}
+		fmt.Fprintf(b, "%s</mutators>\n", ind)
+	default:
+		panic(fmt.Sprintf("unknown mutator %T", m))
+	}
+}
+
+func config(b *bytes.Buffer, c *chroma.Config) {
+	b.WriteString("  <config>\n")
+	fmt.Fprintf(b, "    <name>%s</name>\n", esc(c.Name))
+	for _, s := range c.Aliases {
+		fmt.Fprintf(b, "    <alias>%s</alias>\n", esc(s))
+	}
+	for _, s := range c.Filenames {
+		fmt.Fprintf(b, "    <filename>%s</filename>\n", esc(s))
+	}
+	for _, s := range c.AliasFilenames {
+		fmt.Fprintf(b, "    <alias_filename>%s</alias_filename>\n", esc(s))
+	}
+	for _, s := range c.MimeTypes {
+		fmt.Fprintf(b, "    <mime_type>%s</mime_type>\n", esc(s))
+	}
+	if c.CaseInsensitive {
+		b.WriteString("    <case_insensitive>true</case_insensitive>\n")
+	}
+	if c.DotAll {
+		b.WriteString("    <dot_all>true</dot_all>\n")
+	}
+	if c.NotMultiline {
+		b.WriteString("    <not_multiline>true</not_multiline>\n")
+	}
+	if c.EnsureNL {
+		b.WriteString("    <ensure_nl>true</ensure_nl>\n")
+	}
+	if c.Priority != 0 {
+		fmt.Fprintf(b, "    <priority>%s</priority>\n", strconv.FormatFloat(float64(c.Priority), 'g', -1, 32))
+	}
+	b.WriteString("  </config>\n")
+}
+
+func export(dir, file string, l chroma.Lexer, withRules bool) {
+	var rl *chroma.RegexLexer
+	switch t := l.(type) {
+	case *chroma.RegexLexer:
+		rl = t
+	default:
+		switch reflect.TypeOf(l).String() {
+		case "*chroma.delegatingLexer":
+			rl = field(l, "language").(*chroma.RegexLexer)
+		case "*lexers.httpBodyContentTyper":
+			rl = field(l, "Lexer").(*chroma.RegexLexer)
+		default:
+			panic(fmt.Sprintf("%s: %T", file, l))
+		}
+	}
+	var b bytes.Buffer
+	b.WriteString("<lexer>\n")
+	config(&b, l.Config())
+	b.WriteString("  <rules>\n")
+	if withRules {
+		rules := rl.MustRules()
+		names := []string{}
+		for k := range rules {
+			names = append(names, k)
+		}
+		sort.Strings(names)
+		for _, name := range names {
+			fmt.Fprintf(&b, "    <state name=\"%s\">\n", esc(name))
+			for _, r := range rules[name] {
+				if r.Pattern == "" {
+					b.WriteString("      <rule>\n")
+				} else {
+					fmt.Fprintf(&b, "      <rule pattern=\"%s\">\n", esc(r.Pattern))
+				}
+				emitterOpt(&b, r.Type, "        ")
+				mutator(&b, r.Mutator, "        ")
+				b.WriteString("      </rule>\n")
+			}
+			b.WriteString("    </state>\n")
+		}
+	} else {
+		b.WriteString("    <state name=\"root\">\n      <rule pattern=\".+\">\n        <token type=\"Text\"/>\n      </rule>\n      <rule pattern=\"\\n\">\n        <token type=\"Text\"/>\n      </rule>\n    </state>\n")
+	}
+	b.WriteString("  </rules>\n</lexer>\n")
+	if err := os.WriteFile(filepath.Join(dir, file), b.Bytes(), 0o644); err != nil {
+		panic(err)
+	}
+}
+
+func emitterOpt(b *bytes.Buffer, e chroma.Emitter, ind string) {
+	if e != nil {
+		emitter(b, e, ind)
+	}
+}
+
+func main() {
+	dir := os.Args[1]
+	for _, x := range []struct {
+		lexer, file string
+		rules       bool
+	}{
+		{"Caddyfile", "caddyfile.xml", true},
+		{"Caddyfile Directives", "caddyfile_directives.xml", true},
+		{"Genshi Text", "genshi_text.xml", true},
+		{"Genshi HTML", "genshi_html.xml", true},
+		{"Genshi", "genshi.xml", true},
+		{"Go", "go.xml", true},
+		{"Haxe", "haxe.xml", true},
+		{"HTTP", "http.xml", true},
+		{"markdown", "markdown.xml", true},
+		{"PHTML", "phtml.xml", true},
+		{"Raku", "raku.xml", false},
+		{"reStructuredText", "restructuredtext.xml", true},
+		{"Svelte", "svelte.xml", true},
+		{"TypoScript", "typoscript.xml", true},
+	} {
+		export(dir, x.file, lexers.Get(x.lexer), x.rules)
+	}
+}

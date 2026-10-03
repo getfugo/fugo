@@ -1,0 +1,17 @@
+[
+{"golden": "repo-watermark-opacity-0.5.png", "source": "rust/testdata/site-assets/repo/fuzzy-cirlcle.png", "steps": [{"filters": [{"op": "opacity", "opacity": 0.5}]}]},
+{"golden": "docs-sunset-resize-480x.jpg", "source": "docs/content/en/content-management/image-processing/sunset.jpg", "steps": [{"spec": "resize 480x"}]},
+{"golden": "docs-sunset-fill-120x150-left.jpg", "source": "docs/content/en/content-management/image-processing/sunset.jpg", "steps": [{"spec": "fill 120x150 left"}]},
+{"golden": "docs-sunset-fit-120x120.jpg", "source": "docs/content/en/content-management/image-processing/sunset.jpg", "steps": [{"spec": "fit 120x120"}]},
+{"golden": "docs-sunset-crop-240x240-center.jpg", "source": "docs/content/en/content-management/image-processing/sunset.jpg", "steps": [{"spec": "crop 240x240 center"}]},
+{"golden": "docs-sunset-resize-360x-q10.jpg", "source": "docs/content/en/content-management/image-processing/sunset.jpg", "steps": [{"spec": "resize 360x q10"}]},
+{"golden": "docs-sunset-fill-200x200-topleft.jpg", "source": "docs/content/en/content-management/image-processing/sunset.jpg", "steps": [{"spec": "fill 200x200 topleft"}]},
+{"golden": "docs-card-resize-300x-grayscale.png", "source": "docs/assets/opengraph/gohugoio-card-base-1.png", "steps": [{"spec": "resize 300x"}, {"filters": [{"op": "grayscale"}]}]},
+{"golden": "docs-card-resize-64x.png", "source": "docs/assets/opengraph/gohugoio-card-base-1.png", "steps": [{"spec": "resize 64x"}]},
+{"golden": "docs-zion-colorize-180-50-20.jpg", "source": "docs/assets/images/examples/zion-national-park.jpg", "steps": [{"filters": [{"op": "colorize", "hue": 180, "saturation": 50, "percentage": 20}]}]},
+{"golden": "docs-zion-padding-20-40-976941.jpg", "source": "docs/assets/images/examples/zion-national-park.jpg", "steps": [{"filters": [{"op": "padding", "margin": [20, 40, 20, 40], "color": "#976941"}]}]},
+{"golden": "docs-zion-gaussianblur-5.jpg", "source": "docs/assets/images/examples/zion-national-park.jpg", "steps": [{"filters": [{"op": "gaussian_blur", "sigma": 5}]}]},
+{"golden": "docs-zion-sepia-75.jpg", "source": "docs/assets/images/examples/zion-national-park.jpg", "steps": [{"filters": [{"op": "sepia", "percentage": 75}]}]},
+{"golden": "docs-zion-resize-160x-mask-png.png", "source": "docs/assets/images/examples/zion-national-park.jpg", "steps": [{"spec": "resize 160x"}, {"filters": [{"op": "process", "spec": "png"}, {"op": "mask", "image": "docs/assets/images/examples/mask.png"}]}]},
+{"golden": "docs-exif-orientation-5-autoorient-resize-200x.jpg", "source": "docs/assets/images/examples/landscape-exif-orientation-5.jpg", "steps": [{"filters": [{"op": "auto_orient"}]}, {"spec": "resize 200x"}]}
+]

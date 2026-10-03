@@ -1,0 +1,7 @@
+@import "plain.css";
+  @import 'sub/x.css';
+@import url("remote.css");
+@import "print.css" print;
+@import "tailwindcss";
+@import "sub/x.css";
+.after { color: red; }

@@ -1,0 +1,67 @@
+# Cuts a release: tags the head of the branch it runs on with the next version and starts CI on
+# that tag, whose release job builds and publishes it (ci.yml). The next version is the latest
+# release tag's (v1.0.0 or later; pre-releases and the Go fork's v0.x tags do not count) with
+# the chosen part bumped, or v1.0.0 when there is none (tools/dev/version.py). DEVELOPMENT.md,
+# "CI and releases".
+name: Bump version
+
+on:
+  workflow_dispatch:
+    inputs:
+      version_bump:
+        description: "Version bump type"
+        required: true
+        type: choice
+        options:
+          - major
+          - minor
+          - patch
+
+# One bump at a time, so two runs cannot pick the same version.
+concurrency:
+  group: bump
+  cancel-in-progress: false
+
+permissions:
+  contents: write # push the tag
+  actions: write # start CI on it
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  bump:
+    name: Bump (${{ inputs.version_bump }})
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Every tag, for the latest release.
+          fetch-depth: 0
+
+      - name: Next version
+        id: next
+        env:
+          BUMP: ${{ inputs.version_bump }}
+        run: |
+          version=$(python3 tools/dev/version.py next "$BUMP")
+          echo "version=$version" >>"$GITHUB_OUTPUT"
+          echo "next version ($BUMP): v$version"
+
+      # A tag pushed with the workflow's token starts no workflow, so CI is started on it
+      # explicitly (workflow_dispatch with the tag as ref; its release job runs for tag refs).
+      - name: Tag and release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          TAG: v${{ steps.next.outputs.version }}
+        run: |
+          git tag "$TAG" "$GITHUB_SHA"
+          git push origin "refs/tags/$TAG"
+          gh workflow run ci.yml --ref "$TAG"
+          {
+            echo "Tagged \`$GITHUB_SHA\` (\`$GITHUB_REF_NAME\`) as \`$TAG\` and started CI on it;"
+            echo "its release job publishes the release when lint, test and the builds pass."
+          } >>"$GITHUB_STEP_SUMMARY"

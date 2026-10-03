@@ -1,0 +1,36 @@
+# Reviewed differences between ssg-config and the Go oracle (allconfig/load).
+# Keys: a case name (every difference of that case) or the first line of one difference.
+# The acceptance cases (repo/*) must not appear here. See README.md, "Accepted
+# deviations", for the reasoning behind each group.
+
+[load]
+# (1) Themes: remote modules are not downloaded, so a missing theme is always an error (Go's
+#     `mod` commands can ignore it).
+"themes/missing-ignored" = "a missing theme is an error (no ignoreModuleDoesNotExist: that is for Go's mod commands)"
+
+# (2) Project-wide settings come from the default language. Go keeps imaging, media types and
+#     output formats per language; this port has one table of each per project.
+"languages/per-language-sections [en] imaging:" = "imaging is project-wide"
+"merge/imaging-root-and-lang" = "imaging is project-wide"
+"merge/lang-mediatypes" = "media types and output formats are project-wide"
+
+# (3) Sections that are not typed here: deployment (Go's `deploy` is not ported), segments,
+#     httpCache (owned by the resources crate when GetRemote polling lands).
+"sections/segments-invalid-glob" = "segments not typed"
+"sections/segments-invalid-type" = "segments not typed"
+"sections/deployment-empty-target" = "deployment not typed"
+"sections/deployment-empty-matcher" = "deployment not typed"
+"sections/deployment-bad-pattern" = "deployment not typed"
+"sections/deployment-bad-order" = "deployment not typed"
+"sections/deployment-bad-glob" = "deployment not typed"
+"sections/httpcache-invalid" = "httpCache not typed"
+"sections/imaging-invalid-filter" = "resample filter names are validated by the images crate (T41)"
+
+# (4) Deliberate behaviour differences.
+"basic/empty-dir" = "load requires a configuration file or directory (Go defers the check to the CLI)"
+"basic/filename-missing" = "a missing --config file is an error (Go falls back to defaults)"
+"basic/clock-invalid" = "--clock is not configuration (base::Clock, parsed by the CLI)"
+"basic/cache-dir-no-xdg" = "the cache directory is not created while loading; the oracle's XDG_CACHE_HOME parent was not a directory, which the fixture does not record"
+"languages/lang-overrides-root-scalars" = "disableLanguages inside a language table is ignored (a root-only setting)"
+"sections/caches-invalid-maxage" = "maxAge accepts a number of seconds written as a string"
+"sections/caches-invalid" = "a cache that is not a table is an error; Go ignores it"

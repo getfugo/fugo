@@ -1,0 +1,5 @@
+{% set text = "We did a complete overhaul of Hugo's template system in v0.146.0.
+  We're working on getting all of the relevant documentation up to date, but until
+  then, see [this page](/templates/new-templatesystem-overview/). "
+%}
+{{ <alert color="orange" icon="information-circle" text={text | render_string} title="" /> }}

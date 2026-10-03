@@ -1,0 +1,40 @@
+{#- Renders the given image using the given process specification.
+
+@param {string} path The path to the image, either a page resource or a global resource.
+@param {string} spec The image processing specification.
+@param {string} alt The alt attribute of the img element.
+
+@example {{< imgproc path="sunset.jpg" spec="resize 300x" alt="A sunset" >}}
+-#}
+{%- set path = shortcode | arg(name="path", default="") %}
+{%- if path %}
+  {%- set i = (page.resources | get_resource(name=path)) or get_asset(path=path) %}
+  {%- if i %}
+    {%- set spec = shortcode | arg(name="spec", default="") %}
+    {%- if spec %}
+      {%- set processed = i | process(spec=spec) %}
+      {%- if processed %}
+        <figure>
+          <img
+            src="{{ processed.rel_permalink }}"
+            width="{{ processed.width }}"
+            height="{{ processed.height }}"
+            alt="{{ shortcode | arg(name="alt", default="") }}">
+          <figcaption class="not-prose text-sm">
+            {%- if inner %}
+              {{ inner }}
+            {%- else %}
+              {{ spec }}
+            {%- endif %}
+          </figcaption>
+        </figure>
+      {%- endif %}
+    {%- else %}
+      {{- log_error(message="The \"" ~ shortcode.name ~ "\" shortcode requires a 'spec' argument containing the image processing specification. See " ~ shortcode.position) }}
+    {%- endif %}
+  {%- else %}
+    {{- log_error(message="The \"" ~ shortcode.name ~ "\" shortcode was unable to find \"" ~ path ~ "\". See " ~ shortcode.position) }}
+  {%- endif %}
+{%- else %}
+  {{- log_error(message="The \"" ~ shortcode.name ~ "\" shortcode requires a 'path' argument indicating the image path. The image must be a page resource or a global resource. See " ~ shortcode.position) }}
+{%- endif %}

@@ -1,0 +1,17 @@
+{% set github_info = partial_cached(name="helpers/funcs/get-github-info.html", key="-") %}
+{% set opts = {"minify": true} %}
+{% set head_early = get_asset(path="js/head-early.js") %}
+{% if head_early %}
+  {% set attrs = {"async": ""} %}
+  {{ <linkjs r={head_early | js_build(options=opts)} attributes={attrs} /> }}
+{% endif %}
+{% set main_js = get_asset(path="js/main.js") %}
+{% if main_js %}
+  {% set attrs = {"defer": ""} %}
+  {{ <linkjs r={main_js | js_build(options=opts)} attributes={attrs} /> }}
+{% endif %}
+{% set turbo_js = get_asset(path="js/turbo.js") %}
+{% if turbo_js %}
+  {% set attrs = {"defer": ""} %}
+  {{ <linkjs r={turbo_js | js_build(options=opts)} attributes={attrs} /> }}
+{% endif %}

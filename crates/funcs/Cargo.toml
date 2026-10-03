@@ -1,0 +1,71 @@
+[package]
+name = "ssg-funcs"
+description = "The template API"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+autotests = false
+
+[lib]
+doctest = false
+
+[[test]]
+name = "it"
+path = "tests/it/main.rs"
+
+[lints]
+workspace = true
+
+[features]
+# `runtime` (default) is everything but the spec: `register_pure` with the pure filter, function
+# and test implementations and their dependencies (ICU data through ssg-locale). Without it
+# the crate is `spec` (dependency-free data) plus `register_placeholders` (needs only tera),
+# which is all ssg-testkit's contract test uses; testkit therefore depends on this crate with
+# `default-features = false` and a test of testkit alone never builds ICU data (T02).
+default = ["runtime"]
+runtime = [
+    "dep:ssg-base",
+    "dep:ssg-locale",
+    "dep:tera-contrib",
+    "dep:jiff",
+    "dep:regex",
+    "dep:sha2",
+    "dep:sha1",
+    "dep:md-5",
+    "dep:xxhash-rust",
+    "dep:html5gum",
+    "dep:emojis",
+    "dep:toml",
+]
+# `to_math` (LaTeX → MathML and HTML with KaTeX in QuickJS).
+math = ["runtime", "dep:rquickjs", "dep:serde_json"]
+# `diagrams_goat` (ASCII diagrams to SVG: a port of GoAT, `src/pure/goat/`; no dependencies).
+goat = ["runtime"]
+
+[dependencies]
+ssg-workspace-hack.workspace = true
+tera.workspace = true
+ssg-base = { workspace = true, optional = true }
+ssg-locale = { workspace = true, optional = true }
+tera-contrib = { workspace = true, optional = true }
+jiff = { workspace = true, optional = true }
+regex = { workspace = true, optional = true }
+sha2 = { workspace = true, optional = true }
+sha1 = { workspace = true, optional = true }
+md-5 = { workspace = true, optional = true }
+xxhash-rust = { workspace = true, optional = true }
+html5gum = { workspace = true, optional = true }
+emojis = { workspace = true, optional = true }
+toml = { workspace = true, optional = true }
+rquickjs = { workspace = true, optional = true }
+serde_json = { workspace = true, optional = true }
+
+[dev-dependencies]
+ssg-testkit.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+insta.workspace = true
+pretty_assertions.workspace = true
+jiff.workspace = true

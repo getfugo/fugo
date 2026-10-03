@@ -1,0 +1,96 @@
+//! Chroma's `metal.xml` lexer, converted to Rust (crate README, "Lexer and style files").
+
+use crate::chroma::defs::prelude::*;
+
+#[rustfmt::skip]
+pub(crate) static LEXER: LexerDef = LexerDef {
+    file: "metal",
+    config: ConfigDef {
+        name: "Metal",
+        aliases: &["metal"],
+        filenames: &["*.metal"],
+        mime_types: &["text/x-metal"],
+        ensure_nl: true,
+        ..ConfigDef::EMPTY
+    },
+    states: &[
+        ("function", &[
+            include("whitespace"),
+            include("statements"),
+            rule(r";").token(T::Punctuation),
+            rule(r"\{").token(T::Punctuation).push(&[]),
+            rule(r"\}").token(T::Punctuation).pop(1),
+        ]),
+        ("macro", &[
+            rule(r"(include)(\s*(?:/[*].*?[*]/\s*)?)([^\n]+)").groups(&[T::CommentPreproc, T::Text, T::CommentPreprocFile]),
+            rule(r"[^/\n]+").token(T::CommentPreproc),
+            rule(r"/[*](.|\n)*?[*]/").token(T::CommentMultiline),
+            rule(r"//.*?\n").token(T::CommentSingle).pop(1),
+            rule(r"/").token(T::CommentPreproc),
+            rule(r"(?<=\\)\n").token(T::CommentPreproc),
+            rule(r"\n").token(T::CommentPreproc).pop(1),
+        ]),
+        ("if0", &[
+            rule(r"^\s*#if.*?(?<!\\)\n").token(T::CommentPreproc).push(&[]),
+            rule(r"^\s*#el(?:se|if).*\n").token(T::CommentPreproc).pop(1),
+            rule(r"^\s*#endif.*?(?<!\\)\n").token(T::CommentPreproc).pop(1),
+            rule(r".*?\n").token(T::Comment),
+        ]),
+        ("statements", &[
+            rule(r"(namespace|constexpr|operator|template|using|this)\b").token(T::Keyword),
+            rule(r"(enum)\b(\s+)(class)\b(\s*)").groups(&[T::Keyword, T::Text, T::Keyword, T::Text]).push(&["classname"]),
+            rule(r"(class|struct|enum|union)\b(\s*)").groups(&[T::Keyword, T::Text]).push(&["classname"]),
+            rule(r"\[\[.+\]\]").token(T::NameAttribute),
+            rule(r"(\d+\.\d*|\.\d+|\d+)[eE][+-]?\d+[LlUu]*").token(T::LiteralNumberFloat),
+            rule(r"(\d+\.\d*|\.\d+|\d+[fF])[fF]?").token(T::LiteralNumberFloat),
+            rule(r"0[xX]([0-9A-Fa-f]('?[0-9A-Fa-f]+)*)[LlUu]*").token(T::LiteralNumberHex),
+            rule(r"0('?[0-7]+)+[LlUu]*").token(T::LiteralNumberOct),
+            rule(r"0[Bb][01]('?[01]+)*[LlUu]*").token(T::LiteralNumberBin),
+            rule(r"[0-9]('?[0-9]+)*[LlUu]*").token(T::LiteralNumberInteger),
+            rule(r"\*/").token(T::Error),
+            rule(r"[~!%^&*+=|?:<>/-]").token(T::Operator),
+            rule(r"[()\[\],.]").token(T::Punctuation),
+            rule(r"(continue|typedef|sizeof|extern|static|switch|struct|return|union|const|break|while|enum|else|case|for|do|if)\b").token(T::Keyword),
+            rule(r"(bool|float|half|long|ptrdiff_t|size_t|unsigned|u?char|u?int((8|16|32|64)_t)?|u?short)\b").token(T::KeywordType),
+            rule(r"(bool|float|half|u?(char|int|long|short))(2|3|4)\b").token(T::KeywordType),
+            rule(r"packed_(float|half|long|u?(char|int|short))(2|3|4)\b").token(T::KeywordType),
+            rule(r"(float|half)(2|3|4)x(2|3|4)\b").token(T::KeywordType),
+            rule(r"atomic_u?int\b").token(T::KeywordType),
+            rule(r"(rg?(8|16)(u|s)norm|rgba(8|16)(u|s)norm|srgba8unorm|rgb10a2|rg11b10f|rgb9e5)\b").token(T::KeywordType),
+            rule(r"(array|depth(2d|cube)(_array)?|depth2d_ms(_array)?|sampler|texture_buffer|texture(1|2)d(_array)?|texture2d_ms(_array)?|texture3d|texturecube(_array)?|uniform|visible_function_table)\b").token(T::KeywordType),
+            rule(r"(true|false|NULL)\b").token(T::NameBuiltin),
+            rule(r"(threadgroup_imageblock|threadgroup|constant|ray_data|device|thread)\b").token(T::Keyword),
+            rule(r"([a-zA-Z_]\w*)(\s*)(:)(?!:)").groups(&[T::NameLabel, T::Text, T::Punctuation]),
+            rule(r"[a-zA-Z_]\w*").token(T::Name),
+        ]),
+        ("root", &[
+            include("whitespace"),
+            rule(r"(fragment|kernel|vertex)?((?:[\w*\s])+?(?:\s|[*]))([a-zA-Z_]\w*)(\s*\([^;]*?\))([^;{]*)(\{)").bygroups(&[E::Token(T::Keyword), E::UsingSelf("root"), E::Token(T::NameFunction), E::UsingSelf("root"), E::UsingSelf("root"), E::Token(T::Punctuation)]).push(&["function"]),
+            rule(r"(fragment|kernel|vertex)?((?:[\w*\s])+?(?:\s|[*]))([a-zA-Z_]\w*)(\s*\([^;]*?\))([^;]*)(;)").bygroups(&[E::Token(T::Keyword), E::UsingSelf("root"), E::Token(T::NameFunction), E::UsingSelf("root"), E::UsingSelf("root"), E::Token(T::Punctuation)]),
+            rule("").push(&["statement"]),
+        ]),
+        ("classname", &[
+            rule(r"(\[\[.+\]\])(\s*)").groups(&[T::NameAttribute, T::Text]),
+            rule(r"[a-zA-Z_]\w*").token(T::NameClass).pop(1),
+            rule(r"\s*(?=[>{])").token(T::Text).pop(1),
+        ]),
+        ("whitespace", &[
+            rule(r"^#if\s+0").token(T::CommentPreproc).push(&["if0"]),
+            rule(r"^#").token(T::CommentPreproc).push(&["macro"]),
+            rule(r"^(\s*(?:/[*].*?[*]/\s*)?)(#if\s+0)").bygroups(&[E::UsingSelf("root"), E::Token(T::CommentPreproc)]).push(&["if0"]),
+            rule(r"^(\s*(?:/[*].*?[*]/\s*)?)(#)").bygroups(&[E::UsingSelf("root"), E::Token(T::CommentPreproc)]).push(&["macro"]),
+            rule(r"\n").token(T::Text),
+            rule(r"\s+").token(T::Text),
+            rule(r"\\\n").token(T::Text),
+            rule(r"//(\n|[\w\W]*?[^\\]\n)").token(T::CommentSingle),
+            rule(r"/(\\\n)?[*][\w\W]*?[*](\\\n)?/").token(T::CommentMultiline),
+            rule(r"/(\\\n)?[*][\w\W]*").token(T::CommentMultiline),
+        ]),
+        ("statement", &[
+            include("whitespace"),
+            include("statements"),
+            rule(r"[{]").token(T::Punctuation).push(&["root"]),
+            rule(r"[;}]").token(T::Punctuation).pop(1),
+        ]),
+    ],
+};

@@ -1,0 +1,97 @@
+{#-
+  An embedded Vimeo video. Named arguments id, class, loading, title, allowFullScreen (default
+  true), or the id as the first positional argument (and the class as the second in the simple
+  form). With `privacy.vimeo.simple`, a thumbnail linking to
+  the video (fetched with Vimeo's oEmbed API) replaces the player.
+-#}
+{%- set pc = site.config.privacy.vimeo %}
+{%- if not pc.disable %}
+  {%- set dnt = 1 if pc.enable_dnt else 0 %}
+  {%- if shortcode.is_named_params %}
+    {%- set video_id = shortcode | arg(name="id", default="") %}
+    {%- set cls = shortcode | arg(name="class", default="") %}
+  {%- else %}
+    {%- set video_id = shortcode | arg(index=0, default="") %}
+    {#- Only the simple form takes the class as a positional argument. #}
+    {%- set cls = (shortcode | arg(index=1, default="")) if pc.simple else "" %}
+  {%- endif %}
+
+  {%- if not video_id and pc.simple %}
+    {%- set kind = "named" if shortcode.is_named_params else "positional" %}
+    {{- log_error(message='The "' ~ shortcode.name ~ '" shortcode requires a single ' ~ kind ~ ' parameter, the ID of the Vimeo video. See ' ~ shortcode.position) }}
+  {%- elif not video_id %}
+    {{- log_error(message='The "' ~ shortcode.name ~ '" shortcode requires a video id, either as the first positional argument or an argument named id. See ' ~ shortcode.position) }}
+  {%- elif pc.simple %}
+    {%- set query = querify(params={"url": join_url(parts=["https://vimeo.com", video_id | str]), "dnt": dnt}) %}
+    {%- set remote = get_remote(url="https://vimeo.com/api/oembed.json?" ~ query, optional=true) %}
+    {%- if remote %}
+      {%- set video = remote | unmarshal %}
+      {%- if cls %}
+        {%- set wrapper_class = "s_video_simple " ~ cls %}
+      {%- else %}
+        {%- set wrapper_class = "s_video_simple __h_video" %}
+        {%- if not store_get(key="__h_simple_css") %}
+          {{- store_set(key="__h_simple_css", value=true) -}}
+<style>
+.__h_video {
+   position: relative;
+   padding-bottom: 56.23%;
+   height: 0;
+   overflow: hidden;
+   width: 100%;
+   background: #000;
+}
+.__h_video img {
+   width: 100%;
+   height: auto;
+   color: #000;
+}
+.__h_video .play {
+   height: 72px;
+   width: 72px;
+   left: 50%;
+   top: 50%;
+   margin-left: -36px;
+   margin-top: -36px;
+   position: absolute;
+   cursor: pointer;
+}
+</style>
+        {%- endif %}
+      {%- endif %}
+      {%- set thumbnail = video.thumbnail_url %}
+      {%- set original = thumbnail | regex_replace(pattern="(_.*\\.)", rep=".") -%}
+        <div class="{{ wrapper_class }}">
+          <a href="{{ video.provider_url }}{{ video.video_id | str }}" rel="noopener" target="_blank">
+            <img src="{{ thumbnail }}" srcset="{{ thumbnail }} 1x, {{ original }} 2x" alt="{{ video.title }}">
+            <div class="play">
+              <svg version="1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 61 61"><circle cx="30.5" cy="30.5" r="30.5" opacity=".8" fill="#000"></circle><path d="M25.3 19.2c-2.1-1.2-3.8-.2-3.8 2.2v18.1c0 2.4 1.7 3.4 3.8 2.2l16.6-9.1c2.1-1.2 2.1-3.2 0-4.4l-16.6-9z" fill="#fff"></path></svg>
+            </div>
+          </a>
+        </div>
+    {%- else %}
+      {{- log_warn(message='The "' ~ shortcode.name ~ '" shortcode was unable to retrieve the remote data. See ' ~ shortcode.position, id="shortcode-vimeo-simple") }}
+    {%- endif %}
+  {%- else %}
+    {%- set loading = shortcode | arg(name="loading", default="") %}
+    {%- set video_title = shortcode | arg(name="title", default="") %}
+    {%- set allow_full_screen = (shortcode | arg(name="allowFullScreen", default="")) not in ["false", false, 0] %}
+    {%- set src = "https://player.vimeo.com/video/" ~ video_id ~ "?dnt=" ~ dnt %}
+      <div
+        {%- if cls %}
+          class="{{ cls }}"
+        {%- else %}
+          style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden;"
+        {%- endif %}>
+        <iframe
+          src="{{ src }}"
+          {%- if not cls %}
+            style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border:0;"
+          {%- endif %}
+          {%- if allow_full_screen %} allow="fullscreen"{% endif %}
+          {%- if loading %} loading="{{ loading }}"{% endif %}
+          {%- if video_title %} title="{{ video_title }}"{% endif %}>
+        </iframe>
+      </div>
+  {%- endif %}
+{%- endif %}

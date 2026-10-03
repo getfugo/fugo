@@ -1,0 +1,11 @@
+HTTP/1.1 418 I'm a teapot
+Content-Length: 15
+Content-Type: application/json
+Date: Sun, 27 Sep 2026 10:25:09 GMT
+X-Custom: custom-value
+X-Etags-1: bcc31e36a25827081913db04c91997af
+X-Etags-2: bcc31e36a25827081913db04c91997af
+X-Multi: one
+X-Multi: two
+
+{"teapot":true}

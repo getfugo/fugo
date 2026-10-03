@@ -1,0 +1,55 @@
+[package]
+name = "ssg-sitefuncs"
+description = "Site-bound Tera functions as small handle structs (get_page, ref, i18n, assets, images, paginate, partial, …)"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+autotests = false
+
+[lib]
+doctest = false
+test = false # tests live only in tests/it (one test binary, REWRITE_PLAN.md §2.2)
+
+[[test]]
+name = "it"
+path = "tests/it/main.rs"
+
+[lints]
+workspace = true
+
+[dependencies]
+ssg-workspace-hack.workspace = true
+ssg-base.workspace = true
+ssg-config.workspace = true
+ssg-view.workspace = true
+ssg-funcs.workspace = true
+ssg-resources.workspace = true
+ssg-minify.workspace = true
+ssg-locale.workspace = true
+ssg-site.workspace = true
+ssg-page.workspace = true
+ssg-nav.workspace = true
+ssg-images.workspace = true
+# `partial()` / `template_exists` look templates up; `execute_as_template` renders with the
+# build's Tera instance (`Handles::templates`).
+ssg-layouts.workspace = true
+# The `highlight` filter (site `[markup.highlight]` defaults).
+ssg-highlight.workspace = true
+# `page_toc` in the content phase: the TOC of the fragments stage (T36; already a dependency of
+# `ssg-view`).
+ssg-markup.workspace = true
+dashmap.workspace = true
+tera.workspace = true
+thiserror.workspace = true
+serde_json.workspace = true
+jiff.workspace = true
+# `unmarshal` of CSV and XML (the same readers as `site.data`).
+csv.workspace = true
+roxmltree.workspace = true
+
+[dev-dependencies]
+ssg-testkit.workspace = true
+ssg-vfs.workspace = true
+tempfile.workspace = true

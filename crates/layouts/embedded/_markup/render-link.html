@@ -1,0 +1,18 @@
+{#- Resolves a relative destination to a page, a page resource or an asset. -#}
+{%- set u = destination | parse_url -%}
+{%- set href = u.string -%}
+{%- if href is starting_with(pat="#") -%}
+  {%- set href = page_inner.rel_permalink ~ "#" ~ u.fragment -%}
+{%- elif href and not u.is_absolute -%}
+  {%- set path = u.path | strip_prefix(prefix="./") -%}
+  {%- if path -%}
+    {%- set target = get_page(path=path, page=page_inner) or (page_inner.resources | get_resource(name=path)) or get_asset(path=path) -%}
+    {%- if target -%}
+      {%- set href = target.rel_permalink -%}
+      {%- if u.query %}{% set href = href ~ "?" ~ u.query %}{% endif -%}
+      {%- if u.fragment %}{% set href = href ~ "#" ~ u.fragment %}{% endif -%}
+    {%- endif -%}
+  {%- endif -%}
+{%- endif -%}
+<a href="{{ href }}"{% if title %} title="{{ title }}"{% endif %}>{{ text }}</a>
+{#- -#}

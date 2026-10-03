@@ -1,0 +1,165 @@
+//! Chroma's `caddyfile_directives.xml` lexer, converted to Rust
+//! (crate README, "Lexer and style files").
+
+use crate::chroma::defs::prelude::*;
+
+#[rustfmt::skip]
+pub(crate) static LEXER: LexerDef = LexerDef {
+    file: "caddyfile_directives",
+    config: ConfigDef {
+        name: "Caddyfile Directives",
+        aliases: &["caddyfile-directives", "caddyfile-d", "caddy-d"],
+        ..ConfigDef::EMPTY
+    },
+    states: &[
+        ("arguments", &[
+            rule(r"\{(?=\s)").token(T::Punctuation).push(&["block"]),
+            rule(r"(^|\s+)#.*\n").token(T::CommentSingle).pop(2),
+            rule(r"\\\n").token(T::Text),
+            rule(r"\s*\n").token(T::Text).pop(2),
+            include("base"),
+        ]),
+        ("backticks", &[
+            include("placeholder"),
+            rule(r"\\`").token(T::LiteralStringBacktick),
+            rule(r"[^`]").token(T::LiteralStringBacktick),
+            rule(r"`").token(T::LiteralStringBacktick).pop(1),
+        ]),
+        ("base", &[
+            rule(r"(^|\s+)#.*\n").token(T::CommentSingle),
+            rule(r"\[\<matcher\>\]").token(T::NameDecorator),
+            include("name_constants"),
+            include("heredoc"),
+            rule(r"(https?://)?([a-z0-9.-]+)(:)([0-9]+)([^\s]*)").groups(&[T::Name, T::Name, T::Punctuation, T::LiteralNumberInteger, T::Name]),
+            rule(r"\[").token(T::Punctuation).push(&["optional"]),
+            rule(r"`").token(T::LiteralStringBacktick).push(&["backticks"]),
+            rule(r#"""#).token(T::LiteralStringDouble).push(&["double_quotes"]),
+            include("placeholder"),
+            rule(r"[a-z-]+/[a-z-+]+").token(T::LiteralString),
+            rule(r"[0-9]+([smhdk]|ns|us|µs|ms)?\b").token(T::LiteralNumberInteger),
+            rule(r"[^\s\n#\{]+").token(T::LiteralString),
+            rule(r"/[^\s#]*").token(T::Name),
+            rule(r"\s+").token(T::Text),
+        ]),
+        ("block", &[
+            rule(r"\}").token(T::Punctuation).pop(2),
+            rule(r#"""#).token(T::LiteralStringDouble).push(&["double_quotes"]),
+            rule(r"`").token(T::LiteralStringBacktick).push(&["backticks"]),
+            rule(r"not").token(T::Keyword).push(&["not_matcher"]),
+            include("site_body"),
+            rule(r"[^\s#]+").token(T::Keyword).push(&["subdirective"]),
+            include("base"),
+        ]),
+        ("deep_not_matcher", &[
+            rule(r"\}").token(T::Punctuation).pop(2),
+            rule(r"\{(?=\s)").token(T::Punctuation).push(&["block"]),
+            rule(r"[^\s#]+").token(T::Keyword).push(&["deep_subdirective"]),
+            rule(r"\s+").token(T::Text),
+        ]),
+        ("deep_subdirective", &[
+            rule(r"\{(?=\s)").token(T::Punctuation).push(&["block"]),
+            rule(r"(^|\s+)#.*\n").token(T::CommentSingle).pop(3),
+            rule(r"\s*\n").token(T::Text).pop(3),
+            include("base"),
+        ]),
+        ("directive", &[
+            rule(r"\{(?=\s)").token(T::Punctuation).push(&["block"]),
+            rule(r"(\[\<matcher\>\]|@[^\s]+|/[^\s]+|\*)").token(T::NameDecorator).push(&["arguments"]),
+            rule(r"(^|\s+)#.*\n").token(T::CommentSingle).pop(1),
+            rule(r"\s*\n").token(T::Text).pop(1),
+            include("base"),
+        ]),
+        ("double_quotes", &[
+            include("placeholder"),
+            rule(r#"\\""#).token(T::LiteralStringDouble),
+            rule(r#"[^"]"#).token(T::LiteralStringDouble),
+            rule(r#"""#).token(T::LiteralStringDouble).pop(1),
+        ]),
+        ("heredoc", &[
+            rule(r"(<<([a-zA-Z0-9_-]+))(\n(.*|\n)*)(\s*)(\2)").bygroups(&[E::Token(T::LiteralStringHeredoc), E::Nil, E::Token(T::LiteralString), E::Token(T::LiteralString), E::Token(T::LiteralString), E::Token(T::LiteralStringHeredoc)]),
+        ]),
+        ("matcher", &[
+            rule(r"\{").token(T::Punctuation).push(&["block"]),
+            rule(r"not").token(T::Keyword).push(&["deep_not_matcher"]),
+            include("heredoc"),
+            rule(r"`").token(T::LiteralStringBacktick).push(&["backticks"]),
+            rule(r"[^\s#]+").token(T::Keyword).push(&["arguments"]),
+            rule(r"\s*\n").token(T::Text).pop(1),
+            rule(r"\}").token(T::Punctuation).pop(1),
+            include("base"),
+        ]),
+        ("name_constants", &[
+            rule(r"\b(most_recently_modified|largest_size|smallest_size|first_exist|internal|disable_redirects|ignore_loaded_certs|disable_certs|private_ranges|first|last|before|after|on|off)\b(\||(?=\]|\s|$))").groups(&[T::NameConstant, T::Punctuation]),
+        ]),
+        ("nested_arguments", &[
+            rule(r"\{(?=\s)").token(T::Punctuation).push(&["nested_block"]),
+            rule(r"(^|\s+)#.*\n").token(T::CommentSingle).pop(2),
+            rule(r"\\\n").token(T::Text),
+            rule(r"\s*\n").token(T::Text).pop(2),
+            include("base"),
+        ]),
+        ("nested_block", &[
+            rule(r"\}").token(T::Punctuation).pop(2),
+            rule(r#"""#).token(T::LiteralStringDouble).push(&["double_quotes"]),
+            rule(r"`").token(T::LiteralStringBacktick).push(&["backticks"]),
+            rule(r"not").token(T::Keyword).push(&["not_matcher"]),
+            include("site_body"),
+            rule(r"[^\s#]+").token(T::Keyword).push(&["directive"]),
+            include("base"),
+        ]),
+        ("nested_directive", &[
+            rule(r"\{(?=\s)").token(T::Punctuation).push(&["nested_block"]),
+            rule(r"(\[\<matcher\>\]|@[^\s]+|/[^\s]+|\*)").token(T::NameDecorator).push(&["nested_arguments"]),
+            rule(r"(^|\s+)#.*\n").token(T::CommentSingle).pop(1),
+            rule(r"\s*\n").token(T::Text).pop(1),
+            include("base"),
+        ]),
+        ("not_matcher", &[
+            rule(r"\}").token(T::Punctuation).pop(2),
+            rule(r"\{(?=\s)").token(T::Punctuation).push(&["block"]),
+            rule(r"[^\s#]+").token(T::Keyword).push(&["arguments"]),
+            rule(r"\s+").token(T::Text),
+        ]),
+        ("optional", &[
+            rule(r"\[").token(T::Punctuation).push(&["optional"]),
+            include("name_constants"),
+            rule(r"\|").token(T::Punctuation),
+            rule(r"[^\[\]\|]+").token(T::LiteralString),
+            rule(r"\]").token(T::Punctuation).pop(1),
+        ]),
+        ("placeholder", &[
+            rule(r"\{[\w+.\[\]\:\$-]+\}").token(T::LiteralStringEscape),
+            rule(r"\{[^\}\s]*\b").token(T::LiteralString),
+        ]),
+        ("root", &[
+            include("site_block_common"),
+        ]),
+        ("site_block_common", &[
+            include("site_body"),
+            rule(r"[^\s#]+").token(T::Keyword).push(&["directive"]),
+            include("base"),
+        ]),
+        ("site_body", &[
+            rule(r"\b(import|invoke)\b( [^\s#]+)").groups(&[T::Keyword, T::Text]).push(&["subdirective"]),
+            rule(r"@[^\s]+(?=\s)").token(T::NameDecorator).push(&["matcher"]),
+            rule(r"\[\<matcher\>\]").token(T::NameDecorator).push(&["matcher"]),
+            rule(r"\b(try_files|tls|log|bind)\b").token(T::Keyword).push(&["subdirective"]),
+            rule(r"\b(handle_errors|handle_path|handle_response|replace_status|handle|route)\b").token(T::Keyword).push(&["nested_directive"]),
+            rule(r"\b(uri)\b").token(T::Keyword).push(&["uri_directive"]),
+        ]),
+        ("subdirective", &[
+            rule(r"\{(?=\s)").token(T::Punctuation).push(&["block"]),
+            rule(r"(^|\s+)#.*\n").token(T::CommentSingle).pop(1),
+            rule(r"\s*\n").token(T::Text).pop(1),
+            include("base"),
+        ]),
+        ("uri_directive", &[
+            rule(r"\{(?=\s)").token(T::Punctuation).push(&["block"]),
+            rule(r"(\[\<matcher\>\]|@[^\s]+|/[^\s]+|\*)").token(T::NameDecorator),
+            rule(r"(strip_prefix|strip_suffix|replace|path_regexp)").token(T::NameConstant).push(&["arguments"]),
+            rule(r"(^|\s+)#.*\n").token(T::CommentSingle).pop(1),
+            rule(r"\s*\n").token(T::Text).pop(1),
+            include("base"),
+        ]),
+    ],
+};

@@ -1,0 +1,23 @@
+{% extends "baseof.html" %}
+{% block main %}
+<div class="docs">
+  <aside class="docs__sidebar" data-nav>
+    {% include "_partials/sidebar.html" %}
+  </aside>
+  <main class="docs__main" id="main">
+    {% include "_partials/breadcrumbs.html" %}
+    <article class="content">
+      <h1>{{ page.title }}</h1>
+      {%- if page.description %}
+      <p class="lead">{{ page.description }}</p>
+      {%- endif %}
+      {{ page.content }}
+      {% block after_content %}{% endblock after_content %}
+    </article>
+    {% include "_partials/page-footer.html" %}
+  </main>
+  <aside class="docs__toc">
+    {% include "_partials/toc.html" %}
+  </aside>
+</div>
+{% endblock main %}

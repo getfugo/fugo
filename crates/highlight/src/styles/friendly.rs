@@ -1,0 +1,53 @@
+//! Chroma's `friendly.xml` style, converted to Rust (crate README, "Lexer and style files").
+
+use crate::style::StyleDef;
+use crate::token::TokenType as T;
+
+#[rustfmt::skip]
+pub(crate) static STYLE: StyleDef = StyleDef {
+    name: "friendly",
+    entries: &[
+        (T::Error, "border:#ff0000"),
+        (T::Background, "bg:#f0f0f0"),
+        (T::Keyword, "bold #007020"),
+        (T::KeywordPseudo, "nobold"),
+        (T::KeywordType, "nobold #902000"),
+        (T::NameAttribute, "#4070a0"),
+        (T::NameBuiltin, "#007020"),
+        (T::NameClass, "bold #0e84b5"),
+        (T::NameConstant, "#60add5"),
+        (T::NameDecorator, "bold #555555"),
+        (T::NameEntity, "bold #d55537"),
+        (T::NameException, "#007020"),
+        (T::NameFunction, "#06287e"),
+        (T::NameLabel, "bold #002070"),
+        (T::NameNamespace, "bold #0e84b5"),
+        (T::NameTag, "bold #062873"),
+        (T::NameVariable, "#bb60d5"),
+        (T::LiteralString, "#4070a0"),
+        (T::LiteralStringDoc, "italic"),
+        (T::LiteralStringEscape, "bold #4070a0"),
+        (T::LiteralStringInterpol, "#70a0d0"),
+        (T::LiteralStringOther, "#c65d09"),
+        (T::LiteralStringRegex, "#235388"),
+        (T::LiteralStringSymbol, "#517918"),
+        (T::LiteralNumber, "#40a070"),
+        (T::Operator, "#666666"),
+        (T::OperatorWord, "bold #007020"),
+        (T::Comment, "italic #60a0b0"),
+        (T::CommentSpecial, "noitalic bg:#fff0f0"),
+        (T::CommentPreproc, "noitalic #007020"),
+        (T::GenericDeleted, "#a00000"),
+        (T::GenericEmph, "italic"),
+        (T::GenericError, "#ff0000"),
+        (T::GenericHeading, "bold #000080"),
+        (T::GenericInserted, "#00a000"),
+        (T::GenericOutput, "#888888"),
+        (T::GenericPrompt, "bold #c65d09"),
+        (T::GenericStrong, "bold"),
+        (T::GenericSubheading, "bold #800080"),
+        (T::GenericTraceback, "#0044dd"),
+        (T::GenericUnderline, "underline"),
+        (T::TextWhitespace, "#bbbbbb"),
+    ],
+};

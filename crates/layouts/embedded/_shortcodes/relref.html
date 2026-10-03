@@ -1,0 +1,15 @@
+{#- The relative permalink of a page: positional (path, output format) or named (path, lang, outputFormat) arguments. -#}
+{%- if shortcode.is_named_params %}
+  {%- set path = shortcode | arg(name="path", default="") %}
+  {%- set ref_lang = shortcode | arg(name="lang", default="") %}
+  {%- set ref_format = shortcode | arg(name="outputFormat", default="") %}
+{%- else %}
+  {%- set path = shortcode | arg(index=0, default="") %}
+  {%- set ref_lang = "" %}
+  {%- set ref_format = shortcode | arg(index=1, default="") %}
+{%- endif %}
+{%- if ref_lang and ref_format %}{{ rel_ref(path=path, lang=ref_lang, output_format=ref_format) }}
+{%- elif ref_lang %}{{ rel_ref(path=path, lang=ref_lang) }}
+{%- elif ref_format %}{{ rel_ref(path=path, output_format=ref_format) }}
+{%- else %}{{ rel_ref(path=path) }}
+{%- endif -%}

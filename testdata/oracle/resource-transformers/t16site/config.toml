@@ -1,0 +1,11 @@
+baseURL = "https://example.org/"
+title = "T16"
+disableKinds = ["taxonomy", "term", "RSS", "sitemap"]
+
+[module]
+  [[module.mounts]]
+    source = "assets"
+    target = "assets"
+  [[module.mounts]]
+    source = "node_modules"
+    target = "assets/vendor"

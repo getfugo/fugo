@@ -1,0 +1,31 @@
+{#- Configuration or front matter in TOML, YAML and JSON tabs (assets/js/main.js switches
+    them). The inner content is TOML, shown as written; the other formats are converted with
+    `remarshal`. Named arguments: `file`, the file name without extension (`config`,
+    `content/posts/my-post`); `fm`, front matter: the TOML and YAML delimiters are added. -#}
+{%- set file = shortcode | arg(name="file", default="") %}
+{%- set fm = shortcode | arg(name="fm", default=false) in [true, "true"] %}
+{%- set source = inner_deindent | trim %}
+<div class="tabs" data-tabs>
+  <div class="tabs__bar" role="tablist">
+    {%- for f in ["toml", "yaml", "json"] %}
+    <button type="button" role="tab" aria-selected="{{ "true" if loop.first else "false" }}" data-tab="{{ f }}">{{ f | upper }}</button>
+    {%- endfor %}
+  </div>
+  {%- for f in ["toml", "yaml", "json"] %}
+    {%- set code = source if f == "toml" else (source | remarshal(format=f) | trim) %}
+    {%- if fm and f == "toml" %}{% set code = "+++\n" ~ code ~ "\n+++" %}{% endif %}
+    {%- if fm and f == "yaml" %}{% set code = "---\n" ~ code ~ "\n---" %}{% endif %}
+  <div class="tabs__panel" role="tabpanel" data-panel="{{ f }}"{% if not loop.first %} hidden{% endif %}>
+    <div class="codeblock" data-lang="{{ f }}">
+      <div class="codeblock__bar">
+        <span class="codeblock__lang">{{ file ~ (".md" if fm else "." ~ f) if file else f }}</span>
+        <button class="codeblock__copy" type="button" aria-label="Copy the code" data-copy>
+          <svg class="when-idle" aria-hidden="true"><use href="#icon-copy"></use></svg>
+          <svg class="when-done" aria-hidden="true"><use href="#icon-check"></use></svg>
+        </button>
+      </div>
+      {{ code | highlight(lang=f) }}
+    </div>
+  </div>
+  {%- endfor %}
+</div>

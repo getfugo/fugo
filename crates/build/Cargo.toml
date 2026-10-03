@@ -1,0 +1,42 @@
+[package]
+name = "ssg-build"
+description = "Build orchestration"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+autotests = false
+
+[lib]
+doctest = false
+test = false # tests live only in tests/it (one test binary, REWRITE_PLAN.md §2.2)
+
+[[test]]
+name = "it"
+path = "tests/it/main.rs"
+
+[lints]
+workspace = true
+
+[dependencies]
+ssg-workspace-hack.workspace = true
+ssg-base.workspace = true
+ssg-config.workspace = true
+ssg-vfs.workspace = true
+ssg-site.workspace = true
+ssg-layouts.workspace = true
+ssg-render.workspace = true
+ssg-publish.workspace = true
+# Phases E5–E6: post-process placeholders, resource and image publishing (the image queue and the highlighter are reached through the session's
+# `Handles`, so `ssg-images` and `ssg-highlight` need no edge of their own).
+ssg-resources.workspace = true
+jiff.workspace = true
+rayon.workspace = true
+thiserror.workspace = true
+# The structure dump (`FUGO_STRUCTURE_OUT`, `structure.rs`).
+serde_json.workspace = true
+
+[dev-dependencies]
+ssg-testkit.workspace = true
+tempfile.workspace = true

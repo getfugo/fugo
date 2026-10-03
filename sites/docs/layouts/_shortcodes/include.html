@@ -1,0 +1,19 @@
+{#- Renders the page at the given path with its shortcodes expanded (Go's RenderShortcodes).
+
+You must call this shortcode using the {{% %}} notation.
+
+@param {string} 0 The path to the page, relative to the content directory.
+
+@example {{% include "functions/_common/glob-patterns" %}}
+-#}
+{%- set path = shortcode | arg(index=0, default="") %}
+{%- if path %}
+  {%- set p = get_page(path=path, page=page) or get_page(path=path) %}
+  {%- if p %}
+    {{- render_shortcodes(page=p) }}
+  {%- else %}
+    {{- log_error(message="The \"" ~ shortcode.name ~ "\" shortcode was unable to find \"" ~ path ~ "\". See " ~ shortcode.position) }}
+  {%- endif %}
+{%- else %}
+  {{- log_error(message="The \"" ~ shortcode.name ~ "\" shortcode requires a positional parameter indicating the path of the file to include. See " ~ shortcode.position) }}
+{%- endif %}

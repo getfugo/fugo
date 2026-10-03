@@ -1,0 +1,8 @@
+HTTP/1.1 200 OK
+Content-Length: 69
+Content-Type: image/png
+Date: Sun, 27 Sep 2026 10:25:09 GMT
+X-Custom: custom-value
+X-Multi: one
+X-Multi: two
+

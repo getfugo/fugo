@@ -1,0 +1,13 @@
+{#- GitHub's alert syntax (`> [!NOTE]`, `[!TIP]`, `[!IMPORTANT]`, `[!WARNING]`, `[!CAUTION]`)
+    as a callout; other blockquotes as they are. -#}
+{%- if type == "alert" %}
+<div class="alert alert--{{ alert_type }}" role="note">
+  <p class="alert__title">{{ alert_title or (alert_type | capitalize) }}</p>
+  {{ text }}
+</div>
+{%- else %}
+<blockquote>
+  {{ text }}
+</blockquote>
+{%- endif %}
+{#- -#}

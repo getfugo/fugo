@@ -1,0 +1,21 @@
+---
+source: crates/config/tests/it/api.rs
+expression: notices
+---
+- "config: build.writeStats is no longer supported and is ignored"
+- "config: disqusShortname is deprecated; use services.disqus.shortname"
+- "config: footnoteReturnLinkContents is deprecated; use markup.goldmark.extensions.footnote.backlinkHTML"
+- "config: googleAnalytics is deprecated; use services.googleAnalytics.id"
+- "config: ignoreErrors is deprecated; use ignoreLogs"
+- "config: indexes is deprecated; use taxonomies"
+- "config: logI18nWarnings is deprecated; use printI18nWarnings"
+- "config: minify is deprecated; use minify.minifyOutput"
+- "config: paginate is deprecated; use pagination.pagerSize"
+- "config: paginatePath is deprecated; use pagination.path"
+- "config: privacy.twitter.enablednt is deprecated; use privacy.x.enablednt"
+- "config: pygmentsCodeFences is deprecated; use markup.highlight.codeFences"
+- "config: pygmentsCodefencesGuessSyntax is deprecated; use markup.highlight.guessSyntax"
+- "config: pygmentsStyle is deprecated; use markup.highlight.style"
+- "config: pygmentsUseClasses is deprecated; use markup.highlight.noClasses"
+- "config: rssLimit is deprecated; use services.rss.limit"
+- "config: services.twitter.disableinlinecss is deprecated; use services.x.disableinlinecss"

@@ -1,0 +1,51 @@
+{#- schema.org microdata of `page`: `{% include "_partials/schema.html" %}`. -#}
+{%- set item_name = (page.title or site.title or "") | plainify %}
+{%- if item_name %}
+  <meta itemprop="name" content="{{ item_name }}">
+{%- endif %}
+
+{%- set description = (page.description or page.summary or site.params.description or "") | plainify | html_unescape %}
+{%- if description %}
+  <meta itemprop="description" content="{{ description | trim_chars(chars="\n\r\t ") }}">
+{%- endif %}
+
+{%- set iso8601 = "%Y-%m-%dT%H:%M:%S%:z" %}
+{%- if page.publish_date %}
+  <meta itemprop="datePublished" content="{{ page.publish_date | date(format=iso8601, locale="en") }}">
+{%- endif %}
+
+{%- if page.lastmod %}
+  <meta itemprop="dateModified" content="{{ page.lastmod | date(format=iso8601, locale="en") }}">
+{%- endif %}
+
+{%- if page.word_count %}
+  <meta itemprop="wordCount" content="{{ page.word_count }}">
+{%- endif %}
+
+{%- set images = partial(name="_funcs/get-page-images") %}
+{%- for img in images[:6] %}
+  <meta itemprop="image" content="{{ img.permalink }}">
+{%- endfor %}
+
+{#-
+  Keywords, in order of precedence:
+  1. the titles of the page's "keywords" terms;
+  2. the "keywords" front matter when "keywords" is not a taxonomy;
+  3. the titles of the page's "tags" terms;
+  4. the titles of the page's terms of every taxonomy.
+#}
+{%- set keywords = [t.title for t in get_terms(taxonomy="keywords")] %}
+{%- if not keywords %}
+  {%- set keywords = page.keywords %}
+{%- endif %}
+{%- if not keywords %}
+  {%- set keywords = [t.title for t in get_terms(taxonomy="tags")] %}
+{%- endif %}
+{%- if not keywords %}
+  {%- for taxonomy, terms in page.terms %}
+    {%- set_global keywords = keywords | concat(with=[t.title for t in terms]) %}
+  {%- endfor %}
+{%- endif %}
+{%- if keywords %}
+  <meta itemprop="keywords" content="{{ keywords | join(sep=",") }}">
+{%- endif %}

@@ -1,0 +1,9 @@
+{% extends "baseof.html" %}
+{% block main %}
+<main class="not-found" id="main">
+  {%- set mark = get_asset(path="brand/mark.png") | resize(width=320) %}
+  <img src="{{ mark.rel_permalink }}" width="160" height="160" alt="">
+  <h1>Page not found</h1>
+  <p>The page you are looking for is not here. Try the search, or start from the <a href="{{ site.home.rel_permalink }}">home page</a>.</p>
+</main>
+{% endblock main %}

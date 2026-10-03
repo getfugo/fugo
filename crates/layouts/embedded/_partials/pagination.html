@@ -1,0 +1,74 @@
+{#-
+  Pagination navigation of the current page's pager, as `{% include "_partials/pagination.html" %}`,
+  or `partial(name="pagination", format="terse")` with a format: `default` (5 page slots, disabled
+  first/previous/next/last items) or `terse` (3 slots, no disabled items).
+-#}
+{%- set nav_format = (format | default(value="default")) | lower %}
+{%- if nav_format != "default" and nav_format != "terse" %}
+  {{- log_error(message="The 'format' specified for the embedded pagination template is invalid. Valid choices are: default, terse.") }}
+{%- else %}
+  {%- set pager = paginator() %}
+  {%- if pager.total_pages > 1 %}
+    {%- set full = nav_format == "default" %}
+    <ul class="pagination pagination-{{ nav_format }}">
+    {%- if pager.page_number != pager.first.page_number %}
+      <li class="page-item">
+        <a href="{{ pager.first.url }}" aria-label="First" class="page-link" role="button"><span aria-hidden="true">&laquo;&laquo;</span></a>
+      </li>
+    {%- elif full %}
+      <li class="page-item disabled">
+        <a aria-disabled="true" aria-label="First" class="page-link" role="button" tabindex="-1"><span aria-hidden="true">&laquo;&laquo;</span></a>
+      </li>
+    {%- endif %}
+
+    {%- if pager.prev %}
+      <li class="page-item">
+        <a href="{{ pager.prev.url }}" aria-label="Previous" class="page-link" role="button"><span aria-hidden="true">&laquo;</span></a>
+      </li>
+    {%- elif full %}
+      <li class="page-item disabled">
+        <a aria-disabled="true" aria-label="Previous" class="page-link" role="button" tabindex="-1"><span aria-hidden="true">&laquo;</span></a>
+      </li>
+    {%- endif %}
+
+    {%- set slots = 5 if full else 3 %}
+    {%- set first_slot = max(values=[1, pager.page_number - slots // 2]) %}
+    {%- set last_slot = min(values=[pager.total_pages, first_slot + slots - 1]) %}
+    {%- if last_slot - first_slot + 1 < slots %}
+      {%- set first_slot = max(values=[1, last_slot - slots + 1]) %}
+    {%- endif %}
+
+    {%- for k in range(start=first_slot, end=last_slot + 1) %}
+      {%- if k == pager.page_number %}
+      <li class="page-item active">
+        <a aria-current="page" aria-label="Page {{ k }}" class="page-link" role="button">{{ k }}</a>
+      </li>
+      {%- else %}
+      <li class="page-item">
+        <a href="{{ pager.pagers[k - 1].url }}" aria-label="Page {{ k }}" class="page-link" role="button">{{ k }}</a>
+      </li>
+      {%- endif %}
+    {%- endfor %}
+
+    {%- if pager.next %}
+      <li class="page-item">
+        <a href="{{ pager.next.url }}" aria-label="Next" class="page-link" role="button"><span aria-hidden="true">&raquo;</span></a>
+      </li>
+    {%- elif full %}
+      <li class="page-item disabled">
+        <a aria-disabled="true" aria-label="Next" class="page-link" role="button" tabindex="-1"><span aria-hidden="true">&raquo;</span></a>
+      </li>
+    {%- endif %}
+
+    {%- if pager.page_number != pager.last.page_number %}
+      <li class="page-item">
+        <a href="{{ pager.last.url }}" aria-label="Last" class="page-link" role="button"><span aria-hidden="true">&raquo;&raquo;</span></a>
+      </li>
+    {%- elif full %}
+      <li class="page-item disabled">
+        <a aria-disabled="true" aria-label="Last" class="page-link" role="button" tabindex="-1"><span aria-hidden="true">&raquo;&raquo;</span></a>
+      </li>
+    {%- endif %}
+    </ul>
+  {%- endif %}
+{%- endif -%}

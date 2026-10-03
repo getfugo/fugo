@@ -1,0 +1,75 @@
+{% extends "baseof.html" %}
+
+{% block main %}
+  {% if page.is_page %}
+    {# We currently have a slightly odd content structure with no top level /docs section. #}
+    {% set current_section = page.current_section | deref %}
+    {% set pages = current_section.pages %}
+  {% else %}
+    {% set pages = page.pages %}
+    {% if page.section == "news" %}
+      {% set pages = pages | by_publish_date | reverse %}
+    {% endif %}
+  {% endif %}
+
+
+  <article class="">
+    {% include "_partials/layouts/docsheader.html" %}
+    <div class="mt-6 sm:mt-8 grid grid-cols-2 xl:grid-cols-3 gap-4 min-h-40">
+      {% for p in pages %}
+        {% if p.id == page.id %}
+          {% continue %}
+        {% endif %}
+        <a
+          class="flex col-span-1 a--block cursor-pointer flex-col group border p-3 sm:p-4 hover:shadow-md dark:shadow-slate-800 border-gray-300 dark:border-gray-800 m-0"
+          href="{{ p.params.permalink or p.rel_permalink }}">
+          {% if p.params.show_publish_date %}
+            {% if p.publish_date %}
+              <p
+                class="text-gray-500 dark:text-gray-400 text-sm/5 md:text-base/2 mb-2 sm:mb-4">
+                {{ <date date={p.publish_date} /> }}
+              </p>
+            {% endif %}
+          {% endif %}
+          <h3
+            class="text-lg/6 md:text-2xl tracking-tight p-0 -mt-1 sm:mt-0 mb-1 sm:mb-2 text-primary group-hover:text-primary/70 overflow-hidden">
+            {{ p.link_title }}
+          </h3>
+
+          {% set signatures = p.params.functions_and_methods?.signatures %}
+          {% if signatures %}
+            {# Set in functions and methods pages. #}
+            {% set signature = signatures | first %}
+            {% if signature %}
+              {#- Go reads the return type of the list page here (`$.Params`), never set on a
+                  section, so this branch does not run. #}
+              {% if page.params.functions_and_methods?.returntype %}
+                {% set signature = signature ~ " ⟼ " ~ page.params.functions_and_methods.returntype %}
+              {% endif %}
+              <div
+                class="font-mono font-light text-sm whitespace-nowrap mb-2 sm:mb-4 p-2 bg-slate-50 dark:bg-slate-700 border-0 mr-8 overflow-x-auto">
+                {{- signature -}}
+              </div>
+            {% endif %}
+          {% endif %}
+          <p
+            class="text-black dark:text-gray-100 leading-6 text-sm md:text-base three-lines-ellipsis">
+            {% if p.section == "commands" and p.is_page %}
+              {% set simple_cobra_command_short = p.raw_content | regex_replace(pattern="(?s)^##\\s.+?\\n\\n(.+?)\\n\\n.*", rep="$1") %}
+              {{ simple_cobra_command_short }}.
+            {% else %}
+              {{ (p.params.description or p.summary) | plainify | safe }}
+            {% endif %}
+          </p>
+          {% if build.is_development and site.params.debug?.display_page_metadata %}
+            {{ <list_item_metadata p={p} /> }}
+          {% endif %}
+        </a>
+      {% endfor %}
+    </div>
+  </article>
+{% endblock main %}
+
+{% block rightsidebar %}
+   
+{% endblock rightsidebar %}

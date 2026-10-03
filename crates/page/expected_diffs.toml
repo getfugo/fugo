@@ -1,0 +1,49 @@
+# Reviewed differences between ssg-page and the Go oracles (testdata/oracle/page).
+#
+# The oracle tests (tests/it) classify every difference; a class listed here is accepted with
+# exactly the count given (a changed count fails the test, so the file stays reviewed), and any
+# other difference fails. Keys: [<family>.<class>].
+
+[paths.url-query-or-escape]
+count = 236
+reason = """
+A front matter `url` with a query (`/q?x=1`). Go keeps the query in `.RelPermalink`;
+This port keeps page links as URL paths (`UrlPath`) and escapes them when writing, so `?`
+becomes `%3F`. (Percent escapes such as `/a%20b/` are kept as written, as in Go.) Output
+files are identical; only the links of these adversarial URLs differ.
+"""
+
+[permalinks-decode.go-typed-map]
+count = 1
+reason = """
+The oracle's `advi` case hands Go's `[permalinks]` decoder a `map[string]string` for `page`,
+which it rejects (it expects the `map[string]any` a configuration file decodes to). The same
+table is an ordinary `[permalinks.page]` table to this port.
+"""
+
+[frontmatter-dates.unix-seconds-in-utc]
+count = 48
+reason = """
+A front matter date given as Unix seconds (`date: 1136214245`) is placed in UTC. Go places it
+in the process's local zone, which the oracle ran as a nameless zero offset (`+00:00`); the
+instant is the same.
+"""
+
+[cascade-match.bad-glob-rejected]
+count = 18
+reason = """
+A cascade target glob that does not compile (`[bad`, `[`). Go ignores that criterion (and
+panics when decoding a bad `kind`); this port rejects the cascade entry with an error.
+"""
+
+[markup.markup-not-supported]
+count = 11
+reason = """
+AsciiDoc, reStructuredText, Pandoc, Org, plain text and JSON as content markup. Go renders
+them with external tools; this port supports Markdown and HTML (`Markup`) and reports the others
+as unsupported.
+"""
+
+[page-config.markup-not-supported]
+count = 1
+reason = "As markup.markup-not-supported (an `.adoc` content file)."

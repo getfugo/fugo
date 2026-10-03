@@ -1,0 +1,13 @@
+{%- set signatures = page.params.functions_and_methods?.signatures %}
+{%- if signatures %}
+  <p class="font-bold text-dark dark:text-light">Syntax</p>
+  {%- for s in signatures %}
+    {%- set signature = s %}
+    {%- if page.params.function?.returntype %}
+      {%- set signature = s ~ " ⟼ " ~ page.params.function.returntype %}
+    {%- endif %}
+    <div class="font-sm font-mono ml-3 sm:ml-6 mt-0 sm:mt-1">
+      {{- signature -}}
+    </div>
+  {%- endfor %}
+{%- endif -%}

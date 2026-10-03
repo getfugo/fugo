@@ -1,0 +1,25 @@
+{#- Renders a table of the Chroma lexers and their aliases (site.data.docs.chroma.lexers).
+
+@example {{< chroma-lexers >}}
+-#}
+<div class="overflow-x-auto">
+  <table>
+    <thead>
+      <th>Language</th>
+      <th>Identifiers</th>
+    </thead>
+    <tbody>
+      {%- for lexer in site.data.docs.chroma.lexers %}
+        <tr>
+          <td>{{ lexer.Name }}</td>
+          <td>
+            {%- for alias in lexer.Aliases or [] %}
+              {%- if not loop.first %},{% endif %}
+              <code>{{ alias }}</code>
+            {%- endfor %}
+          </td>
+        </tr>
+      {%- endfor %}
+    </tbody>
+  </table>
+</div>

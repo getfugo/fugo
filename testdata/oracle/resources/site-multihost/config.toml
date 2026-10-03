@@ -1,0 +1,14 @@
+defaultContentLanguage = "en"
+title = "multihost"
+
+[languages]
+  [languages.en]
+    baseURL = "https://en.example.org/docs/"
+    weight = 1
+  [languages.fr]
+    baseURL = "https://fr.example.org/"
+    weight = 2
+
+[imaging]
+  [imaging.exif]
+    excludeFields = ".*"

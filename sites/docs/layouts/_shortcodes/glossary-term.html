@@ -1,0 +1,19 @@
+{#- Renders the definition of the given glossary term.
+
+@param {string} 0 The glossary term.
+
+@example {{% glossary-term float %}}
+@example {{% glossary-term "floating point" %}}
+-#}
+{%- set term = shortcode | arg(index=0, default="") %}
+{%- if term %}
+  {%- set path = "/quick-reference/glossary/" ~ (term | urlize) %}
+  {%- set p = get_page(path=path) %}
+  {%- if p %}
+{{ render_shortcodes(page=p) }}{# Do not indent. #}
+  {%- else %}
+    {{- log_error(message="The glossary term (" ~ shortcode.name ~ ") shortcode was unable to find " ~ path ~ ": see " ~ shortcode.position) }}
+  {%- endif %}
+{%- else %}
+  {{- log_error(message="The glossary term (" ~ shortcode.name ~ ") shortcode requires one positional parameter: see " ~ shortcode.position) }}
+{%- endif -%}

@@ -1,0 +1,11 @@
+HTTP/1.1 200 OK
+Content-Length: 74
+Content-Type: image/svg+xml
+Date: Sun, 27 Sep 2026 10:25:09 GMT
+X-Custom: custom-value
+X-Etags-1: 95b9c8f0abe7569b141a42e7a47da1a6
+X-Etags-2: 95b9c8f0abe7569b141a42e7a47da1a6
+X-Multi: one
+X-Multi: two
+
+<svg xmlns="http://www.w3.org/2000/svg"><rect width="1" height="1"/></svg>

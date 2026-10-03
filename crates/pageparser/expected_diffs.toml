@@ -1,0 +1,20 @@
+# Reviewed differences from the Go oracles (REWRITE_PLAN.md §6.3). Read by tests/it.
+# Each entry: a rule the test checks precisely, and its reason (crate README, "Accepted
+# deviations").
+
+[body_after_split]
+# A page without front matter whose first non-blank text is `<!--more-->`: `lex(body)` after
+# `split_front_matter` sees the divider; Go's page lexer consumed its `<` while looking for
+# front matter and reads it as text (a Go state-machine artefact, §1.2).
+divider_at_start = "summary divider at the start of a page without front matter is recognised"
+
+[front_matter]
+# Case ids of parser/pageparser/pages.json.gz (`shape#<n>`: the n-th hand-written shape).
+"shape#0" = "YAML 1.2 (D5): serde-saphyr rejects `.inf`/`.nan` in untyped values, so the document fails; Go (yaml.v2, YAML 1.1) also reads `yes` as true, `017` as octal and keeps a uint64"
+"shape#3" = "as shape#0 (the same YAML with CRLF line ends)"
+"shape#1" = "TOML: go-toml parses 6.626e-34 as 6.626000000000001e-34 (its own float parser); the leap second 23:59:60 stays a string (jiff has no second 60; Go normalises it to the next minute)"
+"shape#4" = "as shape#1 (the same TOML with CRLF line ends)"
+"shape#21" = "YAML 1.2: `: bad` is a map with the empty key; yaml.v2 rejects it"
+
+[front_matter_rules]
+json_numbers = "JSON integers stay integers; Go decodes every JSON number as float64"

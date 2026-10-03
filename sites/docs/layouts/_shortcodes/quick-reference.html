@@ -1,0 +1,28 @@
+{#- Renders the child sections of the given top-level section, listing each child's
+immediate descendants. A child section's content is page_content (REWRITE_PLAN.md §4.4).
+
+@param {string} section The top-level section to render.
+
+@example {{% quick-reference section="/functions" %}}
+-#}
+{% set section = shortcode | arg(name="section", default="") %}
+{% if not section %}
+  {{ log_error(message="The \"" ~ shortcode.name ~ "\" shortcode requires a 'section' parameter. See " ~ shortcode.position) }}
+{% endif %}
+
+{% set top = get_page(path=section) if section else none %}
+{% if top %}
+  {% for s in top.sections %}{% set s = s | deref %}
+## {{ s.link_title }}{# Do not indent. #}
+{{ s.description }}{# Do not indent. #}
+    {{ page_content(page=s) }}
+    {% if s.pages %}
+      {% for p in s.pages %}
+[{{ p.link_title }}]({{ p.rel_permalink }}){# Do not indent. #}
+: {{ p.description }}{# Do not indent. #}
+      {% endfor %}
+    {% endif %}
+  {% endfor %}
+{% else %}
+  {{ log_error(message="The \"" ~ shortcode.name ~ "\" shortcodes was unable to find the \"" ~ section ~ "\" section. See " ~ shortcode.position) }}
+{% endif %}

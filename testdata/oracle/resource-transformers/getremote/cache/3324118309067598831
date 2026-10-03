@@ -1,0 +1,12 @@
+HTTP/1.1 200 OK
+Content-Length: 15
+Content-Disposition: attachment; filename="report.json"
+Content-Type: application/json
+Date: Sun, 27 Sep 2026 10:25:09 GMT
+X-Custom: custom-value
+X-Etags-1: e90431d46facf1c9af4663adf07b85db
+X-Etags-2: e90431d46facf1c9af4663adf07b85db
+X-Multi: one
+X-Multi: two
+
+{"report":true}

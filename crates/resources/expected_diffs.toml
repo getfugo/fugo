@@ -1,0 +1,45 @@
+# Reviewed differences from the Go oracles (REWRITE_PLAN.md §6.3). Read by tests/it. Each
+# entry: a case or rule the tests check precisely, and its reason (crate README, "Accepted
+# deviations").
+
+[resources]
+# Rules of tests/it/resources.rs (oracle/resources/resources/{synth,docs}).
+shared_params = "Go's front matter metadata writes params into the base resource's shared map, so a translation reusing the file (records with `same`) sees the other language's params; resources are immutable here, so those records' params are not compared"
+key_and_size = "`Key` (Go's cache key, with an image-config hash for images) is not modelled; image width/height come from the ImageQueue seam (T41/T35), not from the store"
+fixture_json = "T00's fixture conversion re-serialised the synthetic site's JSON files (assets/data/x.json, content/blog/bundle1/data.json); the tests restore the bytes Go read from the oracle's recorded contents"
+
+[transform]
+# Rules of tests/it/fingerprint.rs (oracle/resources/transform).
+copy_same_target = "`resources.Copy` of a second, different source to a target already copied in the same language is a TargetConflict; Go's transformation cache key ignores the source, so Go silently returns the first asset's copy (and its content)"
+pipes = "minify and the tool pipes (tocss) are T42's; their chains are not run here but in tests/it/pipes/minify.rs"
+minify_bytes = "(tests/it/pipes/minify.rs) ssg-minify (minify-html, lightningcss, oxc) does not write tdewolff's bytes; such output must be a fixed point of the minifier, and a fingerprint after it names other bytes (T26)"
+tocss_builtin = "(tests/it/pipes/minify.rs) `to_css` is grass, built in: Go's `na:tocss` (\"this feature is not available\") does not apply"
+
+[getremote]
+# Calls of tests/it/remote.rs (oracle/resource-transformers/getremote) whose listed fields
+# differ; every other field is compared.
+"echo-post-upper" = { fields = ["name", "title", "nameNormalized", "relPermalink", "permalink"], reason = "the same request as echo-post with upper-case option names: one typed request here, so it gets echo-post's resource; Go hashes the option names as written" }
+"head" = { fields = ["name", "title", "nameNormalized", "relPermalink", "permalink"], reason = "a HEAD response's `application/json; charset=UTF-8` resolves to the configured JSON type (suffix .json); Go looks the parameterised string up, finds nothing and names the resource without suffix" }
+"vnd-accepted" = { fields = ["mediaType"], reason = "a trusted Content-Type `application/vnd.t15+json; charset=utf-8` becomes the media type `application/vnd.t15+json`; Go's FromString keeps the parameter inside the structured-syntax suffix" }
+
+[tocss]
+# Cases of tests/it/pipes/tocss.rs (oracle/resource-transformers/tocss): grass follows
+# dart-sass, not LibSass. Each listed case's CSS must still equal LibSass's without those
+# differences (plain CSS @imports dropped, numbers to 3 decimals, escapes as characters,
+# constant calc() simplified, no source map comment); a minified case only checks its link.
+main-nested = "dart-sass semantics: `@import \"plain.css\"` hoisted to the top (LibSass kept it in place, and lost it in compressed output because Go hides it in a comment), 10 decimals instead of `precision` (8), `\"\\2192 \"` written as the character; `nested` and `compact` are written expanded"
+main-expanded = "as main-nested"
+main-compact = "as main-nested"
+main-compressed = "as main-nested"
+main-precision-3 = "as main-nested (`precision` has no effect)"
+main-precision-10 = "as main-nested"
+main-node-modules-only = "as main-nested"
+main-missing-include = "as main-nested"
+main-target = "as main-nested"
+main-final = "as main-nested, then minified by lightningcss instead of tdewolff (other bytes, so another fingerprint)"
+main-sourcemap = "as main-nested; grass writes no source maps (no `sourceMappingURL` comment, no `.map` file)"
+main-sourcemap-target = "as main-sourcemap"
+vars = "dart-sass simplifies `calc(10px + 2px)` from `vars` to `12px`"
+vars-expanded = "as vars"
+err-vars-bool = "a boolean in `vars` is written unquoted (`true`); Go fails only because it formats the bool with %q (`unquote(%!q(bool=true))`)"
+

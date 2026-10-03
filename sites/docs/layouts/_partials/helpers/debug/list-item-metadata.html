@@ -1,0 +1,26 @@
+{#- Component `list_item_metadata`: weight, keywords and categories of the listed page `p`. -#}
+{%- component list_item_metadata(p) %}
+<span class="h-3"></span>
+<table class="mt-auto">
+  <tbody>
+    <tr>
+      <td class="align-top text-red-700">weight:</td>
+      <td class="align-top pl-2 w-full">
+        {{ p.weight }}
+      </td>
+    </tr>
+    <tr>
+      <td class="align-top text-red-700">keywords:</td>
+      <td class="align-top pl-2">
+        {{ (p.keywords or []) | join(sep=", ") }}
+      </td>
+    </tr>
+    <tr>
+      <td class="align-top text-red-700">categories:</td>
+      <td class="align-top pl-2">
+        {{ (p.params.categories or []) | join(sep=", ") }}
+      </td>
+    </tr>
+  </tbody>
+</table>
+{%- endcomponent list_item_metadata %}

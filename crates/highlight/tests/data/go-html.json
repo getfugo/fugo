@@ -1,0 +1,572 @@
+[
+ {
+  "lang": "go-html-template",
+  "code": "{{ range .Pages }}\n  <a href=\"{{ .Permalink }}\">{{ .Title }}</a>\n{{ end }}",
+  "opts": "",
+  "html": "<div class=\"highlight\"><pre tabindex=\"0\" style=\"color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;\"><code class=\"language-go-html-template\" data-lang=\"go-html-template\"><span style=\"display:flex;\"><span><span style=\"color:#75715e\">{{</span> <span style=\"color:#66d9ef\">range</span> <span style=\"color:#a6e22e\">.Pages</span> <span style=\"color:#75715e\">}}</span>\n</span></span><span style=\"display:flex;\"><span>  &lt;<span style=\"color:#f92672\">a</span> <span style=\"color:#a6e22e\">href</span><span style=\"color:#f92672\">=</span><span style=\"color:#e6db74\">&#34;</span><span style=\"color:#75715e\">{{</span> <span style=\"color:#a6e22e\">.Permalink</span> <span style=\"color:#75715e\">}}</span><span style=\"color:#e6db74\">&#34;</span>&gt;<span style=\"color:#75715e\">{{</span> <span style=\"color:#a6e22e\">.Title</span> <span style=\"color:#75715e\">}}</span>&lt;/<span style=\"color:#f92672\">a</span>&gt;\n</span></span><span style=\"display:flex;\"><span><span style=\"color:#75715e\">{{</span> <span style=\"color:#66d9ef\">end</span> <span style=\"color:#75715e\">}}</span></span></span></code></pre></div>"
+ },
+ {
+  "lang": "go-html-template",
+  "code": "{{ range .Pages }}\n  <a href=\"{{ .Permalink }}\">{{ .Title }}</a>\n{{ end }}",
+  "opts": "noClasses=false",
+  "html": "<div class=\"highlight\"><pre tabindex=\"0\" class=\"chroma\"><code class=\"language-go-html-template\" data-lang=\"go-html-template\"><span class=\"line\"><span class=\"cl\"><span class=\"cp\">{{</span><span class=\"w\"> </span><span class=\"k\">range</span><span class=\"w\"> </span><span class=\"na\">.Pages</span><span class=\"w\"> </span><span class=\"cp\">}}</span>\n</span></span><span class=\"line\"><span class=\"cl\">  <span class=\"p\">&lt;</span><span class=\"nt\">a</span> <span class=\"na\">href</span><span class=\"o\">=</span><span class=\"s\">&#34;</span><span class=\"cp\">{{</span><span class=\"w\"> </span><span class=\"na\">.Permalink</span><span class=\"w\"> </span><span class=\"cp\">}}</span><span class=\"s\">&#34;</span><span class=\"p\">&gt;</span><span class=\"cp\">{{</span><span class=\"w\"> </span><span class=\"na\">.Title</span><span class=\"w\"> </span><span class=\"cp\">}}</span><span class=\"p\">&lt;/</span><span class=\"nt\">a</span><span class=\"p\">&gt;</span>\n</span></span><span class=\"line\"><span class=\"cl\"><span class=\"cp\">{{</span><span class=\"w\"> </span><span class=\"k\">end</span><span class=\"w\"> </span><span class=\"cp\">}}</span></span></span></code></pre></div>"
+ },
+ {
+  "lang": "go-html-template",
+  "code": "{{ range .Pages }}\n  <a href=\"{{ .Permalink }}\">{{ .Title }}</a>\n{{ end }}",
+  "opts": "noClasses=false,linenos=table",
+  "html": "<div class=\"highlight\"><div class=\"chroma\">\n<table class=\"lntable\"><tr><td class=\"lntd\">\n<pre tabindex=\"0\" class=\"chroma\"><code><span class=\"lnt\">1\n</span><span class=\"lnt\">2\n</span><span class=\"lnt\">3\n</span></code></pre></td>\n<td class=\"lntd\">\n<pre tabindex=\"0\" class=\"chroma\"><code class=\"language-go-html-template\" data-lang=\"go-html-template\"><span class=\"line\"><span class=\"cl\"><span class=\"cp\">{{</span><span class=\"w\"> </span><span class=\"k\">range</span><span class=\"w\"> </span><span class=\"na\">.Pages</span><span class=\"w\"> </span><span class=\"cp\">}}</span>\n</span></span><span class=\"line\"><span class=\"cl\">  <span class=\"p\">&lt;</span><span class=\"nt\">a</span> <span class=\"na\">href</span><span class=\"o\">=</span><span class=\"s\">&#34;</span><span class=\"cp\">{{</span><span class=\"w\"> </span><span class=\"na\">.Permalink</span><span class=\"w\"> </span><span class=\"cp\">}}</span><span class=\"s\">&#34;</span><span class=\"p\">&gt;</span><span class=\"cp\">{{</span><span class=\"w\"> </span><span class=\"na\">.Title</span><span class=\"w\"> </span><span class=\"cp\">}}</span><span class=\"p\">&lt;/</span><span class=\"nt\">a</span><span class=\"p\">&gt;</span>\n</span></span><span class=\"line\"><span class=\"cl\"><span class=\"cp\">{{</span><span class=\"w\"> </span><span class=\"k\">end</span><span class=\"w\"> </span><span class=\"cp\">}}</span></span></span></code></pre></td></tr></table>\n</div>\n</div>"
+ },
+ {
+  "lang": "go-html-template",
+  "code": "{{ range .Pages }}\n  <a href=\"{{ .Permalink }}\">{{ .Title }}</a>\n{{ end }}",
+  "opts": "noClasses=false,linenos=inline",
+  "html": "<div class=\"highlight\"><pre tabindex=\"0\" class=\"chroma\"><code class=\"language-go-html-template\" data-lang=\"go-html-template\"><span class=\"line\"><span class=\"ln\">1</span><span class=\"cl\"><span class=\"cp\">{{</span><span class=\"w\"> </span><span class=\"k\">range</span><span class=\"w\"> </span><span class=\"na\">.Pages</span><span class=\"w\"> </span><span class=\"cp\">}}</span>\n</span></span><span class=\"line\"><span class=\"ln\">2</span><span class=\"cl\">  <span class=\"p\">&lt;</span><span class=\"nt\">a</span> <span class=\"na\">href</span><span class=\"o\">=</span><span class=\"s\">&#34;</span><span class=\"cp\">{{</span><span class=\"w\"> </span><span class=\"na\">.Permalink</span><span class=\"w\"> </span><span class=\"cp\">}}</span><span class=\"s\">&#34;</span><span class=\"p\">&gt;</span><span class=\"cp\">{{</span><span class=\"w\"> </span><span class=\"na\">.Title</span><span class=\"w\"> </span><span class=\"cp\">}}</span><span class=\"p\">&lt;/</span><span class=\"nt\">a</span><span class=\"p\">&gt;</span>\n</span></span><span class=\"line\"><span class=\"ln\">3</span><span class=\"cl\"><span class=\"cp\">{{</span><span class=\"w\"> </span><span class=\"k\">end</span><span class=\"w\"> </span><span class=\"cp\">}}</span></span></span></code></pre></div>"
+ },
+ {
+  "lang": "go-html-template",
+  "code": "{{ range .Pages }}\n  <a href=\"{{ .Permalink }}\">{{ .Title }}</a>\n{{ end }}",
+  "opts": "noClasses=false,linenos=table,hl_lines=2",
+  "html": "<div class=\"highlight\"><div class=\"chroma\">\n<table class=\"lntable\"><tr><td class=\"lntd\">\n<pre tabindex=\"0\" class=\"chroma\"><code><span class=\"lnt\">1\n</span><span class=\"hl\"><span class=\"lnt\">2\n</span></span><span class=\"lnt\">3\n</span></code></pre></td>\n<td class=\"lntd\">\n<pre tabindex=\"0\" class=\"chroma\"><code class=\"language-go-html-template\" data-lang=\"go-html-template\"><span class=\"line\"><span class=\"cl\"><span class=\"cp\">{{</span><span class=\"w\"> </span><span class=\"k\">range</span><span class=\"w\"> </span><span class=\"na\">.Pages</span><span class=\"w\"> </span><span class=\"cp\">}}</span>\n</span></span><span class=\"line hl\"><span class=\"cl\">  <span class=\"p\">&lt;</span><span class=\"nt\">a</span> <span class=\"na\">href</span><span class=\"o\">=</span><span class=\"s\">&#34;</span><span class=\"cp\">{{</span><span class=\"w\"> </span><span class=\"na\">.Permalink</span><span class=\"w\"> </span><span class=\"cp\">}}</span><span class=\"s\">&#34;</span><span class=\"p\">&gt;</span><span class=\"cp\">{{</span><span class=\"w\"> </span><span class=\"na\">.Title</span><span class=\"w\"> </span><span class=\"cp\">}}</span><span class=\"p\">&lt;/</span><span class=\"nt\">a</span><span class=\"p\">&gt;</span>\n</span></span><span class=\"line\"><span class=\"cl\"><span class=\"cp\">{{</span><span class=\"w\"> </span><span class=\"k\">end</span><span class=\"w\"> </span><span class=\"cp\">}}</span></span></span></code></pre></td></tr></table>\n</div>\n</div>"
+ },
+ {
+  "lang": "go-html-template",
+  "code": "{{ range .Pages }}\n  <a href=\"{{ .Permalink }}\">{{ .Title }}</a>\n{{ end }}",
+  "opts": "noClasses=false,linenos=inline,hl_lines=1 3,linenostart=5",
+  "html": "<div class=\"highlight\"><pre tabindex=\"0\" class=\"chroma\"><code class=\"language-go-html-template\" data-lang=\"go-html-template\"><span class=\"line hl\"><span class=\"ln\">5</span><span class=\"cl\"><span class=\"cp\">{{</span><span class=\"w\"> </span><span class=\"k\">range</span><span class=\"w\"> </span><span class=\"na\">.Pages</span><span class=\"w\"> </span><span class=\"cp\">}}</span>\n</span></span><span class=\"line\"><span class=\"ln\">6</span><span class=\"cl\">  <span class=\"p\">&lt;</span><span class=\"nt\">a</span> <span class=\"na\">href</span><span class=\"o\">=</span><span class=\"s\">&#34;</span><span class=\"cp\">{{</span><span class=\"w\"> </span><span class=\"na\">.Permalink</span><span class=\"w\"> </span><span class=\"cp\">}}</span><span class=\"s\">&#34;</span><span class=\"p\">&gt;</span><span class=\"cp\">{{</span><span class=\"w\"> </span><span class=\"na\">.Title</span><span class=\"w\"> </span><span class=\"cp\">}}</span><span class=\"p\">&lt;/</span><span class=\"nt\">a</span><span class=\"p\">&gt;</span>\n</span></span><span class=\"line hl\"><span class=\"ln\">7</span><span class=\"cl\"><span class=\"cp\">{{</span><span class=\"w\"> </span><span class=\"k\">end</span><span class=\"w\"> </span><span class=\"cp\">}}</span></span></span></code></pre></div>"
+ },
+ {
+  "lang": "go-html-template",
+  "code": "{{ range .Pages }}\n  <a href=\"{{ .Permalink }}\">{{ .Title }}</a>\n{{ end }}",
+  "opts": "noClasses=false,hl_lines=2",
+  "html": "<div class=\"highlight\"><pre tabindex=\"0\" class=\"chroma\"><code class=\"language-go-html-template\" data-lang=\"go-html-template\"><span class=\"line\"><span class=\"cl\"><span class=\"cp\">{{</span><span class=\"w\"> </span><span class=\"k\">range</span><span class=\"w\"> </span><span class=\"na\">.Pages</span><span class=\"w\"> </span><span class=\"cp\">}}</span>\n</span></span><span class=\"line hl\"><span class=\"cl\">  <span class=\"p\">&lt;</span><span class=\"nt\">a</span> <span class=\"na\">href</span><span class=\"o\">=</span><span class=\"s\">&#34;</span><span class=\"cp\">{{</span><span class=\"w\"> </span><span class=\"na\">.Permalink</span><span class=\"w\"> </span><span class=\"cp\">}}</span><span class=\"s\">&#34;</span><span class=\"p\">&gt;</span><span class=\"cp\">{{</span><span class=\"w\"> </span><span class=\"na\">.Title</span><span class=\"w\"> </span><span class=\"cp\">}}</span><span class=\"p\">&lt;/</span><span class=\"nt\">a</span><span class=\"p\">&gt;</span>\n</span></span><span class=\"line\"><span class=\"cl\"><span class=\"cp\">{{</span><span class=\"w\"> </span><span class=\"k\">end</span><span class=\"w\"> </span><span class=\"cp\">}}</span></span></span></code></pre></div>"
+ },
+ {
+  "lang": "go-html-template",
+  "code": "{{ range .Pages }}\n  <a href=\"{{ .Permalink }}\">{{ .Title }}</a>\n{{ end }}",
+  "opts": "hl_inline=true,noClasses=true",
+  "html": "<code class=\"code-inline language-go-html-template\"><span style=\"color:#75715e\">{{</span> <span style=\"color:#66d9ef\">range</span> <span style=\"color:#a6e22e\">.Pages</span> <span style=\"color:#75715e\">}}</span>\n  &lt;<span style=\"color:#f92672\">a</span> <span style=\"color:#a6e22e\">href</span><span style=\"color:#f92672\">=</span><span style=\"color:#e6db74\">&#34;</span><span style=\"color:#75715e\">{{</span> <span style=\"color:#a6e22e\">.Permalink</span> <span style=\"color:#75715e\">}}</span><span style=\"color:#e6db74\">&#34;</span>&gt;<span style=\"color:#75715e\">{{</span> <span style=\"color:#a6e22e\">.Title</span> <span style=\"color:#75715e\">}}</span>&lt;/<span style=\"color:#f92672\">a</span>&gt;\n<span style=\"color:#75715e\">{{</span> <span style=\"color:#66d9ef\">end</span> <span style=\"color:#75715e\">}}</span></code>"
+ },
+ {
+  "lang": "go-html-template",
+  "code": "{{ range .Pages }}\n  <a href=\"{{ .Permalink }}\">{{ .Title }}</a>\n{{ end }}",
+  "opts": "hl_inline=true,noClasses=false",
+  "html": "<code class=\"code-inline language-go-html-template\"><span class=\"cp\">{{</span><span class=\"w\"> </span><span class=\"k\">range</span><span class=\"w\"> </span><span class=\"na\">.Pages</span><span class=\"w\"> </span><span class=\"cp\">}}</span>\n  <span class=\"p\">&lt;</span><span class=\"nt\">a</span> <span class=\"na\">href</span><span class=\"o\">=</span><span class=\"s\">&#34;</span><span class=\"cp\">{{</span><span class=\"w\"> </span><span class=\"na\">.Permalink</span><span class=\"w\"> </span><span class=\"cp\">}}</span><span class=\"s\">&#34;</span><span class=\"p\">&gt;</span><span class=\"cp\">{{</span><span class=\"w\"> </span><span class=\"na\">.Title</span><span class=\"w\"> </span><span class=\"cp\">}}</span><span class=\"p\">&lt;/</span><span class=\"nt\">a</span><span class=\"p\">&gt;</span>\n<span class=\"cp\">{{</span><span class=\"w\"> </span><span class=\"k\">end</span><span class=\"w\"> </span><span class=\"cp\">}}</span></code>"
+ },
+ {
+  "lang": "go-html-template",
+  "code": "{{ range .Pages }}\n  <a href=\"{{ .Permalink }}\">{{ .Title }}</a>\n{{ end }}",
+  "opts": "hl_inline=true,noClasses=false,linenos=table",
+  "html": "<div class=\"chroma\">\n<table class=\"lntable\"><tr><td class=\"lntd\">\n<span class=\"lnt\">1\n</span><span class=\"lnt\">2\n</span><span class=\"lnt\">3\n</span></td>\n<td class=\"lntd\">\n<code class=\"code-inline language-go-html-template\"><span class=\"cp\">{{</span><span class=\"w\"> </span><span class=\"k\">range</span><span class=\"w\"> </span><span class=\"na\">.Pages</span><span class=\"w\"> </span><span class=\"cp\">}}</span>\n  <span class=\"p\">&lt;</span><span class=\"nt\">a</span> <span class=\"na\">href</span><span class=\"o\">=</span><span class=\"s\">&#34;</span><span class=\"cp\">{{</span><span class=\"w\"> </span><span class=\"na\">.Permalink</span><span class=\"w\"> </span><span class=\"cp\">}}</span><span class=\"s\">&#34;</span><span class=\"p\">&gt;</span><span class=\"cp\">{{</span><span class=\"w\"> </span><span class=\"na\">.Title</span><span class=\"w\"> </span><span class=\"cp\">}}</span><span class=\"p\">&lt;/</span><span class=\"nt\">a</span><span class=\"p\">&gt;</span>\n<span class=\"cp\">{{</span><span class=\"w\"> </span><span class=\"k\">end</span><span class=\"w\"> </span><span class=\"cp\">}}</span></code></td></tr></table>\n</div>\n"
+ },
+ {
+  "lang": "go-html-template",
+  "code": "{{ range .Pages }}\n  <a href=\"{{ .Permalink }}\">{{ .Title }}</a>\n{{ end }}",
+  "opts": "linenos=table",
+  "html": "<div class=\"highlight\"><div style=\"color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;\">\n<table style=\"border-spacing:0;padding:0;margin:0;border:0;\"><tr><td style=\"vertical-align:top;padding:0;margin:0;border:0;\">\n<pre tabindex=\"0\" style=\"color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;\"><code><span style=\"white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f\">1\n</span><span style=\"white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f\">2\n</span><span style=\"white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f\">3\n</span></code></pre></td>\n<td style=\"vertical-align:top;padding:0;margin:0;border:0;;width:100%\">\n<pre tabindex=\"0\" style=\"color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;\"><code class=\"language-go-html-template\" data-lang=\"go-html-template\"><span style=\"display:flex;\"><span><span style=\"color:#75715e\">{{</span> <span style=\"color:#66d9ef\">range</span> <span style=\"color:#a6e22e\">.Pages</span> <span style=\"color:#75715e\">}}</span>\n</span></span><span style=\"display:flex;\"><span>  &lt;<span style=\"color:#f92672\">a</span> <span style=\"color:#a6e22e\">href</span><span style=\"color:#f92672\">=</span><span style=\"color:#e6db74\">&#34;</span><span style=\"color:#75715e\">{{</span> <span style=\"color:#a6e22e\">.Permalink</span> <span style=\"color:#75715e\">}}</span><span style=\"color:#e6db74\">&#34;</span>&gt;<span style=\"color:#75715e\">{{</span> <span style=\"color:#a6e22e\">.Title</span> <span style=\"color:#75715e\">}}</span>&lt;/<span style=\"color:#f92672\">a</span>&gt;\n</span></span><span style=\"display:flex;\"><span><span style=\"color:#75715e\">{{</span> <span style=\"color:#66d9ef\">end</span> <span style=\"color:#75715e\">}}</span></span></span></code></pre></td></tr></table>\n</div>\n</div>"
+ },
+ {
+  "lang": "go-html-template",
+  "code": "{{ range .Pages }}\n  <a href=\"{{ .Permalink }}\">{{ .Title }}</a>\n{{ end }}",
+  "opts": "linenos=inline,hl_lines=2,style=solarized-dark",
+  "html": "<div class=\"highlight\"><pre tabindex=\"0\" style=\"color:#93a1a1;background-color:#002b36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;display:grid;\"><code class=\"language-go-html-template\" data-lang=\"go-html-template\"><span style=\"display:flex;\"><span style=\"white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050\">1</span><span><span style=\"color:#719e07\">{{</span> <span style=\"color:#719e07\">range</span> .Pages <span style=\"color:#719e07\">}}</span>\n</span></span><span style=\"display:flex; background-color:#19404a\"><span style=\"white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050\">2</span><span>  &lt;<span style=\"color:#268bd2\">a</span> href<span style=\"color:#719e07\">=</span><span style=\"color:#2aa198\">&#34;</span><span style=\"color:#719e07\">{{</span> .Permalink <span style=\"color:#719e07\">}}</span><span style=\"color:#2aa198\">&#34;</span>&gt;<span style=\"color:#719e07\">{{</span> .Title <span style=\"color:#719e07\">}}</span>&lt;/<span style=\"color:#268bd2\">a</span>&gt;\n</span></span><span style=\"display:flex;\"><span style=\"white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050\">3</span><span><span style=\"color:#719e07\">{{</span> <span style=\"color:#719e07\">end</span> <span style=\"color:#719e07\">}}</span></span></span></code></pre></div>"
+ },
+ {
+  "lang": "go-html-template",
+  "code": "{{ range .Pages }}\n  <a href=\"{{ .Permalink }}\">{{ .Title }}</a>\n{{ end }}",
+  "opts": "style=emacs,linenos=table,hl_lines=2-3",
+  "html": "<div class=\"highlight\"><div style=\"background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;display:grid;\">\n<table style=\"border-spacing:0;padding:0;margin:0;border:0;\"><tr><td style=\"vertical-align:top;padding:0;margin:0;border:0;\">\n<pre tabindex=\"0\" style=\"background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;display:grid;\"><code><span style=\"white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f\">1\n</span><span style=\"background-color:#dfdfdf\"><span style=\"white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f\">2\n</span></span><span style=\"background-color:#dfdfdf\"><span style=\"white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f\">3\n</span></span></code></pre></td>\n<td style=\"vertical-align:top;padding:0;margin:0;border:0;;width:100%\">\n<pre tabindex=\"0\" style=\"background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;display:grid;\"><code class=\"language-go-html-template\" data-lang=\"go-html-template\"><span style=\"display:flex;\"><span><span style=\"color:#080\">{{</span><span style=\"color:#bbb\"> </span><span style=\"color:#a2f;font-weight:bold\">range</span><span style=\"color:#bbb\"> </span><span style=\"color:#b44\">.Pages</span><span style=\"color:#bbb\"> </span><span style=\"color:#080\">}}</span>\n</span></span><span style=\"display:flex; background-color:#dfdfdf\"><span>  &lt;<span style=\"color:#008000;font-weight:bold\">a</span> <span style=\"color:#b44\">href</span><span style=\"color:#666\">=</span><span style=\"color:#b44\">&#34;</span><span style=\"color:#080\">{{</span><span style=\"color:#bbb\"> </span><span style=\"color:#b44\">.Permalink</span><span style=\"color:#bbb\"> </span><span style=\"color:#080\">}}</span><span style=\"color:#b44\">&#34;</span>&gt;<span style=\"color:#080\">{{</span><span style=\"color:#bbb\"> </span><span style=\"color:#b44\">.Title</span><span style=\"color:#bbb\"> </span><span style=\"color:#080\">}}</span>&lt;/<span style=\"color:#008000;font-weight:bold\">a</span>&gt;\n</span></span><span style=\"display:flex; background-color:#dfdfdf\"><span><span style=\"color:#080\">{{</span><span style=\"color:#bbb\"> </span><span style=\"color:#a2f;font-weight:bold\">end</span><span style=\"color:#bbb\"> </span><span style=\"color:#080\">}}</span></span></span></code></pre></td></tr></table>\n</div>\n</div>"
+ },
+ {
+  "lang": "go-html-template",
+  "code": "{{ range .Pages }}\n  <a href=\"{{ .Permalink }}\">{{ .Title }}</a>\n{{ end }}",
+  "opts": "noClasses=false,anchorlinenos=true,lineanchors=x,linenos=inline",
+  "html": "<div class=\"highlight\"><pre tabindex=\"0\" class=\"chroma\"><code class=\"language-go-html-template\" data-lang=\"go-html-template\"><span class=\"line\"><span class=\"ln\" id=\"x-1\"><a class=\"lnlinks\" href=\"#x-1\">1</a></span><span class=\"cl\"><span class=\"cp\">{{</span><span class=\"w\"> </span><span class=\"k\">range</span><span class=\"w\"> </span><span class=\"na\">.Pages</span><span class=\"w\"> </span><span class=\"cp\">}}</span>\n</span></span><span class=\"line\"><span class=\"ln\" id=\"x-2\"><a class=\"lnlinks\" href=\"#x-2\">2</a></span><span class=\"cl\">  <span class=\"p\">&lt;</span><span class=\"nt\">a</span> <span class=\"na\">href</span><span class=\"o\">=</span><span class=\"s\">&#34;</span><span class=\"cp\">{{</span><span class=\"w\"> </span><span class=\"na\">.Permalink</span><span class=\"w\"> </span><span class=\"cp\">}}</span><span class=\"s\">&#34;</span><span class=\"p\">&gt;</span><span class=\"cp\">{{</span><span class=\"w\"> </span><span class=\"na\">.Title</span><span class=\"w\"> </span><span class=\"cp\">}}</span><span class=\"p\">&lt;/</span><span class=\"nt\">a</span><span class=\"p\">&gt;</span>\n</span></span><span class=\"line\"><span class=\"ln\" id=\"x-3\"><a class=\"lnlinks\" href=\"#x-3\">3</a></span><span class=\"cl\"><span class=\"cp\">{{</span><span class=\"w\"> </span><span class=\"k\">end</span><span class=\"w\"> </span><span class=\"cp\">}}</span></span></span></code></pre></div>"
+ },
+ {
+  "lang": "go-html-template",
+  "code": "{{ range .Pages }}\n  <a href=\"{{ .Permalink }}\">{{ .Title }}</a>\n{{ end }}",
+  "opts": "noClasses=false,anchorlinenos=true,linenos=table",
+  "html": "<div class=\"highlight\"><div class=\"chroma\">\n<table class=\"lntable\"><tr><td class=\"lntd\">\n<pre tabindex=\"0\" class=\"chroma\"><code><span class=\"lnt\" id=\"1\"><a class=\"lnlinks\" href=\"#1\">1</a>\n</span><span class=\"lnt\" id=\"2\"><a class=\"lnlinks\" href=\"#2\">2</a>\n</span><span class=\"lnt\" id=\"3\"><a class=\"lnlinks\" href=\"#3\">3</a>\n</span></code></pre></td>\n<td class=\"lntd\">\n<pre tabindex=\"0\" class=\"chroma\"><code class=\"language-go-html-template\" data-lang=\"go-html-template\"><span class=\"line\"><span class=\"cl\"><span class=\"cp\">{{</span><span class=\"w\"> </span><span class=\"k\">range</span><span class=\"w\"> </span><span class=\"na\">.Pages</span><span class=\"w\"> </span><span class=\"cp\">}}</span>\n</span></span><span class=\"line\"><span class=\"cl\">  <span class=\"p\">&lt;</span><span class=\"nt\">a</span> <span class=\"na\">href</span><span class=\"o\">=</span><span class=\"s\">&#34;</span><span class=\"cp\">{{</span><span class=\"w\"> </span><span class=\"na\">.Permalink</span><span class=\"w\"> </span><span class=\"cp\">}}</span><span class=\"s\">&#34;</span><span class=\"p\">&gt;</span><span class=\"cp\">{{</span><span class=\"w\"> </span><span class=\"na\">.Title</span><span class=\"w\"> </span><span class=\"cp\">}}</span><span class=\"p\">&lt;/</span><span class=\"nt\">a</span><span class=\"p\">&gt;</span>\n</span></span><span class=\"line\"><span class=\"cl\"><span class=\"cp\">{{</span><span class=\"w\"> </span><span class=\"k\">end</span><span class=\"w\"> </span><span class=\"cp\">}}</span></span></span></code></pre></td></tr></table>\n</div>\n</div>"
+ },
+ {
+  "lang": "go-html-template",
+  "code": "{{ range .Pages }}\n  <a href=\"{{ .Permalink }}\">{{ .Title }}</a>\n{{ end }}",
+  "opts": "noClasses=true,anchorlinenos=true,linenos=table,style=github",
+  "html": "<div class=\"highlight\"><div style=\"background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;\">\n<table style=\"border-spacing:0;padding:0;margin:0;border:0;\"><tr><td style=\"vertical-align:top;padding:0;margin:0;border:0;\">\n<pre tabindex=\"0\" style=\"background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;\"><code><span style=\"white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f\" id=\"1\"><a style=\"outline:none;text-decoration:none;color:inherit\" href=\"#1\">1</a>\n</span><span style=\"white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f\" id=\"2\"><a style=\"outline:none;text-decoration:none;color:inherit\" href=\"#2\">2</a>\n</span><span style=\"white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f\" id=\"3\"><a style=\"outline:none;text-decoration:none;color:inherit\" href=\"#3\">3</a>\n</span></code></pre></td>\n<td style=\"vertical-align:top;padding:0;margin:0;border:0;;width:100%\">\n<pre tabindex=\"0\" style=\"background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;\"><code class=\"language-go-html-template\" data-lang=\"go-html-template\"><span style=\"display:flex;\"><span><span style=\"color:#57606a\">{{</span><span style=\"color:#fff\"> </span><span style=\"color:#cf222e\">range</span><span style=\"color:#fff\"> </span><span style=\"color:#1f2328\">.Pages</span><span style=\"color:#fff\"> </span><span style=\"color:#57606a\">}}</span>\n</span></span><span style=\"display:flex;\"><span>  <span style=\"color:#1f2328\">&lt;</span><span style=\"color:#0550ae\">a</span> <span style=\"color:#1f2328\">href</span><span style=\"color:#0550ae\">=</span><span style=\"color:#0a3069\">&#34;</span><span style=\"color:#57606a\">{{</span><span style=\"color:#fff\"> </span><span style=\"color:#1f2328\">.Permalink</span><span style=\"color:#fff\"> </span><span style=\"color:#57606a\">}}</span><span style=\"color:#0a3069\">&#34;</span><span style=\"color:#1f2328\">&gt;</span><span style=\"color:#57606a\">{{</span><span style=\"color:#fff\"> </span><span style=\"color:#1f2328\">.Title</span><span style=\"color:#fff\"> </span><span style=\"color:#57606a\">}}</span><span style=\"color:#1f2328\">&lt;/</span><span style=\"color:#0550ae\">a</span><span style=\"color:#1f2328\">&gt;</span>\n</span></span><span style=\"display:flex;\"><span><span style=\"color:#57606a\">{{</span><span style=\"color:#fff\"> </span><span style=\"color:#cf222e\">end</span><span style=\"color:#fff\"> </span><span style=\"color:#57606a\">}}</span></span></span></code></pre></td></tr></table>\n</div>\n</div>"
+ },
+ {
+  "lang": "go-html-template",
+  "code": "{{ range .Pages }}\n  <a href=\"{{ .Permalink }}\">{{ .Title }}</a>\n{{ end }}",
+  "opts": "style=nosuchstyle",
+  "html": "<div class=\"highlight\"><pre tabindex=\"0\" style=\"color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;\"><code class=\"language-go-html-template\" data-lang=\"go-html-template\"><span style=\"display:flex;\"><span><span style=\"color:#0f0;font-weight:bold\">{{</span> <span style=\"color:#fff;font-weight:bold\">range</span> <span style=\"color:#007f7f\">.Pages</span> <span style=\"color:#0f0;font-weight:bold\">}}</span>\n</span></span><span style=\"display:flex;\"><span>  &lt;<span style=\"font-weight:bold\">a</span> <span style=\"color:#007f7f\">href</span>=<span style=\"color:#0ff;font-weight:bold\">&#34;</span><span style=\"color:#0f0;font-weight:bold\">{{</span> <span style=\"color:#007f7f\">.Permalink</span> <span style=\"color:#0f0;font-weight:bold\">}}</span><span style=\"color:#0ff;font-weight:bold\">&#34;</span>&gt;<span style=\"color:#0f0;font-weight:bold\">{{</span> <span style=\"color:#007f7f\">.Title</span> <span style=\"color:#0f0;font-weight:bold\">}}</span>&lt;/<span style=\"font-weight:bold\">a</span>&gt;\n</span></span><span style=\"display:flex;\"><span><span style=\"color:#0f0;font-weight:bold\">{{</span> <span style=\"color:#fff;font-weight:bold\">end</span> <span style=\"color:#0f0;font-weight:bold\">}}</span></span></span></code></pre></div>"
+ },
+ {
+  "lang": "go-html-template",
+  "code": "{{ range .Pages }}\n  <a href=\"{{ .Permalink }}\">{{ .Title }}</a>\n{{ end }}",
+  "opts": "tabwidth=8,style=dracula",
+  "html": "<div class=\"highlight\"><pre tabindex=\"0\" style=\"color:#f8f8f2;background-color:#282a36;\"><code class=\"language-go-html-template\" data-lang=\"go-html-template\"><span style=\"display:flex;\"><span><span style=\"color:#ff79c6\">{{</span> <span style=\"color:#ff79c6\">range</span> <span style=\"color:#50fa7b\">.Pages</span> <span style=\"color:#ff79c6\">}}</span>\n</span></span><span style=\"display:flex;\"><span>  &lt;<span style=\"color:#ff79c6\">a</span> <span style=\"color:#50fa7b\">href</span><span style=\"color:#ff79c6\">=</span><span style=\"color:#f1fa8c\">&#34;</span><span style=\"color:#ff79c6\">{{</span> <span style=\"color:#50fa7b\">.Permalink</span> <span style=\"color:#ff79c6\">}}</span><span style=\"color:#f1fa8c\">&#34;</span>&gt;<span style=\"color:#ff79c6\">{{</span> <span style=\"color:#50fa7b\">.Title</span> <span style=\"color:#ff79c6\">}}</span>&lt;/<span style=\"color:#ff79c6\">a</span>&gt;\n</span></span><span style=\"display:flex;\"><span><span style=\"color:#ff79c6\">{{</span> <span style=\"color:#ff79c6\">end</span> <span style=\"color:#ff79c6\">}}</span></span></span></code></pre></div>"
+ },
+ {
+  "lang": "go-html-template",
+  "code": "{{ range .Pages }}\n  <a href=\"{{ .Permalink }}\">{{ .Title }}</a>\n{{ end }}",
+  "opts": "noClasses=false,wrapperClass=hl foo,linenos=true,lineNumbersInTable=false",
+  "html": "<div class=\"hl foo\"><pre tabindex=\"0\" class=\"chroma\"><code class=\"language-go-html-template\" data-lang=\"go-html-template\"><span class=\"line\"><span class=\"ln\">1</span><span class=\"cl\"><span class=\"cp\">{{</span><span class=\"w\"> </span><span class=\"k\">range</span><span class=\"w\"> </span><span class=\"na\">.Pages</span><span class=\"w\"> </span><span class=\"cp\">}}</span>\n</span></span><span class=\"line\"><span class=\"ln\">2</span><span class=\"cl\">  <span class=\"p\">&lt;</span><span class=\"nt\">a</span> <span class=\"na\">href</span><span class=\"o\">=</span><span class=\"s\">&#34;</span><span class=\"cp\">{{</span><span class=\"w\"> </span><span class=\"na\">.Permalink</span><span class=\"w\"> </span><span class=\"cp\">}}</span><span class=\"s\">&#34;</span><span class=\"p\">&gt;</span><span class=\"cp\">{{</span><span class=\"w\"> </span><span class=\"na\">.Title</span><span class=\"w\"> </span><span class=\"cp\">}}</span><span class=\"p\">&lt;/</span><span class=\"nt\">a</span><span class=\"p\">&gt;</span>\n</span></span><span class=\"line\"><span class=\"ln\">3</span><span class=\"cl\"><span class=\"cp\">{{</span><span class=\"w\"> </span><span class=\"k\">end</span><span class=\"w\"> </span><span class=\"cp\">}}</span></span></span></code></pre></div>"
+ },
+ {
+  "lang": "go-html-template",
+  "code": "{{/* a comment */}}\n<!DOCTYPE html>\n<p class=x>&amp; {{ $x := 1 }}</p>\n",
+  "opts": "",
+  "html": "<div class=\"highlight\"><pre tabindex=\"0\" style=\"color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;\"><code class=\"language-go-html-template\" data-lang=\"go-html-template\"><span style=\"display:flex;\"><span><span style=\"color:#75715e\">{{/* a comment */}}</span>\n</span></span><span style=\"display:flex;\"><span><span style=\"color:#75715e\">&lt;!DOCTYPE html&gt;</span>\n</span></span><span style=\"display:flex;\"><span>&lt;<span style=\"color:#f92672\">p</span> <span style=\"color:#a6e22e\">class</span><span style=\"color:#f92672\">=</span><span style=\"color:#e6db74\">x</span>&gt;&amp;amp; <span style=\"color:#75715e\">{{</span> <span style=\"color:#a6e22e\">$x</span> <span style=\"color:#f92672\">:=</span> <span style=\"color:#a6e22e\">1</span> <span style=\"color:#75715e\">}}</span>&lt;/<span style=\"color:#f92672\">p</span>&gt;\n</span></span></code></pre></div>"
+ },
+ {
+  "lang": "go-html-template",
+  "code": "{{/* a comment */}}\n<!DOCTYPE html>\n<p class=x>&amp; {{ $x := 1 }}</p>\n",
+  "opts": "noClasses=false",
+  "html": "<div class=\"highlight\"><pre tabindex=\"0\" class=\"chroma\"><code class=\"language-go-html-template\" data-lang=\"go-html-template\"><span class=\"line\"><span class=\"cl\"><span class=\"cm\">{{/* a comment */}}</span>\n</span></span><span class=\"line\"><span class=\"cl\"><span class=\"cp\">&lt;!DOCTYPE html&gt;</span>\n</span></span><span class=\"line\"><span class=\"cl\"><span class=\"p\">&lt;</span><span class=\"nt\">p</span> <span class=\"na\">class</span><span class=\"o\">=</span><span class=\"s\">x</span><span class=\"p\">&gt;</span><span class=\"ni\">&amp;amp;</span> <span class=\"cp\">{{</span><span class=\"w\"> </span><span class=\"nx\">$x</span><span class=\"w\"> </span><span class=\"o\">:=</span><span class=\"w\"> </span><span class=\"nx\">1</span><span class=\"w\"> </span><span class=\"cp\">}}</span><span class=\"p\">&lt;/</span><span class=\"nt\">p</span><span class=\"p\">&gt;</span>\n</span></span></code></pre></div>"
+ },
+ {
+  "lang": "go-html-template",
+  "code": "{{/* a comment */}}\n<!DOCTYPE html>\n<p class=x>&amp; {{ $x := 1 }}</p>\n",
+  "opts": "noClasses=false,linenos=table",
+  "html": "<div class=\"highlight\"><div class=\"chroma\">\n<table class=\"lntable\"><tr><td class=\"lntd\">\n<pre tabindex=\"0\" class=\"chroma\"><code><span class=\"lnt\">1\n</span><span class=\"lnt\">2\n</span><span class=\"lnt\">3\n</span></code></pre></td>\n<td class=\"lntd\">\n<pre tabindex=\"0\" class=\"chroma\"><code class=\"language-go-html-template\" data-lang=\"go-html-template\"><span class=\"line\"><span class=\"cl\"><span class=\"cm\">{{/* a comment */}}</span>\n</span></span><span class=\"line\"><span class=\"cl\"><span class=\"cp\">&lt;!DOCTYPE html&gt;</span>\n</span></span><span class=\"line\"><span class=\"cl\"><span class=\"p\">&lt;</span><span class=\"nt\">p</span> <span class=\"na\">class</span><span class=\"o\">=</span><span class=\"s\">x</span><span class=\"p\">&gt;</span><span class=\"ni\">&amp;amp;</span> <span class=\"cp\">{{</span><span class=\"w\"> </span><span class=\"nx\">$x</span><span class=\"w\"> </span><span class=\"o\">:=</span><span class=\"w\"> </span><span class=\"nx\">1</span><span class=\"w\"> </span><span class=\"cp\">}}</span><span class=\"p\">&lt;/</span><span class=\"nt\">p</span><span class=\"p\">&gt;</span>\n</span></span></code></pre></td></tr></table>\n</div>\n</div>"
+ },
+ {
+  "lang": "go-html-template",
+  "code": "{{/* a comment */}}\n<!DOCTYPE html>\n<p class=x>&amp; {{ $x := 1 }}</p>\n",
+  "opts": "noClasses=false,linenos=inline",
+  "html": "<div class=\"highlight\"><pre tabindex=\"0\" class=\"chroma\"><code class=\"language-go-html-template\" data-lang=\"go-html-template\"><span class=\"line\"><span class=\"ln\">1</span><span class=\"cl\"><span class=\"cm\">{{/* a comment */}}</span>\n</span></span><span class=\"line\"><span class=\"ln\">2</span><span class=\"cl\"><span class=\"cp\">&lt;!DOCTYPE html&gt;</span>\n</span></span><span class=\"line\"><span class=\"ln\">3</span><span class=\"cl\"><span class=\"p\">&lt;</span><span class=\"nt\">p</span> <span class=\"na\">class</span><span class=\"o\">=</span><span class=\"s\">x</span><span class=\"p\">&gt;</span><span class=\"ni\">&amp;amp;</span> <span class=\"cp\">{{</span><span class=\"w\"> </span><span class=\"nx\">$x</span><span class=\"w\"> </span><span class=\"o\">:=</span><span class=\"w\"> </span><span class=\"nx\">1</span><span class=\"w\"> </span><span class=\"cp\">}}</span><span class=\"p\">&lt;/</span><span class=\"nt\">p</span><span class=\"p\">&gt;</span>\n</span></span></code></pre></div>"
+ },
+ {
+  "lang": "go-html-template",
+  "code": "{{/* a comment */}}\n<!DOCTYPE html>\n<p class=x>&amp; {{ $x := 1 }}</p>\n",
+  "opts": "noClasses=false,linenos=table,hl_lines=2",
+  "html": "<div class=\"highlight\"><div class=\"chroma\">\n<table class=\"lntable\"><tr><td class=\"lntd\">\n<pre tabindex=\"0\" class=\"chroma\"><code><span class=\"lnt\">1\n</span><span class=\"hl\"><span class=\"lnt\">2\n</span></span><span class=\"lnt\">3\n</span></code></pre></td>\n<td class=\"lntd\">\n<pre tabindex=\"0\" class=\"chroma\"><code class=\"language-go-html-template\" data-lang=\"go-html-template\"><span class=\"line\"><span class=\"cl\"><span class=\"cm\">{{/* a comment */}}</span>\n</span></span><span class=\"line hl\"><span class=\"cl\"><span class=\"cp\">&lt;!DOCTYPE html&gt;</span>\n</span></span><span class=\"line\"><span class=\"cl\"><span class=\"p\">&lt;</span><span class=\"nt\">p</span> <span class=\"na\">class</span><span class=\"o\">=</span><span class=\"s\">x</span><span class=\"p\">&gt;</span><span class=\"ni\">&amp;amp;</span> <span class=\"cp\">{{</span><span class=\"w\"> </span><span class=\"nx\">$x</span><span class=\"w\"> </span><span class=\"o\">:=</span><span class=\"w\"> </span><span class=\"nx\">1</span><span class=\"w\"> </span><span class=\"cp\">}}</span><span class=\"p\">&lt;/</span><span class=\"nt\">p</span><span class=\"p\">&gt;</span>\n</span></span></code></pre></td></tr></table>\n</div>\n</div>"
+ },
+ {
+  "lang": "go-html-template",
+  "code": "{{/* a comment */}}\n<!DOCTYPE html>\n<p class=x>&amp; {{ $x := 1 }}</p>\n",
+  "opts": "noClasses=false,linenos=inline,hl_lines=1 3,linenostart=5",
+  "html": "<div class=\"highlight\"><pre tabindex=\"0\" class=\"chroma\"><code class=\"language-go-html-template\" data-lang=\"go-html-template\"><span class=\"line hl\"><span class=\"ln\">5</span><span class=\"cl\"><span class=\"cm\">{{/* a comment */}}</span>\n</span></span><span class=\"line\"><span class=\"ln\">6</span><span class=\"cl\"><span class=\"cp\">&lt;!DOCTYPE html&gt;</span>\n</span></span><span class=\"line hl\"><span class=\"ln\">7</span><span class=\"cl\"><span class=\"p\">&lt;</span><span class=\"nt\">p</span> <span class=\"na\">class</span><span class=\"o\">=</span><span class=\"s\">x</span><span class=\"p\">&gt;</span><span class=\"ni\">&amp;amp;</span> <span class=\"cp\">{{</span><span class=\"w\"> </span><span class=\"nx\">$x</span><span class=\"w\"> </span><span class=\"o\">:=</span><span class=\"w\"> </span><span class=\"nx\">1</span><span class=\"w\"> </span><span class=\"cp\">}}</span><span class=\"p\">&lt;/</span><span class=\"nt\">p</span><span class=\"p\">&gt;</span>\n</span></span></code></pre></div>"
+ },
+ {
+  "lang": "go-html-template",
+  "code": "{{/* a comment */}}\n<!DOCTYPE html>\n<p class=x>&amp; {{ $x := 1 }}</p>\n",
+  "opts": "noClasses=false,hl_lines=2",
+  "html": "<div class=\"highlight\"><pre tabindex=\"0\" class=\"chroma\"><code class=\"language-go-html-template\" data-lang=\"go-html-template\"><span class=\"line\"><span class=\"cl\"><span class=\"cm\">{{/* a comment */}}</span>\n</span></span><span class=\"line hl\"><span class=\"cl\"><span class=\"cp\">&lt;!DOCTYPE html&gt;</span>\n</span></span><span class=\"line\"><span class=\"cl\"><span class=\"p\">&lt;</span><span class=\"nt\">p</span> <span class=\"na\">class</span><span class=\"o\">=</span><span class=\"s\">x</span><span class=\"p\">&gt;</span><span class=\"ni\">&amp;amp;</span> <span class=\"cp\">{{</span><span class=\"w\"> </span><span class=\"nx\">$x</span><span class=\"w\"> </span><span class=\"o\">:=</span><span class=\"w\"> </span><span class=\"nx\">1</span><span class=\"w\"> </span><span class=\"cp\">}}</span><span class=\"p\">&lt;/</span><span class=\"nt\">p</span><span class=\"p\">&gt;</span>\n</span></span></code></pre></div>"
+ },
+ {
+  "lang": "go-html-template",
+  "code": "{{/* a comment */}}\n<!DOCTYPE html>\n<p class=x>&amp; {{ $x := 1 }}</p>\n",
+  "opts": "hl_inline=true,noClasses=true",
+  "html": "<code class=\"code-inline language-go-html-template\"><span style=\"color:#75715e\">{{/* a comment */}}</span>\n<span style=\"color:#75715e\">&lt;!DOCTYPE html&gt;</span>\n&lt;<span style=\"color:#f92672\">p</span> <span style=\"color:#a6e22e\">class</span><span style=\"color:#f92672\">=</span><span style=\"color:#e6db74\">x</span>&gt;&amp;amp; <span style=\"color:#75715e\">{{</span> <span style=\"color:#a6e22e\">$x</span> <span style=\"color:#f92672\">:=</span> <span style=\"color:#a6e22e\">1</span> <span style=\"color:#75715e\">}}</span>&lt;/<span style=\"color:#f92672\">p</span>&gt;\n</code>"
+ },
+ {
+  "lang": "go-html-template",
+  "code": "{{/* a comment */}}\n<!DOCTYPE html>\n<p class=x>&amp; {{ $x := 1 }}</p>\n",
+  "opts": "hl_inline=true,noClasses=false",
+  "html": "<code class=\"code-inline language-go-html-template\"><span class=\"cm\">{{/* a comment */}}</span>\n<span class=\"cp\">&lt;!DOCTYPE html&gt;</span>\n<span class=\"p\">&lt;</span><span class=\"nt\">p</span> <span class=\"na\">class</span><span class=\"o\">=</span><span class=\"s\">x</span><span class=\"p\">&gt;</span><span class=\"ni\">&amp;amp;</span> <span class=\"cp\">{{</span><span class=\"w\"> </span><span class=\"nx\">$x</span><span class=\"w\"> </span><span class=\"o\">:=</span><span class=\"w\"> </span><span class=\"nx\">1</span><span class=\"w\"> </span><span class=\"cp\">}}</span><span class=\"p\">&lt;/</span><span class=\"nt\">p</span><span class=\"p\">&gt;</span>\n</code>"
+ },
+ {
+  "lang": "go-html-template",
+  "code": "{{/* a comment */}}\n<!DOCTYPE html>\n<p class=x>&amp; {{ $x := 1 }}</p>\n",
+  "opts": "hl_inline=true,noClasses=false,linenos=table",
+  "html": "<div class=\"chroma\">\n<table class=\"lntable\"><tr><td class=\"lntd\">\n<span class=\"lnt\">1\n</span><span class=\"lnt\">2\n</span><span class=\"lnt\">3\n</span></td>\n<td class=\"lntd\">\n<code class=\"code-inline language-go-html-template\"><span class=\"cm\">{{/* a comment */}}</span>\n<span class=\"cp\">&lt;!DOCTYPE html&gt;</span>\n<span class=\"p\">&lt;</span><span class=\"nt\">p</span> <span class=\"na\">class</span><span class=\"o\">=</span><span class=\"s\">x</span><span class=\"p\">&gt;</span><span class=\"ni\">&amp;amp;</span> <span class=\"cp\">{{</span><span class=\"w\"> </span><span class=\"nx\">$x</span><span class=\"w\"> </span><span class=\"o\">:=</span><span class=\"w\"> </span><span class=\"nx\">1</span><span class=\"w\"> </span><span class=\"cp\">}}</span><span class=\"p\">&lt;/</span><span class=\"nt\">p</span><span class=\"p\">&gt;</span>\n</code></td></tr></table>\n</div>\n"
+ },
+ {
+  "lang": "go-html-template",
+  "code": "{{/* a comment */}}\n<!DOCTYPE html>\n<p class=x>&amp; {{ $x := 1 }}</p>\n",
+  "opts": "linenos=table",
+  "html": "<div class=\"highlight\"><div style=\"color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;\">\n<table style=\"border-spacing:0;padding:0;margin:0;border:0;\"><tr><td style=\"vertical-align:top;padding:0;margin:0;border:0;\">\n<pre tabindex=\"0\" style=\"color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;\"><code><span style=\"white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f\">1\n</span><span style=\"white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f\">2\n</span><span style=\"white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f\">3\n</span></code></pre></td>\n<td style=\"vertical-align:top;padding:0;margin:0;border:0;;width:100%\">\n<pre tabindex=\"0\" style=\"color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;\"><code class=\"language-go-html-template\" data-lang=\"go-html-template\"><span style=\"display:flex;\"><span><span style=\"color:#75715e\">{{/* a comment */}}</span>\n</span></span><span style=\"display:flex;\"><span><span style=\"color:#75715e\">&lt;!DOCTYPE html&gt;</span>\n</span></span><span style=\"display:flex;\"><span>&lt;<span style=\"color:#f92672\">p</span> <span style=\"color:#a6e22e\">class</span><span style=\"color:#f92672\">=</span><span style=\"color:#e6db74\">x</span>&gt;&amp;amp; <span style=\"color:#75715e\">{{</span> <span style=\"color:#a6e22e\">$x</span> <span style=\"color:#f92672\">:=</span> <span style=\"color:#a6e22e\">1</span> <span style=\"color:#75715e\">}}</span>&lt;/<span style=\"color:#f92672\">p</span>&gt;\n</span></span></code></pre></td></tr></table>\n</div>\n</div>"
+ },
+ {
+  "lang": "go-html-template",
+  "code": "{{/* a comment */}}\n<!DOCTYPE html>\n<p class=x>&amp; {{ $x := 1 }}</p>\n",
+  "opts": "linenos=inline,hl_lines=2,style=solarized-dark",
+  "html": "<div class=\"highlight\"><pre tabindex=\"0\" style=\"color:#93a1a1;background-color:#002b36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;display:grid;\"><code class=\"language-go-html-template\" data-lang=\"go-html-template\"><span style=\"display:flex;\"><span style=\"white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050\">1</span><span><span style=\"color:#586e75\">{{/* a comment */}}</span>\n</span></span><span style=\"display:flex; background-color:#19404a\"><span style=\"white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050\">2</span><span><span style=\"color:#719e07\">&lt;!DOCTYPE html&gt;</span>\n</span></span><span style=\"display:flex;\"><span style=\"white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050\">3</span><span>&lt;<span style=\"color:#268bd2\">p</span> class<span style=\"color:#719e07\">=</span><span style=\"color:#2aa198\">x</span>&gt;<span style=\"color:#cb4b16\">&amp;amp;</span> <span style=\"color:#719e07\">{{</span> $x <span style=\"color:#719e07\">:=</span> 1 <span style=\"color:#719e07\">}}</span>&lt;/<span style=\"color:#268bd2\">p</span>&gt;\n</span></span></code></pre></div>"
+ },
+ {
+  "lang": "go-html-template",
+  "code": "{{/* a comment */}}\n<!DOCTYPE html>\n<p class=x>&amp; {{ $x := 1 }}</p>\n",
+  "opts": "style=emacs,linenos=table,hl_lines=2-3",
+  "html": "<div class=\"highlight\"><div style=\"background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;display:grid;\">\n<table style=\"border-spacing:0;padding:0;margin:0;border:0;\"><tr><td style=\"vertical-align:top;padding:0;margin:0;border:0;\">\n<pre tabindex=\"0\" style=\"background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;display:grid;\"><code><span style=\"white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f\">1\n</span><span style=\"background-color:#dfdfdf\"><span style=\"white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f\">2\n</span></span><span style=\"background-color:#dfdfdf\"><span style=\"white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f\">3\n</span></span></code></pre></td>\n<td style=\"vertical-align:top;padding:0;margin:0;border:0;;width:100%\">\n<pre tabindex=\"0\" style=\"background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;display:grid;\"><code class=\"language-go-html-template\" data-lang=\"go-html-template\"><span style=\"display:flex;\"><span><span style=\"color:#080;font-style:italic\">{{/* a comment */}}</span>\n</span></span><span style=\"display:flex; background-color:#dfdfdf\"><span><span style=\"color:#080\">&lt;!DOCTYPE html&gt;</span>\n</span></span><span style=\"display:flex; background-color:#dfdfdf\"><span>&lt;<span style=\"color:#008000;font-weight:bold\">p</span> <span style=\"color:#b44\">class</span><span style=\"color:#666\">=</span><span style=\"color:#b44\">x</span>&gt;<span style=\"color:#999;font-weight:bold\">&amp;amp;</span> <span style=\"color:#080\">{{</span><span style=\"color:#bbb\"> </span>$x<span style=\"color:#bbb\"> </span><span style=\"color:#666\">:=</span><span style=\"color:#bbb\"> </span>1<span style=\"color:#bbb\"> </span><span style=\"color:#080\">}}</span>&lt;/<span style=\"color:#008000;font-weight:bold\">p</span>&gt;\n</span></span></code></pre></td></tr></table>\n</div>\n</div>"
+ },
+ {
+  "lang": "go-html-template",
+  "code": "{{/* a comment */}}\n<!DOCTYPE html>\n<p class=x>&amp; {{ $x := 1 }}</p>\n",
+  "opts": "noClasses=false,anchorlinenos=true,lineanchors=x,linenos=inline",
+  "html": "<div class=\"highlight\"><pre tabindex=\"0\" class=\"chroma\"><code class=\"language-go-html-template\" data-lang=\"go-html-template\"><span class=\"line\"><span class=\"ln\" id=\"x-1\"><a class=\"lnlinks\" href=\"#x-1\">1</a></span><span class=\"cl\"><span class=\"cm\">{{/* a comment */}}</span>\n</span></span><span class=\"line\"><span class=\"ln\" id=\"x-2\"><a class=\"lnlinks\" href=\"#x-2\">2</a></span><span class=\"cl\"><span class=\"cp\">&lt;!DOCTYPE html&gt;</span>\n</span></span><span class=\"line\"><span class=\"ln\" id=\"x-3\"><a class=\"lnlinks\" href=\"#x-3\">3</a></span><span class=\"cl\"><span class=\"p\">&lt;</span><span class=\"nt\">p</span> <span class=\"na\">class</span><span class=\"o\">=</span><span class=\"s\">x</span><span class=\"p\">&gt;</span><span class=\"ni\">&amp;amp;</span> <span class=\"cp\">{{</span><span class=\"w\"> </span><span class=\"nx\">$x</span><span class=\"w\"> </span><span class=\"o\">:=</span><span class=\"w\"> </span><span class=\"nx\">1</span><span class=\"w\"> </span><span class=\"cp\">}}</span><span class=\"p\">&lt;/</span><span class=\"nt\">p</span><span class=\"p\">&gt;</span>\n</span></span></code></pre></div>"
+ },
+ {
+  "lang": "go-html-template",
+  "code": "{{/* a comment */}}\n<!DOCTYPE html>\n<p class=x>&amp; {{ $x := 1 }}</p>\n",
+  "opts": "noClasses=false,anchorlinenos=true,linenos=table",
+  "html": "<div class=\"highlight\"><div class=\"chroma\">\n<table class=\"lntable\"><tr><td class=\"lntd\">\n<pre tabindex=\"0\" class=\"chroma\"><code><span class=\"lnt\" id=\"1\"><a class=\"lnlinks\" href=\"#1\">1</a>\n</span><span class=\"lnt\" id=\"2\"><a class=\"lnlinks\" href=\"#2\">2</a>\n</span><span class=\"lnt\" id=\"3\"><a class=\"lnlinks\" href=\"#3\">3</a>\n</span></code></pre></td>\n<td class=\"lntd\">\n<pre tabindex=\"0\" class=\"chroma\"><code class=\"language-go-html-template\" data-lang=\"go-html-template\"><span class=\"line\"><span class=\"cl\"><span class=\"cm\">{{/* a comment */}}</span>\n</span></span><span class=\"line\"><span class=\"cl\"><span class=\"cp\">&lt;!DOCTYPE html&gt;</span>\n</span></span><span class=\"line\"><span class=\"cl\"><span class=\"p\">&lt;</span><span class=\"nt\">p</span> <span class=\"na\">class</span><span class=\"o\">=</span><span class=\"s\">x</span><span class=\"p\">&gt;</span><span class=\"ni\">&amp;amp;</span> <span class=\"cp\">{{</span><span class=\"w\"> </span><span class=\"nx\">$x</span><span class=\"w\"> </span><span class=\"o\">:=</span><span class=\"w\"> </span><span class=\"nx\">1</span><span class=\"w\"> </span><span class=\"cp\">}}</span><span class=\"p\">&lt;/</span><span class=\"nt\">p</span><span class=\"p\">&gt;</span>\n</span></span></code></pre></td></tr></table>\n</div>\n</div>"
+ },
+ {
+  "lang": "go-html-template",
+  "code": "{{/* a comment */}}\n<!DOCTYPE html>\n<p class=x>&amp; {{ $x := 1 }}</p>\n",
+  "opts": "noClasses=true,anchorlinenos=true,linenos=table,style=github",
+  "html": "<div class=\"highlight\"><div style=\"background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;\">\n<table style=\"border-spacing:0;padding:0;margin:0;border:0;\"><tr><td style=\"vertical-align:top;padding:0;margin:0;border:0;\">\n<pre tabindex=\"0\" style=\"background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;\"><code><span style=\"white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f\" id=\"1\"><a style=\"outline:none;text-decoration:none;color:inherit\" href=\"#1\">1</a>\n</span><span style=\"white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f\" id=\"2\"><a style=\"outline:none;text-decoration:none;color:inherit\" href=\"#2\">2</a>\n</span><span style=\"white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f\" id=\"3\"><a style=\"outline:none;text-decoration:none;color:inherit\" href=\"#3\">3</a>\n</span></code></pre></td>\n<td style=\"vertical-align:top;padding:0;margin:0;border:0;;width:100%\">\n<pre tabindex=\"0\" style=\"background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;\"><code class=\"language-go-html-template\" data-lang=\"go-html-template\"><span style=\"display:flex;\"><span><span style=\"color:#57606a\">{{/* a comment */}}</span>\n</span></span><span style=\"display:flex;\"><span><span style=\"color:#57606a\">&lt;!DOCTYPE html&gt;</span>\n</span></span><span style=\"display:flex;\"><span><span style=\"color:#1f2328\">&lt;</span><span style=\"color:#0550ae\">p</span> <span style=\"color:#1f2328\">class</span><span style=\"color:#0550ae\">=</span><span style=\"color:#0a3069\">x</span><span style=\"color:#1f2328\">&gt;</span><span style=\"color:#6639ba\">&amp;amp;</span> <span style=\"color:#57606a\">{{</span><span style=\"color:#fff\"> </span><span style=\"color:#1f2328\">$x</span><span style=\"color:#fff\"> </span><span style=\"color:#0550ae\">:=</span><span style=\"color:#fff\"> </span><span style=\"color:#1f2328\">1</span><span style=\"color:#fff\"> </span><span style=\"color:#57606a\">}}</span><span style=\"color:#1f2328\">&lt;/</span><span style=\"color:#0550ae\">p</span><span style=\"color:#1f2328\">&gt;</span>\n</span></span></code></pre></td></tr></table>\n</div>\n</div>"
+ },
+ {
+  "lang": "go-html-template",
+  "code": "{{/* a comment */}}\n<!DOCTYPE html>\n<p class=x>&amp; {{ $x := 1 }}</p>\n",
+  "opts": "style=nosuchstyle",
+  "html": "<div class=\"highlight\"><pre tabindex=\"0\" style=\"color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;\"><code class=\"language-go-html-template\" data-lang=\"go-html-template\"><span style=\"display:flex;\"><span><span style=\"color:#007f7f\">{{/* a comment */}}</span>\n</span></span><span style=\"display:flex;\"><span><span style=\"color:#0f0;font-weight:bold\">&lt;!DOCTYPE html&gt;</span>\n</span></span><span style=\"display:flex;\"><span>&lt;<span style=\"font-weight:bold\">p</span> <span style=\"color:#007f7f\">class</span>=<span style=\"color:#0ff;font-weight:bold\">x</span>&gt;&amp;amp; <span style=\"color:#0f0;font-weight:bold\">{{</span> $x := 1 <span style=\"color:#0f0;font-weight:bold\">}}</span>&lt;/<span style=\"font-weight:bold\">p</span>&gt;\n</span></span></code></pre></div>"
+ },
+ {
+  "lang": "go-html-template",
+  "code": "{{/* a comment */}}\n<!DOCTYPE html>\n<p class=x>&amp; {{ $x := 1 }}</p>\n",
+  "opts": "tabwidth=8,style=dracula",
+  "html": "<div class=\"highlight\"><pre tabindex=\"0\" style=\"color:#f8f8f2;background-color:#282a36;\"><code class=\"language-go-html-template\" data-lang=\"go-html-template\"><span style=\"display:flex;\"><span><span style=\"color:#6272a4\">{{/* a comment */}}</span>\n</span></span><span style=\"display:flex;\"><span><span style=\"color:#ff79c6\">&lt;!DOCTYPE html&gt;</span>\n</span></span><span style=\"display:flex;\"><span>&lt;<span style=\"color:#ff79c6\">p</span> <span style=\"color:#50fa7b\">class</span><span style=\"color:#ff79c6\">=</span><span style=\"color:#f1fa8c\">x</span>&gt;&amp;amp; <span style=\"color:#ff79c6\">{{</span> $x <span style=\"color:#ff79c6\">:=</span> 1 <span style=\"color:#ff79c6\">}}</span>&lt;/<span style=\"color:#ff79c6\">p</span>&gt;\n</span></span></code></pre></div>"
+ },
+ {
+  "lang": "go-html-template",
+  "code": "{{/* a comment */}}\n<!DOCTYPE html>\n<p class=x>&amp; {{ $x := 1 }}</p>\n",
+  "opts": "noClasses=false,wrapperClass=hl foo,linenos=true,lineNumbersInTable=false",
+  "html": "<div class=\"hl foo\"><pre tabindex=\"0\" class=\"chroma\"><code class=\"language-go-html-template\" data-lang=\"go-html-template\"><span class=\"line\"><span class=\"ln\">1</span><span class=\"cl\"><span class=\"cm\">{{/* a comment */}}</span>\n</span></span><span class=\"line\"><span class=\"ln\">2</span><span class=\"cl\"><span class=\"cp\">&lt;!DOCTYPE html&gt;</span>\n</span></span><span class=\"line\"><span class=\"ln\">3</span><span class=\"cl\"><span class=\"p\">&lt;</span><span class=\"nt\">p</span> <span class=\"na\">class</span><span class=\"o\">=</span><span class=\"s\">x</span><span class=\"p\">&gt;</span><span class=\"ni\">&amp;amp;</span> <span class=\"cp\">{{</span><span class=\"w\"> </span><span class=\"nx\">$x</span><span class=\"w\"> </span><span class=\"o\">:=</span><span class=\"w\"> </span><span class=\"nx\">1</span><span class=\"w\"> </span><span class=\"cp\">}}</span><span class=\"p\">&lt;/</span><span class=\"nt\">p</span><span class=\"p\">&gt;</span>\n</span></span></code></pre></div>"
+ },
+ {
+  "lang": "text",
+  "code": "plain <text>\nsecond \"line\"\n\nfourth",
+  "opts": "",
+  "html": "<div class=\"highlight\"><pre tabindex=\"0\" style=\"color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;\"><code class=\"language-text\" data-lang=\"text\"><span style=\"display:flex;\"><span>plain &lt;text&gt;\n</span></span><span style=\"display:flex;\"><span>second &#34;line&#34;\n</span></span><span style=\"display:flex;\"><span>\n</span></span><span style=\"display:flex;\"><span>fourth</span></span></code></pre></div>"
+ },
+ {
+  "lang": "text",
+  "code": "plain <text>\nsecond \"line\"\n\nfourth",
+  "opts": "noClasses=false",
+  "html": "<div class=\"highlight\"><pre tabindex=\"0\" class=\"chroma\"><code class=\"language-text\" data-lang=\"text\"><span class=\"line\"><span class=\"cl\">plain &lt;text&gt;\n</span></span><span class=\"line\"><span class=\"cl\">second &#34;line&#34;\n</span></span><span class=\"line\"><span class=\"cl\">\n</span></span><span class=\"line\"><span class=\"cl\">fourth</span></span></code></pre></div>"
+ },
+ {
+  "lang": "text",
+  "code": "plain <text>\nsecond \"line\"\n\nfourth",
+  "opts": "noClasses=false,linenos=table",
+  "html": "<div class=\"highlight\"><div class=\"chroma\">\n<table class=\"lntable\"><tr><td class=\"lntd\">\n<pre tabindex=\"0\" class=\"chroma\"><code><span class=\"lnt\">1\n</span><span class=\"lnt\">2\n</span><span class=\"lnt\">3\n</span><span class=\"lnt\">4\n</span></code></pre></td>\n<td class=\"lntd\">\n<pre tabindex=\"0\" class=\"chroma\"><code class=\"language-text\" data-lang=\"text\"><span class=\"line\"><span class=\"cl\">plain &lt;text&gt;\n</span></span><span class=\"line\"><span class=\"cl\">second &#34;line&#34;\n</span></span><span class=\"line\"><span class=\"cl\">\n</span></span><span class=\"line\"><span class=\"cl\">fourth</span></span></code></pre></td></tr></table>\n</div>\n</div>"
+ },
+ {
+  "lang": "text",
+  "code": "plain <text>\nsecond \"line\"\n\nfourth",
+  "opts": "noClasses=false,linenos=inline",
+  "html": "<div class=\"highlight\"><pre tabindex=\"0\" class=\"chroma\"><code class=\"language-text\" data-lang=\"text\"><span class=\"line\"><span class=\"ln\">1</span><span class=\"cl\">plain &lt;text&gt;\n</span></span><span class=\"line\"><span class=\"ln\">2</span><span class=\"cl\">second &#34;line&#34;\n</span></span><span class=\"line\"><span class=\"ln\">3</span><span class=\"cl\">\n</span></span><span class=\"line\"><span class=\"ln\">4</span><span class=\"cl\">fourth</span></span></code></pre></div>"
+ },
+ {
+  "lang": "text",
+  "code": "plain <text>\nsecond \"line\"\n\nfourth",
+  "opts": "noClasses=false,linenos=table,hl_lines=2",
+  "html": "<div class=\"highlight\"><div class=\"chroma\">\n<table class=\"lntable\"><tr><td class=\"lntd\">\n<pre tabindex=\"0\" class=\"chroma\"><code><span class=\"lnt\">1\n</span><span class=\"hl\"><span class=\"lnt\">2\n</span></span><span class=\"lnt\">3\n</span><span class=\"lnt\">4\n</span></code></pre></td>\n<td class=\"lntd\">\n<pre tabindex=\"0\" class=\"chroma\"><code class=\"language-text\" data-lang=\"text\"><span class=\"line\"><span class=\"cl\">plain &lt;text&gt;\n</span></span><span class=\"line hl\"><span class=\"cl\">second &#34;line&#34;\n</span></span><span class=\"line\"><span class=\"cl\">\n</span></span><span class=\"line\"><span class=\"cl\">fourth</span></span></code></pre></td></tr></table>\n</div>\n</div>"
+ },
+ {
+  "lang": "text",
+  "code": "plain <text>\nsecond \"line\"\n\nfourth",
+  "opts": "noClasses=false,linenos=inline,hl_lines=1 3,linenostart=5",
+  "html": "<div class=\"highlight\"><pre tabindex=\"0\" class=\"chroma\"><code class=\"language-text\" data-lang=\"text\"><span class=\"line hl\"><span class=\"ln\">5</span><span class=\"cl\">plain &lt;text&gt;\n</span></span><span class=\"line\"><span class=\"ln\">6</span><span class=\"cl\">second &#34;line&#34;\n</span></span><span class=\"line hl\"><span class=\"ln\">7</span><span class=\"cl\">\n</span></span><span class=\"line\"><span class=\"ln\">8</span><span class=\"cl\">fourth</span></span></code></pre></div>"
+ },
+ {
+  "lang": "text",
+  "code": "plain <text>\nsecond \"line\"\n\nfourth",
+  "opts": "noClasses=false,hl_lines=2",
+  "html": "<div class=\"highlight\"><pre tabindex=\"0\" class=\"chroma\"><code class=\"language-text\" data-lang=\"text\"><span class=\"line\"><span class=\"cl\">plain &lt;text&gt;\n</span></span><span class=\"line hl\"><span class=\"cl\">second &#34;line&#34;\n</span></span><span class=\"line\"><span class=\"cl\">\n</span></span><span class=\"line\"><span class=\"cl\">fourth</span></span></code></pre></div>"
+ },
+ {
+  "lang": "text",
+  "code": "plain <text>\nsecond \"line\"\n\nfourth",
+  "opts": "hl_inline=true,noClasses=true",
+  "html": "<code class=\"code-inline language-text\">plain &lt;text&gt;\nsecond &#34;line&#34;\n\nfourth</code>"
+ },
+ {
+  "lang": "text",
+  "code": "plain <text>\nsecond \"line\"\n\nfourth",
+  "opts": "hl_inline=true,noClasses=false",
+  "html": "<code class=\"code-inline language-text\">plain &lt;text&gt;\nsecond &#34;line&#34;\n\nfourth</code>"
+ },
+ {
+  "lang": "text",
+  "code": "plain <text>\nsecond \"line\"\n\nfourth",
+  "opts": "hl_inline=true,noClasses=false,linenos=table",
+  "html": "<div class=\"chroma\">\n<table class=\"lntable\"><tr><td class=\"lntd\">\n<span class=\"lnt\">1\n</span><span class=\"lnt\">2\n</span><span class=\"lnt\">3\n</span><span class=\"lnt\">4\n</span></td>\n<td class=\"lntd\">\n<code class=\"code-inline language-text\">plain &lt;text&gt;\nsecond &#34;line&#34;\n\nfourth</code></td></tr></table>\n</div>\n"
+ },
+ {
+  "lang": "text",
+  "code": "plain <text>\nsecond \"line\"\n\nfourth",
+  "opts": "linenos=table",
+  "html": "<div class=\"highlight\"><div style=\"color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;\">\n<table style=\"border-spacing:0;padding:0;margin:0;border:0;\"><tr><td style=\"vertical-align:top;padding:0;margin:0;border:0;\">\n<pre tabindex=\"0\" style=\"color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;\"><code><span style=\"white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f\">1\n</span><span style=\"white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f\">2\n</span><span style=\"white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f\">3\n</span><span style=\"white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f\">4\n</span></code></pre></td>\n<td style=\"vertical-align:top;padding:0;margin:0;border:0;;width:100%\">\n<pre tabindex=\"0\" style=\"color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;\"><code class=\"language-text\" data-lang=\"text\"><span style=\"display:flex;\"><span>plain &lt;text&gt;\n</span></span><span style=\"display:flex;\"><span>second &#34;line&#34;\n</span></span><span style=\"display:flex;\"><span>\n</span></span><span style=\"display:flex;\"><span>fourth</span></span></code></pre></td></tr></table>\n</div>\n</div>"
+ },
+ {
+  "lang": "text",
+  "code": "plain <text>\nsecond \"line\"\n\nfourth",
+  "opts": "linenos=inline,hl_lines=2,style=solarized-dark",
+  "html": "<div class=\"highlight\"><pre tabindex=\"0\" style=\"color:#93a1a1;background-color:#002b36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;display:grid;\"><code class=\"language-text\" data-lang=\"text\"><span style=\"display:flex;\"><span style=\"white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050\">1</span><span>plain &lt;text&gt;\n</span></span><span style=\"display:flex; background-color:#19404a\"><span style=\"white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050\">2</span><span>second &#34;line&#34;\n</span></span><span style=\"display:flex;\"><span style=\"white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050\">3</span><span>\n</span></span><span style=\"display:flex;\"><span style=\"white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#495050\">4</span><span>fourth</span></span></code></pre></div>"
+ },
+ {
+  "lang": "text",
+  "code": "plain <text>\nsecond \"line\"\n\nfourth",
+  "opts": "style=emacs,linenos=table,hl_lines=2-3",
+  "html": "<div class=\"highlight\"><div style=\"background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;display:grid;\">\n<table style=\"border-spacing:0;padding:0;margin:0;border:0;\"><tr><td style=\"vertical-align:top;padding:0;margin:0;border:0;\">\n<pre tabindex=\"0\" style=\"background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;display:grid;\"><code><span style=\"white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f\">1\n</span><span style=\"background-color:#dfdfdf\"><span style=\"white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f\">2\n</span></span><span style=\"background-color:#dfdfdf\"><span style=\"white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f\">3\n</span></span><span style=\"white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f\">4\n</span></code></pre></td>\n<td style=\"vertical-align:top;padding:0;margin:0;border:0;;width:100%\">\n<pre tabindex=\"0\" style=\"background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4;display:grid;\"><code class=\"language-text\" data-lang=\"text\"><span style=\"display:flex;\"><span>plain &lt;text&gt;\n</span></span><span style=\"display:flex; background-color:#dfdfdf\"><span>second &#34;line&#34;\n</span></span><span style=\"display:flex; background-color:#dfdfdf\"><span>\n</span></span><span style=\"display:flex;\"><span>fourth</span></span></code></pre></td></tr></table>\n</div>\n</div>"
+ },
+ {
+  "lang": "text",
+  "code": "plain <text>\nsecond \"line\"\n\nfourth",
+  "opts": "noClasses=false,anchorlinenos=true,lineanchors=x,linenos=inline",
+  "html": "<div class=\"highlight\"><pre tabindex=\"0\" class=\"chroma\"><code class=\"language-text\" data-lang=\"text\"><span class=\"line\"><span class=\"ln\" id=\"x-1\"><a class=\"lnlinks\" href=\"#x-1\">1</a></span><span class=\"cl\">plain &lt;text&gt;\n</span></span><span class=\"line\"><span class=\"ln\" id=\"x-2\"><a class=\"lnlinks\" href=\"#x-2\">2</a></span><span class=\"cl\">second &#34;line&#34;\n</span></span><span class=\"line\"><span class=\"ln\" id=\"x-3\"><a class=\"lnlinks\" href=\"#x-3\">3</a></span><span class=\"cl\">\n</span></span><span class=\"line\"><span class=\"ln\" id=\"x-4\"><a class=\"lnlinks\" href=\"#x-4\">4</a></span><span class=\"cl\">fourth</span></span></code></pre></div>"
+ },
+ {
+  "lang": "text",
+  "code": "plain <text>\nsecond \"line\"\n\nfourth",
+  "opts": "noClasses=false,anchorlinenos=true,linenos=table",
+  "html": "<div class=\"highlight\"><div class=\"chroma\">\n<table class=\"lntable\"><tr><td class=\"lntd\">\n<pre tabindex=\"0\" class=\"chroma\"><code><span class=\"lnt\" id=\"1\"><a class=\"lnlinks\" href=\"#1\">1</a>\n</span><span class=\"lnt\" id=\"2\"><a class=\"lnlinks\" href=\"#2\">2</a>\n</span><span class=\"lnt\" id=\"3\"><a class=\"lnlinks\" href=\"#3\">3</a>\n</span><span class=\"lnt\" id=\"4\"><a class=\"lnlinks\" href=\"#4\">4</a>\n</span></code></pre></td>\n<td class=\"lntd\">\n<pre tabindex=\"0\" class=\"chroma\"><code class=\"language-text\" data-lang=\"text\"><span class=\"line\"><span class=\"cl\">plain &lt;text&gt;\n</span></span><span class=\"line\"><span class=\"cl\">second &#34;line&#34;\n</span></span><span class=\"line\"><span class=\"cl\">\n</span></span><span class=\"line\"><span class=\"cl\">fourth</span></span></code></pre></td></tr></table>\n</div>\n</div>"
+ },
+ {
+  "lang": "text",
+  "code": "plain <text>\nsecond \"line\"\n\nfourth",
+  "opts": "noClasses=true,anchorlinenos=true,linenos=table,style=github",
+  "html": "<div class=\"highlight\"><div style=\"background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;\">\n<table style=\"border-spacing:0;padding:0;margin:0;border:0;\"><tr><td style=\"vertical-align:top;padding:0;margin:0;border:0;\">\n<pre tabindex=\"0\" style=\"background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;\"><code><span style=\"white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f\" id=\"1\"><a style=\"outline:none;text-decoration:none;color:inherit\" href=\"#1\">1</a>\n</span><span style=\"white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f\" id=\"2\"><a style=\"outline:none;text-decoration:none;color:inherit\" href=\"#2\">2</a>\n</span><span style=\"white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f\" id=\"3\"><a style=\"outline:none;text-decoration:none;color:inherit\" href=\"#3\">3</a>\n</span><span style=\"white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f\" id=\"4\"><a style=\"outline:none;text-decoration:none;color:inherit\" href=\"#4\">4</a>\n</span></code></pre></td>\n<td style=\"vertical-align:top;padding:0;margin:0;border:0;;width:100%\">\n<pre tabindex=\"0\" style=\"background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;\"><code class=\"language-text\" data-lang=\"text\"><span style=\"display:flex;\"><span>plain &lt;text&gt;\n</span></span><span style=\"display:flex;\"><span>second &#34;line&#34;\n</span></span><span style=\"display:flex;\"><span>\n</span></span><span style=\"display:flex;\"><span>fourth</span></span></code></pre></td></tr></table>\n</div>\n</div>"
+ },
+ {
+  "lang": "text",
+  "code": "plain <text>\nsecond \"line\"\n\nfourth",
+  "opts": "style=nosuchstyle",
+  "html": "<div class=\"highlight\"><pre tabindex=\"0\" style=\"color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;\"><code class=\"language-text\" data-lang=\"text\"><span style=\"display:flex;\"><span>plain &lt;text&gt;\n</span></span><span style=\"display:flex;\"><span>second &#34;line&#34;\n</span></span><span style=\"display:flex;\"><span>\n</span></span><span style=\"display:flex;\"><span>fourth</span></span></code></pre></div>"
+ },
+ {
+  "lang": "text",
+  "code": "plain <text>\nsecond \"line\"\n\nfourth",
+  "opts": "tabwidth=8,style=dracula",
+  "html": "<div class=\"highlight\"><pre tabindex=\"0\" style=\"color:#f8f8f2;background-color:#282a36;\"><code class=\"language-text\" data-lang=\"text\"><span style=\"display:flex;\"><span>plain &lt;text&gt;\n</span></span><span style=\"display:flex;\"><span>second &#34;line&#34;\n</span></span><span style=\"display:flex;\"><span>\n</span></span><span style=\"display:flex;\"><span>fourth</span></span></code></pre></div>"
+ },
+ {
+  "lang": "text",
+  "code": "plain <text>\nsecond \"line\"\n\nfourth",
+  "opts": "noClasses=false,wrapperClass=hl foo,linenos=true,lineNumbersInTable=false",
+  "html": "<div class=\"hl foo\"><pre tabindex=\"0\" class=\"chroma\"><code class=\"language-text\" data-lang=\"text\"><span class=\"line\"><span class=\"ln\">1</span><span class=\"cl\">plain &lt;text&gt;\n</span></span><span class=\"line\"><span class=\"ln\">2</span><span class=\"cl\">second &#34;line&#34;\n</span></span><span class=\"line\"><span class=\"ln\">3</span><span class=\"cl\">\n</span></span><span class=\"line\"><span class=\"ln\">4</span><span class=\"cl\">fourth</span></span></code></pre></div>"
+ },
+ {
+  "lang": "nosuchlang",
+  "code": "x < y\n",
+  "opts": "",
+  "html": "<pre tabindex=\"0\"><code class=\"language-nosuchlang\" data-lang=\"nosuchlang\">x &lt; y\n</code></pre>"
+ },
+ {
+  "lang": "nosuchlang",
+  "code": "x < y\n",
+  "opts": "noClasses=false",
+  "html": "<pre tabindex=\"0\"><code class=\"language-nosuchlang\" data-lang=\"nosuchlang\">x &lt; y\n</code></pre>"
+ },
+ {
+  "lang": "nosuchlang",
+  "code": "x < y\n",
+  "opts": "noClasses=false,linenos=table",
+  "html": "<pre tabindex=\"0\"><code class=\"language-nosuchlang\" data-lang=\"nosuchlang\">x &lt; y\n</code></pre>"
+ },
+ {
+  "lang": "nosuchlang",
+  "code": "x < y\n",
+  "opts": "noClasses=false,linenos=inline",
+  "html": "<pre tabindex=\"0\"><code class=\"language-nosuchlang\" data-lang=\"nosuchlang\">x &lt; y\n</code></pre>"
+ },
+ {
+  "lang": "nosuchlang",
+  "code": "x < y\n",
+  "opts": "noClasses=false,linenos=table,hl_lines=2",
+  "html": "<pre tabindex=\"0\"><code class=\"language-nosuchlang\" data-lang=\"nosuchlang\">x &lt; y\n</code></pre>"
+ },
+ {
+  "lang": "nosuchlang",
+  "code": "x < y\n",
+  "opts": "noClasses=false,linenos=inline,hl_lines=1 3,linenostart=5",
+  "html": "<pre tabindex=\"0\"><code class=\"language-nosuchlang\" data-lang=\"nosuchlang\">x &lt; y\n</code></pre>"
+ },
+ {
+  "lang": "nosuchlang",
+  "code": "x < y\n",
+  "opts": "noClasses=false,hl_lines=2",
+  "html": "<pre tabindex=\"0\"><code class=\"language-nosuchlang\" data-lang=\"nosuchlang\">x &lt; y\n</code></pre>"
+ },
+ {
+  "lang": "nosuchlang",
+  "code": "x < y\n",
+  "opts": "hl_inline=true,noClasses=true",
+  "html": "<code class=\"code-inline language-nosuchlang\">x &lt; y\n</code>"
+ },
+ {
+  "lang": "nosuchlang",
+  "code": "x < y\n",
+  "opts": "hl_inline=true,noClasses=false",
+  "html": "<code class=\"code-inline language-nosuchlang\">x &lt; y\n</code>"
+ },
+ {
+  "lang": "nosuchlang",
+  "code": "x < y\n",
+  "opts": "hl_inline=true,noClasses=false,linenos=table",
+  "html": "<code class=\"code-inline language-nosuchlang\">x &lt; y\n</code>"
+ },
+ {
+  "lang": "nosuchlang",
+  "code": "x < y\n",
+  "opts": "linenos=table",
+  "html": "<pre tabindex=\"0\"><code class=\"language-nosuchlang\" data-lang=\"nosuchlang\">x &lt; y\n</code></pre>"
+ },
+ {
+  "lang": "nosuchlang",
+  "code": "x < y\n",
+  "opts": "linenos=inline,hl_lines=2,style=solarized-dark",
+  "html": "<pre tabindex=\"0\"><code class=\"language-nosuchlang\" data-lang=\"nosuchlang\">x &lt; y\n</code></pre>"
+ },
+ {
+  "lang": "nosuchlang",
+  "code": "x < y\n",
+  "opts": "style=emacs,linenos=table,hl_lines=2-3",
+  "html": "<pre tabindex=\"0\"><code class=\"language-nosuchlang\" data-lang=\"nosuchlang\">x &lt; y\n</code></pre>"
+ },
+ {
+  "lang": "nosuchlang",
+  "code": "x < y\n",
+  "opts": "noClasses=false,anchorlinenos=true,lineanchors=x,linenos=inline",
+  "html": "<pre tabindex=\"0\"><code class=\"language-nosuchlang\" data-lang=\"nosuchlang\">x &lt; y\n</code></pre>"
+ },
+ {
+  "lang": "nosuchlang",
+  "code": "x < y\n",
+  "opts": "noClasses=false,anchorlinenos=true,linenos=table",
+  "html": "<pre tabindex=\"0\"><code class=\"language-nosuchlang\" data-lang=\"nosuchlang\">x &lt; y\n</code></pre>"
+ },
+ {
+  "lang": "nosuchlang",
+  "code": "x < y\n",
+  "opts": "noClasses=true,anchorlinenos=true,linenos=table,style=github",
+  "html": "<pre tabindex=\"0\"><code class=\"language-nosuchlang\" data-lang=\"nosuchlang\">x &lt; y\n</code></pre>"
+ },
+ {
+  "lang": "nosuchlang",
+  "code": "x < y\n",
+  "opts": "style=nosuchstyle",
+  "html": "<pre tabindex=\"0\"><code class=\"language-nosuchlang\" data-lang=\"nosuchlang\">x &lt; y\n</code></pre>"
+ },
+ {
+  "lang": "nosuchlang",
+  "code": "x < y\n",
+  "opts": "tabwidth=8,style=dracula",
+  "html": "<pre tabindex=\"0\"><code class=\"language-nosuchlang\" data-lang=\"nosuchlang\">x &lt; y\n</code></pre>"
+ },
+ {
+  "lang": "nosuchlang",
+  "code": "x < y\n",
+  "opts": "noClasses=false,wrapperClass=hl foo,linenos=true,lineNumbersInTable=false",
+  "html": "<pre tabindex=\"0\"><code class=\"language-nosuchlang\" data-lang=\"nosuchlang\">x &lt; y\n</code></pre>"
+ },
+ {
+  "lang": "",
+  "code": "no language",
+  "opts": "",
+  "html": "<pre tabindex=\"0\"><code>no language</code></pre>"
+ },
+ {
+  "lang": "",
+  "code": "no language",
+  "opts": "noClasses=false",
+  "html": "<pre tabindex=\"0\"><code>no language</code></pre>"
+ },
+ {
+  "lang": "",
+  "code": "no language",
+  "opts": "noClasses=false,linenos=table",
+  "html": "<pre tabindex=\"0\"><code>no language</code></pre>"
+ },
+ {
+  "lang": "",
+  "code": "no language",
+  "opts": "noClasses=false,linenos=inline",
+  "html": "<pre tabindex=\"0\"><code>no language</code></pre>"
+ },
+ {
+  "lang": "",
+  "code": "no language",
+  "opts": "noClasses=false,linenos=table,hl_lines=2",
+  "html": "<pre tabindex=\"0\"><code>no language</code></pre>"
+ },
+ {
+  "lang": "",
+  "code": "no language",
+  "opts": "noClasses=false,linenos=inline,hl_lines=1 3,linenostart=5",
+  "html": "<pre tabindex=\"0\"><code>no language</code></pre>"
+ },
+ {
+  "lang": "",
+  "code": "no language",
+  "opts": "noClasses=false,hl_lines=2",
+  "html": "<pre tabindex=\"0\"><code>no language</code></pre>"
+ },
+ {
+  "lang": "",
+  "code": "no language",
+  "opts": "hl_inline=true,noClasses=true",
+  "html": "<code class=\"code-inline language-\">no language</code>"
+ },
+ {
+  "lang": "",
+  "code": "no language",
+  "opts": "hl_inline=true,noClasses=false",
+  "html": "<code class=\"code-inline language-\">no language</code>"
+ },
+ {
+  "lang": "",
+  "code": "no language",
+  "opts": "hl_inline=true,noClasses=false,linenos=table",
+  "html": "<code class=\"code-inline language-\">no language</code>"
+ },
+ {
+  "lang": "",
+  "code": "no language",
+  "opts": "linenos=table",
+  "html": "<pre tabindex=\"0\"><code>no language</code></pre>"
+ },
+ {
+  "lang": "",
+  "code": "no language",
+  "opts": "linenos=inline,hl_lines=2,style=solarized-dark",
+  "html": "<pre tabindex=\"0\"><code>no language</code></pre>"
+ },
+ {
+  "lang": "",
+  "code": "no language",
+  "opts": "style=emacs,linenos=table,hl_lines=2-3",
+  "html": "<pre tabindex=\"0\"><code>no language</code></pre>"
+ },
+ {
+  "lang": "",
+  "code": "no language",
+  "opts": "noClasses=false,anchorlinenos=true,lineanchors=x,linenos=inline",
+  "html": "<pre tabindex=\"0\"><code>no language</code></pre>"
+ },
+ {
+  "lang": "",
+  "code": "no language",
+  "opts": "noClasses=false,anchorlinenos=true,linenos=table",
+  "html": "<pre tabindex=\"0\"><code>no language</code></pre>"
+ },
+ {
+  "lang": "",
+  "code": "no language",
+  "opts": "noClasses=true,anchorlinenos=true,linenos=table,style=github",
+  "html": "<pre tabindex=\"0\"><code>no language</code></pre>"
+ },
+ {
+  "lang": "",
+  "code": "no language",
+  "opts": "style=nosuchstyle",
+  "html": "<pre tabindex=\"0\"><code>no language</code></pre>"
+ },
+ {
+  "lang": "",
+  "code": "no language",
+  "opts": "tabwidth=8,style=dracula",
+  "html": "<pre tabindex=\"0\"><code>no language</code></pre>"
+ },
+ {
+  "lang": "",
+  "code": "no language",
+  "opts": "noClasses=false,wrapperClass=hl foo,linenos=true,lineNumbersInTable=false",
+  "html": "<pre tabindex=\"0\"><code>no language</code></pre>"
+ }
+]

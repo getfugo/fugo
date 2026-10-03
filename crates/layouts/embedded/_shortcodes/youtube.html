@@ -1,0 +1,46 @@
+{#-
+  An embedded YouTube video. The id is the first positional argument or the named argument id.
+  Named arguments: allowFullScreen (default true), autoplay (default false; forces mute),
+  class (drops the inline styles), controls (default true), end, loading (default eager),
+  loop (default false), mute (default false), start, title (default "YouTube video").
+  See https://developers.google.com/youtube/player_parameters.
+-#}
+{%- set pc = site.config.privacy.youtube %}
+{%- if not pc.disable %}
+  {%- set video_id = (shortcode | arg(name="id", default="")) or (shortcode | arg(index=0, default="")) %}
+  {%- if video_id %}
+    {%- set truthy = ["true", true, 1] %}
+    {%- set falsy = ["false", false, 0] %}
+
+    {%- set allow_full_screen = (shortcode | arg(name="allowFullScreen", default="")) not in falsy %}
+    {%- set autoplay = 1 if (shortcode | arg(name="autoplay", default="")) in truthy else 0 %}
+    {%- set controls = 0 if (shortcode | arg(name="controls", default="")) in falsy else 1 %}
+    {%- set repeat = 1 if (shortcode | arg(name="loop", default="")) in truthy else 0 %}
+    {%- set mute = 1 if (autoplay == 1 or (shortcode | arg(name="mute", default="")) in truthy) else 0 %}
+    {%- set cls = shortcode | arg(name="class", default="") %}
+    {%- set end_at = (shortcode | arg(name="end", default=0)) or 0 %}
+    {%- set loading = (shortcode | arg(name="loading", default="")) or "eager" %}
+    {%- set start_at = (shortcode | arg(name="start", default=0)) or 0 %}
+    {%- set video_title = (shortcode | arg(name="title", default="")) or "YouTube video" %}
+
+    {%- set allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" %}
+    {%- if allow_full_screen %}{% set allow = allow ~ "; fullscreen" %}{% endif %}
+
+    {%- set host = "www.youtube-nocookie.com" if pc.privacy_enhanced else "www.youtube.com" %}
+    {%- set params = {"autoplay": autoplay, "controls": controls, "end": end_at, "mute": mute, "start": start_at, "loop": repeat} %}
+    {%- if repeat == 1 %}{% set params = params | merge(with={"playlist": video_id}) %}{% endif %}
+    {%- set src = "https://" ~ host ~ "/embed/" ~ video_id ~ "?" ~ querify(params=params) %}
+
+    {%- set div_style = "" if cls else "position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden;" %}
+    {%- set iframe_style = "" if cls else "position: absolute; top: 0; left: 0; width: 100%; height: 100%; border:0;" -%}
+    <div
+      {%- if cls %} class="{{ cls }}"{% endif %}
+      {%- if div_style %} style="{{ div_style }}"{% endif -%}
+    >
+      <iframe allow="{{ allow }}" loading="{{ loading }}" referrerpolicy="strict-origin-when-cross-origin" src="{{ src }}"
+        {%- if iframe_style %} style="{{ iframe_style }}"{% endif %} title="{{ video_title }}"></iframe>
+    </div>
+  {%- else %}
+    {{- log_error(message='The "' ~ shortcode.name ~ '" shortcode requires an id argument. See ' ~ shortcode.position) }}
+  {%- endif %}
+{%- endif %}

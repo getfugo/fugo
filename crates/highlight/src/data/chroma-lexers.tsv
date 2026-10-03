@@ -1,0 +1,793 @@
+# Chroma v2.19.0 lexer lookup (MIT, github.com/alecthomas/chroma): kind TAB key TAB lexer.
+# kind n = a name or alias (lower-case, matched case-insensitively); f = a file extension or
+# file name (matched exactly). Generated with Chroma's lexers.Get(key) (crate README).
+f	.Renviron	R
+f	.Rhistory	R
+f	.Rprofile	R
+f	.bashrc	Bash
+f	.editorconfig	INI
+f	.env	Bash
+f	.exrc	VimL
+f	.gitconfig	INI
+f	.gvimrc	VimL
+f	.htaccess	ApacheConf
+f	.justfile	Makefile
+f	.pylintrc	INI
+f	.vimrc	VimL
+f	.zshrc	Bash
+f	1p	Groff
+f	3pm	Groff
+f	6pl	Raku
+f	6pm	Raku
+f	BAS	QBasic
+f	BSDmakefile	Makefile
+f	BUCK	Python
+f	BUILD	Python
+f	BUILD.bazel	Python
+f	C	C
+f	CMakeLists.txt	CMake
+f	COB	COBOL
+f	CPY	COBOL
+f	EPF	OnesEnterprise
+f	ERF	OnesEnterprise
+f	F	FortranFixed
+f	F03	Fortran
+f	F95	Fortran
+f	FEATURE	Gherkin
+f	GNUmakefile	Makefile
+f	Gemfile	Ruby
+f	H	C++
+f	HC	HolyC
+f	HC.Z	HolyC
+f	HH	HolyC
+f	Justfile	Makefile
+f	MODULE.bazel	Python
+f	NS7	Natural
+f	NSA	Natural
+f	NSC	Natural
+f	NSG	Natural
+f	NSH	NSIS
+f	NSL	Natural
+f	NSM	Natural
+f	NSN	Natural
+f	NSP	Natural
+f	NSS	Natural
+f	PKGBUILD	Bash
+f	PROC	PSL
+f	Pipfile	TOML
+f	REPO.bazel	Python
+f	Rakefile	Ruby
+f	S	R
+f	SConscript	Python
+f	SConstruct	Python
+f	TRIG	PSL
+f	Vagrantfile	Ruby
+f	WORKSPACE	Python
+f	WORKSPACE.bazel	Python
+f	WORKSPACE.bzlmod	Python
+f	_exrc	VimL
+f	_gvimrc	VimL
+f	_vimrc	VimL
+f	adb	Ada
+f	ads	Ada
+f	ahkl	AutoHotkey
+f	als	Alloy
+f	apache.conf	ApacheConf
+f	apache2.conf	ApacheConf
+f	au3	AutoIt
+f	autodelegate	Myghty
+f	autohandler	Mason
+f	automount	SYSTEMD
+f	aux	TeX
+f	avsc	JSON
+f	b	Brainfuck
+f	bal	Ballerina
+f	bas	QBasic
+f	bashrc	Bash
+f	bb	BlitzBasic
+f	bf	Brainfuck
+f	bzl	Python
+f	cc	C++
+f	cdf	Mathematica
+f	cf	CFEngine3
+f	cginc	HLSL
+f	cjs	JavaScript
+f	cls	OpenEdge ABL
+f	cmd	Batchfile
+f	cob	COBOL
+f	cp	C++
+f	cpy	COBOL
+f	cs	C#
+f	csproj	XML
+f	cts	TypeScript
+f	cxx	C++
+f	dal	AL
+f	decls	BlitzBasic
+f	def	Modula-2
+f	device	SYSTEMD
+f	dhandler	Mason
+f	dhcpd.conf	ISCdhcpd
+f	di	D
+f	dnssd	SYSTEMD
+f	dpk	ObjectPascal
+f	dpr	ObjectPascal
+f	dyl	Dylan
+f	dzn	MiniZinc
+f	ebuild	Bash
+f	ecl	Prolog
+f	eclass	Bash
+f	eex	Elixir
+f	el	EmacsLisp
+f	env	Bash
+f	epf	OnesEnterprise
+f	eps	PostScript
+f	erf	OnesEnterprise
+f	erl	Erlang
+f	es	Erlang
+f	escript	Erlang
+f	exheres-0	Bash
+f	exlib	Bash
+f	f	FortranFixed
+f	f03	Fortran
+f	f95	Fortran
+f	feature	Gherkin
+f	frag	GLSL
+f	frt	Forth
+f	fs	Forth
+f	fsi	FSharp
+f	fsproj	XML
+f	fth	Forth
+f	fun	Standard ML
+f	fx	HLSL
+f	fxh	HLSL
+f	fzn	MiniZinc
+f	gemspec	Ruby
+f	geo	GLSL
+f	go.tmpl	Cheetah
+f	gotmpl	Go Template
+f	gradle	Groovy
+f	gvimrc	VimL
+f	h	C
+f	h++	C++
+f	ha	Hare
+f	hc	HolyC
+f	hc.z	HolyC
+f	hh	C++
+f	hlsli	HLSL
+f	hpp	C++
+f	hrl	Erlang
+f	htm	HTML
+f	hxx	C++
+f	i	OpenEdge ABL
+f	idc	C
+f	ijs	J
+f	inc	PHP
+f	inf	INI
+f	ino	Arduino
+f	intr	Dylan
+f	ipf	Igor
+f	jdn	Janet
+f	jsm	JavaScript
+f	jsonc	JSON
+f	justfile	Makefile
+f	jy	Python
+f	kt	Kotlin
+f	kts	Kotlin
+f	libsonnet	Jsonnet
+f	link	SYSTEMD
+f	ll	LLVM
+f	load	Fish
+f	lpk	ObjectPascal
+f	lpr	ObjectPascal
+f	m	Mathematica
+f	ma	Mathematica
+f	mak	Makefile
+f	mao	Mako
+f	mc	MonkeyC
+f	meson_options.txt	Meson
+f	mhtml	Mason
+f	mi	Mason
+f	mjs	JavaScript
+f	mk	Makefile
+f	ml	OCaml
+f	mli	OCaml
+f	mll	OCaml
+f	mly	OCaml
+f	mod	Modula-2
+f	mount	SYSTEMD
+f	mt	Mathematica
+f	mts	TypeScript
+f	mx	Mathematica
+f	myt	Myghty
+f	nbp	Mathematica
+f	netdev	SYSTEMD
+f	network	SYSTEMD
+f	nginx.conf	Nginx configuration file
+f	nqp	Raku
+f	ns2	Newspeak
+f	p	OpenEdge ABL
+f	p6	Raku
+f	p6l	Raku
+f	p6m	Raku
+f	pacman.conf	PacmanConf
+f	pas	ObjectPascal
+f	patch	Diff
+f	path	SYSTEMD
+f	pc	PkgConfig
+f	plot	Gnuplot
+f	plt	Gnuplot
+f	pm	Perl
+f	pm6	Raku
+f	pml	Promela
+f	poetry.lock	TOML
+f	pp	ObjectPascal
+f	pr	Promela
+f	prm	Promela
+f	pro	Prolog
+f	prom	Promela
+f	ps	PostScript
+f	pxd	Cython
+f	pxi	Cython
+f	pyi	Python
+f	pylintrc	INI
+f	pyw	Python
+f	rake	Ruby
+f	rakudoc	Raku
+f	rakumod	Raku
+f	rakutest	Raku
+f	rbw	Ruby
+f	rbx	Ruby
+f	re	ReasonML
+f	rei	ReasonML
+f	rex	Rexx
+f	rktd	Racket
+f	rktl	Racket
+f	rq	SPARQL
+f	rs.in	Rust
+f	rss	XML
+f	rvt	Tcl
+f	rx	Rexx
+f	s	R
+f	sc	Python
+f	scad	OpenSCAD
+f	sce	Scilab
+f	sci	Scilab
+f	scope	SYSTEMD
+f	service	SYSTEMD
+f	sh-session	Bash Session
+f	sig	Standard ML
+f	siv	Sieve
+f	slice	SYSTEMD
+f	socket	SYSTEMD
+f	spt	Cheetah
+f	sql	SQL
+f	ss	Scheme
+f	styl	Stylus
+f	svg	XML
+f	svh	systemverilog
+f	swap	SYSTEMD
+f	t	Perl
+f	tac	Python
+f	target	SYSTEMD
+f	td	TableGen
+f	termcap.src	Termcap
+f	terminfo.src	Terminfo
+f	timer	SYSTEMD
+f	tmpl	Cheetah
+f	toc	TeX
+f	tpl	Smarty
+f	tpp	C++
+f	tst	Scilab
+f	ttl	Turtle
+f	tu	Turing
+f	txt	plaintext
+f	typ	Typst
+f	uc	ucode
+f	v	V
+f	v.mod	Modula-2
+f	vb	VB.net
+f	vcxproj	XML
+f	vert	GLSL
+f	vhd	VHDL
+f	vimrc	VimL
+f	vv	V
+f	w	OpenEdge ABL
+f	wl	Mathematica
+f	wlua	Lua
+f	wsdl	XML
+f	wsf	XML
+f	xhtml	HTML
+f	xsd	XML
+f	xsl	XML
+f	xslt	HTML
+f	yml	YAML
+f	zon	Zig
+f	zshrc	Bash
+n	1s	OnesEnterprise
+n	1s:enterprise	OnesEnterprise
+n	abap	ABAP
+n	abl	OpenEdge ABL
+n	abnf	ABNF
+n	aconf	ApacheConf
+n	actionscript	ActionScript
+n	actionscript 3	ActionScript 3
+n	actionscript3	ActionScript 3
+n	ada	Ada
+n	ada2005	Ada
+n	ada95	Ada
+n	agda	Agda
+n	ahk	AutoHotkey
+n	al	AL
+n	alloy	Alloy
+n	angular2	Angular2
+n	antlr	ANTLR
+n	apache	ApacheConf
+n	apacheconf	ApacheConf
+n	apl	APL
+n	applescript	AppleScript
+n	aql	ArangoDB AQL
+n	arangodb aql	ArangoDB AQL
+n	arduino	Arduino
+n	arexx	Rexx
+n	armasm	ArmAsm
+n	as	ActionScript
+n	as3	ActionScript 3
+n	asm	GAS
+n	atl	ATL
+n	autohotkey	AutoHotkey
+n	autoit	AutoIt
+n	awk	Awk
+n	b3d	BlitzBasic
+n	ballerina	Ballerina
+n	bash	Bash
+n	bash session	Bash Session
+n	bash-session	Bash Session
+n	basic	QBasic
+n	bat	Batchfile
+n	batch	Batchfile
+n	batchfile	Batchfile
+n	beef	Beef
+n	bf	Brainfuck
+n	bib	BibTeX
+n	bibtex	BibTeX
+n	bicep	Bicep
+n	bind	dns
+n	blitzbasic	BlitzBasic
+n	bnf	BNF
+n	bplus	BlitzBasic
+n	bqn	BQN
+n	brainfuck	Brainfuck
+n	bsdmake	Makefile
+n	c	C
+n	c#	C#
+n	c++	C++
+n	caddy	Caddyfile
+n	caddy-d	Caddyfile Directives
+n	caddyfile	Caddyfile
+n	caddyfile directives	Caddyfile Directives
+n	caddyfile-d	Caddyfile Directives
+n	caddyfile-directives	Caddyfile Directives
+n	cap'n proto	Cap'n Proto
+n	capnp	Cap'n Proto
+n	cassandra	Cassandra CQL
+n	cassandra cql	Cassandra CQL
+n	cassette	VHS
+n	ceylon	Ceylon
+n	cf3	CFEngine3
+n	cfengine3	CFEngine3
+n	cfg	INI
+n	cfs	cfstatement
+n	cfstatement	cfstatement
+n	chai	ChaiScript
+n	chaiscript	ChaiScript
+n	chapel	Chapel
+n	cheetah	Cheetah
+n	chpl	Chapel
+n	cl	Common Lisp
+n	clj	Clojure
+n	clojure	Clojure
+n	cmake	CMake
+n	cobol	COBOL
+n	coffee	CoffeeScript
+n	coffee-script	CoffeeScript
+n	coffeescript	CoffeeScript
+n	common lisp	Common Lisp
+n	common-lisp	Common Lisp
+n	console	Bash Session
+n	coq	Coq
+n	core	Core
+n	cpp	C++
+n	cql	Cassandra CQL
+n	cr	Crystal
+n	crystal	Crystal
+n	csh	Tcsh
+n	csharp	C#
+n	css	CSS
+n	csv	CSV
+n	cucumber	Gherkin
+n	cue	CUE
+n	cython	Cython
+n	d	D
+n	dart	Dart
+n	dax	Dax
+n	desktop	Desktop file
+n	desktop file	Desktop file
+n	desktop_entry	Desktop file
+n	diff	Diff
+n	django	Django/Jinja
+n	django/jinja	Django/Jinja
+n	dns	dns
+n	docker	Docker
+n	dockerfile	Docker
+n	dosbatch	Batchfile
+n	dosini	INI
+n	dtd	DTD
+n	duby	Ruby
+n	dylan	Dylan
+n	ebnf	EBNF
+n	edn	Clojure
+n	elisp	EmacsLisp
+n	elixir	Elixir
+n	elm	Elm
+n	emacs	EmacsLisp
+n	emacs-lisp	EmacsLisp
+n	emacslisp	EmacsLisp
+n	erlang	Erlang
+n	ex	Elixir
+n	exs	Elixir
+n	f90	Fortran
+n	factor	Factor
+n	fennel	Fennel
+n	fish	Fish
+n	fishshell	Fish
+n	fnl	Fennel
+n	forth	Forth
+n	fortran	Fortran
+n	fortranfixed	FortranFixed
+n	fsharp	FSharp
+n	gas	GAS
+n	gawk	Awk
+n	gd	GDScript
+n	gd3	GDScript3
+n	gdscript	GDScript
+n	gdscript3	GDScript3
+n	genshi	Genshi
+n	genshi html	Genshi HTML
+n	genshi text	Genshi Text
+n	genshitext	Genshi Text
+n	gherkin	Gherkin
+n	gleam	Gleam
+n	glsl	GLSL
+n	gnuplot	Gnuplot
+n	go	Go
+n	go html template	Go HTML Template
+n	go template	Go Template
+n	go text template	Go Text Template
+n	go-html-template	Go HTML Template
+n	go-template	Go Template
+n	go-text-template	Go Text Template
+n	golang	Go
+n	gql	GraphQL
+n	graphql	GraphQL
+n	graphqls	GraphQL
+n	groff	Groff
+n	groovy	Groovy
+n	gsed	Sed
+n	handlebars	Handlebars
+n	hare	Hare
+n	haskell	Haskell
+n	haxe	Haxe
+n	hbs	Handlebars
+n	hcl	HCL
+n	hexdump	Hexdump
+n	hlb	HLB
+n	hlsl	HLSL
+n	holyc	HolyC
+n	hs	Haskell
+n	html	HTML
+n	html+genshi	Genshi HTML
+n	html+kid	Genshi HTML
+n	http	HTTP
+n	hx	Haxe
+n	hxsl	Haxe
+n	hy	Hy
+n	hylang	Hy
+n	idr	Idris
+n	idris	Idris
+n	igor	Igor
+n	igorpro	Igor
+n	ini	INI
+n	io	Io
+n	iscdhcpd	ISCdhcpd
+n	j	J
+n	janet	Janet
+n	java	Java
+n	java-properties	properties
+n	javascript	JavaScript
+n	jinja	Django/Jinja
+n	jl	Julia
+n	js	JavaScript
+n	json	JSON
+n	jsonata	JSONata
+n	jsonnet	Jsonnet
+n	jsx	react
+n	julia	Julia
+n	jungle	Jungle
+n	kid	Genshi
+n	kotlin	Kotlin
+n	ksh	Bash
+n	latex	TeX
+n	lean	Lean4
+n	lean4	Lean4
+n	lighttpd	Lighttpd configuration file
+n	lighttpd configuration file	Lighttpd configuration file
+n	lighty	Lighttpd configuration file
+n	lisp	Common Lisp
+n	llvm	LLVM
+n	lua	Lua
+n	luau	Lua
+n	m2	Modula-2
+n	make	Makefile
+n	makefile	Makefile
+n	mako	Mako
+n	man	Groff
+n	mariadb	MySQL
+n	markdown	markdown
+n	mason	Mason
+n	materialize	Materialize SQL dialect
+n	materialize sql dialect	Materialize SQL dialect
+n	mathematica	Mathematica
+n	matlab	Matlab
+n	mawk	Awk
+n	mcf	MCFunction
+n	mcfunction	MCFunction
+n	md	markdown
+n	meson	Meson
+n	meson.build	Meson
+n	metal	Metal
+n	mf	Makefile
+n	minizinc	MiniZinc
+n	mkd	markdown
+n	mlir	MLIR
+n	mma	Mathematica
+n	modula-2	Modula-2
+n	modula2	Modula-2
+n	mojo	Mojo
+n	monkeyc	MonkeyC
+n	moon	MoonScript
+n	moonscript	MoonScript
+n	morrowind	MorrowindScript
+n	morrowindscript	MorrowindScript
+n	mwscript	MorrowindScript
+n	myghty	Myghty
+n	mysql	MySQL
+n	mzn	MiniZinc
+n	mzsql	Materialize SQL dialect
+n	nasm	NASM
+n	natural	Natural
+n	nawk	Awk
+n	nb	Mathematica
+n	ndisasm	NDISASM
+n	newspeak	Newspeak
+n	ng2	Angular2
+n	nginx	Nginx configuration file
+n	nginx configuration file	Nginx configuration file
+n	nim	Nim
+n	nimrod	Nim
+n	nix	Nix
+n	nixos	Nix
+n	no-highlight	plaintext
+n	nroff	Groff
+n	nsh	NSIS
+n	nsi	NSIS
+n	nsis	NSIS
+n	obj-c	Objective-C
+n	objc	Objective-C
+n	objective-c	Objective-C
+n	objectivec	Objective-C
+n	objectpascal	ObjectPascal
+n	ocaml	OCaml
+n	octave	Octave
+n	odin	Odin
+n	ones	OnesEnterprise
+n	onesenterprise	OnesEnterprise
+n	openedge	OpenEdge ABL
+n	openedge abl	OpenEdge ABL
+n	openedgeabl	OpenEdge ABL
+n	openscad	OpenSCAD
+n	org	Org Mode
+n	org mode	Org Mode
+n	orgmode	Org Mode
+n	pacmanconf	PacmanConf
+n	perl	Perl
+n	perl6	Raku
+n	php	PHP
+n	php3	PHP
+n	php4	PHP
+n	php5	PHP
+n	phtml	PHTML
+n	pig	Pig
+n	pkgconfig	PkgConfig
+n	pl	Perl
+n	pl/pgsql	PL/pgSQL
+n	pl6	Raku
+n	plain	plaintext
+n	plaintext	plaintext
+n	plc	Plutus Core
+n	plpgsql	PL/pgSQL
+n	plutus core	Plutus Core
+n	plutus-core	Plutus Core
+n	pony	Pony
+n	posh	PowerShell
+n	postgres	PostgreSQL SQL dialect
+n	postgresql	PostgreSQL SQL dialect
+n	postgresql sql dialect	PostgreSQL SQL dialect
+n	postscr	PostScript
+n	postscript	PostScript
+n	pov	POVRay
+n	povray	POVRay
+n	powerquery	PowerQuery
+n	powershell	PowerShell
+n	pq	PowerQuery
+n	progress	OpenEdge ABL
+n	prolog	Prolog
+n	promela	Promela
+n	promql	PromQL
+n	properties	properties
+n	proto	Protocol Buffer
+n	protobuf	Protocol Buffer
+n	protocol buffer	Protocol Buffer
+n	prql	PRQL
+n	ps1	PowerShell
+n	psd1	PowerShell
+n	psl	PSL
+n	psm1	PowerShell
+n	puppet	Puppet
+n	pwsh	PowerShell
+n	py	Python
+n	py2	Python 2
+n	py3	Python
+n	pyrex	Cython
+n	python	Python
+n	python 2	Python 2
+n	python2	Python 2
+n	python3	Python
+n	pyx	Cython
+n	qbasic	QBasic
+n	qbs	QML
+n	qml	QML
+n	r	R
+n	racket	Racket
+n	ragel	Ragel
+n	raku	Raku
+n	rb	Ruby
+n	react	react
+n	reason	ReasonML
+n	reasonml	ReasonML
+n	reg	reg
+n	registry	reg
+n	rego	Rego
+n	rest	reStructuredText
+n	restructuredtext	reStructuredText
+n	rexx	Rexx
+n	rkt	Racket
+n	rpg iv	RPGLE
+n	rpgle	RPGLE
+n	rpmspec	RPMSpec
+n	rs	Rust
+n	rst	reStructuredText
+n	ruby	Ruby
+n	rust	Rust
+n	s	R
+n	sage	Python
+n	sas	SAS
+n	sass	Sass
+n	scala	Scala
+n	scheme	Scheme
+n	scilab	Scilab
+n	scm	Scheme
+n	scss	SCSS
+n	sed	Sed
+n	sh	Bash
+n	shell	Bash
+n	shell-session	Bash Session
+n	sieve	Sieve
+n	smali	Smali
+n	smalltalk	Smalltalk
+n	smarty	Smarty
+n	sml	Standard ML
+n	snbt	SNBT
+n	snobol	Snobol
+n	sol	Solidity
+n	solidity	Solidity
+n	sourcepawn	SourcePawn
+n	sp	SourcePawn
+n	sparql	SPARQL
+n	spec	RPMSpec
+n	spitfire	Cheetah
+n	splus	R
+n	sql	SQL
+n	sqlrpgle	RPGLE
+n	squeak	Smalltalk
+n	squid	SquidConf
+n	squid.conf	SquidConf
+n	squidconf	SquidConf
+n	ssed	Sed
+n	st	Smalltalk
+n	standard ml	Standard ML
+n	stas	stas
+n	stylus	Stylus
+n	sv	systemverilog
+n	svelte	Svelte
+n	swift	Swift
+n	systemd	SYSTEMD
+n	systemverilog	systemverilog
+n	t-sql	Transact-SQL
+n	tablegen	TableGen
+n	tal	Tal
+n	tape	VHS
+n	tasm	TASM
+n	tcl	Tcl
+n	tcsh	Tcsh
+n	termcap	Termcap
+n	terminfo	Terminfo
+n	terraform	Terraform
+n	tex	TeX
+n	text	plaintext
+n	tf	Terraform
+n	thrift	Thrift
+n	toml	TOML
+n	tradingview	TradingView
+n	transact-sql	Transact-SQL
+n	ts	TypeScript
+n	tsql	Transact-SQL
+n	tsx	TypeScript
+n	turing	Turing
+n	turtle	Turtle
+n	tv	TradingView
+n	twig	Twig
+n	typescript	TypeScript
+n	typoscript	TypoScript
+n	typoscriptcssdata	TypoScriptCssData
+n	typoscripthtmldata	TypoScriptHtmlData
+n	typst	Typst
+n	ucode	ucode
+n	udiff	Diff
+n	uxntal	Tal
+n	v	V
+n	v shell	V shell
+n	vala	Vala
+n	vapi	Vala
+n	vb.net	VB.net
+n	vbnet	VB.net
+n	verilog	verilog
+n	vhdl	VHDL
+n	vhs	VHS
+n	vim	VimL
+n	viml	VimL
+n	vlang	V
+n	vsh	V shell
+n	vshell	V shell
+n	vtt	WebVTT
+n	vue	vue
+n	vuejs	vue
+n	wdte	WDTE
+n	webgpu shading language	WebGPU Shading Language
+n	webvtt	WebVTT
+n	wgsl	WebGPU Shading Language
+n	whiley	Whiley
+n	winbatch	Batchfile
+n	xml	XML
+n	xml+genshi	Genshi
+n	xml+kid	Genshi
+n	xorg	Xorg
+n	xorg.conf	Xorg
+n	yaml	YAML
+n	yang	YANG
+n	z80	Z80 Assembly
+n	z80 assembly	Z80 Assembly
+n	zed	Zed
+n	zig	Zig
+n	zone	dns
+n	zsh	Bash
+n	🔥	Mojo

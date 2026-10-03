@@ -1,0 +1,267 @@
+[
+ {
+  "name": "lazy-table-in-item",
+  "markdown": "1. First item.\n1. Use these values:<!-- x -->\n  |    Field   | Value |\n  | ---------- | ----- |\n  | Env        | `Static` |\n  | Cmd        | `hugo` (or yours) |\n\nAfter.\n",
+  "html": "<ol>\n<li>First item.</li>\n<li>Use these values:\n<table>\n  <thead>\n      <tr>\n          <th>Field</th>\n          <th>Value</th>\n      </tr>\n  </thead>\n  <tbody>\n      <tr>\n          <td>Env</td>\n          <td><code>Static</code></td>\n      </tr>\n      <tr>\n          <td>Cmd</td>\n          <td><code>hugo</code> (or yours)</td>\n      </tr>\n  </tbody>\n</table>\n</li>\n</ol>\n<p>After.</p>\n"
+ },
+ {
+  "name": "padded-header-in-dd",
+  "markdown": "level\n: (`string`) The level. Default is `medium`.\n\n  Error correction level|Redundancy\n  :--|:--|:--\n  low|20%\n  medium|38%\n\nscale\n: (`int`) Scale.\n",
+  "html": "<dl>\n<dt>level</dt>\n<dd>(<code>string</code>) The level. Default is <code>medium</code>.\n<table>\n  <thead>\n      <tr>\n          <th style=\"text-align: left\">Error correction level</th>\n          <th style=\"text-align: left\">Redundancy</th>\n          <th></th>\n      </tr>\n  </thead>\n  <tbody>\n      <tr>\n          <td style=\"text-align: left\">low</td>\n          <td style=\"text-align: left\">20%</td>\n          <td></td>\n      </tr>\n      <tr>\n          <td style=\"text-align: left\">medium</td>\n          <td style=\"text-align: left\">38%</td>\n          <td></td>\n      </tr>\n  </tbody>\n</table>\n</dd>\n<dt>scale</dt>\n<dd>(<code>int</code>) Scale.</dd>\n</dl>\n"
+ },
+ {
+  "name": "blank-before-table-in-item",
+  "markdown": "Prep:\n1. Create it.\n2. Generate a key:\n   ```shell\n   ssh-keygen\n   ```\n   This writes two files.\n3. Add variables:\n\n    | Name | Value |\n    |------|-------|\n    | `A`  | `b`   |\n\nOnce done.\n",
+  "html": "<p>Prep:</p>\n<ol>\n<li>Create it.</li>\n<li>Generate a key:\n<pre data-lang=\"shell\" data-ordinal=\"0\">ssh-keygen</pre>\nThis writes two files.</li>\n<li>Add variables:\n<table>\n  <thead>\n      <tr>\n          <th>Name</th>\n          <th>Value</th>\n      </tr>\n  </thead>\n  <tbody>\n      <tr>\n          <td><code>A</code></td>\n          <td><code>b</code></td>\n      </tr>\n  </tbody>\n</table>\n</li>\n</ol>\n<p>Once done.</p>\n"
+ },
+ {
+  "name": "remainder-paragraph",
+  "markdown": "Some *text\nmore | x |\n| a | b |\n| - | - |\n| c | d |\n",
+  "html": "<p>Some *text\nmore | x |</p>\n<table>\n  <thead>\n      <tr>\n          <th>a</th>\n          <th>b</th>\n      </tr>\n  </thead>\n  <tbody>\n      <tr>\n          <td>c</td>\n          <td>d</td>\n      </tr>\n  </tbody>\n</table>\n"
+ },
+ {
+  "name": "escaped-pipes",
+  "markdown": "| a \\| b | `c\\|d` | e |\n|---|:-:|--:|\n| `x\\|y` | p \\| q | r |\n",
+  "html": "<table>\n  <thead>\n      <tr>\n          <th>a | b</th>\n          <th style=\"text-align: center\"><code>c|d</code></th>\n          <th style=\"text-align: right\">e</th>\n      </tr>\n  </thead>\n  <tbody>\n      <tr>\n          <td><code>x|y</code></td>\n          <td style=\"text-align: center\">p | q</td>\n          <td style=\"text-align: right\">r</td>\n      </tr>\n  </tbody>\n</table>\n"
+ },
+ {
+  "name": "row-shapes",
+  "markdown": "| a | b |\n|---|---|\nplain row\n| 1 | 2 | 3 | 4 |\n|\na||\n| x |\n",
+  "html": "<table>\n  <thead>\n      <tr>\n          <th>a</th>\n          <th>b</th>\n      </tr>\n  </thead>\n  <tbody>\n      <tr>\n          <td>plain row</td>\n          <td></td>\n      </tr>\n      <tr>\n          <td>1</td>\n          <td>2</td>\n      </tr>\n      <tr>\n          <td></td>\n          <td></td>\n      </tr>\n      <tr>\n          <td>a</td>\n          <td></td>\n      </tr>\n      <tr>\n          <td>x</td>\n          <td></td>\n      </tr>\n  </tbody>\n</table>\n"
+ },
+ {
+  "name": "header-too-long",
+  "markdown": "a|b|c\n-|-\nd|e\n-|-\n",
+  "html": "<p>a|b|c\n-|-\nd|e\n-|-</p>\n"
+ },
+ {
+  "name": "delim-without-pipes",
+  "markdown": "head\n:-:\nbody\n",
+  "html": "<table>\n  <thead>\n      <tr>\n          <th style=\"text-align: center\">head</th>\n      </tr>\n  </thead>\n  <tbody>\n      <tr>\n          <td style=\"text-align: center\">body</td>\n      </tr>\n  </tbody>\n</table>\n"
+ },
+ {
+  "name": "ref-links-in-cells",
+  "markdown": "| a | b |\n|---|---|\n| [x] | [y][z] |\n\n[x]: /x\n[z]: /z \"T\"\n",
+  "html": "<table>\n  <thead>\n      <tr>\n          <th>a</th>\n          <th>b</th>\n      </tr>\n  </thead>\n  <tbody>\n      <tr>\n          <td><a href=\"/x\">x</a></td>\n          <td><a href=\"/z\" title=\"T\">y</a></td>\n      </tr>\n  </tbody>\n</table>\n"
+ },
+ {
+  "name": "table-then-attr",
+  "markdown": "| a |\n|---|\n| b |\n{.c}\n",
+  "html": "<table>\n  <thead>\n      <tr>\n          <th>a</th>\n      </tr>\n  </thead>\n  <tbody>\n      <tr>\n          <td>b</td>\n      </tr>\n      <tr>\n          <td>{.c}</td>\n      </tr>\n  </tbody>\n</table>\n"
+ },
+ {
+  "name": "dd-first-child-table",
+  "markdown": "term\n: | a | b |\n  |---|---|\n  | c | d |\n\n  second para\n\n  third para\n",
+  "html": "<dl>\n<dt>term</dt>\n<dd><table>\n  <thead>\n      <tr>\n          <th>a</th>\n          <th>b</th>\n      </tr>\n  </thead>\n  <tbody>\n      <tr>\n          <td>c</td>\n          <td>d</td>\n      </tr>\n  </tbody>\n</table>\nsecond para\n<p>third para</p>\n</dd>\n</dl>\n"
+ },
+ {
+  "name": "table-in-quote-lazy",
+  "markdown": "> intro\n| a | b |\n|---|---|\n| c | d |\n",
+  "html": "<blockquote>\n<p>intro</p>\n<table>\n  <thead>\n      <tr>\n          <th>a</th>\n          <th>b</th>\n      </tr>\n  </thead>\n  <tbody>\n      <tr>\n          <td>c</td>\n          <td>d</td>\n      </tr>\n  </tbody>\n</table></blockquote>\n"
+ },
+ {
+  "name": "indented-delim",
+  "markdown": "| a |\n    |---|\n| b |\n",
+  "html": "<p>| a |\n|&mdash;|\n| b |</p>\n"
+ },
+ {
+  "name": "emph-across-cells",
+  "markdown": "| *a | b* |\n|---|---|\n| `c | d` |\n",
+  "html": "<table>\n  <thead>\n      <tr>\n          <th>*a</th>\n          <th>b*</th>\n      </tr>\n  </thead>\n  <tbody>\n      <tr>\n          <td>`c</td>\n          <td>d`</td>\n      </tr>\n  </tbody>\n</table>\n"
+ },
+ {
+  "name": "table-in-item-first",
+  "markdown": "- | a |\n  |---|\n  | b |\n- next\n",
+  "html": "<ul>\n<li>\n<table>\n  <thead>\n      <tr>\n          <th>a</th>\n      </tr>\n  </thead>\n  <tbody>\n      <tr>\n          <td>b</td>\n      </tr>\n  </tbody>\n</table>\n</li>\n<li>next</li>\n</ul>\n"
+ },
+ {
+  "name": "include-tight-dd-end",
+  "markdown": "lang\n: (`string`) The language.\n\n<<WRAP:\nformat\n: (`string`) The format. Optional.\n:WRAP>>\n## Examples\n",
+  "html": "<dl>\n<dt>lang</dt>\n<dd>(<code>string</code>) The language.</dd>\n</dl>\n<dl>\n<dt>format</dt>\n<dd>(<code>string</code>) The format. Optional.\n</dd>\n</dl>\n<h2 id=\"examples\">Examples</h2>\n"
+ },
+ {
+  "name": "include-tight-list-end",
+  "markdown": "1. one\n<<WRAP:\n1. two\n1. logical path (ascending)\n:WRAP>>\nAfter\n",
+  "html": "<ol>\n<li>\n<p>one</p>\n</li>\n<li>\n<p>two</p>\n</li>\n<li>\n<p>logical path (ascending)</p>\n</li>\n</ol>\n<p>After</p>\n"
+ },
+ {
+  "name": "include-splits-dl",
+  "markdown": "format\n: (`string`) The format.\n\n<<WRAP:\nparams\n: (`map`) Params.\n\n  ```js\n  x\n  ```\n:WRAP>>\n## Next\n",
+  "html": "<dl>\n<dt>format</dt>\n<dd>(<code>string</code>) The format.</dd>\n</dl>\n<dl>\n<dt>params</dt>\n<dd>(<code>map</code>) Params.\n<pre data-lang=\"js\" data-ordinal=\"0\">x</pre>\n</dd>\n</dl>\n<h2 id=\"next\">Next</h2>\n"
+ },
+ {
+  "name": "indented-include-in-dd",
+  "markdown": "Why?\n: <!-- keep -->\n  <<WRAP:\nHugo includes all features:\n\n- **WebP** - encode [images]\n- **Sass** - see [details]\n\n[images]: /img/\n[details]: /d/\n:WRAP>>\n\n  When you attempt to use it:\n\n  ```go\n  error\n  ```\n\n  To resolve, see [installation].\n\nNext?\n: In the file.\n\n[installation]: /installation/\n",
+  "html": "<dl>\n<dt>Why?</dt>\n<dd>\n<p>Hugo includes all features:</p>\n<ul>\n<li><strong>WebP</strong> - encode <a href=\"/img/\">images</a></li>\n<li><strong>Sass</strong> - see <a href=\"/d/\">details</a></li>\n</ul>\n<p>When you attempt to use it:</p>\n<pre data-lang=\"go\" data-ordinal=\"0\">error</pre>\n<p>To resolve, see <a href=\"/installation/\">installation</a>.</p>\n</dd>\n<dt>Next?</dt>\n<dd>In the file.</dd>\n</dl>\n"
+ },
+ {
+  "name": "glossary-inline",
+  "markdown": "An intro.\n\n<<WRAP:\nAn _ugly URL_ is a URL with an extension.\n:WRAP>>&nbsp;For example:\n\nMore.\n",
+  "html": "<p>An intro.</p>\n<p>An <em>ugly URL</em> is a URL with an extension. For example:</p>\n<p>More.</p>\n"
+ },
+ {
+  "name": "include-lazy-after-text",
+  "markdown": "Before text\n<<WRAP:\ninside\n:WRAP>>after\n",
+  "html": "<p>Before text</p>\n<p>insideafter</p>\n"
+ },
+ {
+  "name": "include-image-alone",
+  "markdown": "<<WRAP:\n![a](b.png)\n:WRAP>>\n",
+  "html": "<p><img src=\"b.png\" alt=\"a\"></p>\n"
+ },
+ {
+  "name": "include-table-end",
+  "markdown": "<<WRAP:\n| a | b |\n|---|---|\n| c | d |\n:WRAP>>\nNext\n",
+  "html": "<table>\n  <thead>\n      <tr>\n          <th>a</th>\n          <th>b</th>\n      </tr>\n  </thead>\n  <tbody>\n      <tr>\n          <td>c</td>\n          <td>d</td>\n      </tr>\n      <tr>\n          <td></td>\n          <td></td>\n      </tr>\n  </tbody>\n</table>\n<p>Next</p>\n"
+ },
+ {
+  "name": "include-heading-first",
+  "markdown": "<<WRAP:\n## Title\n\ntext\n:WRAP>>\n",
+  "html": "<h2 id=\"title\">Title</h2>\n<p>text</p>\n"
+ },
+ {
+  "name": "include-in-item",
+  "markdown": "- a\n- <<WRAP:\nb\n:WRAP>>\n- c\n",
+  "html": "<ul>\n<li>a</li>\n<li></li>\n</ul>\n<p>b</p>\n<ul>\n<li>c</li>\n</ul>\n"
+ },
+ {
+  "name": "ref-def-in-tight-dd",
+  "markdown": "regex\n: Use the [RE2 syntax] here.\n\n  [RE2 syntax]: https://example.org/re2\n    \n  \nnext\n: def\n",
+  "html": "<dl>\n<dt>regex</dt>\n<dd>Use the <a href=\"https://example.org/re2\">RE2 syntax</a> here.\n</dd>\n<dt>next</dt>\n<dd>def</dd>\n</dl>\n"
+ },
+ {
+  "name": "ref-def-in-tight-item",
+  "markdown": "- one\n  [a]: /x\n- two\n\n  [b]: /y\n- three [a] [b]\n",
+  "html": "<ul>\n<li>\n<p>one\n[a]: /x</p>\n</li>\n<li>\n<p>two</p>\n</li>\n<li>\n<p>three [a] <a href=\"/y\">b</a></p>\n</li>\n</ul>\n"
+ },
+ {
+  "name": "comment-in-tight-item",
+  "markdown": "- foo\n  <!-- c -->\n- bar\n",
+  "html": "<ul>\n<li>foo\n</li>\n<li>bar</li>\n</ul>\n"
+ },
+ {
+  "name": "comment-first-in-item",
+  "markdown": "- <!-- c -->\n  foo\n- bar\n",
+  "html": "<ul>\n<li>\nfoo</li>\n<li>bar</li>\n</ul>\n"
+ },
+ {
+  "name": "inline-comment-paragraph",
+  "markdown": "text <!-- c --> more\n\n![i](p.png) <!-- c -->\n",
+  "html": "<p>text  more</p>\n<p><img src=\"p.png\" alt=\"i\"> </p>\n"
+ },
+ {
+  "name": "table-then-setext-dash",
+  "markdown": "| a | b |\n|---|---|\n| c | d |\n---\n\ntext\n",
+  "html": "<table>\n  <thead>\n      <tr>\n          <th>a</th>\n          <th>b</th>\n      </tr>\n  </thead>\n  <tbody>\n      <tr>\n          <td>c</td>\n          <td>d</td>\n      </tr>\n  </tbody>\n</table>\n<hr>\n<p>text</p>\n"
+ },
+ {
+  "name": "table-then-setext-empty-item",
+  "markdown": "| a |\n|---|\n| b |\n-\n",
+  "html": "<table>\n  <thead>\n      <tr>\n          <th>a</th>\n      </tr>\n  </thead>\n  <tbody>\n      <tr>\n          <td>b</td>\n      </tr>\n  </tbody>\n</table>\n<ul>\n<li></li>\n</ul>\n"
+ },
+ {
+  "name": "table-then-setext-equals",
+  "markdown": "| a |\n|---|\n| b |\n===\n",
+  "html": "<table>\n  <thead>\n      <tr>\n          <th>a</th>\n      </tr>\n  </thead>\n  <tbody>\n      <tr>\n          <td>b</td>\n      </tr>\n  </tbody>\n</table>\n<p>===</p>\n"
+ },
+ {
+  "name": "table-then-setext-keeps-before",
+  "markdown": "intro\n| a |\n|---|\n---\n",
+  "html": "<table>\n  <thead>\n      <tr>\n          <th>a</th>\n      </tr>\n  </thead>\n  <tbody>\n  </tbody>\n</table>\n<h2 id=\"intro\">intro</h2>\n"
+ },
+ {
+  "name": "table-then-setext-in-dd",
+  "markdown": "t\n: | a |\n  |---|\n  ---\n",
+  "html": "<dl>\n<dt>t</dt>\n<dd><table>\n  <thead>\n      <tr>\n          <th>a</th>\n      </tr>\n  </thead>\n  <tbody>\n  </tbody>\n</table>\n<hr>\n</dd>\n</dl>\n"
+ },
+ {
+  "name": "table-then-setext-in-item",
+  "markdown": "- x\n\n  | a |\n  |---|\n  | b |\n  ---\n",
+  "html": "<ul>\n<li>x\n<table>\n  <thead>\n      <tr>\n          <th>a</th>\n      </tr>\n  </thead>\n  <tbody>\n      <tr>\n          <td>b</td>\n      </tr>\n  </tbody>\n</table>\n<hr>\n</li>\n</ul>\n"
+ },
+ {
+  "name": "table-then-setext-refdef",
+  "markdown": "[r]: /r\nmore [r]\n| a |\n|---|\n===\n",
+  "html": "<table>\n  <thead>\n      <tr>\n          <th>a</th>\n      </tr>\n  </thead>\n  <tbody>\n  </tbody>\n</table>\n<h1 id=\"more-r\">more <a href=\"/r\">r</a></h1>\n"
+ },
+ {
+  "name": "table-then-definition",
+  "markdown": "| a |\n|---|\n: def\n",
+  "html": "<table>\n  <thead>\n      <tr>\n          <th>a</th>\n      </tr>\n  </thead>\n  <tbody>\n  </tbody>\n</table>\n<p>: def</p>\n"
+ },
+ {
+  "name": "table-then-definition-keeps-term",
+  "markdown": "intro\n| a |\n|---|\n: def\n",
+  "html": "<table>\n  <thead>\n      <tr>\n          <th>a</th>\n      </tr>\n  </thead>\n  <tbody>\n  </tbody>\n</table>\n<dl>\n<dt>intro</dt>\n<dd>def</dd>\n</dl>\n"
+ },
+ {
+  "name": "table-blank-then-definition",
+  "markdown": "intro\n| a |\n|---|\n\n: def\n",
+  "html": "<p>intro</p>\n<table>\n  <thead>\n      <tr>\n          <th>a</th>\n      </tr>\n  </thead>\n  <tbody>\n  </tbody>\n</table>\n<p>: def</p>\n"
+ },
+ {
+  "name": "lazy-setext-line-before-table",
+  "markdown": "> intro\n===\n| a |\n|---|\n| b |\n\nText.\n\n| c |\n|---|\n| d |\n",
+  "html": "<blockquote>\n<p>intro\n===</p>\n<table>\n  <thead>\n      <tr>\n          <th>a</th>\n      </tr>\n  </thead>\n  <tbody>\n      <tr>\n          <td>b</td>\n      </tr>\n  </tbody>\n</table></blockquote>\n<p>Text.</p>\n<table>\n  <thead>\n      <tr>\n          <th>c</th>\n      </tr>\n  </thead>\n  <tbody>\n      <tr>\n          <td>d</td>\n      </tr>\n  </tbody>\n</table>\n"
+ },
+ {
+  "name": "html-after-refdef-before-table",
+  "markdown": "[x]: /y\n<custom-el>\n| a |\n|---|\n| b |\n\n| c |\n|---|\n| d |\n",
+  "html": "<p><!-- raw HTML omitted --></p>\n<table>\n  <thead>\n      <tr>\n          <th>a</th>\n      </tr>\n  </thead>\n  <tbody>\n      <tr>\n          <td>b</td>\n      </tr>\n  </tbody>\n</table>\n<table>\n  <thead>\n      <tr>\n          <th>c</th>\n      </tr>\n  </thead>\n  <tbody>\n      <tr>\n          <td>d</td>\n      </tr>\n  </tbody>\n</table>\n"
+ },
+ {
+  "name": "hard-breaks-before-table",
+  "markdown": "intro  \nmore\n| a |\n|---|\n| b |\n\none  \ntwo  \nthree\n| a |\n|---|\n",
+  "html": "<p>intro<br>\nmore</p>\n<table>\n  <thead>\n      <tr>\n          <th>a</th>\n      </tr>\n  </thead>\n  <tbody>\n      <tr>\n          <td>b</td>\n      </tr>\n  </tbody>\n</table>\n<p>one<br>\ntwo<br>\nthree</p>\n<table>\n  <thead>\n      <tr>\n          <th>a</th>\n      </tr>\n  </thead>\n  <tbody>\n  </tbody>\n</table>\n"
+ },
+ {
+  "name": "backslash-before-table",
+  "markdown": "intro\\\n| a |\n|---|\n\nend\\  \n| a |\n|---|\n",
+  "html": "<p>intro\\</p>\n<table>\n  <thead>\n      <tr>\n          <th>a</th>\n      </tr>\n  </thead>\n  <tbody>\n  </tbody>\n</table>\n<p>end\\</p>\n<table>\n  <thead>\n      <tr>\n          <th>a</th>\n      </tr>\n  </thead>\n  <tbody>\n  </tbody>\n</table>\n"
+ },
+ {
+  "name": "definition-shaped-line-before-table",
+  "markdown": "  : x\n| `c\\|d` | e |\n|---|---|\n- item\n",
+  "html": "<p>: x</p>\n<table>\n  <thead>\n      <tr>\n          <th><code>c|d</code></th>\n          <th>e</th>\n      </tr>\n  </thead>\n  <tbody>\n  </tbody>\n</table>\n<ul>\n<li>item</li>\n</ul>\n"
+ },
+ {
+  "name": "delimiter-shaped-line-before-table",
+  "markdown": "|:-:|\n  | u |\n  |---|\n",
+  "html": "<p>|:-:|</p>\n<table>\n  <thead>\n      <tr>\n          <th>u</th>\n      </tr>\n  </thead>\n  <tbody>\n  </tbody>\n</table>\n"
+ },
+ {
+  "name": "inline-into-header",
+  "markdown": "*intro\n| a* |\n|---|\n\n`intro\n| a` |\n|---|\n",
+  "html": "<p>*intro</p>\n<table>\n  <thead>\n      <tr>\n          <th>a*</th>\n      </tr>\n  </thead>\n  <tbody>\n  </tbody>\n</table>\n<p>`intro</p>\n<table>\n  <thead>\n      <tr>\n          <th>a`</th>\n      </tr>\n  </thead>\n  <tbody>\n  </tbody>\n</table>\n"
+ },
+ {
+  "name": "task-item-table",
+  "markdown": "- [ ] task\n  |---|\n- [ ] intro\n  | a |\n  |---|\n- [x] |a|\n  |---|\n",
+  "html": "<ul>\n<li>\n<table>\n  <thead>\n      <tr>\n          <th>[ ] task</th>\n      </tr>\n  </thead>\n  <tbody>\n  </tbody>\n</table>\n</li>\n<li><input disabled=\"\" type=\"checkbox\"> intro\n<table>\n  <thead>\n      <tr>\n          <th>a</th>\n      </tr>\n  </thead>\n  <tbody>\n  </tbody>\n</table>\n</li>\n<li><input checked=\"\" disabled=\"\" type=\"checkbox\"> |a|\n|&mdash;|</li>\n</ul>\n"
+ },
+ {
+  "name": "even-backslashes-before-pipe",
+  "markdown": "| a \\\\| b | c |\n|---|---|\n| x \\\\| y | z |\n\n| a \\\\\\\\| b | c |\n|---|---|\n",
+  "html": "<table>\n  <thead>\n      <tr>\n          <th>a \\| b</th>\n          <th>c</th>\n      </tr>\n  </thead>\n  <tbody>\n      <tr>\n          <td>x \\| y</td>\n          <td>z</td>\n      </tr>\n  </tbody>\n</table>\n<table>\n  <thead>\n      <tr>\n          <th>a \\\\| b</th>\n          <th>c</th>\n      </tr>\n  </thead>\n  <tbody>\n  </tbody>\n</table>\n"
+ },
+ {
+  "name": "refdef-right-before-table",
+  "markdown": "[a]: /x\n| h |\n|---|\n| [a] |\n\n| [b] |\n|---|\n\n[b]: /y\n| c |\n|---|\n",
+  "html": "<table>\n  <thead>\n      <tr>\n          <th>h</th>\n      </tr>\n  </thead>\n  <tbody>\n      <tr>\n          <td><a href=\"/x\">a</a></td>\n      </tr>\n  </tbody>\n</table>\n<table>\n  <thead>\n      <tr>\n          <th><a href=\"/y\">b</a></th>\n      </tr>\n  </thead>\n  <tbody>\n  </tbody>\n</table>\n<table>\n  <thead>\n      <tr>\n          <th>c</th>\n      </tr>\n  </thead>\n  <tbody>\n  </tbody>\n</table>\n"
+ },
+ {
+  "name": "escaped-pipe-in-autolink",
+  "markdown": "| <http://a.com/\\|y> | `a\\|b` |\n|---|---|\n",
+  "html": "<table>\n  <thead>\n      <tr>\n          <th><a href=\"http://a.com/%5C%7Cy\">http://a.com/\\|y</a></th>\n          <th><code>a|b</code></th>\n      </tr>\n  </thead>\n  <tbody>\n  </tbody>\n</table>\n"
+ },
+ {
+  "name": "footnote-definition-in-tight-item",
+  "markdown": "- a[^1]\n- b\n  [^1]: note\n- c\n\nt\n: d[^2]\n  [^2]: other\n",
+  "html": "<ul>\n<li>a<sup id=\"fnref:1\"><a href=\"#fn:1\" class=\"footnote-ref\" role=\"doc-noteref\">1</a></sup></li>\n<li>b</li>\n<li>c</li>\n</ul>\n<dl>\n<dt>t</dt>\n<dd>d<sup id=\"fnref:2\"><a href=\"#fn:2\" class=\"footnote-ref\" role=\"doc-noteref\">2</a></sup></dd>\n</dl>\n<div class=\"footnotes\" role=\"doc-endnotes\">\n<hr>\n<ol>\n<li id=\"fn:1\">\n<p>note&#160;<a href=\"#fnref:1\" class=\"footnote-backref\" role=\"doc-backlink\">&#x21a9;&#xfe0e;</a></p>\n</li>\n<li id=\"fn:2\">\n<p>other&#160;<a href=\"#fnref:2\" class=\"footnote-backref\" role=\"doc-backlink\">&#x21a9;&#xfe0e;</a></p>\n</li>\n</ol>\n</div>\n"
+ },
+ {
+  "name": "emphasis-before-include",
+  "markdown": "_foo_<<WRAP:x:WRAP>>\n",
+  "html": "<p><em>foo</em>x</p>\n"
+ }
+]

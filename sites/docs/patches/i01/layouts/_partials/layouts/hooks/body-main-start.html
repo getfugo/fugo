@@ -1,0 +1,9 @@
+{% if page.is_section or page.is_page %}
+  <div class="hidden print:flex justify-between border-b-1 border-b-gray-400 mb-4">
+    <p class="flex flex-col justify-end text-4xl mb-3">Hugo Documentation</p>
+    {% set qr = get_asset(path="/opengraph/gohugoio-card-base-1.png") | resize(width=48) %}
+    {% if qr %}
+      <img class="mb-2 -mr-2" src="{{ qr.rel_permalink }}" width="{{ (qr.width * 0.75) | int }}" height="{{ (qr.height * 0.75) | int }}" alt="Link to {{ page.permalink }}">
+    {% endif %}
+  </div>
+{% endif %}

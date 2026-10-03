@@ -1,0 +1,98 @@
+// The goldmark-structure oracle of ssg-markup (crate README, "Tests";
+// tests/it/acceptance/compat.rs): the Go implementation's goldmark converter as the Go build had it at commit
+// 44529028, which is what the published documentation site was built with.
+//
+// Run it in the Go tree of this repository at that commit, next to the markup oracles whose
+// configuration and render hooks it reuses:
+//
+//	git worktree add <tree> 44529028
+//	mkdir <tree>/tools/go-oracle/nh-markup/mdcompat
+//	cp crates/markup/tests/data/compat/mdcompat.go.txt <tree>/tools/go-oracle/nh-markup/mdcompat/main.go
+//	cd <tree> && GOFLAGS=-mod=mod go run ./tools/go-oracle/nh-markup/mdcompat \
+//	    < <repo>/crates/markup/tests/data/compat/compat.json > compat.json.new
+//
+// and copy compat.json.new over compat.json (offline with the Go module cache of go.mod).
+//
+// Input: the JSON array of compat.json, [{"name", "markdown", "html"}]; "html" is ignored.
+// Output: the same array with "html" set to the HTML of "markdown" rendered with the markup
+// configuration "default" of mdoracle.Configs (the Go defaults) and the replica render hooks
+// of mdoracle.ReplicaRenderers (the oracles' table and code block renderers). In "markdown",
+// "<<WRAP:text:WRAP>>" stands for an include: it is replaced by the Go context wrapper (Wrap(text); the
+// context markers that .RenderShortcodes puts around an included page inside goldmark, page
+// id 7) with every further line indented like the text before it when that is only
+// whitespace, as the Go site builder indents the output of an indented shortcode call.
+package main
+
+import (
+	"encoding/json"
+	"os"
+	"strings"
+
+	"github.com/neohugo/neohugo/markup/converter"
+	"github.com/neohugo/neohugo/markup/goldmark/hugocontext"
+	"github.com/neohugo/neohugo/tools/go-oracle/nh-markup/mdoracle"
+)
+
+type record struct {
+	Name     string `json:"name"`
+	Markdown string `json:"markdown"`
+	HTML     string `json:"html"`
+}
+
+// expand replaces each <<WRAP:text:WRAP>> by the wrapped, indented text.
+func expand(s string) string {
+	for {
+		i := strings.Index(s, "<<WRAP:")
+		if i < 0 {
+			return s
+		}
+		j := strings.Index(s[i:], ":WRAP>>")
+		inner := s[i+len("<<WRAP:") : i+j]
+		ls := strings.LastIndex(s[:i], "\n") + 1
+		ind := s[ls:i]
+		if strings.TrimSpace(ind) != "" {
+			ind = ""
+		}
+		w := hugocontext.Wrap([]byte(inner), 7)
+		var b strings.Builder
+		for k, line := range strings.SplitAfter(w, "\n") {
+			if line == "" {
+				continue
+			}
+			if k > 0 {
+				b.WriteString(ind)
+			}
+			b.WriteString(line)
+		}
+		s = s[:i] + b.String() + s[i+j+len(":WRAP>>"):]
+	}
+}
+
+func main() {
+	var recs []record
+	if err := json.NewDecoder(os.Stdin).Decode(&recs); err != nil {
+		panic(err)
+	}
+	p, _ := mdoracle.NewProvider(mdoracle.ConfigByName("default"))
+	conv, err := p.New(converter.DocumentContext{})
+	if err != nil {
+		panic(err)
+	}
+	for i, r := range recs {
+		res, _ := mdoracle.Convert(conv, converter.RenderContext{
+			Src:         []byte(expand(r.Markdown)),
+			GetRenderer: mdoracle.ReplicaRenderers,
+		})
+		if res.Err != "" || res.Panic != "" {
+			recs[i].HTML = "ERROR " + res.Err + res.Panic
+			continue
+		}
+		recs[i].HTML = string(res.HTML)
+	}
+	enc := json.NewEncoder(os.Stdout)
+	enc.SetEscapeHTML(false)
+	enc.SetIndent("", " ")
+	if err := enc.Encode(recs); err != nil {
+		panic(err)
+	}
+}

@@ -1,0 +1,49 @@
+{#- The function reference: a section per group and a page per name, from
+    data/template_api.json (generated from fugo's template API, crates/funcs/src/spec.rs). -#}
+{%- set api = site.data.template_api %}
+{%- set kinds = {"filter": "Filter", "function": "Function", "test": "Test"} %}
+{%- set phases = {
+  "both": "every kind of template: layouts, partials, shortcodes and render hooks",
+  "layout": "layouts and partials only, not shortcodes or render hooks",
+  "content": "shortcodes and render hooks only",
+  "adapter": "content adapters (`_content.html`) and the partials they call only"
+} %}
+{%- set sources = {"builtin": "a Tera built-in", "contrib": "tera-contrib", "native": "fugo"} %}
+{%- for g in api.groups %}
+  {%- set funcs = [f for f in api.funcs if f.group == g.id] %}
+  {%- set items = ["[`" ~ f.name ~ "`](" ~ f.name ~ "/)\n: " ~ f.doc for f in funcs] %}
+  {{- add_page(page={
+    "path": g.id,
+    "kind": "section",
+    "title": g.title,
+    "weight": loop.index,
+    "params": {"description": ""},
+    "content": {"mediaType": "text/markdown", "value": items | join(sep="\n\n")}
+  }) -}}
+  {%- for f in funcs %}
+    {%- set args = "" %}
+    {%- if f.kwargs %}
+      {%- set rows = ["| `" ~ k.name ~ "` | " ~ k.type ~ " | " ~ ("yes" if k.required else "no") ~ " |" for k in f.kwargs] %}
+      {%- set args = "## Arguments\n\n| Argument | Type | Required |\n|---|---|---|\n" ~ (rows | join(sep="\n")) ~ "\n\n" %}
+      {%- if f.rest_kwargs %}
+        {%- set args = args ~ "Further keyword arguments are passed on.\n\n" %}
+      {%- endif %}
+    {%- endif %}
+    {%- set facts = [
+      "- **Kind:** " ~ kinds[f.kind] ~ ", implemented by " ~ sources[f.source] ~ ".",
+      "- **Available in:** " ~ phases[f.phase] ~ ".",
+      "- **Output:** " ~ ("safe HTML, not escaped." if f.safe else "escaped like any value, unless marked `safe`."),
+    ] %}
+    {%- if f.site_bound %}
+      {%- set facts = facts | concat(with=["- **Site-bound:** reads the site or the page being rendered; in a component, pass `page=` or declare `@__nh`."]) %}
+    {%- endif %}
+    {%- set md = "```text {title=\"Signature\"}\n" ~ f.signature ~ "\n```\n\n" ~ f.doc ~ "\n\n" ~ args ~ "## Details\n\n" ~ (facts | join(sep="\n")) ~ "\n" %}
+    {{- add_page(page={
+      "path": g.id ~ "/" ~ f.name,
+      "title": f.name,
+      "weight": loop.index,
+      "params": {"api_kind": f.kind},
+      "content": {"mediaType": "text/markdown", "value": md}
+    }) -}}
+  {%- endfor %}
+{%- endfor %}

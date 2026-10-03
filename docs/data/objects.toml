@@ -1,0 +1,367 @@
+# The template objects of the documentation's reference (/reference/objects/): every field of
+# the views in crates/view/src/views.rs, described. `structs` names the Rust views an object
+# is made of; ssg-view's test `docs_objects_cover_the_views` fails when a field of one of them
+# has no description here, or a description names a field that does not exist. A field
+# description is Markdown.
+
+[page]
+title = "Page"
+order = 1
+structs = ["PageSummaryView", "ContentView", "PageRelations"]
+intro = """
+`page` in layouts, shortcodes and render hooks, and every element of a page list
+(`site.pages`, `page.pages`, a pager's `pages`, …). A list holds *summary* values: every
+field below except the relations (`parent` … `term`), which only the page being rendered has;
+`get_page`, `deref` and `page.parent` give a full value. The content fields (`content` …
+`len`) are not available while content is rendered (shortcodes, render hooks): use
+`page_content(page=…)` and its siblings there.
+"""
+
+[page.fields]
+id = "A number unique to the page within the build. Compare pages by `id`: `p.id == page.id`."
+kind = "`home`, `page`, `section`, `taxonomy` or `term`."
+lang = "The language code of the page, e.g. `en`."
+path = "The logical path of the page, e.g. `/posts/my-post`, the key `get_page` accepts."
+section = "The first path segment, e.g. `posts`."
+type = "The content type: front matter `type`, else the section."
+layout = "Front matter `layout`, or none."
+bundle_type = "`leaf`, `branch`, or none for a single file."
+name = "The name of the page's file or bundle directory."
+title = "The title."
+link_title = "Front matter `linkTitle`, else the title."
+description = "Front matter `description`."
+date = "A date (`{rfc3339, unix}`), or none. Format it with `page.date | date(format=\"%Y-%m-%d\")`."
+lastmod = "The last modification date, or none."
+publish_date = "The publish date, or none."
+expiry_date = "The expiry date, or none."
+weight = "Front matter `weight` (0 when unset)."
+draft = "Whether the page is a draft."
+params = "The page parameters: front matter keys not reserved by fugo, plus `params`; keys are lower case."
+keywords = "Front matter `keywords`: a list of strings."
+aliases = "Front matter `aliases`: a list of URLs that redirect to the page."
+permalink = "The absolute URL of the page's primary output format (`\"\"` when it has none)."
+rel_permalink = "The URL path of the page's primary output format."
+is_home = "Whether the page is the home page."
+is_section = "Whether the page is a section."
+is_page = "Whether the page is a regular page."
+is_node = "Whether the page is a list page (home, section, taxonomy, term)."
+is_translated = "Whether the page exists in other languages."
+file = "The source file (a [file](/reference/objects/file/) object), or none for pages without one."
+git_info = "Always none: fugo does not read Git history."
+sitemap = "The page's sitemap settings (a [sitemap](/reference/objects/sitemap/) object)."
+language = "The page's [language](/reference/objects/language/)."
+output_formats = "`{name: output format}` in format order, e.g. `page.output_formats.rss.permalink`."
+resources = "The page resources (a list of [resources](/reference/objects/resource/))."
+terms = "`{plural: [page link]}`: the page's terms for every configured taxonomy, e.g. `page.terms.tags`."
+raw_content = "The source after the front matter."
+content = "The rendered content (safe HTML)."
+summary = "The summary (safe HTML): the content before <code>&lt;!-<wbr>-more-<wbr>-&gt;</code>, front matter `summary`, or the automatic summary."
+truncated = "Whether the summary is shorter than the content."
+plain = "The content as plain text."
+word_count = "The number of words of the content."
+fuzzy_word_count = "The word count rounded up to the next multiple of 100."
+reading_time = "The estimated reading time in minutes."
+table_of_contents = "The table of contents (safe HTML `<nav id=\"TableOfContents\">`), per `markup.tableOfContents`."
+fragments = "The headings and identifiers of the content (a [fragments](/reference/objects/fragments/) object)."
+len = "The length of the content in bytes."
+parent = "The parent section, or none for the home page. In a [hierarchical taxonomy](/content-management/taxonomies/#hierarchical-taxonomies), a term's parent is the term above it."
+current_section = "The page itself when it is a section or the home page, else its parent section."
+first_section = "The top-level section the page belongs to (the home page for top-level pages)."
+ancestors = "The sections above the page, nearest first, up to the home page."
+pages = "The pages of a list page: the regular pages and sections directly below a section, the term pages of a taxonomy, the pages of a term; in the default order. In a hierarchical taxonomy: the top-level terms of the taxonomy, the pages of a term and of the terms below it."
+regular_pages = "The regular pages directly below a list page."
+regular_pages_recursive = "The regular pages anywhere below a list page."
+sections = "The sections directly below a section or the home page; in a hierarchical taxonomy, the terms directly below the taxonomy page or a term page."
+prev = "The page that follows this one in `site.regular_pages` (newest first by default, so usually the older page), or none."
+next = "The page that precedes this one in `site.regular_pages` (usually the newer page), or none."
+prev_in_section = "As `prev`, among the regular pages of the page's section."
+next_in_section = "As `next`, among the regular pages of the page's section."
+translations = "The page in the other languages."
+all_translations = "The page in every language, this one included."
+alternative_output_formats = "The page's output formats other than its primary one."
+taxonomy = "On a taxonomy page: `{singular, plural, terms}` (a [taxonomy](/reference/objects/taxonomy/) object); else none."
+term = "On a term page: `{name, term, key, singular, plural}` (see [taxonomy](/reference/objects/taxonomy/)); else none."
+
+[file]
+title = "File"
+order = 20
+structs = ["FileView"]
+intro = "`page.file`: the content file a page comes from."
+[file.fields]
+path = "The path relative to the content directory, e.g. `posts/my-post/index.md`."
+dir = "The directory of `path`, with a trailing slash."
+base_file_name = "The file name without extension, e.g. `index`."
+content_base_name = "The page's name: the bundle directory for an index file, else the file name without extension."
+unique_id = "A hash of the path, stable across builds."
+is_content_adapter = "Whether the page comes from a content adapter (`_content.html`)."
+
+[git_info]
+title = "Git info"
+order = 21
+structs = ["GitInfoView"]
+intro = "The shape of `page.git_info`, which is always none: fugo does not read Git history."
+[git_info.fields]
+hash = "The commit hash."
+abbreviated_hash = "The abbreviated commit hash."
+subject = "The commit subject."
+author_name = "The author's name."
+author_email = "The author's email address."
+author_date = "The author date."
+commit_date = "The commit date."
+
+[date]
+title = "Date"
+order = 22
+structs = ["DateView"]
+intro = """
+A date value: `page.date`, `page.lastmod`, `now()`, `x | to_date`. Format it with the `date`
+filter: `page.date | date(format=\"%B %-d, %Y\")`, or `date(style=\"long\")` for the
+language's own format. Compare dates by `unix`.
+"""
+[date.fields]
+rfc3339 = "The date in RFC 3339 format, e.g. `2025-10-13T15:00:00Z`."
+unix = "Seconds since 1970-01-01 UTC."
+
+[sitemap]
+title = "Sitemap settings"
+order = 23
+structs = ["SitemapView"]
+intro = "`page.sitemap`: the page's `sitemap` front matter merged over the site's `sitemap` configuration."
+[sitemap.fields]
+change_freq = "`changefreq`, e.g. `monthly`."
+priority = "`priority`: an integer when it is whole, else a number; -1 when unset."
+disable = "Whether the page is left out of the sitemap."
+
+[fragments]
+title = "Fragments"
+order = 24
+structs = ["FragmentsView", "HeadingView"]
+intro = "`page.fragments` and `page_fragments(page=…)`: the headings of the content as a tree, and every identifier."
+[fragments.fields]
+headings = "The headings as a tree: `[{id, level, title, headings}]`."
+identifiers = "Every `id` of the content, in document order."
+id = "The heading's `id`."
+level = "The heading level, 1 to 6."
+title = "The heading's text (HTML)."
+
+[site]
+title = "Site"
+order = 2
+structs = ["SiteView"]
+intro = "`site`: the site of the language being rendered."
+[site.fields]
+title = "The site title (`title`)."
+base_url = "The base URL, e.g. `https://example.org/`."
+lang = "The language code."
+language_code = "`languageCode`, e.g. `en-US`."
+language = "The site's [language](/reference/objects/language/)."
+languages = "Every configured [language](/reference/objects/language/), by weight."
+is_multilingual = "Whether more than one language is configured."
+copyright = "`copyright`."
+params = "The site parameters (`params`), keys lower case."
+data = "The data files of `data/`, e.g. `site.data.authors`."
+home = "The home page."
+pages = "Every page of the language: regular pages and list pages."
+regular_pages = "The regular pages of the language."
+all_pages = "Every page in every language."
+sections = "The top-level sections."
+main_sections = "The `mainSections` configuration, else the section with the most regular pages."
+taxonomies = "`{plural: {key: term entry}}`: every term of every taxonomy with its pages, e.g. `site.taxonomies.tags.rust.pages` (see [taxonomy](/reference/objects/taxonomy/))."
+menus = "`{menu: [menu entry]}` (see [menu entry](/reference/objects/menu-entry/)), e.g. `site.menus.main`."
+last_mod = "The latest `lastmod` of the site's pages."
+config = "The configuration the embedded templates read: `services` and `privacy`, in snake case, e.g. `site.config.services.rss.limit`."
+sitemap_abs_url = "The absolute URL of the language's sitemap."
+server_port = "The port of the base URL (the server's port under `fugo server`), 0 without one."
+
+[language]
+title = "Language"
+order = 3
+structs = ["LanguageView"]
+intro = "`site.language`, `page.language` and the elements of `site.languages`."
+[language.fields]
+lang = "The language key, e.g. `en`."
+name = "`languageName`, e.g. `English`."
+code = "`languageCode`, else the key."
+direction = "`languageDirection`: `ltr` or `rtl`."
+weight = "The language's weight."
+params = "The language's `params`."
+
+[page_link]
+title = "Page link"
+order = 4
+structs = ["PageLink"]
+intro = "A small page value: the elements of `page.terms.<taxonomy>` and the pages menus point to."
+[page_link.fields]
+id = "The page's `id`."
+kind = "The page's kind."
+path = "The page's logical path."
+lang = "The page's language."
+title = "The page's title."
+link_title = "The page's link title."
+permalink = "The page's absolute URL."
+rel_permalink = "The page's URL path."
+
+[taxonomy]
+title = "Taxonomy"
+order = 10
+structs = ["TaxonomyView", "TermView", "TermEntryView"]
+intro = """
+`page.taxonomy` (on taxonomy pages), `page.term` (on term pages) and the entries of
+`site.taxonomies.<plural>.<term>`.
+"""
+[taxonomy.fields]
+singular = "The singular name, e.g. `tag`."
+plural = "The plural name, e.g. `tags`."
+terms = "On a taxonomy page: the terms with their pages, `[term entry]`."
+name = "The term as first written, e.g. `Blue Sky`."
+term = "On a term page: the term, as `.Data.Term` gives it."
+key = "The term's key, e.g. `blue-sky`; in a hierarchical taxonomy its path below the taxonomy, e.g. `snacks/chips`."
+count = "The number of pages with the term (in a hierarchical taxonomy also those of the terms below it)."
+page = "The term's page."
+pages = "The pages with the term (in a hierarchical taxonomy also those of the terms below it)."
+
+[menu_entry]
+title = "Menu entry"
+order = 5
+structs = ["MenuEntryView"]
+intro = "An element of `site.menus.<menu>` and of an entry's `children`."
+[menu_entry.fields]
+identifier = "The entry's `identifier`."
+key_name = "The identifier, else the name: the key `parent` refers to."
+name = "The text of the entry."
+title = "The `title` attribute, else the page's link title."
+url = "The URL: the page's, or the entry's `url`."
+weight = "The entry's weight."
+parent = "The `key_name` of the parent entry, or `\"\"`."
+pre = "`pre`: HTML before the name (safe)."
+post = "`post`: HTML after the name (safe)."
+params = "The entry's `params`."
+page = "The page the entry points to, or none."
+children = "The child entries."
+has_children = "Whether the entry has children."
+
+[output_format]
+title = "Output format"
+order = 11
+structs = ["OutputFormatView"]
+intro = "`output_format` (the format being rendered) and the values of `page.output_formats`."
+[output_format.fields]
+name = "The format name, e.g. `html`, `rss`."
+rel = "The `rel` of its `<link>`: `canonical` or `alternate`."
+media_type = "The format's [media type](/reference/objects/media-type/)."
+permalink = "The page's absolute URL in this format."
+rel_permalink = "The page's URL path in this format."
+is_plain_text = "Whether the format is plain text (not HTML-escaped)."
+is_html = "Whether the format is HTML."
+
+[media_type]
+title = "Media type"
+order = 12
+structs = ["MediaTypeView"]
+intro = "The `media_type` of output formats and resources."
+[media_type.fields]
+type = "The full type, e.g. `text/html`."
+main_type = "The main type, e.g. `text`."
+sub_type = "The subtype, e.g. `html`."
+suffixes = "The file suffixes, e.g. `[\"html\", \"htm\"]`."
+delimiter = "The suffix delimiter, `.`."
+
+[pager]
+title = "Pager"
+order = 6
+structs = ["PagerView", "PagerLink"]
+intro = """
+What `paginator()` and `paginate(pages=…)` return. The embedded `_partials/pagination.html`
+renders the navigation.
+"""
+[pager.fields]
+page_number = "The number of this pager, from 1."
+url = "The URL path of this pager."
+pages = "The pages of this pager."
+pager_size = "The number of pages per pager."
+total_pages = "The number of pagers."
+total_number_of_elements = "The number of pages over all pagers."
+has_prev = "Whether there is a previous pager."
+has_next = "Whether there is a next pager."
+prev = "The previous pager's `{page_number, url}`, or none."
+next = "The next pager's `{page_number, url}`, or none."
+first = "The first pager's `{page_number, url}`."
+last = "The last pager's `{page_number, url}`."
+pagers = "Every pager's `{page_number, url}`."
+
+[resource]
+title = "Resource"
+order = 7
+structs = ["ResourceView", "ResourceDataView"]
+intro = """
+A page resource (`page.resources`), a global resource (`get_asset`), a remote resource
+(`get_remote`), or the result of a pipe (`to_css`, `fingerprint`, `resize`, …).
+"""
+[resource.fields]
+__rid = "An internal identifier the site functions read the resource back by; do not print it."
+name = "The resource's name: its path relative to the page bundle or `assets/`, or the `name` front matter gives it."
+title = "The title front matter `resources` gives it, else the name."
+params = "The `params` front matter `resources` gives it."
+resource_type = "The main type of its media type, e.g. `image`."
+media_type = "Its [media type](/reference/objects/media-type/)."
+rel_permalink = "Its URL path; publishes the resource."
+permalink = "Its absolute URL; publishes the resource."
+width = "The width of an image in pixels, else none."
+height = "The height of an image in pixels, else none."
+data = "`{integrity}`: the integrity of a fingerprinted resource, else none."
+page_id = "For a content file of a bundle (a page resource that is a page), that page's `id`."
+integrity = "The Subresource Integrity hash after `fingerprint`, e.g. `sha256-…`."
+
+[shortcode]
+title = "Shortcode"
+order = 8
+structs = ["ShortcodeView"]
+intro = "`shortcode` in a shortcode template. Read arguments with `shortcode | arg(name=…)` or `arg(index=…)`."
+[shortcode.fields]
+name = "The shortcode's name."
+args = "The positional arguments."
+params = "The named arguments."
+is_named_params = "Whether the call uses named arguments."
+ordinal = "The shortcode's position among the page's calls, from 0."
+parent = "The enclosing shortcode, or none."
+position = "The call's position, `file:line:column`, for error messages."
+
+[build]
+title = "Build"
+order = 9
+structs = ["BuildView"]
+intro = "`build`: the version and the build environment, in every template. It replaces the Go templates' site-info object."
+[build.fields]
+name = "The program's name, `fugo` (the RSS feeds' `<generator>`)."
+version = "fugo's version, e.g. `1.0.0`; check it with `version_at_least`."
+environment = "The environment: `production` (build), `development` (server), or `-e`."
+is_production = "Whether the environment is `production`."
+is_development = "Whether the environment is `development`."
+is_server = "Whether the build runs in `fugo server`."
+generator = "`<meta name=\"generator\" content=\"fugo <version>\">` (safe)."
+
+[site_config]
+title = "Site configuration"
+order = 13
+structs = ["SiteConfigView", "ServicesView", "RssView", "GoogleAnalyticsView", "DisqusView", "InlineCssView", "PrivacyView", "PrivacyServiceView"]
+intro = "`site.config`: the `services` and `privacy` configuration the embedded templates read, in snake case."
+[site_config.fields]
+services = "`{rss, google_analytics, disqus, instagram, x, twitter}`."
+privacy = "`{disqus, google_analytics, instagram, twitter, vimeo, x, youtube}`, each with every switch below."
+rss = "`{limit}`: `services.rss.limit`, the number of items of RSS feeds (-1: all)."
+limit = "The number of items (-1: all)."
+google_analytics = "`{id}` under `services`; the privacy switches under `privacy`."
+id = "The Google Analytics measurement ID."
+disqus = "`{shortname}` under `services`; the privacy switches under `privacy`."
+shortname = "The Disqus shortname."
+instagram = "`{disable_inline_css}` under `services`; the privacy switches under `privacy`."
+x = "`{disable_inline_css}` under `services`; the privacy switches under `privacy`."
+twitter = "`{disable_inline_css}` under `services`; the privacy switches under `privacy`."
+disable_inline_css = "Whether the embedded shortcode leaves out its inline CSS."
+vimeo = "The privacy switches of the `vimeo` shortcode."
+youtube = "The privacy switches of the `youtube` shortcode."
+disable = "Whether the service is disabled."
+simple = "Whether the simple (static) variant is used."
+enable_dnt = "Whether Do Not Track is sent (`x`, `vimeo`)."
+respect_do_not_track = "Whether the browser's Do Not Track is respected (`google_analytics`)."
+privacy_enhanced = "Whether the privacy-enhanced mode is used (`youtube`)."

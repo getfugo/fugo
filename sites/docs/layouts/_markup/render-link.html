@@ -1,0 +1,203 @@
+{#- Converted from the Veriphor link render hook (last modified 2025-01-19T14:44:56-08:00).
+
+Copyright 2025 Veriphor LLC
+
+Licensed under the Apache License, Version 2.0 (the "License"); you may not
+use this file except in compliance with the License. You may obtain a copy of
+the License at
+
+https://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+License for the specific language governing permissions and limitations under
+the License.
+
+This render hook resolves internal destinations by looking for a matching:
+
+  1. Content page
+  2. Page resource (a file in the current page bundle)
+  3. Section resource (a file in the current section)
+  4. Global resource (a file in the assets directory)
+
+It skips the section resource lookup if the current page is a leaf bundle.
+
+External destinations are not modified. The destination "g" links the link text to its entry
+on the glossary page.
+
+By default, if this render hook is unable to resolve a destination, including a
+fragment if present, it passes the destination through without modification. To
+emit a warning or error, set the error level in your site configuration:
+
+  [params.render_hooks.link]
+  errorLevel = 'warning' # ignore (default), warning, or error (fails the build)
+  highlightBroken = true # true or false (default)
+
+highlightBroken adds a "broken" class to anchor elements with invalid destinations, in a
+development environment when errorLevel is warning.
+
+Go validated fragments and built glossary attributes in inline partials
+(_partials/inline/h-rh-l/*); both are inlined below. Fragments are validated only when the
+error level is not "ignore" (Go computed them and discarded the result).
+-#}
+{#- Initialize. #}
+{%- set render_hook_name = "link" %}
+
+{#- Verify minimum required version. #}
+{%- set min_hugo_version = "0.141.0" %}
+{%- if "0.149.0-DEV" is not version_at_least(version=min_hugo_version) %}{# the recorded Go build's version #}
+  {{- log_error(message="The \"" ~ render_hook_name ~ "\" render hook requires Hugo v" ~ min_hugo_version ~ " or later.") }}
+{%- endif %}
+
+{#- Error level when unable to resolve destination: ignore, warning, or error. #}
+{%- set error_level = (site.params.render_hooks?.link?.errorlevel or "ignore") | lower %}
+
+{#- If true, adds "broken" class to broken links. Applicable in development environment when errorLevel is warning. #}
+{%- set highlight_broken_links = site.params.render_hooks?.link?.highlightbroken or false %}
+
+{#- Validate error level. #}
+{%- if error_level not in ["ignore", "warning", "error"] %}
+  {{- log_error(message="The \"" ~ render_hook_name ~ "\" render hook is misconfigured. The errorLevel \"" ~ error_level ~ "\" is invalid. Please check your site configuration.") }}
+{%- endif %}
+
+{#- Determine content path for warning and error messages. #}
+{%- set content_path = page.path %}
+
+{#- Parse destination. #}
+{%- set u = destination | parse_url %}
+
+{#- Set common message. #}
+{%- set msg = "The \"" ~ render_hook_name ~ "\" render hook was unable to resolve the destination \"" ~ u.string ~ "\" in " ~ content_path %}
+
+{#- Set attributes for anchor element; `fragment_page`: the page whose headings the fragment must name. #}
+{%- set attrs = {"href": u.string} %}
+{%- set fragment_page = none %}
+{%- set broken = false %}
+{%- if u.string == "g" %}
+  {#- Destination is a glossary term. #}
+  {%- set term_given = text | plainify | lower %}
+  {%- set term_singular = term_given | singularize_word %}
+  {%- set term_actual = "" %}
+  {%- set glossary_path = "/quick-reference/glossary" %}
+
+  {#- Verify that the glossary page exists. #}
+  {%- set glossary_page = get_page(path=glossary_path) %}
+  {%- if not glossary_page %}
+    {{- log_error(message="The \"" ~ render_hook_name ~ "\" render hook was unable to find " ~ glossary_path ~ ": see " ~ content_path) }}
+  {%- endif %}
+
+  {#- There's a better way to handle this, but it works for now. #}
+  {%- set cheating = {
+    "chaining": "chain",
+    "localize": "localization",
+    "localized": "localization",
+    "paginating": "paginate",
+    "walking": "walk",
+    "ci/cd": "cicd",
+  } %}
+
+  {#- Verify that a glossary term page exists for the given term. #}
+  {%- if get_page(path=join_url(parts=[glossary_path, term_given | urlize])) %}
+    {%- set term_actual = term_given %}
+  {%- elif get_page(path=join_url(parts=[glossary_path, term_singular | urlize])) %}
+    {%- set term_actual = term_singular %}
+  {%- else %}
+    {%- set term_to_test = cheating | get(key=term_given, default="") %}
+    {%- if get_page(path=join_url(parts=[glossary_path, term_to_test | urlize])) %}
+      {%- set term_actual = term_to_test %}
+    {%- endif %}
+  {%- endif %}
+
+  {%- if not term_actual %}
+    {{- log_error(message="The \"" ~ render_hook_name ~ "\" render hook was unable to find a glossary page for either the singular or plural form of the term \"" ~ term_given ~ "\": see " ~ content_path) }}
+  {%- endif %}
+
+  {#- The href does not point to the term page but, via its fragment, to its entry on the glossary page. #}
+  {%- set href = "" %}
+  {%- if term_actual and glossary_page %}
+    {%- set href = glossary_page.rel_permalink ~ "#" ~ (term_actual | anchorize) %}
+  {%- endif %}
+  {%- set attrs = {"href": href} %}
+{%- elif u.is_absolute %}
+  {#- Destination is a remote resource. #}
+  {%- set attrs = attrs | merge(with={"rel": "external"}) %}
+{%- elif u.path %}
+  {%- set p = get_page(path=u.path, page=page_inner) or get_page(path=u.path | trim_end_chars(chars="/"), page=page_inner) %}
+  {%- if p %}
+    {#- Destination is a page. #}
+    {%- set href = p.rel_permalink %}
+    {%- if u.query %}
+      {%- set href = href ~ "?" ~ u.query %}
+    {%- endif %}
+    {%- if u.fragment %}
+      {%- set fragment_page = p %}
+      {%- set href = href ~ "#" ~ u.fragment %}
+    {%- endif %}
+    {%- set attrs = {"href": href} %}
+  {%- else %}
+    {#- A page resource, else a section resource (not from a leaf bundle), else a global
+    resource; query and fragment are dropped. #}
+    {%- set r = (page_inner.resources | get_resource(name=u.path))
+      or ((page.current_section.resources | get_resource(name=u.path)) if page.bundle_type != "leaf" else none)
+      or get_asset(path=u.path) %}
+    {%- if r %}
+      {%- set attrs = {"href": r.rel_permalink} %}
+    {%- else %}
+      {%- set broken = true %}
+    {%- endif %}
+  {%- endif %}
+{%- elif u.fragment %}
+  {#- Destination is on the same page; prepend relative permalink. #}
+  {%- set fragment_page = page %}
+  {%- set attrs = {"href": page.rel_permalink ~ "#" ~ u.fragment} %}
+{%- else %}
+  {%- set broken = true %}
+{%- endif %}
+
+{%- if broken %}
+  {%- if error_level == "warning" %}
+    {{- log_warn(message=msg) }}
+    {%- if highlight_broken_links and build.is_development %}
+      {%- set attrs = attrs | merge(with={"class": "broken"}) %}
+    {%- endif %}
+  {%- elif error_level == "error" %}
+    {{- log_error(message=msg) }}
+  {%- endif %}
+{%- endif %}
+
+{#- Validate the fragment. #}
+{%- if fragment_page and error_level != "ignore" %}
+  {%- set fragment = u.fragment %}
+  {%- set fragments = page_fragments(page=fragment_page) %}
+  {%- set count = [i for i in fragments.identifiers if i == fragment] | length %}
+  {%- set fragment_msg = "" %}
+  {%- if count > 1 %}
+    {%- set fragment_msg = "The \"" ~ render_hook_name ~ "\" render hook detected duplicate heading IDs \"" ~ fragment ~ "\" in " ~ content_path %}
+  {%- elif count == 0 %}
+    {#- Determine target path for warning and error message. #}
+    {%- set target_path = fragment_page.file.path if fragment_page.file else fragment_page.path %}
+    {%- if target_path == content_path %}
+      {%- set fragment_msg = "The \"" ~ render_hook_name ~ "\" render hook was unable to find heading ID \"" ~ fragment ~ "\" in " ~ target_path %}
+    {%- else %}
+      {%- set fragment_msg = "The \"" ~ render_hook_name ~ "\" render hook was unable to find heading ID \"" ~ fragment ~ "\" in " ~ target_path ~ ". See " ~ content_path %}
+    {%- endif %}
+  {%- endif %}
+  {%- if fragment_msg %}
+    {%- if error_level == "warning" %}
+      {{- log_warn(message=fragment_msg) }}
+    {%- elif error_level == "error" %}
+      {{- log_error(message=fragment_msg) }}
+    {%- endif %}
+  {%- endif %}
+{%- endif %}
+
+{#- Render anchor element. -#}
+<a
+  {%- if title %}title="{{ title }}"{%- endif %}
+  {%- for k, v in attrs | sort_keys %}
+    {%- if v %} {{ k }}="{{ v }}"{%- endif %}
+  {%- endfor -%}
+  >{{ text }}</a
+>
+{#- -#}

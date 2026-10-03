@@ -1,0 +1,24 @@
+{#- Adds the reference page of the command `c` (data/commands.json) with `weight`; called by
+    content/commands/_content.html. -#}
+{%- set own = [partial(name="docs/flag.html", a=a) for a in c.args if not a.global and not a.positional] %}
+{%- set global = [partial(name="docs/flag.html", a=a) for a in c.args if a.global] %}
+{%- set md = (c.long_about or c.about or "") ~ "\n\n## Usage\n\n```sh\n" ~ c.usage ~ "\n```\n" %}
+{%- if c.aliases %}
+  {%- set md = md ~ "\nAlias: " ~ (["`" ~ x ~ "`" for x in c.aliases] | join(sep=", ")) ~ ".\n" %}
+{%- endif %}
+{%- if c.subcommands %}
+  {%- set subs = ["[`" ~ s.path ~ "`](/commands/" ~ (s.path | replace(from=" ", to="-")) ~ "/)\n: " ~ (s.about or "") for s in c.subcommands] %}
+  {%- set md = md ~ "\n## Commands\n\n" ~ (subs | join(sep="\n\n")) ~ "\n" %}
+{%- endif %}
+{%- if own %}
+  {%- set md = md ~ "\n## Options\n\n" ~ (own | join(sep="\n\n")) ~ "\n" %}
+{%- endif %}
+{%- if global %}
+  {%- set md = md ~ "\n## Global options\n\nEvery command takes these.\n\n" ~ (global | join(sep="\n\n")) ~ "\n" %}
+{%- endif %}
+{{- add_page(page={
+  "path": c.path | replace(from=" ", to="-"),
+  "title": c.path,
+  "weight": weight,
+  "content": {"mediaType": "text/markdown", "value": md}
+}) -}}

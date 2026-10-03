@@ -1,0 +1,23 @@
+{% set qr = <qr_img page={page} img_class="w-10 bg-white view-transition-qr" /> %}
+{% set qr_big = <qr_img page={page} img_class="w-64 p-4" /> %}
+<div
+  class="hidden lg:block cursor-pointer outline-2 hover:outline-3 outline-blue-500 w-10 h-10">
+  {{ <modal modal_button={qr} modal_content={qr_big} modal_title={"QR code linking to " ~ page.permalink} /> }}
+</div>
+
+{#- Component `qr_img` (Go: the inline partial "_partials/_inline/qr"): a QR code image
+    linking to `page`. -#}
+{%- component qr_img(page, img_class=none, @__nh) %}
+  {% set img_class = img_class | default_if_empty(value="w-10") %}
+  {% set img = qr_code(text=page.permalink, target_dir="images/qr") %}
+  {% if img %}
+
+    <img
+      src="{{ img.rel_permalink }}"
+      width="{{ img.width }}"
+      height="{{ img.height }}"
+      @load="$event.target.classList.remove('_opacity-0')"
+      alt="QR code linking to {{ page.permalink }}"
+      class="{{ img_class }}">
+  {% endif %}
+{%- endcomponent qr_img %}

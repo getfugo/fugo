@@ -1,0 +1,4 @@
+{#- The search index: one entry per page with its section, description and text
+    (assets/js/main.js loads it on the first search). Lists hold summary values, so the
+    section is the page's `section` key; the script shows it as a label. -#}
+{{- [{"t": p.title, "u": p.rel_permalink, "s": p.section, "k": p.kind, "d": p.description, "x": p.plain | truncate(length=4000)} for p in site.pages if not p.is_home] | jsonify -}}

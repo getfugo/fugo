@@ -1,0 +1,18 @@
+{% set width = attributes.width or "" %}
+{% set height = attributes.height or "" %}
+{% set cls = attributes.class or "" %}
+<div class="goat svg-container {{ cls }}">
+  {% set diagram = diagrams_goat(text=inner) %}{% if diagram %}
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      font-family="Menlo,Lucida Console,monospace"
+      {% if width or height %}
+        {% if width %}width="{{ width }}"{% endif %}
+        {% if height %}height="{{ height }}"{% endif %}
+      {% else %}
+        viewBox="0 0 {{ diagram.width }} {{ diagram.height }}"
+      {% endif %}>
+      {{ diagram.inner }}
+    </svg>
+  {% endif %}
+</div>

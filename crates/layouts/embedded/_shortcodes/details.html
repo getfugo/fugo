@@ -1,0 +1,18 @@
+{#-
+  An HTML details element. Named arguments: class, name, summary (Markdown, default "Details"),
+  title, open (default false).
+-#}
+{%- set cls = shortcode | arg(name="class", default="") %}
+{%- set group = shortcode | arg(name="name", default="") %}
+{%- set summary = (shortcode | arg(name="summary", default="")) or "Details" %}
+{%- set details_title = shortcode | arg(name="title", default="") %}
+{%- set is_open = (shortcode | arg(name="open", default=false)) in ["true", true, 1] %}
+<details
+  {%- if cls %} class="{{ cls }}"{% endif %}
+  {%- if group %} name="{{ group }}"{% endif %}
+  {%- if is_open %} open{% endif %}
+  {%- if details_title %} title="{{ details_title }}"{% endif -%}
+>
+  <summary>{{ summary | render_string }}</summary>
+  {{ inner | render_string(display="block") -}}
+</details>

@@ -1,0 +1,86 @@
+---
+source: crates/cli/tests/it/embedded.rs
+expression: "read(&site, \"embedded/hooks/index.html\")"
+---
+<head>
+<meta property="og:url" content="https://example.org/embedded/hooks/">
+  <meta property="og:site_name" content="Testsite">
+  <meta property="og:title" content="Hooks">
+  <meta property="og:description" content="The hooks page">
+  <meta property="og:locale" content="en">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="embedded">
+    <meta property="article:published_time" content="2022-03-04T05:06:07+00:00">
+    <meta property="article:modified_time" content="2022-04-05T06:07:08+02:00">
+    <meta property="article:tag" content="B">
+    <meta property="article:tag" content="Tag Two">
+    <meta property="og:image" content="https://example.org/img/site.png">
+      <meta property="og:see_also" content="https://example.org/embedded/bundle/">
+      <meta property="og:see_also" content="https://example.org/embedded/shortcodes/">
+    <meta property="fb:app_id" content="12345">
+
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="https://example.org/img/site.png">
+  <meta name="twitter:title" content="Hooks">
+  <meta name="twitter:description" content="The hooks page">
+  <meta name="twitter:site" content="@example">
+
+
+  <meta itemprop="name" content="Hooks">
+  <meta itemprop="description" content="The hooks page">
+  <meta itemprop="datePublished" content="2022-03-04T05:06:07+00:00">
+  <meta itemprop="dateModified" content="2022-04-05T06:07:08+02:00">
+  <meta itemprop="wordCount" content="32">
+  <meta itemprop="image" content="https://example.org/img/site.png">
+  <meta itemprop="keywords" content="kw1,kw2">
+
+
+      <script async src="https://www.googletagmanager.com/gtag/js?id=G-ABC123"></script>
+      <script>
+        var doNotTrack = false;
+        if (true) {
+          var dnt = (navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack);
+          var doNotTrack = (dnt == "1" || dnt == "yes");
+        }
+        if (!doNotTrack) {
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('js', new Date());
+          gtag('config', 'G-ABC123');
+        }
+      </script>
+</head>
+<main><p>Links: <a href="https://example.org/about/" title="About title">page</a>, <a href="https://example.org/posts/one/">relative</a>, <a href="https://example.org/posts/two/">md file</a>,
+<a href="https://example.org/embedded/hooks/#frag">fragment</a>, <a href="https://example.org/about/#sec?x=1">page fragment</a>, <a href="https://example.org/posts/three/?a=b&amp;c=d#top">query</a>,
+<a href="bundle/feature.png">resource</a>, <a href="https://example.org/img/logo.png">asset</a>, <a href="https://example.org/nope/">missing</a>, <a href="https://example.com/x?y=1">external</a>,
+<a href="mailto:a@example.org">mail</a>, <a href="https://auto.example.org/">https://auto.example.org/</a>, <a href="">empty</a>.</p>
+<p>Images: <img src="https://example.org/img/logo.png" alt="alt text" title="Img title">, <img src="https://cdn.example.org/p.png" alt="plain">,
+<img src="missing.png?x=1#f" alt="missing"></p>
+<img src="https://example.org/img/logo.png" alt="block image" class="wide" loading="lazy">
+<p class="para">A paragraph.</p>
+<table class="tbl" data-x="y&amp;z &#39;q&#39; /p &lt;é&gt;" id="t1">
+  <thead>
+      <tr>
+          <th style="text-align: left">Left</th>
+          <th style="text-align: center">Center</th>
+          <th style="text-align: right">Right</th>
+          <th>None</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td style="text-align: left">a</td>
+          <td style="text-align: center"><strong>b</strong></td>
+          <td style="text-align: right"><code>c</code></td>
+          <td>d</td>
+      </tr>
+      <tr>
+          <td style="text-align: left">e</td>
+          <td style="text-align: center"></td>
+          <td style="text-align: right">g</td>
+          <td>h</td>
+      </tr>
+  </tbody>
+</table>
+</main>

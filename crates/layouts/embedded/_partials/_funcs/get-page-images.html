@@ -1,0 +1,39 @@
+{#-
+  Returns the images of `page` as a list of maps `{image?, rel_permalink, permalink}`:
+  called as `partial(name="_funcs/get-page-images")`.
+-#}
+{%- set resources = page.resources | by_type(type="image") %}
+{%- set img_params = page.params.images or [] %}
+{%- if img_params is string %}{% set img_params = [img_params] %}{% endif %}
+{%- set imgs = [] %}
+
+{#- Featured image resources when the images param is empty. #}
+{%- if not img_params %}
+  {%- set featured = (resources | find_resource(pattern="*feature*")) or (resources | find_resource(pattern="{*cover*,*thumbnail*}")) %}
+  {%- if featured %}
+    {%- set imgs = [{"image": featured, "rel_permalink": featured.rel_permalink, "permalink": featured.permalink}] %}
+  {%- endif %}
+{%- endif %}
+
+{#- The first of the site's images as the fallback. #}
+{%- if not img_params and not imgs %}
+  {%- set site_images = site.params.images or [] %}
+  {%- if site_images is string %}{% set site_images = [site_images] %}{% endif %}
+  {%- set img_params = site_images[:1] %}
+{%- endif %}
+
+{#- The images param: resources, then local paths, then external URLs. #}
+{%- for img in img_params %}
+  {%- set url = img | parse_url %}
+  {%- if url.scheme == "" %}
+    {%- set r = resources | find_resource(pattern=img) %}
+    {%- if r %}
+      {%- set_global imgs = imgs | append(value={"image": r, "rel_permalink": r.rel_permalink, "permalink": r.permalink}) %}
+    {%- else %}
+      {%- set_global imgs = imgs | append(value={"rel_permalink": img | rel_url, "permalink": img | abs_url}) %}
+    {%- endif %}
+  {%- else %}
+    {%- set_global imgs = imgs | append(value={"rel_permalink": img, "permalink": img}) %}
+  {%- endif %}
+{%- endfor %}
+{{- return_value(value=imgs) }}

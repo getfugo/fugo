@@ -1,0 +1,50 @@
+---
+source: crates/cli/tests/it/embedded.rs
+expression: "read(&site, \"embedded/featured/index.html\")"
+---
+<head>
+<meta property="og:url" content="https://example.org/embedded/featured/">
+  <meta property="og:site_name" content="Testsite">
+  <meta property="og:title" content="Featured">
+  <meta property="og:description" content="Featured image resource, no images param.">
+  <meta property="og:locale" content="en">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="embedded">
+    <meta property="article:published_time" content="2022-03-07T00:00:00+00:00">
+    <meta property="article:modified_time" content="2022-03-07T00:00:00+00:00">
+    <meta property="og:image" content="https://example.org/embedded/featured/cover.png">
+    <meta property="fb:app_id" content="12345">
+
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="https://example.org/embedded/featured/cover.png">
+  <meta name="twitter:title" content="Featured">
+  <meta name="twitter:description" content="Featured image resource, no images param.">
+  <meta name="twitter:site" content="@example">
+
+
+  <meta itemprop="name" content="Featured">
+  <meta itemprop="description" content="Featured image resource, no images param.">
+  <meta itemprop="datePublished" content="2022-03-07T00:00:00+00:00">
+  <meta itemprop="dateModified" content="2022-03-07T00:00:00+00:00">
+  <meta itemprop="wordCount" content="6">
+  <meta itemprop="image" content="https://example.org/embedded/featured/cover.png">
+
+
+      <script async src="https://www.googletagmanager.com/gtag/js?id=G-ABC123"></script>
+      <script>
+        var doNotTrack = false;
+        if (true) {
+          var dnt = (navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack);
+          var doNotTrack = (dnt == "1" || dnt == "yes");
+        }
+        if (!doNotTrack) {
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('js', new Date());
+          gtag('config', 'G-ABC123');
+        }
+      </script>
+</head>
+<main><p>Featured image resource, no images param.</p>
+</main>

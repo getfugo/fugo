@@ -1,0 +1,104 @@
+{#- Renders syntax-highlighted configuration data in JSON, TOML, and YAML formats.
+
+@param {string} [config] The section of site.data.docs.config to render.
+@param {bool} [copy=false] Whether to display a copy-to-clipboard button.
+@param {string} [dataKey] The section of site.data.docs to render.
+@param {string} [file] The file name to display above the rendered code.
+@param {bool} [fm=false] Whether to render the code as front matter.
+@param {bool} [skipHeader=false] Whether to omit top level key(s) when rendering a section of site.data.docs.config.
+
+@example  {{< code-toggle file=config config=build />}}
+
+@example  {{< code-toggle file=content/example.md fm="true" }}
+          title='Example'
+          draft='false
+          {{< /code-toggle }}
+
+Go wrapped a config section in its keys with `dict $sections $section`; here each key wraps
+it, innermost first, with `[[key, value]] | from_pairs` (map literal keys are constants).
+
+The i01 variant (sites.py DOCS_REPLACE): no highlighting (the code is escaped into a plain
+<pre><code>), and every tab shows JSON (remarshal → "json").
+-#}
+{#- Get parameters. #}
+{%- set config = shortcode | arg(name="config", default="") %}
+{%- set data_key = shortcode | arg(name="dataKey", default="") %}
+{%- set file = shortcode | arg(name="file", default="") %}
+{%- set copy = (shortcode | arg(name="copy", default="")) in ["true", true, 1] %}
+{%- set fm = (shortcode | arg(name="fm", default="")) in ["true", true, 1] %}
+{%- set skip_header = (shortcode | arg(name="skipHeader", default="")) in ["true", true, 1] %}
+
+{#- Define constants. #}
+{%- set delimiters = {"toml": "+++", "yaml": "---"} %}
+{%- set langs = ["yaml", "toml", "json"] %}
+{%- set place_holder = "#-hugo-placeholder-#" %}
+
+{#- Render. #}
+{%- if config %}
+  {%- set file = file or "hugo" %}
+  {%- set sections = config | split(pat=".") %}
+  {%- set config_section = site.data.docs.config | get_path(path=sections) %}
+  {%- if skip_header %}
+    {%- set code = config_section %}
+  {%- else %}
+    {%- set_global code = config_section %}
+    {%- for s in sections | reverse %}
+      {%- set_global code = [[s, code]] | from_pairs %}
+    {%- endfor %}
+  {%- endif %}
+{%- elif data_key %}
+  {%- set file = file or data_key %}
+  {%- set code = site.data.docs | get_path(path=data_key | split(pat=".")) %}
+{%- else %}
+  {%- set code = inner %}
+{%- endif %}
+
+
+<div x-data class="shortcode-code not-prose relative p-0 mt-6 mb-8">
+  {%- if copy %}
+    <svg
+      class="absolute right-4 top-12 z-30 text-blue-600 hover:text-blue-500 cursor-pointer w-6 h-6"
+      @click="$copy($refs[$store.nav.userSettings.settings.configFileType])">
+      <use href="#icon--copy"></use>
+    </svg>
+  {%- endif %}
+  <nav class="relative flex" aria-label="Tabs">
+    {%- if file %}
+      <div
+        class="select-none flex-none text-sm px-2 content-center border-b-1 border-gray-300 dark:border-gray-700"
+        aria-label="Filename">
+        {{ file }}{% if not fm %}.{% endif %}
+      </div>
+    {%- endif %}
+    {%- for l in langs %}
+      <button
+        x-on:click="$store.nav.userSettings.settings.configFileType = '{{ l }}'"
+        aria-label="{{ "Toggle " ~ l }}"
+        class="px-3 py-2 font-semibold text-black dark:text-slate-200 border-l-1 border-t-1 {% if loop.last %}
+          border-r-1
+        {% endif %} border-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 dark:border-gray-700 cursor-pointer relative min-w-0 flex-1 overflow-hidden text-sm no-underline text-center focus:z-10 overflow-x-auto"
+        :class="$store.nav.userSettings.settings.configFileType === '{{ l }}' ? 'border-b-0 bg-light dark:bg-dark' : 'border-b-1'">
+        <span class="select-none">
+          {{ l }}
+        </span>
+      </button>
+    {%- endfor %}
+  </nav>
+  {%- if code %}
+    {%- for l in langs %}
+      <div
+        class="max-h-96 overflow-y-auto border-l-1 border-b-1 border-r-1 border-gray-300 dark:border-gray-700"
+        x-ref="{{ l }}"
+        x-cloak
+        x-transition:enter.opacity.duration.300ms
+        x-show="$store.nav.userSettings.settings.configFileType === '{{ l }}'">
+        {%- set h_code = code | remarshal(format="json") %}
+        {%- if fm and l in ["toml", "yaml"] %}
+          {%- set h_code = place_holder ~ "\n" ~ h_code ~ "\n" ~ place_holder %}
+        {%- endif %}
+        {%- set h_code = h_code | regex_replace(pattern="\n+", rep="\n") %}
+        {{- ("<pre><code>" ~ (h_code | html_escape) ~ "</code></pre>") | regex_replace(pattern=place_holder, rep=delimiters | get(key=l, default="")) | safe }}
+      </div>
+    {%- endfor %}
+  {%- endif %}
+</div>

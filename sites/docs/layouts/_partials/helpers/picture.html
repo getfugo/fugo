@@ -1,0 +1,32 @@
+{#-
+  Component `picture`: a responsive <picture> of the image resource `image` (`width`
+  pixels wide, default 1000; half that for small screens, plus WebP variants).
+-#}
+{%- component picture(image, width=none, class=none, loading=none, alt=none, @__nh) %}
+{%- set width = width | default_if_empty(value=1000) %}
+{%- set width1x = width // 2 %}
+{%- set image_webp = image | resize(width=width, format="webp") %}
+{%- set image1x = image | resize(width=width1x) %}
+{%- set image1x_webp = image | resize(width=width1x, format="webp") %}
+{%- set class = class | default_if_empty(value="h-64 tablet:h-96 lg:h-full w-full object-cover lg:absolute") %}
+{%- set loading = loading | default_if_empty(value="eager") %}
+<picture>
+  <source
+    srcset="{{ image_webp.rel_permalink }}"
+    type="image/webp"
+    media="(min-width: 1200px)">
+  <source
+    srcset="{{ image.rel_permalink }}"
+    type="image/jpeg"
+    media="(min-width: 1200px)">
+  <source srcset="{{ image1x_webp.rel_permalink }}" type="image/webp">
+  <source srcset="{{ image1x.rel_permalink }}" type="image/jpeg">
+  <img
+    class="{{ class }}"
+    src="{{ image1x.rel_permalink }}"
+    alt=""
+    loading="{{ loading }}"
+    width="{{ image1x.width }}"
+    height="{{ image1x.height }}">
+</picture>
+{%- endcomponent picture %}

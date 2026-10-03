@@ -1,0 +1,60 @@
+---
+source: crates/cli/tests/it/embedded.rs
+expression: "read(&site, \"embedded/bundle/index.html\")"
+---
+<head>
+<meta property="og:url" content="https://example.org/embedded/bundle/">
+  <meta property="og:site_name" content="Testsite">
+  <meta property="og:title" content="Bundle">
+  <meta property="og:description" content="A bundle with images.">
+  <meta property="og:locale" content="en">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="embedded">
+    <meta property="article:published_time" content="2022-03-06T00:00:00+00:00">
+    <meta property="article:modified_time" content="2022-03-06T00:00:00+00:00">
+    <meta property="og:image" content="https://example.org/embedded/bundle/other.png">
+    <meta property="og:image" content="https://example.org/img/local.png">
+    <meta property="og:image" content="https://cdn.example.org/remote.png">
+    <meta property="og:audio" content="https://example.org/audio/a.mp3">
+    <meta property="og:video" content="https://example.org/v/one.mp4">
+    <meta property="og:video" content="https://cdn.example.org/two.mp4">
+      <meta property="og:see_also" content="https://example.org/embedded/shortcodes/">
+      <meta property="og:see_also" content="https://example.org/embedded/hooks/">
+    <meta property="fb:app_id" content="12345">
+
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="https://example.org/embedded/bundle/other.png">
+  <meta name="twitter:title" content="Bundle">
+  <meta name="twitter:description" content="A bundle with images.">
+  <meta name="twitter:site" content="@example">
+
+
+  <meta itemprop="name" content="Bundle">
+  <meta itemprop="description" content="A bundle with images.">
+  <meta itemprop="datePublished" content="2022-03-06T00:00:00+00:00">
+  <meta itemprop="dateModified" content="2022-03-06T00:00:00+00:00">
+  <meta itemprop="wordCount" content="4">
+  <meta itemprop="image" content="https://example.org/embedded/bundle/other.png">
+  <meta itemprop="image" content="https://example.org/img/local.png">
+  <meta itemprop="image" content="https://cdn.example.org/remote.png">
+  <meta itemprop="keywords" content="S1">
+
+
+      <script async src="https://www.googletagmanager.com/gtag/js?id=G-ABC123"></script>
+      <script>
+        var doNotTrack = false;
+        if (true) {
+          var dnt = (navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack);
+          var doNotTrack = (dnt == "1" || dnt == "yes");
+        }
+        if (!doNotTrack) {
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('js', new Date());
+          gtag('config', 'G-ABC123');
+        }
+      </script>
+</head>
+<main><p>A bundle with <b>images</b>.</p>
+</main>

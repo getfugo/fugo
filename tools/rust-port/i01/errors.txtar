@@ -1,0 +1,50 @@
+A site whose build fails: the error texts (file positions of template errors in a baseof block,
+a page layout, a partial, a shortcode and a render hook) must be Go's.
+-- config.toml --
+baseURL = "https://example.org/"
+title = "Errors"
+disableKinds = ["rss", "sitemap", "taxonomy", "term"]
+-- layouts/_default/baseof.html --
+<!DOCTYPE html>
+<html>
+<body>
+{{ block "main" . }}{{ end }}
+{{ block "footer" . }}{{ partial "broken.html" . }}{{ end }}
+</body>
+</html>
+-- layouts/_default/single.html --
+{{ define "main" }}
+<h1>{{ .Title }}</h1>
+{{ .Content }}
+{{ end }}
+-- layouts/_default/list.html --
+{{ define "main" }}
+<h1>{{ .Title }}</h1>
+{{ index .Params.missing 3 }}
+{{ end }}
+{{ define "footer" }}ok{{ end }}
+-- layouts/partials/broken.html --
+<footer>
+{{ .Params.nested.deep.value | upper }}
+{{ add 1 "x" }}
+</footer>
+-- layouts/shortcodes/bad.html --
+{{ .Get 0 | int | div 10 }}
+-- layouts/_default/_markup/render-link.html --
+<a href="{{ .Destination }}">{{ .Text }}{{ if eq .Destination "/boom/" }}{{ index "abc" 10 }}{{ end }}</a>
+-- content/_index.md --
+---
+title: Home
+---
+-- content/page.md --
+---
+title: Page
+---
+A page with a [link](/boom/).
+-- content/sc.md --
+---
+title: Shortcode
+---
+{{< bad "0" >}}
+-- layouts/404.html --
+<p>not found</p>

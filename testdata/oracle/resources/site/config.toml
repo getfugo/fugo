@@ -1,0 +1,19 @@
+baseURL = "https://example.org/sub/"
+title = "synth"
+defaultContentLanguage = "en"
+disableKinds = ["taxonomy", "term", "rss", "sitemap", "robotsTXT", "404"]
+
+[languages]
+  [languages.en]
+    weight = 1
+    title = "Synth EN"
+  [languages.fr]
+    weight = 2
+    title = "Synth FR"
+
+[imaging]
+  [imaging.exif]
+    disableDate = false
+    disableLatLong = false
+    excludeFields = ".*"
+    includeFields = ""

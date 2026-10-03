@@ -1,0 +1,93 @@
+// The Chroma oracle of ssg-highlight (crate README, "Fixtures"): Chroma v2.19.0 itself.
+//
+//	chroma order             the registered lexers, in registration order
+//	chroma analyse < in      per JSON line {lang, code}: the name of lexers.Analyse(code), or ""
+//	chroma score < in        per JSON line: lexers.Get(lang).AnalyseText(code)
+//	chroma tokens < in       per JSON line: Coalesce(lexers.Get(lang)).Tokenise(nil, code) as
+//	                         [[type, text], …], or null without a lexer
+//
+// Build it in a directory of its own with a go.mod requiring github.com/alecthomas/chroma/v2
+// v2.19.0 and github.com/dlclark/regexp2 v1.11.5 (GOFLAGS=-mod=mod, offline with the module
+// cache).
+package main
+
+import (
+	"bufio"
+	"encoding/json"
+	"fmt"
+	"os"
+	"strconv"
+
+	"github.com/alecthomas/chroma/v2"
+	"github.com/alecthomas/chroma/v2/lexers"
+)
+
+type req struct {
+	Lang string `json:"lang"`
+	Code string `json:"code"`
+}
+
+func main() {
+	switch os.Args[1] {
+	case "order":
+		for _, l := range lexers.GlobalLexerRegistry.Lexers {
+			c := l.Config()
+			fmt.Printf("%s\t%v\t%v\t%v\t%v\n", c.Name, c.Aliases, c.Filenames, c.AliasFilenames, c.Priority)
+		}
+	case "analyse":
+		// stdin: JSON lines {lang, code}; stdout: the name of lexers.Analyse(code), or "".
+		sc := bufio.NewScanner(os.Stdin)
+		sc.Buffer(make([]byte, 64<<20), 64<<20)
+		for sc.Scan() {
+			var r req
+			if err := json.Unmarshal(sc.Bytes(), &r); err != nil {
+				panic(err)
+			}
+			l := lexers.Analyse(r.Code)
+			if l == nil {
+				fmt.Println("")
+			} else {
+				fmt.Println(l.Config().Name)
+			}
+		}
+	case "score":
+		// stdin: JSON lines {lang, code}; stdout: lexers.Get(lang).AnalyseText(code)
+		sc := bufio.NewScanner(os.Stdin)
+		sc.Buffer(make([]byte, 64<<20), 64<<20)
+		for sc.Scan() {
+			var r req
+			if err := json.Unmarshal(sc.Bytes(), &r); err != nil {
+				panic(err)
+			}
+			fmt.Println(strconv.FormatFloat(float64(lexers.Get(r.Lang).AnalyseText(r.Code)), 'f', -1, 32))
+		}
+	case "tokens":
+		// stdin: JSON lines {lang, code}; stdout: JSON lines [[type, value], ...] (coalesced) or null
+		sc := bufio.NewScanner(os.Stdin)
+		sc.Buffer(make([]byte, 64<<20), 64<<20)
+		out := bufio.NewWriter(os.Stdout)
+		defer out.Flush()
+		for sc.Scan() {
+			var r req
+			if err := json.Unmarshal(sc.Bytes(), &r); err != nil {
+				panic(err)
+			}
+			l := lexers.Get(r.Lang)
+			if l == nil {
+				out.WriteString("null\n")
+				continue
+			}
+			it, err := chroma.Coalesce(l).Tokenise(nil, r.Code)
+			if err != nil {
+				panic(err)
+			}
+			res := [][2]string{}
+			for t := it(); t != chroma.EOF; t = it() {
+				res = append(res, [2]string{t.Type.String(), t.Value})
+			}
+			b, _ := json.Marshal(res)
+			out.Write(b)
+			out.WriteString("\n")
+		}
+	}
+}

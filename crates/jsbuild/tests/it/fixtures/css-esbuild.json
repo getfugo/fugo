@@ -1,0 +1,753 @@
+{
+  "about": "CSS imported from js.Build scripts: what the entry prints (default export and namespace of each import, as JSON) when esbuild 0.25.6 bundles it (--bundle --format=esm --platform=node, the case's loaders) and node runs it; and the inputs this port deliberately rejects. Recorded from esbuild 0.25.6 for ssg-jsbuild's tests (tests/it/css.rs).",
+  "cases": [
+    {
+      "esbuild": "{\"a.module.css\":{\"default\":{\"btn\":\"a_btn\",\"my-class\":\"a_my-class\",\"main\":\"a_main\",\"icon\":\"a_icon\",\"default\":\"a_default\",\"1x\":\"a_1x\",\"a:b\":\"a_a:b\",\"x\":\"a_x\",\"y\":\"a_y\",\"z\":\"a_z\",\"w\":\"a_w\",\"v\":\"a_v\",\"é\":\"a_é\"},\"ns\":[[\"1x\",\"a_1x\"],[\"__proto__\",\"a___proto__\"],[\"a:b\",\"a_a:b\"],[\"btn\",\"a_btn\"],[\"default\",true],[\"icon\",\"a_icon\"],[\"main\",\"a_main\"],[\"my-class\",\"a_my-class\"],[\"v\",\"a_v\"],[\"w\",\"a_w\"],[\"x\",\"a_x\"],[\"y\",\"a_y\"],[\"z\",\"a_z\"],[\"é\",\"a_é\"]]}}",
+      "files": [
+        [
+          "a.module.css",
+          ".btn { color: red }\n.my-class {}\n#main {}\n.btn:hover .icon {}\n.default {}\n.\\31x {}\n.a\\:b {}\n.__proto__ {}\n.x.y > .z ~ .w + .v {}\n.é {}\n"
+        ]
+      ],
+      "imports": [
+        "a.module.css"
+      ],
+      "loaders": [],
+      "name": "classes"
+    },
+    {
+      "esbuild": "{\"a.module.css\":{\"default\":{\"a\":\"a_a\",\"b\":\"a_b\",\"c\":\"a_c\",\"d\":\"a_d\",\"k\":\"a_k\",\"l\":\"a_l\",\"m\":\"a_m\",\"n\":\"a_n\",\"o\":\"a_o\",\"p\":\"a_p\",\"q\":\"a_q\",\"r\":\"a_r\",\"s\":\"a_s\",\"t\":\"a_t\",\"u\":\"a_u\",\"g\":\"a_g\",\"i\":\"a_i\",\"e\":\"a_e\"},\"ns\":[[\"a\",\"a_a\"],[\"b\",\"a_b\"],[\"c\",\"a_c\"],[\"d\",\"a_d\"],[\"default\",true],[\"e\",\"a_e\"],[\"g\",\"a_g\"],[\"i\",\"a_i\"],[\"k\",\"a_k\"],[\"l\",\"a_l\"],[\"m\",\"a_m\"],[\"n\",\"a_n\"],[\"o\",\"a_o\"],[\"p\",\"a_p\"],[\"q\",\"a_q\"],[\"r\",\"a_r\"],[\"s\",\"a_s\"],[\"t\",\"a_t\"],[\"u\",\"a_u\"]]}}",
+      "files": [
+        [
+          "a.module.css",
+          ".a::before {} .b:nth-child(2n+1 of .c) {} .d:nth-child(even) {} .k:not(.l .m) {} .n:has(> .o, .p) {} .q:is(.r) {} .s:where(#t) {} .u:unknown(.f) {} .g::part(h) {} .i:host(.j) {} [data-x=\".no\"] {} div.e {}"
+        ]
+      ],
+      "imports": [
+        "a.module.css"
+      ],
+      "loaders": [],
+      "name": "pseudo"
+    },
+    {
+      "esbuild": "{\"a.module.css\":{\"default\":{\"l1\":\"a_l1\",\"l2\":\"a_l2\",\"l3\":\"a_l3\",\"l4\":\"a_l4\",\"lid\":\"a_lid\",\"l5\":\"a_l5\"},\"ns\":[[\"default\",true],[\"l1\",\"a_l1\"],[\"l2\",\"a_l2\"],[\"l3\",\"a_l3\"],[\"l4\",\"a_l4\"],[\"l5\",\"a_l5\"],[\"lid\",\"a_lid\"]]}}",
+      "files": [
+        [
+          "a.module.css",
+          ":global(.g1) .l1 {}\n:local(.l2):hover {}\n.l3 :global(.g2) .l4 {}\n:global(.g3 .g4) {}\n:global(#gid) #lid {}\n.l5 { :global(.g6) & {} }\n"
+        ]
+      ],
+      "imports": [
+        "a.module.css"
+      ],
+      "loaders": [],
+      "name": "global-local"
+    },
+    {
+      "esbuild": "{\"a.module.css\":{\"default\":{\"a\":\"a_a\",\"b\":\"a_b\",\"c\":\"a_c\",\"d\":\"a_d\",\"e\":\"a_e\"},\"ns\":[[\"a\",\"a_a\"],[\"b\",\"a_b\"],[\"c\",\"a_c\"],[\"d\",\"a_d\"],[\"default\",true],[\"e\",\"a_e\"]]}}",
+      "files": [
+        [
+          "a.module.css",
+          ".a { color: red; &:hover { color: blue } .b & {} & .c {} > .d {} @media (x) { .e {} } }"
+        ]
+      ],
+      "imports": [
+        "a.module.css"
+      ],
+      "loaders": [],
+      "name": "nesting"
+    },
+    {
+      "esbuild": "{\"a.module.css\":{\"default\":{\"m\":\"a_m\",\"s\":\"a_s\",\"ly\":\"a_ly\",\"sc3\":\"a_sc3\",\"ss\":\"a_ss\",\"doc\":\"a_doc\"},\"ns\":[[\"default\",true],[\"doc\",\"a_doc\"],[\"ly\",\"a_ly\"],[\"m\",\"a_m\"],[\"s\",\"a_s\"],[\"sc3\",\"a_sc3\"],[\"ss\",\"a_ss\"]]}}",
+      "files": [
+        [
+          "a.module.css",
+          "@media screen { .m {} } @supports (display:grid) { .s {} } @layer base { .ly {} } @layer x, y; @scope (.sc1) to (.sc2) { .sc3 {} } @starting-style { .ss {} } @font-face { font-family: x } @page :first { margin: 0 } @unknown foo { .u {} } @-moz-document url-prefix() { .doc {} }"
+        ]
+      ],
+      "imports": [
+        "a.module.css"
+      ],
+      "loaders": [],
+      "name": "at-rules"
+    },
+    {
+      "esbuild": "{\"a.module.css\":{\"default\":{\"k1\":\"a_k1\",\"k2\":\"a_k2\",\"k3\":\"a_k3\",\"a\":\"a_a\",\"k6\":\"a_k6\",\"k7\":\"a_k7\",\"b\":\"a_b\",\"k8\":\"a_k8\",\"k9\":\"a_k9\",\"c\":\"a_c\",\"d\":\"a_d\",\"k12\":\"a_k12\",\"e\":\"a_e\",\"f\":\"a_f\",\"g\":\"a_g\",\"k13\":\"a_k13\",\"k14\":\"a_k14\",\"h\":\"a_h\",\"i\":\"a_i\",\"k15\":\"a_k15\",\"j\":\"a_j\",\"spin\":\"a_spin\",\"k\":\"a_k\",\"k16\":\"a_k16\"},\"ns\":[[\"a\",\"a_a\"],[\"b\",\"a_b\"],[\"c\",\"a_c\"],[\"d\",\"a_d\"],[\"default\",true],[\"e\",\"a_e\"],[\"f\",\"a_f\"],[\"g\",\"a_g\"],[\"h\",\"a_h\"],[\"i\",\"a_i\"],[\"j\",\"a_j\"],[\"k\",\"a_k\"],[\"k1\",\"a_k1\"],[\"k12\",\"a_k12\"],[\"k13\",\"a_k13\"],[\"k14\",\"a_k14\"],[\"k15\",\"a_k15\"],[\"k16\",\"a_k16\"],[\"k2\",\"a_k2\"],[\"k3\",\"a_k3\"],[\"k6\",\"a_k6\"],[\"k7\",\"a_k7\"],[\"k8\",\"a_k8\"],[\"k9\",\"a_k9\"],[\"spin\",\"a_spin\"]]}}",
+      "files": [
+        [
+          "a.module.css",
+          "@keyframes k1 { from { opacity: 0 } to { opacity: 1 } }\n@keyframes \"k2\" {}\n@-webkit-keyframes k3 {}\n.a { animation: k6 1s infinite ease-in, k7 2s; }\n.b { animation-name: k8, none, k9; }\n.c { -webkit-animation: k10 1s; }\n.d { animation: 1s linear forwards k12 alternate paused; }\n.e { animation: inherit; } .f { animation-name: unset; }\n.g { animation: \"k13\" 1s; animation-name: \"k14\"; }\n.h { animation: var(--x) 1s; } .i { animation: k15 1s steps(4, end); }\n.j { animation: spin var(--time) linear infinite; }\n.k { animation-name: k16, var(--other); }\n"
+        ]
+      ],
+      "imports": [
+        "a.module.css"
+      ],
+      "loaders": [],
+      "name": "keyframes"
+    },
+    {
+      "esbuild": "{\"a.module.css\":{\"default\":{\"cs1\":\"a_cs1\",\"a\":\"a_a\",\"cs3\":\"a_cs3\",\"cs4\":\"a_cs4\",\"b\":\"a_b\",\"d\":\"a_d\",\"cont1\":\"a_cont1\",\"e\":\"a_e\",\"cont2\":\"a_cont2\",\"cont3\":\"a_cont3\",\"cont4\":\"a_cont4\",\"f\":\"a_f\"},\"ns\":[[\"a\",\"a_a\"],[\"b\",\"a_b\"],[\"cont1\",\"a_cont1\"],[\"cont2\",\"a_cont2\"],[\"cont3\",\"a_cont3\"],[\"cont4\",\"a_cont4\"],[\"cs1\",\"a_cs1\"],[\"cs3\",\"a_cs3\"],[\"cs4\",\"a_cs4\"],[\"d\",\"a_d\"],[\"default\",true],[\"e\",\"a_e\"],[\"f\",\"a_f\"]]}}",
+      "files": [
+        [
+          "a.module.css",
+          "@counter-style cs1 { system: cyclic; symbols: \"*\"; }\n.a { list-style: cs3 inside; list-style-type: cs4; }\n.b { list-style-type: decimal; list-style: square; }\n@container cont1 (min-width: 100px) { .d {} }\n@container (min-width: 1px) { }\n.e { container: cont2 / size; container-name: cont3 cont4; }\n.f { container-name: none; }\n"
+        ]
+      ],
+      "imports": [
+        "a.module.css"
+      ],
+      "loaders": [],
+      "name": "counter-container-list"
+    },
+    {
+      "esbuild": "{\"a.module.css\":{\"default\":{\"a\":\"a_a\",\"b\":\"a_b\",\"k2\":\"a_k2\",\"k1\":\"a_k1\",\"c1\":\"a_c1\",\"c\":\"a_c\",\"k0\":\"a_k0\",\"x\":\"a_x\",\"later\":\"a_later\"},\"ns\":[[\"a\",\"a_a\"],[\"b\",\"a_b\"],[\"c\",\"a_c\"],[\"c1\",\"a_c1\"],[\"default\",true],[\"k0\",\"a_k0\"],[\"k1\",\"a_k1\"],[\"k2\",\"a_k2\"],[\"later\",\"a_later\"],[\"x\",\"a_x\"]]}}",
+      "files": [
+        [
+          "a.module.css",
+          ".a { animation: k1 1s; .b { animation: k2 1s; } list-style-type: c1 } .c { animation-name: k0 } .x { animation: later } @keyframes later {}"
+        ]
+      ],
+      "imports": [
+        "a.module.css"
+      ],
+      "loaders": [],
+      "name": "decl-order"
+    },
+    {
+      "esbuild": "{\"a.module.css\":{\"default\":{\"a\":\"a_a\",\"b\":\"a_b\"},\"ns\":[[\"a\",\"a_a\"],[\"b\",\"a_b\"],[\"default\",true]]}}",
+      "files": [
+        [
+          "a.module.css",
+          ".a { --my-var: red; color: var(--my-var); } :root { --x: 1 } .b { grid-area: g }"
+        ]
+      ],
+      "imports": [
+        "a.module.css"
+      ],
+      "loaders": [],
+      "name": "custom-props"
+    },
+    {
+      "esbuild": "{\"a.module.css\":{\"default\":{},\"ns\":[[\"default\",true]]}}",
+      "files": [
+        [
+          "a.module.css",
+          ":global(.x) {} div {} [data-x] {}"
+        ]
+      ],
+      "imports": [
+        "a.module.css"
+      ],
+      "loaders": [],
+      "name": "only-global"
+    },
+    {
+      "esbuild": "{\"a.module.css\":{\"default\":{},\"ns\":[[\"default\",true]]}}",
+      "files": [
+        [
+          "a.module.css",
+          ""
+        ]
+      ],
+      "imports": [
+        "a.module.css"
+      ],
+      "loaders": [],
+      "name": "empty"
+    },
+    {
+      "esbuild": "{\"a.module.css\":{\"default\":{\"a\":\"a_c a_b a_a\",\"b\":\"a_c a_b\",\"c\":\"a_c\",\"d\":\"a_c a_b a_a a_d\",\"e\":\"a_nope a_e\",\"nope\":\"a_nope\"},\"ns\":[[\"a\",\"a_c a_b a_a\"],[\"b\",\"a_c a_b\"],[\"c\",\"a_c\"],[\"d\",\"a_c a_b a_a a_d\"],[\"default\",true],[\"e\",\"a_nope a_e\"],[\"nope\",\"a_nope\"]]}}",
+      "files": [
+        [
+          "a.module.css",
+          ".a { composes: b c } .b { composes: c } .c {} .d { composes: a } .e { composes: nope }"
+        ]
+      ],
+      "imports": [
+        "a.module.css"
+      ],
+      "loaders": [],
+      "name": "composes-same"
+    },
+    {
+      "esbuild": "{\"a.module.css\":{\"default\":{\"a\":\"a_b a_a\",\"b\":\"a_b\",\"c\":\"a_c\"},\"ns\":[[\"a\",\"a_b a_a\"],[\"b\",\"a_b\"],[\"c\",\"a_c\"],[\"default\",true]]}}",
+      "files": [
+        [
+          "a.module.css",
+          ".a { composes: b } .c {} .b {}"
+        ]
+      ],
+      "imports": [
+        "a.module.css"
+      ],
+      "loaders": [],
+      "name": "composes-later"
+    },
+    {
+      "esbuild": "{\"a.module.css\":{\"default\":{\"a\":\"g1 g2 a_a\",\"b\":\"g1 g2 a_a a_b\"},\"ns\":[[\"a\",\"g1 g2 a_a\"],[\"b\",\"g1 g2 a_a a_b\"],[\"default\",true]]}}",
+      "files": [
+        [
+          "a.module.css",
+          ".a { composes: g1 g2 from global } .b { composes: a; composes: g1 from global }"
+        ]
+      ],
+      "imports": [
+        "a.module.css"
+      ],
+      "loaders": [],
+      "name": "composes-global"
+    },
+    {
+      "esbuild": "{\"a.module.css\":{\"default\":{\"e\":\"a_c a_e\",\"f\":\"a_c a_f\",\"c\":\"a_c\"},\"ns\":[[\"c\",\"a_c\"],[\"default\",true],[\"e\",\"a_c a_e\"],[\"f\",\"a_c a_f\"]]}}",
+      "files": [
+        [
+          "a.module.css",
+          ".e, .f { composes: c } .c {}"
+        ]
+      ],
+      "imports": [
+        "a.module.css"
+      ],
+      "loaders": [],
+      "name": "composes-multi-parent"
+    },
+    {
+      "esbuild": "{\"a.module.css\":{\"default\":{\"a\":\"a_a\",\"b\":\"a_b\",\"c\":\"a_c\",\"d\":\"a_d\"},\"ns\":[[\"a\",\"a_a\"],[\"b\",\"a_b\"],[\"c\",\"a_c\"],[\"d\",\"a_d\"],[\"default\",true]]}}",
+      "files": [
+        [
+          "a.module.css",
+          ".a .b { composes: c } .c {} div { composes: c } .d:hover { composes: c }"
+        ]
+      ],
+      "imports": [
+        "a.module.css"
+      ],
+      "loaders": [],
+      "name": "composes-bad-place"
+    },
+    {
+      "esbuild": "{\"a.module.css\":{\"default\":{\"a\":\"a_b a_a\",\"b\":\"a_a a_b\"},\"ns\":[[\"a\",\"a_b a_a\"],[\"b\",\"a_a a_b\"],[\"default\",true]]}}",
+      "files": [
+        [
+          "a.module.css",
+          ".a { composes: b } .b { composes: a }"
+        ]
+      ],
+      "imports": [
+        "a.module.css"
+      ],
+      "loaders": [],
+      "name": "composes-cycle-same"
+    },
+    {
+      "esbuild": "{\"a.module.css\":{\"default\":{\"a\":\"b_x b_y a_a\",\"z\":\"b_q a_z\"},\"ns\":[[\"a\",\"b_x b_y a_a\"],[\"default\",true],[\"z\",\"b_q a_z\"]]}}",
+      "files": [
+        [
+          "a.module.css",
+          ".a { composes: x y from \"./b.module.css\"; color: red } .z { composes: q from './b.module.css' }"
+        ],
+        [
+          "b.module.css",
+          ".x {} .y { composes: x } .q {}"
+        ]
+      ],
+      "imports": [
+        "a.module.css"
+      ],
+      "loaders": [],
+      "name": "composes-other"
+    },
+    {
+      "esbuild": "{\"a.module.css\":{\"default\":{\"a\":\"b_x b_y a_a\"},\"ns\":[[\"a\",\"b_x b_y a_a\"],[\"default\",true]]},\"b.module.css\":{\"default\":{\"x\":\"b_x\",\"y\":\"b_x b_y\"},\"ns\":[[\"default\",true],[\"x\",\"b_x\"],[\"y\",\"b_x b_y\"]]}}",
+      "files": [
+        [
+          "a.module.css",
+          ".a { composes: x y from \"./b.module.css\" }"
+        ],
+        [
+          "b.module.css",
+          ".x {} .y { composes: x }"
+        ]
+      ],
+      "imports": [
+        "a.module.css",
+        "b.module.css"
+      ],
+      "loaders": [],
+      "name": "composes-other-both"
+    },
+    {
+      "esbuild": "{\"a.module.css\":{\"default\":{\"a\":\"b_x a_b a_c a_a\",\"b\":\"a_b\",\"c\":\"a_c\"},\"ns\":[[\"a\",\"b_x a_b a_c a_a\"],[\"b\",\"a_b\"],[\"c\",\"a_c\"],[\"default\",true]]}}",
+      "files": [
+        [
+          "a.module.css",
+          ".a { composes: b; composes: x from './b.module.css'; composes: c } .b {} .c {}"
+        ],
+        [
+          "b.module.css",
+          ".x {}"
+        ]
+      ],
+      "imports": [
+        "a.module.css"
+      ],
+      "loaders": [],
+      "name": "composes-order"
+    },
+    {
+      "esbuild": "{\"a.module.css\":{\"default\":{\"a\":\"c_z c_y b_x a_b a_a\",\"b\":\"c_z c_y b_x a_b\"},\"ns\":[[\"a\",\"c_z c_y b_x a_b a_a\"],[\"b\",\"c_z c_y b_x a_b\"],[\"default\",true]]}}",
+      "files": [
+        [
+          "a.module.css",
+          ".a { composes: b } .b { composes: x from './sub/b.module.css' }"
+        ],
+        [
+          "sub/b.module.css",
+          ".x { composes: y from '../c.module.css' } .y {}"
+        ],
+        [
+          "c.module.css",
+          ".y { composes: z } .z {}"
+        ]
+      ],
+      "imports": [
+        "a.module.css"
+      ],
+      "loaders": [],
+      "name": "composes-nested-files"
+    },
+    {
+      "esbuild": "{\"a.module.css\":{\"default\":{\"a\":\"b_base b_x b_y a_a\"},\"ns\":[[\"a\",\"b_base b_x b_y a_a\"],[\"default\",true]]}}",
+      "files": [
+        [
+          "a.module.css",
+          ".a { composes: x y from './b.module.css'; composes: x from './b.module.css' }"
+        ],
+        [
+          "b.module.css",
+          ".base {} .x { composes: base } .y { composes: base }"
+        ]
+      ],
+      "imports": [
+        "a.module.css"
+      ],
+      "loaders": [],
+      "name": "composes-shared-base"
+    },
+    {
+      "esbuild": "{\"a.module.css\":{\"default\":{\"a\":\"a_a\"},\"ns\":[[\"a\",\"a_a\"],[\"default\",true]]}}",
+      "files": [
+        [
+          "a.module.css",
+          ".a { composes: x from \"https://example.com/b.css\" }"
+        ]
+      ],
+      "imports": [
+        "a.module.css"
+      ],
+      "loaders": [],
+      "name": "composes-external"
+    },
+    {
+      "esbuild": "{\"my-comp.module.css\":{\"default\":{\"x\":\"my_comp_x\"},\"ns\":[[\"default\",true],[\"x\",\"my_comp_x\"]]},\"1x.module.css\":{\"default\":{\"x\":\"x_x\"},\"ns\":[[\"default\",true],[\"x\",\"x_x\"]]},\"a.b.c.module.css\":{\"default\":{\"x\":\"a_b_c_x\"},\"ns\":[[\"default\",true],[\"x\",\"a_b_c_x\"]]},\"dir/index.module.css\":{\"default\":{\"x\":\"dir_x\"},\"ns\":[[\"default\",true],[\"x\",\"dir_x\"]]},\"UPPER.module.css\":{\"default\":{\"x\":\"UPPER_x\"},\"ns\":[[\"default\",true],[\"x\",\"UPPER_x\"]]},\"_u.module.css\":{\"default\":{\"x\":\"u_x\"},\"ns\":[[\"default\",true],[\"x\",\"u_x\"]]},\"$d.module.css\":{\"default\":{\"x\":\"d_x\"},\"ns\":[[\"default\",true],[\"x\",\"d_x\"]]},\"a-1-b.module.css\":{\"default\":{\"x\":\"a_1_b_x\"},\"ns\":[[\"default\",true],[\"x\",\"a_1_b_x\"]]},\"a.module.module.css\":{\"default\":{\"x\":\"a_module_x\"},\"ns\":[[\"default\",true],[\"x\",\"a_module_x\"]]},\"dir.v2/index.module.css\":{\"default\":{\"y\":\"dir_y\"},\"ns\":[[\"default\",true],[\"y\",\"dir_y\"]]}}",
+      "files": [
+        [
+          "my-comp.module.css",
+          ".x{}"
+        ],
+        [
+          "1x.module.css",
+          ".x{}"
+        ],
+        [
+          "a.b.c.module.css",
+          ".x{}"
+        ],
+        [
+          "dir/index.module.css",
+          ".x{}"
+        ],
+        [
+          "UPPER.module.css",
+          ".x{}"
+        ],
+        [
+          "_u.module.css",
+          ".x{}"
+        ],
+        [
+          "$d.module.css",
+          ".x{}"
+        ],
+        [
+          "a-1-b.module.css",
+          ".x{}"
+        ],
+        [
+          "a.module.module.css",
+          ".x{}"
+        ],
+        [
+          "dir.v2/index.module.css",
+          ".y{}"
+        ]
+      ],
+      "imports": [
+        "my-comp.module.css",
+        "1x.module.css",
+        "a.b.c.module.css",
+        "dir/index.module.css",
+        "UPPER.module.css",
+        "_u.module.css",
+        "$d.module.css",
+        "a-1-b.module.css",
+        "a.module.module.css",
+        "dir.v2/index.module.css"
+      ],
+      "loaders": [],
+      "name": "stems"
+    },
+    {
+      "esbuild": "{\"a.css\":{\"default\":{},\"ns\":[[\"default\",true]]},\"b.module.css\":{\"default\":{\"m\":\"b_m\"},\"ns\":[[\"default\",true],[\"m\",\"b_m\"]]}}",
+      "files": [
+        [
+          "a.css",
+          ".btn {} :local(.l) {}"
+        ],
+        [
+          "b.module.css",
+          ".m {}"
+        ]
+      ],
+      "imports": [
+        "a.css",
+        "b.module.css"
+      ],
+      "loaders": [],
+      "name": "loader-css"
+    },
+    {
+      "esbuild": "{\"a.css\":{\"default\":{\"btn\":\"a_btn\",\"id\":\"a_id\",\"k\":\"a_k\"},\"ns\":[[\"btn\",\"a_btn\"],[\"default\",true],[\"id\",\"a_id\"],[\"k\",\"a_k\"]]}}",
+      "files": [
+        [
+          "a.css",
+          ".btn {} #id {} @keyframes k {} :global(.g) {}"
+        ]
+      ],
+      "imports": [
+        "a.css"
+      ],
+      "loaders": [
+        [
+          ".css",
+          "local-css"
+        ]
+      ],
+      "name": "loader-local"
+    },
+    {
+      "esbuild": "{\"a.css\":{\"default\":{\"l1\":\"a_l1\",\"l2\":\"a_l2\"},\"ns\":[[\"default\",true],[\"l1\",\"a_l1\"],[\"l2\",\"a_l2\"]]},\"b.css\":{\"default\":{},\"ns\":[[\"default\",true]]}}",
+      "files": [
+        [
+          "a.css",
+          ".btn {} :local(.l1) .g1 {} @keyframes k {} :local(.l2) { animation: k2 }"
+        ],
+        [
+          "b.css",
+          ".plain {}"
+        ]
+      ],
+      "imports": [
+        "a.css",
+        "b.css"
+      ],
+      "loaders": [
+        [
+          ".css",
+          "global-css"
+        ]
+      ],
+      "name": "loader-global"
+    },
+    {
+      "esbuild": "{\"a.css\":{\"default\":{\"a\":\"b a_a\"},\"ns\":[[\"a\",\"b a_a\"],[\"default\",true]]}}",
+      "files": [
+        [
+          "a.css",
+          ":local(.a) { composes: b } .b {}"
+        ]
+      ],
+      "imports": [
+        "a.css"
+      ],
+      "loaders": [
+        [
+          ".css",
+          "global-css"
+        ]
+      ],
+      "name": "loader-global-composes"
+    },
+    {
+      "esbuild": "{\"a.module.css\":{\"default\":{\"123\":\"a_123\",\"a b\":\"a_a b\",\"@x\":\"a_@x\",\"--x\":\"a_--x\",\"-y\":\"a_-y\",\"�\":\"a_�\",\"abc\":\"a_abc\",\"1a\":\"a_1a\"},\"ns\":[[\"--x\",\"a_--x\"],[\"-y\",\"a_-y\"],[\"123\",\"a_123\"],[\"1a\",\"a_1a\"],[\"@x\",\"a_@x\"],[\"a b\",\"a_a b\"],[\"abc\",\"a_abc\"],[\"default\",true],[\"�\",\"a_�\"]]}}",
+      "files": [
+        [
+          "a.module.css",
+          ".a\\ b {} .\\31 23 {} .\\@x {} .--x {} .-y {} .\\0 {} .ab\\63 {} #\\31 a {}"
+        ]
+      ],
+      "imports": [
+        "a.module.css"
+      ],
+      "loaders": [],
+      "name": "x-escapes"
+    },
+    {
+      "esbuild": "{\"a.module.css\":{\"default\":{\"a\":\"a_a\",\"k17\":\"a_k17\",\"b\":\"a_b\",\"k18\":\"a_k18\",\"c\":\"a_c\",\"d\":\"a_d\",\"k19\":\"a_k19\",\"e\":\"a_e\",\"k20\":\"a_k20\",\"f\":\"a_f\",\"none\":\"a_none\",\"g\":\"a_g\",\"initial\":\"a_initial\",\"k21\":\"a_k21\"},\"ns\":[[\"a\",\"a_a\"],[\"b\",\"a_b\"],[\"c\",\"a_c\"],[\"d\",\"a_d\"],[\"default\",true],[\"e\",\"a_e\"],[\"f\",\"a_f\"],[\"g\",\"a_g\"],[\"initial\",\"a_initial\"],[\"k17\",\"a_k17\"],[\"k18\",\"a_k18\"],[\"k19\",\"a_k19\"],[\"k20\",\"a_k20\"],[\"k21\",\"a_k21\"],[\"none\",\"a_none\"]]}}",
+      "files": [
+        [
+          "a.module.css",
+          ".a { animation: ease k17 ease } .b { animation: infinite 2 k18 } .c { animation: none } .d { animation: k19 none } .e { ANIMATION: k20 } .f { animation: \"none\" } .g { animation-name: \"initial\", k21 }"
+        ]
+      ],
+      "imports": [
+        "a.module.css"
+      ],
+      "loaders": [],
+      "name": "x-anim-odd"
+    },
+    {
+      "esbuild": "{\"a.module.css\":{\"default\":{\"a\":\"a_b a_a\",\"b\":\"a_b\"},\"ns\":[[\"a\",\"a_b a_a\"],[\"b\",\"a_b\"],[\"default\",true]]}}",
+      "files": [
+        [
+          "a.module.css",
+          "@media (x) { .a { composes: b } } .b {}"
+        ]
+      ],
+      "imports": [
+        "a.module.css"
+      ],
+      "loaders": [],
+      "name": "x-composes-media"
+    },
+    {
+      "esbuild": "{\"a.module.css\":{\"default\":{\"a\":\"a_a\",\"c\":\"a_c\",\"b\":\"a_b\"},\"ns\":[[\"a\",\"a_a\"],[\"b\",\"a_b\"],[\"c\",\"a_c\"],[\"default\",true]]}}",
+      "files": [
+        [
+          "a.module.css",
+          ".a { .c { composes: b } } .b {}"
+        ]
+      ],
+      "imports": [
+        "a.module.css"
+      ],
+      "loaders": [],
+      "name": "x-composes-nested"
+    },
+    {
+      "esbuild": "{\"a.module.css\":{\"default\":{\"a\":\"a_a\",\"b\":\"a_b\",\"c\":\"a_c\",\"d\":\"a_c a_d\"},\"ns\":[[\"a\",\"a_a\"],[\"b\",\"a_b\"],[\"c\",\"a_c\"],[\"d\",\"a_c a_d\"],[\"default\",true]]}}",
+      "files": [
+        [
+          "a.module.css",
+          ".a.b { composes: c } .c {} :local(.d) { composes: c }"
+        ]
+      ],
+      "imports": [
+        "a.module.css"
+      ],
+      "loaders": [],
+      "name": "x-composes-compound"
+    },
+    {
+      "esbuild": "{\"a.module.css\":{\"default\":{\"k\":\"a_k\",\"k2\":\"a_k2\"},\"ns\":[[\"default\",true],[\"k\",\"a_k\"],[\"k2\",\"a_k2\"]]}}",
+      "files": [
+        [
+          "a.module.css",
+          "@media (x) { @keyframes k {} } @keyframes k2 { 0% { color: red } 50% { opacity: 0 } }"
+        ]
+      ],
+      "imports": [
+        "a.module.css"
+      ],
+      "loaders": [],
+      "name": "x-keyframes-media"
+    },
+    {
+      "esbuild": "{\"a.module.css\":{\"default\":{\"a\":\"a_a\",\"c\":\"a_c\",\"d\":\"a_d\",\"f\":\"a_f\",\"g\":\"a_g\",\"h\":\"a_h\",\"i\":\"a_i\",\"k\":\"a_k\",\"l\":\"a_l\",\"m\":\"a_m\",\"n\":\"a_n\",\"p\":\"a_p\",\"q\":\"a_q\"},\"ns\":[[\"a\",\"a_a\"],[\"c\",\"a_c\"],[\"d\",\"a_d\"],[\"default\",true],[\"f\",\"a_f\"],[\"g\",\"a_g\"],[\"h\",\"a_h\"],[\"i\",\"a_i\"],[\"k\",\"a_k\"],[\"l\",\"a_l\"],[\"m\",\"a_m\"],[\"n\",\"a_n\"],[\"p\",\"a_p\"],[\"q\",\"a_q\"]]}}",
+      "files": [
+        [
+          "a.module.css",
+          "*.a {} ns|b.c {} *|*.d {} a[href$=\".e\"].f {} .g:is() {} .h:where(.i, ) {} .k:nth-last-child(2 of .l) {} .m:nth-of-type(2) {} .n::slotted(.o) {} .p::-webkit-scrollbar {} .q:-moz-any(.r) {}"
+        ]
+      ],
+      "imports": [
+        "a.module.css"
+      ],
+      "loaders": [],
+      "name": "x-selectors"
+    },
+    {
+      "esbuild": "{\"a.module.css\":{\"default\":{\"a\":\"a_a\",\"b\":\"a_b\",\"c\":\"a_c\",\"d\":\"a_d\",\"e\":\"a_e\"},\"ns\":[[\"a\",\"a_a\"],[\"b\",\"a_b\"],[\"c\",\"a_c\"],[\"d\",\"a_d\"],[\"default\",true],[\"e\",\"a_e\"]]}}",
+      "files": [
+        [
+          "a.module.css",
+          "/* .c1 */ .a /* .c2 */ { color: red /* .c3 */; } .b { filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#000', endColorstr='#fff'); } .c { width: expression(document.body.clientWidth); } @media \\0screen { .d {} } .e{zoom:1;*display:inline}"
+        ]
+      ],
+      "imports": [
+        "a.module.css"
+      ],
+      "loaders": [],
+      "name": "x-comments-hacks"
+    },
+    {
+      "esbuild": "{\"a.module.css\":{\"default\":{\"a\":\"a_a\",\"b\":\"a_b\"},\"ns\":[[\"a\",\"a_a\"],[\"b\",\"a_b\"],[\"default\",true]]}}",
+      "files": [
+        [
+          "a.module.css",
+          "@import \"https://example.com/x.css\"; .a { background: url(data:image/png;base64,AA) } .b {}"
+        ]
+      ],
+      "imports": [
+        "a.module.css"
+      ],
+      "loaders": [],
+      "name": "x-import-url"
+    },
+    {
+      "esbuild": "{\"a.module.css\":{\"default\":{\"a\":\"a_a\",\"cs5\":\"a_cs5\",\"b\":\"a_b\",\"cs6\":\"a_cs6\",\"c\":\"a_c\",\"d\":\"a_d\",\"e\":\"a_e\",\"f\":\"a_f\",\"none\":\"a_none\"},\"ns\":[[\"a\",\"a_a\"],[\"b\",\"a_b\"],[\"c\",\"a_c\"],[\"cs5\",\"a_cs5\"],[\"cs6\",\"a_cs6\"],[\"d\",\"a_d\"],[\"default\",true],[\"e\",\"a_e\"],[\"f\",\"a_f\"],[\"none\",\"a_none\"]]}}",
+      "files": [
+        [
+          "a.module.css",
+          ".a { list-style: none cs5; } .b { list-style: url(data:image/png;base64,AA) cs6 outside } .c { list-style: \"x\" } .d { list-style: none none } .e { list-style-type: \"*\" } .f { list-style-type: symbols(cyclic \"*\") } @counter-style none {}"
+        ]
+      ],
+      "imports": [
+        "a.module.css"
+      ],
+      "loaders": [],
+      "name": "x-list-style"
+    },
+    {
+      "esbuild": "{\"a.module.css\":{\"default\":{\"a\":\"a_a\",\"c5\":\"a_c5\",\"c6\":\"a_c6\",\"b\":\"a_b\",\"c7\":\"a_c7\",\"c8\":\"a_c8\",\"c\":\"a_c\",\"d\":\"a_d\"},\"ns\":[[\"a\",\"a_a\"],[\"b\",\"a_b\"],[\"c\",\"a_c\"],[\"c5\",\"a_c5\"],[\"c6\",\"a_c6\"],[\"c7\",\"a_c7\"],[\"c8\",\"a_c8\"],[\"d\",\"a_d\"],[\"default\",true]]}}",
+      "files": [
+        [
+          "a.module.css",
+          ".a { container: c5 c6 } .b { container: c7 / inline-size } @container not (min-width: 1px) {} @container c8 (width > 1px) and (height > 1px) {} .c { container-name: none } .d { container: inherit }"
+        ]
+      ],
+      "imports": [
+        "a.module.css"
+      ],
+      "loaders": [],
+      "name": "x-container"
+    },
+    {
+      "esbuild": "{\"ünïcode.module.css\":{\"default\":{\"日本\":\"n_code_日本\",\"a😀\":\"n_code_a😀\"},\"ns\":[[\"a😀\",\"n_code_a😀\"],[\"default\",true],[\"日本\",\"n_code_日本\"]]},\"dir/index.module.css\":{\"default\":{\"x\":\"dir_x\"},\"ns\":[[\"default\",true],[\"x\",\"dir_x\"]]}}",
+      "files": [
+        [
+          "ünïcode.module.css",
+          ".日本 {} .a😀 {}"
+        ],
+        [
+          "dir/index.module.css",
+          ".x {}"
+        ]
+      ],
+      "imports": [
+        "ünïcode.module.css",
+        "dir/index.module.css"
+      ],
+      "loaders": [],
+      "name": "x-unicode"
+    },
+    {
+      "esbuild": "{\"a.module.css\":{\"default\":{\"a\":\"a_a\",\"c\":\"a_c\",\"e\":\"a_e\"},\"ns\":[[\"a\",\"a_a\"],[\"c\",\"a_c\"],[\"default\",true],[\"e\",\"a_e\"]]}}",
+      "files": [
+        [
+          "a.module.css",
+          ":host .a {} :host(.b) .c {} :host-context(.d) .e {}"
+        ]
+      ],
+      "imports": [
+        "a.module.css"
+      ],
+      "loaders": [],
+      "name": "x-host-context"
+    },
+    {
+      "esbuild": "{\"a.module.css\":{\"default\":{\"a\":\"a_a\",\"b\":\"a_b\",\"k\":\"a_k\",\"c\":\"a_c\"},\"ns\":[[\"a\",\"a_a\"],[\"b\",\"a_b\"],[\"c\",\"a_c\"],[\"default\",true],[\"k\",\"a_k\"]]}}",
+      "files": [
+        [
+          "a.module.css",
+          ".a { @media (x) { .b { animation: k } } @supports (y) { color: red } & + .c {} }"
+        ]
+      ],
+      "imports": [
+        "a.module.css"
+      ],
+      "loaders": [],
+      "name": "x-nesting-at"
+    },
+    {
+      "esbuild": "{\"a.module.css\":{\"default\":{\"btn\":\"icons_svg icons_icon a_base a_rounded shadow a_btn\",\"base\":\"a_base\",\"rounded\":\"a_base a_rounded\"},\"ns\":[[\"base\",\"a_base\"],[\"btn\",\"icons_svg icons_icon a_base a_rounded shadow a_btn\"],[\"default\",true],[\"rounded\",\"a_base a_rounded\"]]},\"icons.module.css\":{\"default\":{\"icon\":\"icons_svg icons_icon\",\"svg\":\"icons_svg\"},\"ns\":[[\"default\",true],[\"icon\",\"icons_svg icons_icon\"],[\"svg\",\"icons_svg\"]]}}",
+      "files": [
+        [
+          "a.module.css",
+          "@value primary: #BF4040;\n:export { primaryColor: red; }\n.btn { composes: base rounded; composes: shadow from global; composes: icon from \"./icons.module.css\"; color: primary }\n.base {} .rounded { composes: base }\n"
+        ],
+        [
+          "icons.module.css",
+          ".icon { composes: svg } .svg {}"
+        ]
+      ],
+      "imports": [
+        "a.module.css",
+        "icons.module.css"
+      ],
+      "loaders": [],
+      "name": "icss-idioms"
+    },
+    {
+      "esbuild": "{\"a.module.css\":{\"default\":{\"ok\":\"a_ok\",\"bad\":\"a_bad\",\"ok2\":\"a_ok2\",\"ok3\":\"a_ok3\"},\"ns\":[[\"bad\",\"a_bad\"],[\"default\",true],[\"ok\",\"a_ok\"],[\"ok2\",\"a_ok2\"],[\"ok3\",\"a_ok3\"]]}}",
+      "files": [
+        [
+          "a.module.css",
+          ".ok { color: red; } .bad { color: ; } .ok2 { *zoom: 1; _height: 1px } .ok3 {}"
+        ]
+      ],
+      "imports": [
+        "a.module.css"
+      ],
+      "loaders": [],
+      "name": "invalid-css"
+    }
+  ],
+  "entry": "for each import i: `import d<i> from \"./<file>\"; import * as n<i> from \"./<file>\";`, then `out[<file>] = { default: d<i>, ns: Object.keys(n<i>).sort().map(k => [k, k === \"default\" ? n<i>.default === d<i> : n<i>[k]]) }` and `console.log(JSON.stringify(out))`",
+  "errors": [
+    {
+      "files": [
+        [
+          "a.module.css",
+          ".a :global .b {}"
+        ]
+      ],
+      "message": "a bare \":global\"",
+      "name": "bare-global"
+    },
+    {
+      "files": [
+        [
+          "x/s.module.css",
+          ".root {}"
+        ],
+        [
+          "y/s.module.css",
+          ".root {}"
+        ]
+      ],
+      "message": "the CSS-module name \"s_root\"",
+      "name": "collision"
+    }
+  ]
+}

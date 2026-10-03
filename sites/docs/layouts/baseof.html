@@ -1,0 +1,65 @@
+<!doctype html>
+<html
+  class="h-full antialiased scheme-light dark:scheme-dark"
+  lang="{{ site.language_code or "en-US" }}">
+  <head>
+    <meta charset="utf-8">
+    <title>
+      {{ page.title }}
+    </title>
+    <style>
+      [x-cloak] {
+        display: none !important;
+      }
+    </style>
+
+    {% include "_partials/layouts/head/head-js.html" %}
+    {#- The stylesheet comes after every page is rendered, where the Go build ran Tailwind. #}
+    {{ defer(template="_partials/deferred/tailwind.html", key="global", data={"tailwind": true}) }}
+    {% if store_get(key="hasMath") %}
+      <link
+        href="https://cdn.jsdelivr.net/npm/katex@0.16.21/dist/katex.min.css"
+        rel="stylesheet">
+    {% endif %}
+    {% include "_partials/layouts/head/head.html" %}
+  </head>
+
+  {% set body_class = "flex flex-col min-h-full bg-white dark:bg-blue-950 kind-" ~ page.kind %}
+  {% if page.params.searchable %}
+    {% set body_class = body_class ~ " searchable" %}
+  {% endif %}
+
+  <body class="{{ body_class }}">
+    {% include "_partials/layouts/hooks/body-start.html" %}
+    {# Layout. #}
+    {% block header %}
+      {% include "_partials/layouts/header/header.html" %}
+    {% endblock header %}
+    {% block subheader %}
+    {% endblock subheader %}
+    {% block hero %}
+    {% endblock hero %}
+    <div class="flex w-full xl:w-6xl h-full flex-auto mx-auto">
+      <main
+        class="flex-1 mx-auto lg:mx-0 w-full max-w-3x lg:max-w-3x pt-8 lg:pt-14 pb-20 px-main print:pt-0">
+        {% include "_partials/layouts/hooks/body-main-start.html" %}
+        {% block main %}{% endblock main %}
+      </main>
+      {% block rightsidebar %}
+        <aside
+          class="py-15 ml-4 xl:ml-12 w-60 hidden lg:relative lg:block lg:flex-none">
+          {% block rightsidebar_content %}{% endblock rightsidebar_content %}
+        </aside>
+      {% endblock rightsidebar %}
+    </div>
+    {# Common icons. #}
+    {% include "_partials/layouts/icons.html" %}
+    {# Common templates. #}
+    {% include "_partials/layouts/templates.html" %}
+    {# Footer. #}
+    {% block footer %}
+      {% include "_partials/layouts/footer.html" %}
+    {% endblock footer %}
+    {% include "_partials/layouts/hooks/body-end.html" %}
+  </body>
+</html>

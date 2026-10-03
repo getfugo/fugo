@@ -1,0 +1,10 @@
+{#- A page per command, from data/commands.json (generated from the clap definitions of
+    crates/cli/src/args.rs by ssg-cli's test docs_commands_json_matches_the_cli). -#}
+{%- set root = site.data.commands.root %}
+{{- partial(name="docs/command-page.html", c=root, weight=1) -}}
+{%- for c in root.subcommands %}
+  {{- partial(name="docs/command-page.html", c=c, weight=loop.index * 10) -}}
+  {%- for s in c.subcommands %}
+    {{- partial(name="docs/command-page.html", c=s, weight=loop.index * 10 + 1) -}}
+  {%- endfor %}
+{%- endfor %}

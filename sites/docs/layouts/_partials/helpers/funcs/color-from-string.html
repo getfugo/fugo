@@ -1,0 +1,27 @@
+{#-
+  Returns `{color, shade1, shade2, shade3}`, a Tailwind colour picked by hashing `text`
+  (shades for a dark background when `dark`; `single` forces the colour):
+  `partial(name="helpers/funcs/color-from-string.html", text=…, dark=…)`.
+-#}
+{%- set colors = ["slate", "green", "cyan", "blue"] %}
+{%- if single is defined and single %}
+  {%- set colors = [single] %}
+{%- endif %}
+
+{%- set shades = [300, 400, 500] %}
+{%- if not dark %}
+  {%- set shades = [700, 800] %}
+{%- endif %}
+{%- set hash = text | fnv32a %}
+{%- set i = hash % (colors | length) %}
+{%- set j = hash % (shades | length) %}
+{%- set color = colors[i] %}
+{%- set shade1 = shades[j] %}
+{%- if shade1 > 500 %}
+  {%- set shade2 = min(values=[shade1 - 500, 100]) | int %}
+  {%- set shade3 = shade1 - 100 %}
+{%- else %}
+  {%- set shade2 = max(values=[shade1 + 500, 700]) | int %}
+  {%- set shade3 = shade1 + 200 %}
+{%- endif %}
+{{- return_value(value={"color": color, "shade1": shade1, "shade2": shade2, "shade3": shade3}) }}

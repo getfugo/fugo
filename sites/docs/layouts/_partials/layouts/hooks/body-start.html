@@ -1,0 +1,5 @@
+{% set body_start = get_asset(path="js/body-start.js") %}
+{% if body_start %}
+  {% set attrs = {"": ""} %}
+  {{ <linkjs r={body_start | js_build(options={"minify": true})} attributes={attrs} /> }}
+{% endif %}

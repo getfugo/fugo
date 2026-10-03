@@ -1,0 +1,26 @@
+{#- X (Twitter) card metadata of `page`: `{% include "_partials/twitter_cards.html" %}`. -#}
+{%- set images = partial(name="_funcs/get-page-images") %}
+{%- set first_image = images | first %}
+{%- if first_image %}
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="{{ first_image.permalink }}">
+{%- else %}
+  <meta name="twitter:card" content="summary">
+{%- endif %}
+
+{%- set card_title = (page.title or site.title or site.params.title or "") | plainify %}
+{%- if card_title %}
+  <meta name="twitter:title" content="{{ card_title }}">
+{%- endif %}
+
+{%- set description = (page.description or page.summary or site.params.description or "") | plainify | html_unescape %}
+{%- if description %}
+  <meta name="twitter:description" content="{{ description | trim_chars(chars="\n\r\t ") }}">
+{%- endif %}
+
+{%- set social = site.params.social or "" %}
+{%- if social is map and social.twitter %}
+  {%- set handle = social.twitter | str %}
+  {%- if not handle is starting_with(pat="@") %}{% set handle = "@" ~ handle %}{% endif %}
+  <meta name="twitter:site" content="{{ handle }}">
+{%- endif %}

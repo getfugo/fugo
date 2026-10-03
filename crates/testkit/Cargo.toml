@@ -1,0 +1,42 @@
+[package]
+name = "ssg-testkit"
+description = "Dev-only test support: plain-JSON oracle fixtures, txtar sites, insta settings"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+autotests = false
+
+[lib]
+doctest = false
+
+[[test]]
+name = "it"
+path = "tests/it/main.rs"
+
+[lints]
+workspace = true
+
+[dependencies]
+ssg-workspace-hack.workspace = true
+# The contract test needs only `spec` and `register_placeholders`. `default-features = false`
+# drops funcs' `runtime` feature (ICU data via ssg-locale and tera-contrib `date`), so
+# `cargo test -p ssg-testkit` builds nothing of funcs beyond tera. A path dependency, because
+# an inherited (`workspace = true`) one cannot turn default features off in edition 2024.
+ssg-funcs = { path = "../funcs", default-features = false }
+ssg-base.workspace = true
+tera.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+flate2.workspace = true
+# `registry`: the local npm registry of the package installer's tests
+tar.workspace = true
+sha2.workspace = true
+base64.workspace = true
+thiserror.workspace = true
+insta.workspace = true
+tempfile.workspace = true
+
+[dev-dependencies]
+pretty_assertions.workspace = true

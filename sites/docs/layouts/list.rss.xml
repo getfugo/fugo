@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Hugo News</title>
+    <description>Recent news about Hugo, a static site generator written in Go, optimized for speed and designed for flexibility.</description>
+    <link>{{ page.permalink }}</link>
+    <generator>Hugo 0.149.0-DEV</generator>
+    <language>{{ site.language_code or site.lang }}</language>
+    {%- if site.copyright %}
+      <copyright>{{ site.copyright }}</copyright>
+    {%- endif %}
+    {%- if page.output_formats.rss %}
+      {%- set feed = page.output_formats.rss %}
+      <atom:link href="{{ feed.permalink }}" rel="self" type="{{ feed.media_type.type }}" />
+    {%- endif %}
+    {%- set limit = site.config.services.rss.limit %}
+    {%- if limit <= 0 %}
+      {%- set limit = 999 %}
+    {%- endif %}
+    {%- set news = get_page(path="/news") %}
+    {%- if news %}
+      {%- set pages = news.pages | by_publish_date | reverse %}
+      {%- set pages = pages[:limit] %}
+    {%- else %}
+      {{- log_error(message="The list.rss.xml layout was unable to find the 'news' page.") }}
+      {%- set pages = [] %}
+    {%- endif %}
+    {%- set newest = pages | first %}
+    <lastBuildDate>{% if newest %}{{ newest.publish_date | date(format="%a, %d %b %Y %H:%M:%S %z") }}{% endif %}</lastBuildDate>
+    {%- for p in pages %}
+      <item>
+        <title>{{ p.title }}</title>
+        <link>{{ p.params.permalink or p.permalink }}</link>
+        <pubDate>{{ p.publish_date | date(format="%a, %d %b %Y %H:%M:%S %z") }}</pubDate>
+        <guid>{{ p.params.permalink or p.permalink }}</guid>
+        <description>{{ p.summary | xml_escape }}</description>
+      </item>
+    {%- endfor %}
+  </channel>
+</rss>

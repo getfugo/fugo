@@ -1,0 +1,17 @@
+# The synthetic site of the nh-resource-transformers oracles (Wave B task T15),
+# written by tools/go-oracle/nh-resource-transformers/gensite.py.
+baseURL = "https://example.org/sub/"
+title = "T15 synthetic"
+disableKinds = ["taxonomy", "term", "rss", "sitemap", "robotstxt", "404"]
+# GetRemote retries temporary HTTP errors until this timeout.
+timeout = "1s"
+
+[params]
+  api = "https://api.example.org"
+  [params.comment]
+    apipro = "https://api.seasample.example"
+
+[security]
+  [security.http]
+    methods = ['(?i)GET|POST|HEAD']
+    mediaTypes = ['^application/vnd\.t15\+json']

@@ -1,0 +1,118 @@
+# Reviewed differences from the Go oracles (REWRITE_PLAN.md §6.3). Read by tests/it.
+
+# gobwas/glob (the Go implementation's glob library) mis-matches these patterns of
+# testdata/oracle/common/glob/match.json.gz; ssg-base implements the documented glob semantics
+# instead (crate README, "Accepted deviations"). Each entry: pattern, then one input where gobwas
+# answers wrongly.
+[glob]
+# An empty alternative group (`{}`, `{,}`, a trailing `{`) makes gobwas match nothing.
+empty = [
+    ["**[ab]**{a*,b?}{", "ba"],  # gobwas: false
+    [",{", ","],  # gobwas: false
+    ["[!a-c]a{", "/a"],  # gobwas: false
+    ["[!ab]{a,}{", "c"],  # gobwas: false
+    ["[!ab]{}/.", "*/."],  # gobwas: false
+    ["[[!a-c]{{", "a"],  # gobwas: false
+    ["[a-c]**{", "a"],  # gobwas: false
+    ["]**{", "]"],  # gobwas: false
+    ["a{,}", "a"],  # gobwas: false
+    ["{,}a", "a"],  # gobwas: false
+    ["{a,ab}[/]{", "a/"],  # gobwas: false
+    ["{a,b}{}", "a"],  # gobwas: false
+    ["{a,}*{", ""],  # gobwas: false
+    ["ก{", "ก"],  # gobwas: false
+]
+# Alternatives of different shapes (`{a*,b?}`) next to other wildcards are mis-compiled.
+shapes = [
+    ["**{a,b}b{a*,b?}", "aab*abbก"],  # gobwas: false
+    ["*?{a*,b?}a", "กกéabA"],  # gobwas: false
+    ["*[a-c]{a*,b?}", "ba"],  # gobwas: false
+    ["?{a*,b?}**", "ba"],  # gobwas: false
+    ["?{a,}{,a}{a{b,c},d}{a*,b?}[!a-c]", "éaba*"],  # gobwas: false
+    ["[!/]{a/b,c}{a*,b?}[!a-c]", "écab,/"],  # gobwas: false
+    ["[!a-c]{a*,b?}", "/a"],  # gobwas: false
+    ["[!a-c]{a*,b?}ab", "xab.babab"],  # gobwas: false
+    ["[!ab]{a*,b?}ก", "éb.ก"],  # gobwas: false
+    ["[/]{a*,b?}", "/a"],  # gobwas: false
+    ["[a-c]{{a*,b?}", "ba"],  # gobwas: false
+    ["[ab]{a*,b?}/", "babx*/"],  # gobwas: false
+    ["[c{,a}![!a-c]{a*,b?}", "Aa.A"],  # gobwas: false
+    ["{*,**}{*,**}{a*,b?}", "a"],  # gobwas: false
+    ["{,a}[!/]{a/b,c}{a*,b?}[/]*", "écab,/"],  # gobwas: false
+    ["{a*,b?}[a-c]ab", "abab"],  # gobwas: false
+    ["{a*,b?}[ab][ab],", "Aabaab,"],  # gobwas: false
+    ["{a*,b?}abก", "ababก"],  # gobwas: false
+    ["{a*,b?}{a,}{a,}?", "ab"],  # gobwas: false
+    ["{a*,b?}é", "aé"],  # gobwas: false
+    ["{a*,b?}ก", "aab*abbก"],  # gobwas: false
+    ["{a*,b?}ก\\*[!a-c]", "aba/ก*é"],  # gobwas: false
+    ["{a*,b?}กx\\", "a.caกx"],  # gobwas: false
+    ["{abc*def,abc?def,abc[zte]def}", "abcdef"],  # gobwas: false
+    ["ก{a*,b?}", "กA.Aé"],  # gobwas: false
+]
+# Other optimiser bugs: `?`/`[!x]` match the empty string, fixed-width rows measured in bytes, merged negated classes.
+other = [
+    ["\u0000", ""],  # gobwas: true
+    ["**[!/]b{[/]?", "a,ab/é"],  # gobwas: false
+    ["**{,a}", ""],  # gobwas: false
+    ["*c*[a-c][!a-c]a", "xccéA"],  # gobwas: false
+    ["*{,a}[a-c]", "a"],  # gobwas: false
+    ["*é[!ab][ab][a-c]", "éกaa"],  # gobwas: false
+    [",{,a}{*,**}", ","],  # gobwas: false
+    ["?", ""],  # gobwas: true
+    ["??{a,b}", "éxa"],  # gobwas: false
+    ["?[!/]", "ก/"],  # gobwas: true
+    ["[!-{,a}ab]", ""],  # gobwas: true
+    ["[!/]", ""],  # gobwas: true
+    ["[!/][!a-c]", "éa"],  # gobwas: true
+    ["[!/][/]", "ก/"],  # gobwas: false
+    ["[!/][[!/]", "ก/"],  # gobwas: false
+    ["[!/][a-c]", "éa"],  # gobwas: false
+    ["[!a-c]", ""],  # gobwas: true
+    ["[!a-c],", "ก,"],  # gobwas: false
+    ["[!a-c]?/", "กc/"],  # gobwas: false
+    ["[!a-c][!a-c]?{a,ab}", "ébab"],  # gobwas: true
+    ["[!a-c][a-c]", "éa"],  # gobwas: false
+    ["[!a-c]{,a}[!/][a-c][ab]", "éกaa"],  # gobwas: false
+    ["[!a-c]ก", "กก"],  # gobwas: false
+    ["[!a]", ""],  # gobwas: true
+    ["[!ab]", ""],  # gobwas: true
+    ["[!ab],", "ก,"],  # gobwas: false
+    ["[!ab]/", "ก/"],  # gobwas: false
+    ["[!ab][!ab]", "ba"],  # gobwas: true
+    ["[!ab][!ab][a-c]", "éxa"],  # gobwas: false
+    ["[!ab][!ab][ab]?{[!ab]", "éb.x*"],  # gobwas: true
+    ["[!ab][!ab]\\", "ba"],  # gobwas: true
+    ["[!ab][/]", "ก/"],  # gobwas: false
+    ["[!ab]\\", ""],  # gobwas: true
+    ["[!ab]\\*", "ก*"],  # gobwas: false
+    ["[!ab]aba[!a-c]", "éaba*"],  # gobwas: false
+    ["[!ab]é", ",é"],  # gobwas: false
+    ["[!abc]", ""],  # gobwas: true
+    ["[a-c]{,a}{*,**}[!a-c]", "aé"],  # gobwas: false
+    ["[a-c]é", "aé"],  # gobwas: false
+    ["[ab]/?a[ab]", "b/éAa"],  # gobwas: false
+    ["[ab]é", "aé"],  # gobwas: false
+    ["[ab]é\\", "aé"],  # gobwas: false
+    ["a\u0000b", "ab"],  # gobwas: true
+    ["a*[ab]?é", "aaéA*é"],  # gobwas: false
+    ["ab[!/]{*,**}{a,}", "abc"],  # gobwas: false
+    ["b[!/]{,a}{a,}", "ba"],  # gobwas: false
+    ["c{a/b,c}?[!a-c]", "ccéก"],  # gobwas: false
+    ["{*,**}?[!/]", "é"],  # gobwas: true
+    ["{,a}**[!/]{x", "a.caกx"],  # gobwas: false
+    ["{,a}{,a}[/][ab]", "/a"],  # gobwas: false
+    ["{?", ""],  # gobwas: true
+    ["{a,}?[!/][/][!a-c]", "bก/,"],  # gobwas: false
+    ["{a,}{a,b}{a,b}?", "Aaก"],  # gobwas: false
+    ["{a/b,c}*[!/]*[!ab]?", "ccéก"],  # gobwas: false
+    ["{a/b,c}{*,**}{a,}", "c"],  # gobwas: false
+    ["{{,a}*ab", "ab"],  # gobwas: false
+    ["é[!/]{a,}", "éa"],  # gobwas: false
+    ["éc{*,**}{,a}{a,}", "écab,/"],  # gobwas: false
+    ["é{,a}*", "é"],  # gobwas: false
+    ["é{[!/]", "éa"],  # gobwas: false
+    ["ก[!/]/", "กc/"],  # gobwas: false
+    ["ก[!a-c]*{a,ab}[!a-c]", "กกéabA"],  # gobwas: false
+    ["ก[/]", "ก/"],  # gobwas: false
+]

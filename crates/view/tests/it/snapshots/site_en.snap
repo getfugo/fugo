@@ -1,0 +1,177 @@
+---
+source: crates/view/tests/it/views.rs
+expression: "tera::Value::from(site)"
+---
+all_pages:
+  - /posts/bundle
+  - /
+  - /tags/a
+  - /posts/two
+  - /tags
+  - /tags/b
+  - /posts/one
+  - /posts
+  - /tags/a
+  - /
+  - /posts
+  - /tags
+  - /posts/one
+base_url: "https://example.org/"
+config:
+  privacy:
+    disqus:
+      disable: false
+      enable_dnt: false
+      privacy_enhanced: false
+      respect_do_not_track: false
+      simple: false
+    google_analytics:
+      disable: false
+      enable_dnt: false
+      privacy_enhanced: false
+      respect_do_not_track: false
+      simple: false
+    instagram:
+      disable: false
+      enable_dnt: false
+      privacy_enhanced: false
+      respect_do_not_track: false
+      simple: false
+    twitter:
+      disable: false
+      enable_dnt: false
+      privacy_enhanced: false
+      respect_do_not_track: false
+      simple: false
+    vimeo:
+      disable: false
+      enable_dnt: false
+      privacy_enhanced: false
+      respect_do_not_track: false
+      simple: false
+    x:
+      disable: false
+      enable_dnt: true
+      privacy_enhanced: false
+      respect_do_not_track: false
+      simple: false
+    youtube:
+      disable: false
+      enable_dnt: false
+      privacy_enhanced: true
+      respect_do_not_track: false
+      simple: false
+  services:
+    disqus:
+      shortname: ""
+    google_analytics:
+      id: G-1
+    instagram:
+      disable_inline_css: false
+    rss:
+      limit: 10
+    twitter:
+      disable_inline_css: false
+    x:
+      disable_inline_css: false
+copyright: (c) Views
+data:
+  team:
+    Lead: Ann
+home: /
+is_multilingual: true
+lang: en
+language:
+  code: en
+  direction: ltr
+  lang: en
+  name: English
+  params:
+    description: A site
+  weight: 1
+language_code: en
+languages:
+  - code: en
+    direction: ltr
+    lang: en
+    name: English
+    params:
+      description: A site
+    weight: 1
+  - code: fr
+    direction: ltr
+    lang: fr
+    name: Français
+    params:
+      description: A site
+    weight: 2
+last_mod:
+  rfc3339: "2021-05-01T00:00:00+00:00"
+  unix: 1619827200
+main_sections:
+  - posts
+menus:
+  main:
+    - children:
+        - children: []
+          has_children: false
+          identifier: ""
+          key_name: One
+          name: One
+          page:
+            id: 5
+            kind: page
+            lang: en
+            link_title: One
+            path: /posts/one
+            permalink: "https://example.org/posts/one/"
+            rel_permalink: /posts/one/
+            title: One
+          params: {}
+          parent: Posts
+          post: ""
+          pre: "<i>"
+          title: One
+          url: /posts/one/
+          weight: 0
+      has_children: true
+      identifier: ""
+      key_name: Posts
+      name: Posts
+      page:
+        id: 2
+        kind: section
+        lang: en
+        link_title: Posts
+        path: /posts
+        permalink: "https://example.org/posts/"
+        rel_permalink: /posts/
+        title: Posts
+      params: {}
+      parent: ~
+      post: ""
+      pre: ""
+      title: Posts
+      url: /posts/
+      weight: 1
+pages:
+  - /posts/bundle
+  - /
+  - /tags/a
+  - /posts/two
+  - /tags
+  - /tags/b
+  - /posts/one
+  - /posts
+params:
+  description: A site
+regular_pages:
+  - /posts/bundle
+  - /posts/two
+  - /posts/one
+sections:
+  - /posts
+server_port: 0
+sitemap_abs_url: "https://example.org/en/sitemap.xml"
+taxonomies: ~
+title: Views

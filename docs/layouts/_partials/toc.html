@@ -1,0 +1,6 @@
+{%- if page.fragments.headings and page.table_of_contents is containing(pat="<li>") %}
+<nav class="toc" aria-label="On this page">
+  <p class="toc__title">On this page</p>
+  {{ page.table_of_contents }}
+</nav>
+{%- endif %}

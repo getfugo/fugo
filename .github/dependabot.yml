@@ -1,0 +1,34 @@
+# See https://docs.github.com/en/github/administering-a-repository/configuration-options-for-dependency-updates#package-ecosystem
+# No npm entry: the versions in tools/dev/node are parity pins (the tools the golden data was
+# built with), not dependencies to keep current. No entry for docs/ either: its go.mod and
+# package.json belong to the docs site, whose files the test fixtures record by hash.
+version: 2
+updates:
+  # One grouped pull request for the patch bumps and one for the minor bumps, so that a minor
+  # bump of a 0.x crate (a breaking change for Cargo: comrak 0.55 to 0.56, tera-contrib,
+  # ...) does not hold back the patch and security fixes. Several crates shape the output the
+  # parity gates compare with the Go build's golden data (comrak, minify-html,
+  # lightningcss, oxc, grass, image, webp, ...): each group must pass the gates of CI's Test job
+  # like any change, and a bump that changes a gate's differences needs an entry in
+  # tools/dev/changes/ (see its README).
+  - package-ecosystem: "cargo"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    groups:
+      patch:
+        patterns: ["*"]
+        update-types: ["patch"]
+      minor:
+        patterns: ["*"]
+        update-types: ["minor"]
+    ignore:
+      # Pinned exactly ("=2.4.0" in Cargo.toml) on purpose, a young engine whose behaviour the
+      # layouts rely on (docs/rust-port/REWRITE_PLAN.md §9, risk 3): moved by hand.
+      - dependency-name: "tera"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 10

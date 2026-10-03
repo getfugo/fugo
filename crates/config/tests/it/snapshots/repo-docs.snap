@@ -1,0 +1,81 @@
+---
+source: crates/config/tests/it/load.rs
+expression: "crate::sites::summary(c)"
+---
+content:
+  drafts: false
+  expired: false
+  future: false
+defaultLanguageInSubdir: false
+environment: production
+formats:
+  - html
+  - "404"
+  - alias
+  - amp
+  - calendar
+  - css
+  - csv
+  - gotmpl
+  - headers
+  - json
+  - markdown
+  - redir
+  - robots
+  - rss
+  - sitemap
+  - sitemapindex
+  - webappmanifest
+minifyOutput: false
+multihost: false
+security:
+  inlineShortcodes: disabled
+sites:
+  - baseURL: "https://gohugo.io/"
+    cascade: 3
+    code: en-US
+    disableKinds: []
+    lang: en
+    mainSections: ~
+    menus: 5
+    name: English
+    outputs:
+      "404":
+        - "404"
+      home:
+        - html
+        - rss
+        - redir
+        - headers
+      page:
+        - html
+      robotstxt:
+        - robots
+      section:
+        - html
+      sitemap:
+        - sitemap
+      sitemapindex:
+        - sitemapindex
+      taxonomy:
+        - html
+      term:
+        - html
+    pagination:
+      disableAliases: false
+      pagerSize: 10
+      path: page
+    params: 4
+    permalinks:
+      page: {}
+      section: {}
+      taxonomy: {}
+      term: {}
+    taxonomies:
+      - category=categories
+    timeZone: Europe/Oslo
+    title: Hugo
+    ugly: never
+    urlPrefix: ""
+    weight: 1
+timeout: 60

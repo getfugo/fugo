@@ -1,0 +1,53 @@
+[package]
+name = "ssg-render"
+description = "The render Session"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+autotests = false
+
+[lib]
+doctest = false
+test = false # tests live only in tests/it (one test binary, REWRITE_PLAN.md §2.2)
+
+[[test]]
+name = "it"
+path = "tests/it/main.rs"
+
+[lints]
+workspace = true
+
+[dependencies]
+ssg-workspace-hack.workspace = true
+ssg-base.workspace = true
+ssg-config.workspace = true
+ssg-vfs.workspace = true
+ssg-site.workspace = true
+ssg-page.workspace = true
+ssg-view.workspace = true
+ssg-layouts.workspace = true
+ssg-funcs.workspace = true
+ssg-markup.workspace = true
+# `AliasPlan` is ssg-nav's (T24).
+ssg-nav.workspace = true
+# The resource store the views register bundle files in (T33).
+ssg-resources.workspace = true
+# T34: shortcodes (the lexer and assembler), the site functions (`Handles`, `register`; T35
+# fills them), code fences no hook handles, and what `Handles` holds.
+ssg-pageparser.workspace = true
+ssg-sitefuncs.workspace = true
+ssg-highlight.workspace = true
+ssg-images.workspace = true
+ssg-locale.workspace = true
+dashmap.workspace = true
+tera.workspace = true
+rayon.workspace = true
+thiserror.workspace = true
+
+[dev-dependencies]
+tempfile.workspace = true
+ssg-testkit.workspace = true
+serde_json.workspace = true
+sha2.workspace = true

@@ -1,0 +1,21 @@
+{#-
+  Component `linkjs`: a script tag for the resource `r` (fingerprinted outside development),
+  with `attributes` rendered by `render_attributes` (helpers/linkcss.html).
+  Called as `{{ <linkjs r={r} attributes={attrs} /> }}`.
+-#}
+{%- component linkjs(r, attributes={}, @build, @__nh) %}
+{%- if build.is_development %}
+  <script
+    src="{{ r.rel_permalink }}"
+    {{ <render_attributes attributes={attributes} /> }}></script>
+{%- else %}
+  {%- set f = r | fingerprint %}
+  {%- if f %}
+    <script
+      src="{{ f.rel_permalink }}"
+      integrity="{{ f.data.integrity }}"
+      crossorigin="anonymous"
+      {{ <render_attributes attributes={attributes} /> }}></script>
+  {%- endif %}
+{%- endif %}
+{%- endcomponent linkjs %}

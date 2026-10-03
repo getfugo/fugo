@@ -1,0 +1,93 @@
+//! Chroma's `fsharp.xml` lexer, converted to Rust (crate README, "Lexer and style files").
+
+use crate::chroma::defs::prelude::*;
+
+#[rustfmt::skip]
+pub(crate) static LEXER: LexerDef = LexerDef {
+    file: "fsharp",
+    config: ConfigDef {
+        name: "FSharp",
+        aliases: &["fsharp"],
+        filenames: &["*.fs", "*.fsi"],
+        mime_types: &["text/x-fsharp"],
+        ..ConfigDef::EMPTY
+    },
+    states: &[
+        ("comment", &[
+            rule(r#"[^(*)@"]+"#).token(T::Comment),
+            rule(r"\(\*").token(T::Comment).push(&[]),
+            rule(r"\*\)").token(T::Comment).pop(1),
+            rule(r#"@""#).token(T::LiteralString).push(&["lstring"]),
+            rule(r#"""""#).token(T::LiteralString).push(&["tqs"]),
+            rule(r#"""#).token(T::LiteralString).push(&["string"]),
+            rule(r"[(*)@]").token(T::Comment),
+        ]),
+        ("string", &[
+            rule(r#"[^\\"]+"#).token(T::LiteralString),
+            include("escape-sequence"),
+            rule(r"\\\n").token(T::LiteralString),
+            rule(r"\n").token(T::LiteralString),
+            rule(r#""B?"#).token(T::LiteralString).pop(1),
+        ]),
+        ("lstring", &[
+            rule(r#"[^"]+"#).token(T::LiteralString),
+            rule(r"\n").token(T::LiteralString),
+            rule(r#""""#).token(T::LiteralString),
+            rule(r#""B?"#).token(T::LiteralString).pop(1),
+        ]),
+        ("tqs", &[
+            rule(r#"[^"]+"#).token(T::LiteralString),
+            rule(r"\n").token(T::LiteralString),
+            rule(r#""""B?"#).token(T::LiteralString).pop(1),
+            rule(r#"""#).token(T::LiteralString),
+        ]),
+        ("escape-sequence", &[
+            rule(r#"\\[\\"\'ntbrafv]"#).token(T::LiteralStringEscape),
+            rule(r"\\[0-9]{3}").token(T::LiteralStringEscape),
+            rule(r"\\u[0-9a-fA-F]{4}").token(T::LiteralStringEscape),
+            rule(r"\\U[0-9a-fA-F]{8}").token(T::LiteralStringEscape),
+        ]),
+        ("root", &[
+            rule(r"\s+").token(T::Text),
+            rule(r"\(\)|\[\]").token(T::NameBuiltinPseudo),
+            rule(r"\b(?<!\.)([A-Z][\w\']*)(?=\s*\.)").token(T::NameNamespace).push(&["dotted"]),
+            rule(r"\b([A-Z][\w\']*)").token(T::Name),
+            rule(r"///.*?\n").token(T::LiteralStringDoc),
+            rule(r"//.*?\n").token(T::CommentSingle),
+            rule(r"\(\*(?!\))").token(T::Comment).push(&["comment"]),
+            rule(r#"@""#).token(T::LiteralString).push(&["lstring"]),
+            rule(r#"""""#).token(T::LiteralString).push(&["tqs"]),
+            rule(r#"""#).token(T::LiteralString).push(&["string"]),
+            rule(r"\b(open type|open|module)(\s+)([\w.]+)").groups(&[T::Keyword, T::Text, T::NameNamespace]),
+            rule(r"\b(let!?)(\s+)(\w+)").groups(&[T::Keyword, T::Text, T::NameVariable]),
+            rule(r"\b(type)(\s+)(\w+)").groups(&[T::Keyword, T::Text, T::NameClass]),
+            rule(r"\b(member|override)(\s+)(\w+)(\.)(\w+)").groups(&[T::Keyword, T::Text, T::Name, T::Punctuation, T::NameFunction]),
+            rule(r"\b(abstract|as|assert|base|begin|class|default|delegate|do!|do|done|downcast|downto|elif|else|end|exception|extern|false|finally|for|function|fun|global|if|inherit|inline|interface|internal|in|lazy|let!|let|match|member|module|mutable|namespace|new|null|of|open|override|private|public|rec|return!|return|select|static|struct|then|to|true|try|type|upcast|use!|use|val|void|when|while|with|yield!|yield|atomic|break|checked|component|const|constraint|constructor|continue|eager|event|external|fixed|functor|include|method|mixin|object|parallel|process|protected|pure|sealed|tailcall|trait|virtual|volatile)\b").token(T::Keyword),
+            rule(r"``([^`\n\r\t]|`[^`\n\r\t])+``").token(T::Name),
+            rule(r"#[ \t]*(if|endif|else|line|nowarn|light|r|\d+)\b").token(T::CommentPreproc),
+            rule(r"(!=|#|&&|&|\(|\)|\*|\+|,|-\.|->|-|\.\.|\.|::|:=|:>|:|;;|;|<-|<\]|<|>\]|>|\?\?|\?|\[<|\[\||\[|\]|_|`|\{|\|\]|\||\}|~|<@@|<@|=|@>|@@>)").token(T::Operator),
+            rule(r"([=<>@^|&+\*/$%-]|[!?~])?[!$%&*+\./:<=>?@^|~-]").token(T::Operator),
+            rule(r"\b(and|or|not)\b").token(T::OperatorWord),
+            rule(r"\b(sbyte|byte|char|nativeint|unativeint|float32|single|float|double|int8|uint8|int16|uint16|int32|uint32|int64|uint64|decimal|unit|bool|string|list|exn|obj|enum)\b").token(T::KeywordType),
+            rule(r"[^\W\d][\w']*").token(T::Name),
+            rule(r"\d[\d_]*[uU]?[yslLnQRZINGmM]?").token(T::LiteralNumberInteger),
+            rule(r"0[xX][\da-fA-F][\da-fA-F_]*[uU]?[yslLn]?[fF]?").token(T::LiteralNumberHex),
+            rule(r"0[oO][0-7][0-7_]*[uU]?[yslLn]?").token(T::LiteralNumberOct),
+            rule(r"0[bB][01][01_]*[uU]?[yslLn]?").token(T::LiteralNumberBin),
+            rule(r"-?\d[\d_]*(.[\d_]*)?([eE][+\-]?\d[\d_]*)[fFmM]?").token(T::LiteralNumberFloat),
+            rule(r#"'(?:(\\[\\\"'ntbr ])|(\\[0-9]{3})|(\\x[0-9a-fA-F]{2}))'B?"#).token(T::LiteralStringChar),
+            rule(r"'.'").token(T::LiteralStringChar),
+            rule(r"'").token(T::Keyword),
+            rule(r#"@?""#).token(T::LiteralStringDouble).push(&["string"]),
+            rule(r"[~?][a-z][\w\']*:").token(T::NameVariable),
+        ]),
+        ("dotted", &[
+            rule(r"\s+").token(T::Text),
+            rule(r"\.").token(T::Punctuation),
+            rule(r"[A-Z][\w\']*(?=\s*\.)").token(T::NameNamespace),
+            rule(r"[A-Z][\w\']*").token(T::Name).pop(1),
+            rule(r"[a-z_][\w\']*").token(T::Name).pop(1),
+            rule("").pop(1),
+        ]),
+    ],
+};

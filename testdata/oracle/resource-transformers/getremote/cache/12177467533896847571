@@ -1,0 +1,17 @@
+HTTP/1.1 200 OK
+Content-Length: 125
+Content-Type: text/plain; charset=utf-8
+Date: Sun, 27 Sep 2026 10:25:09 GMT
+X-Custom: custom-value
+X-Etags-1: e565126f5ec7faeabbceeaa73fca6fad
+X-Etags-2: e565126f5ec7faeabbceeaa73fca6fad
+X-Multi: one
+X-Multi: two
+
+method=GET
+path=/echo
+query=
+Accept=application/json|text/plain
+User-Agent=Hugo Static Site Generator
+X-Api-Key=secret
+body=

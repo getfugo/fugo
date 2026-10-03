@@ -1,0 +1,265 @@
+# The Rust workspace (docs/rust-port/REWRITE_PLAN.md §2).
+#
+# Every third-party dependency and its features are declared here and only here; member
+# manifests use `<dep>.workspace = true` and never add `features =` (§2.2).
+
+[workspace]
+resolver = "3"
+members = ["crates/*"]
+
+[workspace.package]
+# The version of builds not made from a release tag: a release takes its tag's (ssg_base::VERSION;
+# DEVELOPMENT.md, "CI and releases").
+version = "0.0.0-DEV"
+edition = "2024"
+license = "Apache-2.0"
+rust-version = "1.96" # rolldown's oxc needs 1.96; resolver 3 picks MSRV-compatible versions
+repository = "https://github.com/getfugo/fugo"
+publish = false
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+unused_qualifications = "warn"
+
+# `all` plus the reviewed pedantic subset (§1.2); thread_local is banned in clippy.toml.
+[workspace.lints.clippy]
+all = { level = "warn", priority = -1 }
+struct_excessive_bools = "warn"
+fn_params_excessive_bools = "warn"
+cloned_instead_of_copied = "warn"
+explicit_into_iter_loop = "warn"
+explicit_iter_loop = "warn"
+flat_map_option = "warn"
+implicit_clone = "warn"
+inefficient_to_string = "warn"
+manual_let_else = "warn"
+map_unwrap_or = "warn"
+needless_pass_by_value = "warn"
+redundant_closure_for_method_calls = "warn"
+semicolon_if_nothing_returned = "warn"
+uninlined_format_args = "warn"
+unnested_or_patterns = "warn"
+dbg_macro = "warn"
+todo = "warn"
+
+[profile.dev]
+debug = "line-tables-only"
+incremental = false # incremental caches are the largest consumer of target/
+
+[profile.dev.package."*"]
+debug = false
+opt-level = 1
+
+[profile.dev.package.image]
+opt-level = 3
+[profile.dev.package.fast_image_resize]
+opt-level = 3
+[profile.dev.package.zune-jpeg]
+opt-level = 3
+[profile.dev.package.libwebp-sys] # the C build reads this crate's opt-level, not webp's
+opt-level = 3
+[profile.dev.package.grass]
+opt-level = 3
+# minify-html's parser `debug_assert`s that a raw-text element's end tag has its name, which
+# `<script>x</scriptx>` violates (release builds accept it); T26 needs dev to behave like release.
+[profile.dev.package.minify-html]
+debug-assertions = false
+
+[workspace.dependencies]
+# ── workspace members ──
+ssg-workspace-hack = { path = "crates/workspace-hack" }
+ssg-base = { path = "crates/base" }
+ssg-config = { path = "crates/config" }
+ssg-vfs = { path = "crates/vfs" }
+ssg-pageparser = { path = "crates/pageparser" }
+ssg-locale = { path = "crates/locale" }
+ssg-page = { path = "crates/page" }
+ssg-site = { path = "crates/site" }
+ssg-nav = { path = "crates/nav" }
+ssg-markup = { path = "crates/markup" }
+ssg-highlight = { path = "crates/highlight" }
+ssg-minify = { path = "crates/minify" }
+ssg-images = { path = "crates/images" }
+ssg-jsbuild = { path = "crates/jsbuild" }
+ssg-resources = { path = "crates/resources" }
+ssg-layouts = { path = "crates/layouts" }
+ssg-funcs = { path = "crates/funcs" }
+ssg-view = { path = "crates/view" }
+ssg-sitefuncs = { path = "crates/sitefuncs" }
+ssg-render = { path = "crates/render" }
+ssg-publish = { path = "crates/publish" }
+ssg-build = { path = "crates/build" }
+ssg-cli = { path = "crates/cli" }
+ssg-serve = { path = "crates/serve" }
+ssg-testkit = { path = "crates/testkit" }
+ssg-migrate = { path = "crates/migrate" }
+ssg-npm = { path = "crates/npm" }
+
+# ── data formats ──
+serde = { version = "1.0.229", features = ["derive", "rc", "alloc"] }
+# rolldown turns on `preserve_order` (Map keeps insertion order) and `arbitrary_precision`
+# (numbers keep their text) for every build it is part of; the workspace-hack turns them on
+# for every member, so tests see what the binary does. Code must not rely on Map order.
+serde_json = "1.0.151"
+toml = "1.1.6"         # decode via toml::Table → base::Value
+serde-saphyr = "1.3"   # YAML 1.2; fallback serde_norway 0.9
+csv = "1.3"
+roxmltree = "0.21"     # plan: 0.20 (verify); 0.21 is current
+indexmap = { version = "2", features = ["serde"] }
+bitflags = { version = "2", features = ["std"] }
+semver = "1"
+flate2 = "1"           # gzip of the plain-JSON fixtures (testkit); not in the plan's §5 list
+
+# ── templates ──
+tera = { version = "=2.4.0", features = ["no_fmt", "fast_hash", "preserve_order"] }
+# No `date`: this port registers its own `date` on ssg-locale (T12, T31); tera-contrib's would
+# pull jiff-icu, icu_calendar and icu_time into funcs.
+tera-contrib = { version = "0.3", default-features = false, features = ["regex", "urlencode", "base64", "filesize_format"] }
+
+# ── markdown & text ──
+comrak = { version = "0.55", default-features = false, features = ["attributes", "shortcodes"] }
+regex = "1.13"
+aho-corasick = "1.1"
+html5gum = "0.8.4"
+unicode-normalization = "0.1.25"
+unicode-segmentation = "1.12"
+unicode-properties = { version = "0.1", features = ["general-category"] }
+percent-encoding = "2.3.2"
+url = "2.5"
+# to_math: KaTeX in QuickJS-ng (MIT; C, built by cc). `parallel`: Send + Sync runtimes, pooled
+# across render threads.
+rquickjs = { version = "0.14", default-features = false, features = ["std", "parallel"] }
+emojis = "0.8"         # emojify (T31); already locked through comrak `shortcodes`
+
+# ── time & locale (ICU4X, Unicode-3.0) ──
+jiff = { version = "0.2.37", features = ["serde"] }
+icu_collator = "2.3"
+icu_plurals = "2.3"
+icu_decimal = "2.3"
+icu_locale = "2.3"
+icu_datetime = "2.3"
+# inflection / title case (pluralizer, cruet, titlecase): evaluated in T10 against the
+# flect/prose oracle; own data tables if none reaches 100%.
+
+# ── files ──
+walkdir = "2.5"
+globset = "0.4.20"
+mime_guess = "2"
+filetime = "0.2"
+
+# ── css / js / html output ──
+grass = { version = "0.13.4", default-features = false, features = ["random"] }
+minify-html = "0.18.1"
+lightningcss = { version = "1.0.0-alpha.72", default-features = false, features = ["browserslist"] }
+browserslist-rs = "0.19" # the project's browserslist configuration → lightningcss targets
+oxc_minifier = "0.95" # lockstep with minify-html's oxc
+oxc_allocator = "0.95" # the oxc pipeline around oxc_minifier (T26), same lockstep
+oxc_parser = "0.95"
+oxc_codegen = "0.95"
+oxc_span = "0.95"
+# js_build: the rolldown bundler and the oxc it pins (the `oxc` umbrella crate, so the 0.95
+# crates above keep their names). Exact pins: rolldown's Rust API has no semver promise and
+# every release moves oxc.
+rolldown = "=1.2.12"
+rolldown_common = "=1.2.12"
+rolldown_error = "=1.2.12"
+rolldown_plugin = "=1.2.12"
+rolldown_sourcemap = "=1.2.12"
+oxc = { version = "=0.152.0", features = ["codegen", "semantic", "ast_visit", "transformer"] }
+oxc_sourcemap = "=9.0.0"
+quick-xml = "0.42"    # XML/SVG minifier tokens (T26); already locked through plist
+
+# ── images ──
+image = { version = "0.25.10", default-features = false, features = ["jpeg", "png", "gif", "webp", "bmp", "tiff", "rayon"] }
+fast_image_resize = { version = "6.1", features = ["image", "rayon"] }
+webp = { version = "0.3.1", default-features = false } # lossy q, preset, sharp YUV (C libwebp, BSD-3)
+kamadak-exif = "0.6.1"
+imageproc = { version = "0.27", default-features = false }
+ab_glyph = "0.2.32" # images.Text (T72a)
+qrcode = { version = "0.14", default-features = false } # images.QR (T72a)
+color_quant = "2"
+kmeans_colors = "0.7.1"
+
+# ── hashing ──
+sha2 = "0.11"
+sha1 = "0.11"
+md-5 = "0.11"
+xxhash-rust = { version = "0.8.19", features = ["xxh3", "xxh64"] }
+base64 = "0.23" # same major as tera-contrib
+
+# ── network (GetRemote) ──
+ureq = { version = "3.4", default-features = false, features = ["rustls", "gzip"] } # rustls with the ring provider
+
+# ── concurrency, errors, logging ──
+rayon = "1.12"
+dashmap = "6"
+thiserror = "2.0.21"
+anyhow = "1.0.104" # cli only
+tracing = "0.1.44"
+tracing-subscriber = { version = "0.3.23", features = ["env-filter", "fmt"] }
+
+# ── cli & serve (serve only in T71) ──
+clap = { version = "4.6", features = ["derive", "env"] }
+notify = "8.2"
+notify-debouncer-full = "0.7"
+axum = { version = "0.8.9", default-features = false, features = ["http1", "tokio", "ws"] }
+tokio = { version = "1.53", default-features = false, features = ["rt", "net", "fs", "time", "sync"] }
+# serve tests only: the LiveReload WebSocket client (locked through axum `ws`; the features
+# tokio-tungstenite enables, so that `-p ssg-cli` and `-p ssg-serve` share its build)
+tungstenite = { version = "0.29", default-features = false, features = ["handshake"] }
+
+# ── npm packages (ssg-npm): Deno's installer ──
+# Exact pins of one Deno release (the CLI 2.9.7 set): the crates have no semver promise and
+# move together.
+deno_resolver = { version = "=0.90.0", features = ["sync"] }
+node_resolver = { version = "=0.97.0", features = ["sync"] }
+deno_npm_installer = "=0.54.0"
+deno_npm_cache = "=0.78.0"
+deno_npmrc = "=0.20.0"
+deno_config = "=0.109.0"
+deno_error = "=0.7.1"
+sys_traits = { version = "0.1.29", features = ["real"] }
+async-trait = "0.1"
+tar = "0.4" # ssg-npm tests: the packages of the local registry
+rustls = { version = "0.23", default-features = false, features = ["ring", "std"] }
+
+# ── dev ──
+insta = { version = "1", features = ["yaml", "glob", "redactions"] }
+tempfile = "3"
+pretty_assertions = "1"
+dhat = "0.3" # T33 allocation measurement (it binary only)
+
+# ── workspace-hack only: feature unification (T00; checked with `cargo tree -e features`, see
+anstyle = { version = "1", features = ["std"] }
+crc32fast = { version = "1", features = ["std"] }
+either = { version = "1", default-features = false, features = ["std", "use_std"] }
+fastrand = { version = "2", features = ["alloc", "std"] }
+getrandom = { version = "0.3", default-features = false, features = ["std"] }
+hashbrown = { version = "0.16", default-features = false, features = ["allocator-api2", "default-hasher", "inline-more"] }
+# 0.17: indexmap's (no features), rquickjs-core's (default features; `math`)
+hashbrown-0-17 = { package = "hashbrown", version = "0.17" }
+icu_locale_core = { version = "2", default-features = false, features = ["alloc", "zerovec"] }
+icu_provider = { version = "2", default-features = false, features = ["alloc", "baked", "sync"] } # sync: Send + Sync ICU formatters (T12)
+itertools = { version = "0.14", features = ["use_alloc", "use_std"] }
+libc = { version = "0.2", features = ["std"] }
+litemap = { version = "0.8", default-features = false, features = ["alloc"] }
+log = { version = "0.4", default-features = false, features = ["alloc", "std"] }
+memchr = { version = "2", features = ["alloc", "std"] }
+num-traits = { version = "0.2", features = ["i128", "libm", "std"] }
+once_cell = { version = "1", features = ["alloc", "race", "std"] }
+potential_utf = { version = "0.1", default-features = false, features = ["alloc", "writeable", "zerovec"] }
+regex-automata = { version = "0.4", default-features = false, features = ["alloc", "dfa", "dfa-build", "dfa-onepass", "dfa-search", "hybrid", "meta", "nfa", "nfa-backtrack", "nfa-pikevm", "nfa-thompson", "perf", "perf-inline", "perf-literal", "perf-literal-multisubstring", "perf-literal-substring", "std", "syntax", "unicode", "unicode-age", "unicode-bool", "unicode-case", "unicode-gencat", "unicode-perl", "unicode-script", "unicode-segment", "unicode-word-boundary"] }
+regex-syntax = { version = "0.8", features = ["std", "unicode", "unicode-age", "unicode-bool", "unicode-case", "unicode-gencat", "unicode-perl", "unicode-script", "unicode-segment"] }
+simd-adler32 = { version = "0.3", features = ["const-generics", "std"] }
+smallvec = { version = "1", default-features = false, features = ["const_generics", "const_new", "union"] }
+stable_deref_trait = { version = "1", default-features = false, features = ["alloc"] }
+tinystr = { version = "0.8", default-features = false, features = ["alloc", "zerovec"] }
+typenum = { version = "1", default-features = false, features = ["const-generics"] }
+writeable = { version = "0.6", features = ["alloc", "either"] }
+yoke = { version = "0.8", default-features = false, features = ["alloc", "derive", "zerofrom"] }
+zerocopy = { version = "0.8", default-features = false, features = ["derive", "simd"] }
+zerofrom = { version = "0.1", default-features = false, features = ["alloc", "derive"] }
+zerotrie = { version = "0.2", default-features = false, features = ["alloc", "yoke", "zerofrom"] }
+serde_core = { version = "1", features = ["alloc", "rc", "result", "std"] }
+allocator-api2 = { version = "0.2", features = ["alloc", "std"] }
+zerovec = { version = "0.11", default-features = false, features = ["alloc", "derive", "yoke"] }

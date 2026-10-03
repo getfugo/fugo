@@ -1,0 +1,99 @@
+# Reviewed differences between ssg-locale and the Go oracles (testdata/oracle).
+# Every entry says why the difference is accepted. The tests fail on unlisted differences and on
+# stale entries.
+
+[translate]
+# Go argument types with no native value counterpart: Go treats them through its type switch
+# (template.HTML is not a count, time.Month is an int, method sets are called).
+go_only_argtypes = [
+    "template.HTML",
+    "time.Month",
+    # Go structs: this port passes maps (views), and a missing struct field is a Go execution
+    # error where a missing map key prints `<no value>`.
+    "main.countField",
+    "*main.countField",
+    "main.noCountField",
+    "main.wordCount",
+    "main.countMethod",
+    "*main.countMethod",
+]
+# Messages using Go template actions (`if`, `with`, `printf`, `.Count.Foo` stays supported):
+# our evaluator rejects them at load time with file and key (REWRITE_PLAN §1.1, §2.4).
+unsupported_syntax = ["badparse", "withif", "hour"]
+
+[translate.rules]
+print-collection = "`{{ . }}` on a map or list argument: Go prints `map[Count:1]` / `[1]` (fmt syntax); this port reports an evaluation error and renders nothing (no Go value printing)."
+scalar-count-field = "`{{ .Count }}` with a float, numeric-string or unsigned argument: Go only wraps signed integers as a count and fails on the rest; this port treats every numeric argument as its own `.Count`."
+bool-count = "A boolean argument (or `Count: true`): Go's cast turns true into the count 1 (form `one`); this port does not take booleans as counts."
+exponent-count = "A count string in exponent notation (`1e3`): Go accepts it as numeric and then fails to parse it (renders nothing); this port does not take it as a count (form `other`)."
+
+[translate.accepted]
+"plurals fr allforms int 1000000" = "Newer CLDR gave French a `many` form for multiples of a million (`1 000 000 de …`); go-i18n's older tables say `other`."
+"plurals pt allforms int 1000000" = "Newer CLDR gave Portuguese a `many` form for multiples of a million; go-i18n's older tables say `other`."
+"art oc readingTime int 1" = "Occitan has CLDR locale data but no plural rules, so ICU uses the root rules (`other` only); go-i18n used the English rules for it."
+"art oc readingTime string \"1\"" = "As `art oc readingTime int 1`."
+"art oc oc int 1" = "As `art oc readingTime int 1` (the message has only `one`, so nothing renders)."
+"art oc oc string \"1\"" = "As `art oc readingTime int 1`."
+"gotest-known-language-missing-plural-false oc oc int 1" = "As `art oc readingTime int 1`."
+"gotest-known-language-missing-plural-true oc oc int 1" = "As `art oc readingTime int 1`."
+"art klingon readingTime int 1" = "`klingon` is not a CLDR language: this port uses the root plural rules (`other`); go-i18n used the English rules for unknown languages."
+"art klingon readingTime string \"1\"" = "As `art klingon readingTime int 1`."
+"art x1 readingTime int 1" = "As `art klingon readingTime int 1` (`x1` falls back to the default language `klingon`)."
+"art x1 readingTime string \"1\"" = "As `art x1 readingTime int 1`."
+"art a1 readingTime int 1" = "As `art klingon readingTime int 1` (`a1` is not a BCP 47 language)."
+"art a1 readingTime string \"1\"" = "As `art a1 readingTime int 1`."
+"art a2 readingTime int 1" = "As `art a1 readingTime int 1`."
+"art a2 readingTime string \"1\"" = "As `art a1 readingTime int 1`."
+"regions pt m <nil> null" = "Go's language matcher sends `pt` to the `pt-BR` bundle even though a `pt` file exists (x/text treats Brazilian as the default Portuguese); this port uses the exact bundle `pt`."
+
+[plural]
+# Locales for which ICU4X's compiled data has no plural rules (they are below the CLDR coverage
+# level ICU4X ships, or legacy codes such as `iw`, `ji`, `mo`, `sh`, `tl` that CLDR only knows
+# as aliases): the root rules apply and every count is `other`. go-i18n embeds the rules of all
+# CLDR plurals.xml locales. The test checks that these locales really give `other` throughout.
+no_icu_data = [
+    "an", "ars", "asa", "bem", "bez", "ce", "cgg", "ckb", "dv", "ff", "fur", "gsw", "guw", "gv",
+    "haw", "io", "iu", "iw", "jgo", "ji", "jmc", "kab", "kaj", "kcg", "kkj", "kl", "ksb", "ksh",
+    "kw", "lag", "lg", "ln", "mas", "mg", "mgo", "mo", "nah", "naq", "nd", "nnh", "nr", "ny",
+    "nyn", "os", "pap", "prg", "rof", "rwk", "saq", "sdh", "se", "seh", "sh", "shi", "sma", "smi",
+    "smj", "smn", "sms", "sn", "ss", "ssy", "teo", "tig", "tl", "ts", "tzm", "ve", "vo", "vun",
+    "wa", "wae", "xog", "yi",
+]
+
+# Rules that changed in CLDR after the tables go-i18n generated (ICU4X 2.3 ships CLDR 48).
+[plural.changed]
+ca = "`many` for multiples of a million."
+es = "`many` for multiples of a million."
+fr = "`many` for multiples of a million."
+it = "`many` for multiples of a million."
+pt = "`many` for multiples of a million."
+pt_PT = "`many` for multiples of a million."
+scn = "`many` for multiples of a million."
+he = "Hebrew lost the `many` form for multiples of ten."
+is = "Icelandic `one` no longer matches decimals such as 0.2 or 1.2 (the rule on t was rewritten)."
+mt = "Maltese gained a `two` form; 2 and 102 were `few`."
+ro = "Romanian `few` now also covers 101, 1001, 1000001, …"
+
+[locales]
+# The Go locales library (older CLDR data) against ICU4X 2.3 (CLDR 48), Gregorian calendar.
+[locales.fields]
+"th WeekdayAbbreviated" = "CLDR changed the Thai abbreviated weekdays from `อา.`, `จ.`, … to `อาทิตย์`, `จันทร์`, …; month names and wide weekdays are unchanged."
+"th date_full" = "CLDR's Thai full date now writes the era abbreviated (`ค.ศ.`) instead of `คริสต์ศักราช`."
+"en date_short" = "ICU writes the full year in short dates outside the two-digit window (`8/14/1900`); the Go locales library always cuts it to two digits (`8/14/00`)."
+"th date_short" = "As `en date_short`."
+
+[parse]
+[parse.cases]
+22 = "A list of strings under `a`: go-i18n gives each the key `a.` (the last wins); this port the key `a`."
+33 = "An array of tables without ids under `x`: go-i18n keys them `x.`; this port `x` (the last wins)."
+58 = "`other: [a]` is a list, so `x` is a namespace: go-i18n keys the entry `x.other.`, this port `x.other`."
+42 = "A YAML integer key: go-i18n rejects it; our YAML decoding writes keys as strings (`1`)."
+43 = "As case 42, nested."
+44 = "As case 42, inside a message."
+61 = "As case 42, inside a `translation` map (this port reads it as a namespace entry)."
+64 = "An empty YAML document (`---`) is an empty file for this port; go-i18n rejects the null document."
+65 = "As case 64 (`~`)."
+71 = "As case 64 (JSON `null`)."
+122 = "`en.all.toml`: go-i18n takes the tag from the last dot segment (`all`); this port requires the file name to be a language code and rejects it."
+137 = "`.toml` (no language): go-i18n uses `und`; this port rejects the file name."
+140 = "`en.TOML`: this port matches the extension case-insensitively; go-i18n has no unmarshaler for `TOML`."

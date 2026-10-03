@@ -1,0 +1,12 @@
+HTTP/1.1 200 OK
+Content-Length: 6
+Content-Disposition: attachment; filename*=UTF-8''na%C3%AFve%20file.txt
+Content-Type: text/plain
+Date: Sun, 27 Sep 2026 10:25:09 GMT
+X-Custom: custom-value
+X-Etags-1: 33a2049197c6eb4f8b05795b314b4d41
+X-Etags-2: 33a2049197c6eb4f8b05795b314b4d41
+X-Multi: one
+X-Multi: two
+
+naive

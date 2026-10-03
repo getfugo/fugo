@@ -1,0 +1,53 @@
+//! Chroma's `emacs.xml` style, converted to Rust (crate README, "Lexer and style files").
+
+use crate::style::StyleDef;
+use crate::token::TokenType as T;
+
+#[rustfmt::skip]
+pub(crate) static STYLE: StyleDef = StyleDef {
+    name: "emacs",
+    entries: &[
+        (T::Error, "border:#ff0000"),
+        (T::Background, "bg:#f8f8f8"),
+        (T::Keyword, "bold #aa22ff"),
+        (T::KeywordPseudo, "nobold"),
+        (T::KeywordType, "bold #00bb00"),
+        (T::NameAttribute, "#bb4444"),
+        (T::NameBuiltin, "#aa22ff"),
+        (T::NameClass, "#0000ff"),
+        (T::NameConstant, "#880000"),
+        (T::NameDecorator, "#aa22ff"),
+        (T::NameEntity, "bold #999999"),
+        (T::NameException, "bold #d2413a"),
+        (T::NameFunction, "#00a000"),
+        (T::NameLabel, "#a0a000"),
+        (T::NameNamespace, "bold #0000ff"),
+        (T::NameTag, "bold #008000"),
+        (T::NameVariable, "#b8860b"),
+        (T::LiteralString, "#bb4444"),
+        (T::LiteralStringDoc, "italic"),
+        (T::LiteralStringEscape, "bold #bb6622"),
+        (T::LiteralStringInterpol, "bold #bb6688"),
+        (T::LiteralStringOther, "#008000"),
+        (T::LiteralStringRegex, "#bb6688"),
+        (T::LiteralStringSymbol, "#b8860b"),
+        (T::LiteralNumber, "#666666"),
+        (T::Operator, "#666666"),
+        (T::OperatorWord, "bold #aa22ff"),
+        (T::Comment, "italic #008800"),
+        (T::CommentSpecial, "bold noitalic"),
+        (T::CommentPreproc, "noitalic"),
+        (T::GenericDeleted, "#a00000"),
+        (T::GenericEmph, "italic"),
+        (T::GenericError, "#ff0000"),
+        (T::GenericHeading, "bold #000080"),
+        (T::GenericInserted, "#00a000"),
+        (T::GenericOutput, "#888888"),
+        (T::GenericPrompt, "bold #000080"),
+        (T::GenericStrong, "bold"),
+        (T::GenericSubheading, "bold #800080"),
+        (T::GenericTraceback, "#0044dd"),
+        (T::GenericUnderline, "underline"),
+        (T::TextWhitespace, "#bbbbbb"),
+    ],
+};

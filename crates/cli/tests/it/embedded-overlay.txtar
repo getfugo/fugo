@@ -1,0 +1,142 @@
+Test-only overlay of the testsite (REWRITE_PLAN.md §7.1, T60): content, configuration and
+layouts that call every embedded template. Written over the testsite by tests/it/embedded.rs,
+which also writes the PNG files, the getresource cache entries of the x and vimeo oEmbed
+requests, and the markup settings into config.toml (codeFences, block attributes, standalone
+images), and config/_default/privacy.toml per variant.
+The shared testsite, and so Go's reference build, stays as it is.
+-- config/_default/params.toml --
+description = "Site <b>description</b> & more"
+images = ["/img/site.png"]
+[social]
+twitter = "example"
+facebook_app_id = "12345"
+-- config/_default/services.toml --
+[googleAnalytics]
+id = "G-ABC123"
+-- config/_default/caches.toml --
+[getresource]
+dir = ":resourceDir/_gen"
+maxAge = -1
+-- config/_default/taxonomies.toml --
+tag = "tags"
+category = "categories"
+series = "series"
+-- layouts/embedded/single.html --
+<head>
+{% include "_partials/opengraph.html" %}
+{% include "_partials/twitter_cards.html" %}
+{% include "_partials/schema.html" %}
+{% include "_partials/google_analytics.html" %}
+</head>
+<main>{{ page.content }}</main>
+-- layouts/embedded/list.html --
+<head>
+{% include "_partials/opengraph.html" %}
+{% include "_partials/twitter_cards.html" %}
+{% include "_partials/schema.html" %}
+</head>
+<main>{% set pager = paginator() %}{% for p in pager.pages %}{{ p.title }};{% endfor %}</main>
+<nav>
+{% include "_partials/pagination.html" %}
+</nav>
+<nav>
+{{ partial(name="pagination", format="terse") }}
+</nav>
+-- content/embedded/_index.md --
+---
+title: Embedded
+---
+-- content/embedded/hooks.md --
+---
+title: Hooks
+date: 2022-03-04T05:06:07Z
+lastmod: 2022-04-05T06:07:08+02:00
+description: "The <em>hooks</em> page"
+tags: [b, "Tag Two"]
+series: [s1]
+keywords: [kw1, kw2]
+---
+Links: [page](/about/ "About title"), [relative](../../posts/one/), [md file](/posts/two.md),
+[fragment](#frag), [page fragment](/about/#sec?x=1), [query](/posts/three/?a=b&c=d#top),
+[resource](bundle/feature.png), [asset](/img/logo.png), [missing](/nope/), [external](https://example.com/x?y=1),
+[mail](mailto:a@example.org), <https://auto.example.org/>, [empty]().
+
+Images: ![alt *text*](/img/logo.png "Img title"), ![plain](https://cdn.example.org/p.png),
+![missing](missing.png?x=1#f)
+
+![block image](/img/logo.png)
+{.wide loading=lazy}
+
+A paragraph.
+{.para}
+
+| Left | Center | Right | None |
+|:-----|:------:|------:|------|
+| a    | **b**  | `c`   | d    |
+| e    |        | g     | h    |
+{.tbl #t1 data-x="y&z 'q' /p <é>"}
+-- content/embedded/shortcodes.md --
+---
+title: Shortcodes
+date: 2022-03-05
+series: [s1]
+color: blue
+nested:
+  key: deep
+---
+{{< figure src="/img/logo.png" alt="Logo" >}}
+
+{{< figure src="bundle/feature.png" link="https://example.com/" target="_blank" rel="noopener" caption="A *caption*" title="Fig title" attr="Photo by **me**" attrlink="https://me.example.org/" class="fig" width="10" height="20" loading="lazy" >}}
+
+{{< figure src="https://cdn.example.org/x.png" caption="Only [caption](/about/)" >}}
+
+{{< details >}}
+A basic *collapsible* section.
+{{< /details >}}
+
+{{< details summary="Custom **summary**" open=true class="dc" name="grp" title="T" >}}
+Inner.
+
+Second paragraph.
+{{< /details >}}
+
+{{< highlight go "linenos=inline,hl_lines=2" >}}
+package main
+func main() {}
+{{< /highlight >}}
+
+{{< highlight bash >}}
+  echo hi
+{{< /highlight >}}
+
+{{< youtube 0RKpf3rK57I >}}
+
+{{< youtube id=0RKpf3rK57I loading=lazy start=30 end=60 autoplay=true loop=true controls=false allowFullScreen=false class="yt" title="My video" >}}
+
+{{< vimeo 55073825 >}}
+
+{{< vimeo id=55073825 class="foo bar" loading=lazy title="My Video" allowFullScreen=false >}}
+
+{{< instagram CxOWiQNP2MO >}}
+
+{{< x user="SanDiegoZoo" id="1453110110599868418" >}}
+
+Param: {{< param color >}} / {{< param "nested.key" >}} / {{< param description >}}.
+
+Ref: {{< ref "/about" >}} {{< ref "posts/one.md" >}} {{< ref path="/om" lang="nn" >}} {{< ref "/posts" "rss" >}} {{< relref "/about" >}} {{< relref path="hooks" >}} {{< relref "/first-post" >}} {{< relref path="/posts" outputFormat="rss" >}}.
+-- content/embedded/bundle/index.md --
+---
+title: Bundle
+date: 2022-03-06
+images: [other.png, /img/local.png, "https://cdn.example.org/remote.png"]
+audio: [/audio/a.mp3]
+videos: [/v/one.mp4, "https://cdn.example.org/two.mp4"]
+series: [s1]
+---
+A bundle with <b>images</b>.
+-- content/embedded/featured/index.md --
+---
+title: Featured
+date: 2022-03-07
+---
+Featured image resource, no images param.

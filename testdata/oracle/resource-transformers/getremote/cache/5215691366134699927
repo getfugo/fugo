@@ -1,0 +1,11 @@
+HTTP/1.1 200 OK
+Content-Length: 11
+Content-Type: text/plain; charset=utf-8
+Date: Sun, 27 Sep 2026 10:25:09 GMT
+X-Custom: custom-value
+X-Etags-1: cae78661f93d71cb9c8063d20eb49614
+X-Etags-2: cae78661f93d71cb9c8063d20eb49614
+X-Multi: one
+X-Multi: two
+
+plain text

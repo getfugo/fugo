@@ -1,0 +1,17 @@
+# Reviewed deviations of ssg-nav's oracle tests from Go: per test family, per class, the
+# number of accepted differences and why. ssg-nav itself has none; the two left are oracle
+# cases that call Go's decoders on tables Go's configuration loader never hands them (keys
+# as written, no merge-strategy key), where ssg-config (like Go's loader) sees the site's
+# configuration. See README.md.
+
+[menus-decode.config-menu-name-folded]
+count = 1
+reason = """Menu names are configuration keys, which the configuration loader lower-cases, in Go
+(config provider) as in ssg-config: `Main` and `main` are one menu `main`. The oracle calls
+`navigation.DecodeConfig` on the keys as written and gets two."""
+
+[related-decode.config-related-empty-accepted]
+count = 1
+reason = """An empty `[related]` table is the empty configuration (threshold 0, no indices) in
+ssg-config and in Go's site loader (allconfig oracle `sections/related-empty`); the oracle
+calls `related.DecodeConfig` on the bare empty table, which rejects it."""

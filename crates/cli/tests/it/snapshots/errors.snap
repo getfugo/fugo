@@ -1,0 +1,17 @@
+---
+source: crates/cli/tests/it/embedded.rs
+expression: "lines.join(\"\\n\")"
+---
+ERROR build failed: 10 error(s)
+ERROR: Missing param key: "[site]/content/param.md:4:1"
+ERROR: Param "nope" not found: "[site]/content/param.md:4:15"
+ERROR: The "instagram" shortcode requires a single positional parameter, the ID of the Instagram post. See "[site]/content/instagram.md:4:1"
+ERROR: The "level" argument passed to the "qr" shortcode must be one of low, medium, quartile, or high. See "[site]/content/qr.md:4:1"
+ERROR: The "qr" shortcode requires a "text" argument. See "[site]/content/qr.md:4:1"
+ERROR: The "scale" argument passed to the "qr" shortcode must be an integer greater than or equal to 2. See "[site]/content/qr.md:4:1"
+ERROR: The "vimeo" shortcode requires a video id, either as the first positional argument or an argument named id. See "[site]/content/vimeo.md:4:1"
+ERROR: The "x" shortcode requires two named parameters: user and id. See "[site]/content/x.md:4:1"
+ERROR: The "youtube" shortcode requires an id argument. See "[site]/content/youtube.md:4:1"
+ERROR: The 'format' specified for the embedded pagination template is invalid. Valid choices are: default, terse.
+WARN : Google Analytics 4 (GA4) replaced Google Universal Analytics (UA) effective 1 July 2023. See https://support.google.com/analytics/answer/11583528. Create a GA4 property and data stream, then replace the Google Analytics ID in your site configuration with the new value.
+WARN : disableKinds: unknown kind "robots"

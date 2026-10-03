@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="{{ site.language_code or "en" }}">
+  <head>
+    {% include "_partials/head.html" %}
+  </head>
+  <body class="kind-{{ page.kind }}">
+    <a class="skip-link" href="#main">Skip to content</a>
+    {% include "_partials/header.html" %}
+    {#- The part of the page that client-side navigation (assets/js/main.js) replaces. #}
+    <div class="page" data-page>
+    {% block main %}{% endblock main %}
+    </div>
+    {% include "_partials/footer.html" %}
+    {% include "_partials/search.html" %}
+    {% include "_partials/icons.html" %}
+  </body>
+</html>

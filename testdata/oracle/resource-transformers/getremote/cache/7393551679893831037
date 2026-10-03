@@ -1,0 +1,11 @@
+HTTP/1.1 403 Forbidden
+Content-Length: 7
+Content-Type: text/plain
+Date: Sun, 27 Sep 2026 10:25:09 GMT
+X-Custom: custom-value
+X-Etags-1: 158ee90f12f717dcbf3ad71e0f41cdb3
+X-Etags-2: 158ee90f12f717dcbf3ad71e0f41cdb3
+X-Multi: one
+X-Multi: two
+
+go away

@@ -1,0 +1,35 @@
+[package]
+name = "ssg-nav"
+description = "Menus, pagination arithmetic and pager URLs, the related-content index and the alias plan"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+autotests = false
+
+[lib]
+doctest = false
+
+[[test]]
+name = "it"
+path = "tests/it/main.rs"
+
+[lints]
+workspace = true
+
+[dependencies]
+ssg-workspace-hack.workspace = true
+ssg-base.workspace = true
+ssg-config.workspace = true
+ssg-page.workspace = true
+# The `NavModel` implementation of the site `Model` lands with T23b (URLs and relations).
+ssg-site.workspace = true
+jiff.workspace = true
+thiserror.workspace = true
+
+[dev-dependencies]
+ssg-testkit.workspace = true
+ssg-vfs.workspace = true
+serde_json.workspace = true
+tempfile.workspace = true

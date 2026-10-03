@@ -1,0 +1,56 @@
+{#- Renders the glossary of terms.
+
+When you call this shortcode using the {{% %}} notation, the glossary terms are
+Markdown headings (level 6) which means they are members of .Fragments. This
+allows the link render hook to verify links to glossary terms.
+
+Yes, the terms themselves are pages, but we don't want to link to the pages, at
+least not right now. Instead, we want to link to the ids rendered by this
+shortcode.
+
+@example {{% glossary %}}
+-#}
+{%- set path = "/quick-reference/glossary" %}
+{%- set glossary_page = get_page(path=path) %}
+{%- if glossary_page %}
+  {%- set terms = glossary_page.pages | by_title %}
+
+  {#- Build and render alphabetical index: the first term of each letter, letters sorted. #}
+  {%- set_global letters = [] %}
+  {%- set_global anchors = [] %}
+  {%- for p in terms %}
+    {%- set k = p.title | substr(start=0, length=1) | upper %}
+    {%- if k not in letters %}
+      {%- set_global letters = letters | append(value=k) %}
+      {%- set_global anchors = anchors | append(value=p.path | path_base_name | anchorize) %}
+    {%- endif %}
+  {%- endfor %}
+  {%- for k in letters | sort %}
+    {%- set i = [j for j in range(end=letters | length) if letters[j] == k] | first %}
+[{{ k }}](#{{ anchors[i] }})&nbsp;{# Do not indent. #}
+  {%- endfor %}
+
+  {# Render glossary terms. #}
+  {%- for p in terms %}
+{{ p.title }}{# Do not indent. #}
+: {{ p.raw_content | trim | safe }}{# Do not indent. #}
+    {% if p.params.reference %}
+      {%- set u = p.params.reference | parse_url %}
+      {%- set_global destination = "" %}
+      {%- if u.is_absolute %}
+        {%- set_global destination = u.string %}
+      {%- else %}
+        {%- set target = get_page(path=u.path) %}
+        {%- if target %}
+          {%- set_global destination = target.rel_permalink %}
+        {%- else %}
+          {{- log_error(message="The \"" ~ shortcode.name ~ "\" shortcode was unable to find the reference link " ~ p.params.reference ~ ": see " ~ p.path) }}
+        {%- endif %}
+      {%- endif %}
+: See&nbsp;[details]({{ destination }}).{# Do not indent. #}
+    {%- endif %}
+  {% endfor %}
+
+{%- else %}
+  {{- log_error(message="The \"" ~ shortcode.name ~ "\" shortcode was unable to get " ~ path ~ ": see " ~ shortcode.position) }}
+{%- endif %}
