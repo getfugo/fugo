@@ -127,7 +127,8 @@ ICU data in `locale`, `serve`) stay out of lanes A/B until round 8.
 ## CI and releases
 
 `.github/workflows/ci.yml` builds, tests and releases this workspace; it is the repository's
-only build workflow (`stale.yml` manages issues).
+only build workflow. `bump.yml` cuts a release, `image.yml` packages each release as a container
+image (below) and `stale.yml` manages issues.
 
 **When it runs.** On pushes to `main` and `rust-port`, on every pull request, on every
 `v[0-9]*` tag, and by hand (`workflow_dispatch`); there are no path filters. A newer run on the
@@ -138,7 +139,7 @@ same ref cancels the older one, except on tags.
 | Lint | ubuntu-24.04 | `cargo fmt --all --check`; `cargo clippy --workspace --all-targets --locked -- -D warnings`; `tools/dev/licence-check.sh`; `tools/dev/selftest.py`; `tools/rust-port/i01/sites.py patches --check`; on a tag, the tag must be `v<version of [workspace.package]>` |
 | Test | ubuntu-24.04 | `cargo test --workspace --locked --no-fail-fast` with the tools below; the job summary lists every test that printed `SKIPPED`, and any such test fails the job |
 | Build | one native runner per target | `cargo build --release --locked -p ssg-cli --target <triple>` with the version variables (below); `fugo version`; a tiny site built, whose sitemap, RSS and `robots.txt` (embedded templates) must have no CR; `tools/dev/notices.py` (licences of the linked crates); `tools/dev/package.py` → artifact `fugo-<triple>` |
-| Release | ubuntu-24.04 | tags only, after the other three: the GitHub release (below) |
+| Release | ubuntu-24.04 | tags only, after the other three: the GitHub release (below), then `image.yml` for its container image |
 
 The tests run on Linux only; the macOS and Windows binaries get the release build and its smoke
 test (the version line and one tiny site). The Go CI also ran its tests on Windows (`mage -v
@@ -231,8 +232,9 @@ python3 tools/dev/package.py <scratch>/target/x86_64-unknown-linux-gnu/release/f
 **Cutting a release.** The version comes from the git tag: a release is the tag
 `v<major>.<minor>.<patch>[-<pre-release>]`, and nothing in the repository is edited for it.
 `version` in `[workspace.package]` of `Cargo.toml` (`0.0.0-DEV`) is only the version of builds
-not made from a tag. The repository also holds the Go fork's tags (`v0.1.0` … `v0.148.2`);
-fugo's start at `v1.0.0`, and the v0.x tags never count.
+not made from a tag. fugo's releases start at `v1.0.0`. The Go fork's tags (`v0.1.0` …
+`v0.148.2`) and their releases were removed when `v1.0.0` was released; a v0.x tag (an old
+clone may still have them) never counts.
 1. Run the **Bump version** workflow (`.github/workflows/bump.yml`; Actions → Bump version →
    Run workflow, or `gh workflow run bump.yml --ref main -f version_bump=minor`) on the branch
    to release, with `version_bump` `major`, `minor` or `patch`. It takes the latest release tag
@@ -253,14 +255,43 @@ fugo's start at `v1.0.0`, and the v0.x tags never count.
    version with a `-` (e.g. `1.3.0-rc.1`) makes a pre-release, never latest; any other release
    is marked latest only if no published release has a higher version, so a patch release of
    an older line does not take latest from a newer one.
+3. The Release job then dispatches `image.yml` with the tag as ref, which pushes the release's
+   container image (below).
 
 A local build gets a release's version the same way: `FUGO_BUILD_VERSION=1.2.3 cargo build
 --release --locked -p ssg-cli`.
 
 Re-running the workflow (or its failed jobs) for a tag replaces the assets of the release an
 earlier run created, and publishes it if that run stopped before (`gh release create` makes a
-draft, uploads the assets, then publishes it). The tags `v0.148.2` and older are the Go
-implementation's releases.
+draft, uploads the assets, then publishes it).
+
+**Container image.** `Dockerfile` packages a published release, it does not compile:
+`docker build --build-arg FUGO_VERSION=<version> .` downloads
+`fugo_<version>_linux-<amd64|arm64>.tar.gz` and the checksums file of the release `v<version>`
+(on the build machine's platform, so nothing is emulated), checks the archive, and puts the
+binary in `/usr/local/bin` of `debian:trixie-slim` (glibc 2.41; the binaries need 2.35) with
+ca-certificates, git and tzdata (jiff reads time zones from `/usr/share/zoneinfo` on Linux), and
+the archive's licence files in `/usr/share/doc/fugo/`. A `RUN fugo version` step checks that the
+binary runs on the base and prints the version asked for. The image runs as the user `fugo`
+(1000:1000) in `/src` with the entry point `fugo`; `XDG_CACHE_HOME=/cache` (mode 1777) and git's
+`safe.directory = *` let any `--user` build a mounted site. `.dockerignore` excludes the whole
+build context, which the Dockerfile does not use. `FUGO_RELEASES` (a build argument) points it at
+another copy of the releases, e.g. a local `python3 -m http.server` serving
+`v<version>/<files>` of a CI run's artifacts to test the Dockerfile before a release
+(`--build-arg FUGO_RELEASES=http://host.docker.internal:8000`).
+
+`.github/workflows/image.yml` builds it for linux/amd64 and linux/arm64 (QEMU runs the final
+stage's `apt-get` for arm64) and pushes `ghcr.io/getfugo/fugo` with the job's token. It runs by
+`workflow_dispatch` with a release tag: the Release job dispatches it for each release, and
+`gh workflow run image.yml -f tag=v1.2.3` builds a published release's image again (from the
+default branch's Dockerfile, unless `--ref` names another). It pushes the tags `<version>` and,
+when no published release of that line has a higher version, `<major>.<minor>`, `<major>` and
+`latest` (the Release job's rule for latest); a pre-release gets only `<version>`. Before
+pushing, it runs the amd64 image on a tiny site, as the runner's user through a mounted
+directory, and checks the sitemap's time zone. A pull request that changes `Dockerfile`,
+`.dockerignore` or `image.yml` builds the latest release's image without pushing. A new package
+on ghcr.io is private: make it public once in its settings (Package settings → Change
+visibility).
 
 **Caches.** `Swatinem/rust-cache` per job and target; only pushes to `main` and `rust-port` save
 them, and pull requests restore their base branch's. A cold test job builds about 3.2 GB of

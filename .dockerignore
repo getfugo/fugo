@@ -1,0 +1,3 @@
+# The Dockerfile downloads a release and copies nothing from the build context, so none of the
+# repository (target/ alone is gigabytes) is sent to the builder.
+*

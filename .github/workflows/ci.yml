@@ -278,6 +278,7 @@ jobs:
     timeout-minutes: 15
     permissions:
       contents: write
+      actions: write # start image.yml
     steps:
       - uses: actions/download-artifact@v4
         with:
@@ -344,6 +345,18 @@ jobs:
             echo
             echo "Each archive holds the \`$APP_NAME\` binary, \`README.md\`, \`LICENSE\`, \`NOTICE\`, \`THIRD_PARTY_NOTICES.txt\` (the licences of the linked crates), \`PROVENANCE.md\` and \`THIRD_PARTY/\`."
             echo "Check a download with \`sha256sum -c ${APP_NAME}_${version}_checksums.txt --ignore-missing\` (on macOS: \`shasum -a 256 -c ${APP_NAME}_${version}_checksums.txt --ignore-missing\`)."
+            echo
+            echo "Container image (linux/amd64, linux/arm64): \`docker pull ghcr.io/${GH_REPO,,}:$version\`."
           } >"$RUNNER_TEMP/notes.md"
           gh release create "$TAG" dist/* --verify-tag "${latest[@]}" \
             --title "$APP_NAME $version" --notes-file "$RUNNER_TEMP/notes.md"
+
+      # The release's container image (image.yml, which packages the Linux archives just
+      # published). A workflow cannot start another with its token's events, so it is dispatched,
+      # with the tag as ref: the image is built with the Dockerfile of the release's commit.
+      - name: Image
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          TAG: ${{ github.ref_name }}
+        run: gh workflow run image.yml --ref "$TAG" -f tag="$TAG"

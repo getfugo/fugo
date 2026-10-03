@@ -470,7 +470,8 @@ that comments and READMEs cite.
   root through `repo_file` (`ssg_testkit::fixture`, `sites.py`).
 - **Releases:** tags `v<version>` instead of `rust-v<version>`; the CI workflow publishes the
   GitHub release (a pre-release if the version has a `-`, else latest only if no release has a
-  higher version). The tags `v0.148.2` and older are the Go releases.
+  higher version). The Go releases (`v0.148.2` and older) and their tags were removed on
+  2026-10-04, when `v1.0.0` was released.
 - **Drop-in names:** the binary has the Go version's name again (it had an `-rs` suffix; since
   the rename, §10, it is `fugo`); `fugo version` prints the Go line,
   `fugo v<version>[-<commit>] <os>/<arch> BuildDate=<date|unknown>[ VendorInfo=<vendor>]`
@@ -515,11 +516,11 @@ Follow-ups outside the repository:
   `Build (ubuntu-latest, Go 1.25)`, Golangci-lint, Release, Benchmark, Docker image) would block
   every pull request; require the CI workflow's `Lint`, `Test` and `Build (<target>)` instead.
 - **Secrets** no workflow reads any more: `DOCKERHUB_USERNAME`, `DOCKERHUB_TOKEN`, `CR_PAT`
-  (`image.yml`), `FUGO_GITHUB_TOKEN`, `FUGO_EMAIL` (the docs deploy of `release.yml`).
+  (the Go build's `image.yml`; fugo's `image.yml` pushes to ghcr.io with the job's token),
+  `FUGO_GITHUB_TOKEN`, `FUGO_EMAIL` (the docs deploy of `release.yml`).
 - **Public channels frozen at the last Go build:** the Go version's Docker images (Docker Hub and
-  ghcr.io); the documentation site getfugo.github.io (deployed on `v*` tags by
-  `release.yml`); and `/releases/latest`, which stays at the Go `v0.148.2` until the first Rust
-  release that is not a pre-release (`v1.0.0`).
+  ghcr.io, under the former name; fugo's image is `ghcr.io/getfugo/fugo`); and the
+  documentation site getfugo.github.io (deployed on `v*` tags by `release.yml`).
 
 ## 10. History
 
@@ -655,3 +656,9 @@ Follow-ups outside the repository:
   `workflow_dispatch` with `version_bump` major/minor/patch) tags the branch head with the
   next version (`v1.0.0` first; the Go fork's v0.x tags do not count) and dispatches CI on the
   tag, whose release job publishes it (DEVELOPMENT.md "CI and releases").
+- 2026-10-04: **v1.0.0 and the container image.** The Rust port was merged into `main` (#140)
+  and released as `v1.0.0`; the Go fork's 361 tags and 40 releases were removed from the
+  repository. `Dockerfile` packages a release's Linux binary on Debian slim (it downloads the
+  release archive, it does not compile), and `.github/workflows/image.yml`, dispatched by the
+  Release job, pushes it to `ghcr.io/getfugo/fugo` for linux/amd64 and linux/arm64
+  (DEVELOPMENT.md "Container image").

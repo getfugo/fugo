@@ -1,0 +1,145 @@
+# The container image ghcr.io/<owner>/<repository> (ghcr.io/getfugo/fugo): a release's Linux
+# binaries on Debian slim, for linux/amd64 and linux/arm64 (Dockerfile). The Release job of
+# ci.yml starts this workflow for every release it publishes; run it by hand to build the image
+# of a published release again (`gh workflow run image.yml -f tag=v1.2.3`). A pull request that
+# changes the image builds it from the latest release without pushing. DEVELOPMENT.md,
+# "Container image".
+name: Image
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "The published release to package (v1.2.3)"
+        required: true
+        type: string
+  pull_request:
+    paths:
+      - Dockerfile
+      - .dockerignore
+      - .github/workflows/image.yml
+
+concurrency:
+  group: image-${{ inputs.tag || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  image:
+    name: Image (${{ inputs.tag || 'latest release, not pushed' }})
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: write # push to ghcr.io
+    steps:
+      - uses: actions/checkout@v4
+
+      # The release (the tag given, else the latest release) and the tags it moves: <version>
+      # always; <major>.<minor>, <major> and latest when no published release of that line, or
+      # none at all for latest, has a higher version (the Release job's rule for latest), so
+      # rebuilding an older release, or a patch release of an older line, does not take them from
+      # a newer one. A pre-release (1.3.0-rc.1) gets only <version>.
+      - name: Release
+        id: release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          TAG: ${{ inputs.tag }}
+        run: |
+          if [ -z "$TAG" ]; then
+            TAG=$(gh release view --json tagName --jq .tagName)
+          fi
+          version=$(python3 tools/dev/version.py tag "$TAG")
+          commit=$(gh api "repos/$GH_REPO/commits/$TAG" --jq .sha)
+          major=${version%%.*}
+          minor=${version#*.}
+          minor=${minor%%.*}
+          tags=$version
+          case $version in
+            *-*) ;;
+            *)
+              published=$({
+                gh release list --limit 1000 --json tagName,isDraft,isPrerelease \
+                  --jq '.[] | select((.isDraft or .isPrerelease) | not) | .tagName'
+                echo "$TAG"
+              } | sed -n 's/^v\([0-9][0-9.]*\)$/\1/p')
+              # newest <prefix>: the highest published version starting with <prefix>.
+              newest() { awk -v p="$1" 'substr($0, 1, length(p)) == p' <<<"$published" | sort -V | tail -n 1; }
+              if [ "$(newest "$major.$minor.")" = "$version" ]; then tags+=" $major.$minor"; fi
+              if [ "$(newest "$major.")" = "$version" ]; then tags+=" $major"; fi
+              if [ "$(newest "")" = "$version" ]; then tags+=" latest"; fi
+              ;;
+          esac
+          image=ghcr.io/${GITHUB_REPOSITORY,,}
+          {
+            echo "version=$version"
+            echo "commit=$commit"
+            echo "image=$image"
+            echo "tags<<EOF"
+            for t in $tags; do echo "$image:$t"; done
+            echo "EOF"
+          } >>"$GITHUB_OUTPUT"
+          echo "$TAG ($commit): $image:{${tags// /,}}"
+
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+
+      # The amd64 image, loaded to run it as a user would: the Dockerfile has already checked
+      # that the binary runs and prints the version; this builds a tiny site, written as the
+      # runner's user through a mounted directory, as the README says to.
+      - name: Build (linux/amd64)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/amd64
+          build-args: FUGO_VERSION=${{ steps.release.outputs.version }}
+          load: true
+          tags: fugo:test
+
+      - name: Smoke test
+        run: |
+          docker run --rm fugo:test version
+          site=$RUNNER_TEMP/site
+          mkdir -p "$site/content"
+          printf 'baseURL = "https://example.org/"\ntimeZone = "Europe/Berlin"\n' >"$site/config.toml"
+          printf -- '---\ntitle: Home\ndate: 2026-01-02T03:04:05\n---\n' >"$site/content/_index.md"
+          docker run --rm --user "$(id -u):$(id -g)" -v "$site:/src" fugo:test
+          grep -q '<lastmod>2026-01-02T03:04:05+01:00</lastmod>' "$site/public/sitemap.xml"
+
+      - name: Log in to ghcr.io
+        if: github.event_name == 'workflow_dispatch'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+
+      - name: Build and push (linux/amd64, linux/arm64)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          build-args: FUGO_VERSION=${{ steps.release.outputs.version }}
+          push: ${{ github.event_name == 'workflow_dispatch' }}
+          tags: ${{ steps.release.outputs.tags }}
+          labels: |
+            org.opencontainers.image.revision=${{ steps.release.outputs.commit }}
+            org.opencontainers.image.url=https://github.com/${{ github.repository }}
+
+      - name: Summary
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          TAGS: ${{ steps.release.outputs.tags }}
+        run: |
+          {
+            echo "Pushed the image of v${{ steps.release.outputs.version }} as:"
+            echo
+            for t in $TAGS; do echo "- \`$t\`"; done
+          } >>"$GITHUB_STEP_SUMMARY"

@@ -55,7 +55,7 @@ Minified CSS (`--minify`, `resources.Minify`) is prepared for the browsers of th
 
 ## Installation
 
-Download the archive for your platform from the [releases] page. Releases are tagged `v<version>`; v1.0.0 and later are the Rust implementation named fugo, v0.148.2 and earlier the former Go implementation, released under the project's former name. The archives are named `fugo_<version>_<os>-<arch>.tar.gz` (`.zip` for Windows; up to v0.148.2 the archives carry the former name), and hold the `fugo` binary, `README.md`, `LICENSE`, `NOTICE`, `THIRD_PARTY_NOTICES.txt`, `PROVENANCE.md` and `THIRD_PARTY/`:
+Download the archive for your platform from the [releases] page. Releases are tagged `v<version>` and start at v1.0.0, the Rust implementation named fugo; the releases of the former Go implementation (v0.148.2 and earlier, under the project's former name) are no longer published. The archives are named `fugo_<version>_<os>-<arch>.tar.gz` (`.zip` for Windows), and hold the `fugo` binary, `README.md`, `LICENSE`, `NOTICE`, `THIRD_PARTY_NOTICES.txt`, `PROVENANCE.md` and `THIRD_PARTY/`:
 
 - `linux-amd64`, `linux-arm64` (glibc 2.35 or later)
 - `darwin-amd64`, `darwin-arm64`
@@ -71,6 +71,13 @@ fugo server -s <site>         # development server with live reload
 
 The commands and flags (the Go build's, in kebab case, with its camelCase spellings as aliases) are listed in [crates/cli/README.md](crates/cli/README.md).
 
+The container image `ghcr.io/getfugo/fugo` (linux/amd64, linux/arm64) holds each release's Linux binary on Debian slim, with git, ca-certificates and tzdata. It is tagged `<version>`, `<major>.<minor>`, `<major>` and `latest`; its entry point is `fugo` and its working directory `/src`, so mount the site there (`--user` makes the files written yours on Linux):
+
+```text
+docker run --rm -v "$PWD:/src" --user "$(id -u):$(id -g)" ghcr.io/getfugo/fugo --minify
+docker run --rm -v "$PWD:/src" --user "$(id -u):$(id -g)" -p 1313:1313 ghcr.io/getfugo/fugo server --bind 0.0.0.0
+```
+
 ## Upgrading from the Go build
 
 v1.0.0 replaces the Go build, under a new name and its own version numbers. What a site or a script may have to change:
@@ -83,7 +90,7 @@ v1.0.0 replaces the Go build, under a new name and its own version numbers. What
 - **`server` renders into memory by default.** The Go build wrote the site to the publish directory and served it from there (`-M`/`--renderToMemory` rendered into memory). For the Go behaviour add `--render-to-disk`, a flag of fugo, not of the Go build; `-d`/`--destination` without it is an error.
 - **Modules** are not downloaded (no `go.mod` resolution): themes and modules come from the themes directory, `_vendor` or an absolute path.
 - **`js.Build` bundles in process with [rolldown](https://rolldown.rs)** (the Go build linked esbuild 0.25.6): nothing to install, and the options are the same. Scripts behave as before, but their bytes differ, so fingerprinted names, `Data.Integrity` and source maps change. Other visible differences: the IIFE wrapper is `(function() { … })();`; legal comments stay where they are instead of moving to the end; error texts are rolldown's, except unresolved imports (`Could not resolve "x"`) and the `es5` target's errors, which keep esbuild's wording and positions. As with esbuild, TC39 decorators are lowered, `target: es5` checks and lowers the bundle, and CSS imported from scripts is dropped (`local-css` modules give their class names). Sass is compiled in process with dart-sass semantics, whatever `transpiler` says.
-- The Docker images of the Go build, published under the former name, are no longer updated; they stay at the last Go build.
+- The Docker images of the Go build, published under the former name, are no longer updated; they stay at the last Go build. fugo's image is `ghcr.io/getfugo/fugo` ([Installation](#installation)): its entry point is `fugo` (`docker run … ghcr.io/getfugo/fugo server`, not `… <image> <program> server`), it runs as the user 1000 and has no Node.js, Dart Sass or image tools, which fugo does not use.
 - The website [getfugo.github.io](https://getfugo.github.io) is no longer redeployed on release tags, and until it is redeployed from `docs/` it documents the Go build. fugo's documentation is now `docs/`, a site with its own theme built by fugo (`tools/docs/build.sh`). The Go build's documentation site is kept as the test fixture `testdata/legacy-docs/`: `tools/legacy-docs/build.sh` builds it with fugo (Tera layouts in `sites/docs`), and gate A-D3 checks every page of that build against the published one.
 
 ## Build from source

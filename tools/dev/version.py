@@ -4,8 +4,8 @@
 A release is the tag v<major>.<minor>.<patch>[-<pre-release>]; CI builds it with that version
 (the compile-time variable $FUGO_BUILD_VERSION, which ssg_base::VERSION reads). `version` in
 [workspace.package] of Cargo.toml is only the version of builds not made from a tag, and is
-never edited for a release. The repository also holds the Go fork's tags (v0.1.0 … v0.148.2):
-fugo's releases start at v1.0.0, and v0.x tags never count as fugo's.
+never edited for a release. fugo's releases start at v1.0.0; a v0.x tag never counts as fugo's
+(the Go fork's tags v0.1.0 … v0.148.2 were removed, but an old clone may still have them).
 
 Usage:
   version.py next major|minor|patch   the version after the latest release tag of the

@@ -1,6 +1,6 @@
 ---
 title: Installation
-description: Install fugo from a release archive on Linux, macOS or Windows, or build it from source with Cargo.
+description: Install fugo from a release archive on Linux, macOS or Windows, run it from its container image, or build it from source with Cargo.
 weight: 20
 ---
 
@@ -68,6 +68,41 @@ fugo version
 
 ```text
 fugo v1.0.0 linux/amd64 BuildDate=…
+```
+
+## Container image
+
+Every release is also published as the container image `ghcr.io/getfugo/fugo`, for
+linux/amd64 and linux/arm64: the release's Linux binary on Debian slim, with git,
+ca-certificates and tzdata. Pick a tag:
+
+| Tag | Image |
+|---|---|
+| `1.2.3` | that release |
+| `1.2` | the latest release of 1.2 |
+| `1` | the latest release of 1 |
+| `latest` | the latest release |
+
+The image runs `fugo` in `/src`, so mount your site there. Any arguments are passed to `fugo`.
+On Linux, `--user` runs fugo as you, so the files it writes are yours:
+
+```sh
+# Build the site in the current directory into ./public
+docker run --rm -v "$PWD:/src" --user "$(id -u):$(id -g)" ghcr.io/getfugo/fugo --minify
+
+# The development server at http://localhost:1313/
+docker run --rm -v "$PWD:/src" --user "$(id -u):$(id -g)" -p 1313:1313 \
+  ghcr.io/getfugo/fugo server --bind 0.0.0.0
+```
+
+Inside a container, the server must listen on all interfaces (`--bind 0.0.0.0`) for the published
+port to reach it. fugo keeps its caches (npm packages, remote resources, processed images) in
+`/cache`; mount a volume there (`-v fugo-cache:/cache`) to keep them between runs.
+
+To build the image of a release yourself, from a clone of the repository:
+
+```sh
+docker build --build-arg FUGO_VERSION=1.0.0 -t fugo .
 ```
 
 ## Build from source

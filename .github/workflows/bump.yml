@@ -1,6 +1,6 @@
 # Cuts a release: tags the head of the branch it runs on with the next version and starts CI on
 # that tag, whose release job builds and publishes it (ci.yml). The next version is the latest
-# release tag's (v1.0.0 or later; pre-releases and the Go fork's v0.x tags do not count) with
+# release tag's (v1.0.0 or later; pre-releases and v0.x tags do not count) with
 # the chosen part bumped, or v1.0.0 when there is none (tools/dev/version.py). DEVELOPMENT.md,
 # "CI and releases".
 name: Bump version
