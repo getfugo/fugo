@@ -7140,7 +7140,7 @@ dependencies = [
  "crc32fast",
  "either",
  "fastrand",
- "getrandom 0.3.4",
+ "getrandom 0.4.3",
  "hashbrown 0.16.1",
  "hashbrown 0.17.1",
  "icu_locale_core",
