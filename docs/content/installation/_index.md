@@ -107,7 +107,7 @@ docker build --build-arg FUGO_VERSION=1.0.0 -t fugo .
 
 ## Build from source
 
-You need Rust 1.96 or later ([rustup](https://rustup.rs/)) and a C compiler (libwebp and a few
+You need Rust 1.99 or later ([rustup](https://rustup.rs/)) and a C compiler (libwebp and a few
 other libraries are compiled from C):
 
 ```sh
