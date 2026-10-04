@@ -63,3 +63,8 @@ updates:
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 10
+    # One pull request for every action update, majors included: workflow files are merged by
+    # hand (automerge.yml's token cannot change them).
+    groups:
+      actions:
+        patterns: ["*"]
