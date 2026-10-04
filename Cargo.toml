@@ -230,7 +230,7 @@ insta = { version = "1", features = ["yaml", "glob", "redactions"] }
 # insta, with the features insta turns on: one build), the release archives' zip, the licence
 # check's SPDX expressions. Not cargo_metadata: it turns on serde_json's `unbounded_depth`
 # (crates/dev/src/metadata.rs).
-similar = { version = "2.7", features = ["inline"] }
+similar = { version = "3.2", features = ["inline"] }
 zip = { version = "8.6", default-features = false, features = ["deflate-flate2"] }
 spdx = "0.13"
 tempfile = "3"
