@@ -237,7 +237,7 @@ impl TransformEnv {
 #[derive(Default)]
 pub(crate) struct PipeState {
     realizing: Mutex<HashMap<ResourceId, Arc<Mutex<()>>>>,
-    /// Files published with a resource (source maps).
+    /// Files published with a resource (source maps, legal comment files).
     companions: Mutex<BTreeMap<ResourceId, Vec<ResourceId>>>,
     pub(crate) post: postprocess::Registry,
 }
@@ -262,6 +262,8 @@ struct Output {
     bytes: Vec<u8>,
     /// A source map published next to the result (`<target>.map`).
     source_map: Option<Vec<u8>>,
+    /// The legal comments of a script, published next to it (`<target>.LEGAL.txt`).
+    legal: Option<Vec<u8>>,
 }
 
 /// Registers the result of `t` on `id` (see the module documentation).
@@ -421,30 +423,45 @@ pub(crate) fn realize(
         Transform::JsBuild(o) => jsbuild::run(store, &env, &src, &o.0, &input).map_err(fail)?,
     };
     if let Some(map) = out.source_map {
-        let map_link = format!("{}.map", r.link.as_str());
-        let companion = store.push(NewResource {
-            origin: Origin::Named,
-            media_type: media_type(store, "application/json"),
-            name: map_link.clone(),
-            name_normalized: None,
-            title: map_link.clone(),
-            params: ssg_base::Params::default(),
-            data: ssg_base::Map::new(),
-            lang: r.lang,
-            target: OutputPath::new(&format!("{}.map", r.target.as_str())),
-            link: UrlPath::new(&map_link),
-            body: Body::Bytes(map.into()),
-            policy: PublishPolicy::OnReference,
-            kind: None,
-        });
-        lock(&store.pipes.companions)
-            .entry(id)
-            .or_default()
-            .push(companion);
+        push_companion(store, id, &r, ".map", "application/json", map);
+    }
+    if let Some(legal) = out.legal {
+        push_companion(store, id, &r, ".LEGAL.txt", "text/plain", legal);
     }
     done.body = Body::Bytes(out.bytes.into());
     store.replace(id, done);
     Ok(store.resource(id))
+}
+
+/// Registers a file published with resource `id` (`r`) whenever it is: `<target><suffix>`.
+fn push_companion(
+    store: &ResourceStore,
+    id: ResourceId,
+    r: &Resource,
+    suffix: &str,
+    media: &str,
+    bytes: Vec<u8>,
+) {
+    let link = format!("{}{suffix}", r.link.as_str());
+    let companion = store.push(NewResource {
+        origin: Origin::Named,
+        media_type: media_type(store, media),
+        name: link.clone(),
+        name_normalized: None,
+        title: link.clone(),
+        params: ssg_base::Params::default(),
+        data: ssg_base::Map::new(),
+        lang: r.lang,
+        target: OutputPath::new(&format!("{}{suffix}", r.target.as_str())),
+        link: UrlPath::new(&link),
+        body: Body::Bytes(bytes.into()),
+        policy: PublishPolicy::OnReference,
+        kind: None,
+    });
+    lock(&store.pipes.companions)
+        .entry(id)
+        .or_default()
+        .push(companion);
 }
 
 /// `bytes` as text, for the text transforms.

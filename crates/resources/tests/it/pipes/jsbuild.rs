@@ -213,3 +213,44 @@ fn a_result_on_its_sources_path_is_what_is_published() {
         "console.log(\"plain\");\n"
     );
 }
+
+/// `legalComments: external`: the script's legal comments are published next to it, as
+/// `<target>.LEGAL.txt`, when the script is.
+#[test]
+fn legal_comments_go_to_a_file_next_to_the_script() {
+    use ssg_resources::Transform;
+    use ssg_resources::pipes::JsBuildSpec;
+
+    let site = super::mini_site(&[
+        ("config.toml", "baseURL = \"https://example.org/\"\n"),
+        (
+            "assets/js/main.js",
+            "/*! main | MIT */\nexport const x = 1;\n",
+        ),
+    ]);
+    let p = project(site.path(), |_| {});
+    let s = &p.store;
+    let built = s
+        .transform(
+            p.asset("js/main.js"),
+            Transform::JsBuild(Box::new(
+                JsBuildSpec::from_json(&serde_json::json!({
+                    "format": "esm", "minify": true, "legalComments": "external",
+                    "targetPath": "js/app.js"
+                }))
+                .unwrap(),
+            )),
+        )
+        .unwrap();
+    s.realize(built).unwrap();
+    let sink = MemSink::default();
+    let link = s.resource(built).rel_permalink.clone();
+    s.publish([link.as_str()], &sink).unwrap();
+    let files = sink.0.lock().unwrap();
+    let js = String::from_utf8(files["js/app.js"].clone()).unwrap();
+    assert!(!js.contains("/*"), "{js}");
+    assert_eq!(
+        String::from_utf8(files["js/app.js.LEGAL.txt"].clone()).unwrap(),
+        "/*! main | MIT */\n"
+    );
+}

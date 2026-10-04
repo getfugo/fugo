@@ -131,6 +131,23 @@ option_enum!(
 );
 
 option_enum!(
+    /// Where legal comments go (`legalComments`: `/*!`, `//!`, `@license`, `@preserve`); the
+    /// default is `eof`, esbuild's for bundles.
+    LegalComments, "legalComments" {
+        /// Moved to the end of the script, once each.
+        Eof => "eof" | "",
+        /// Left where they are.
+        Inline => "inline",
+        /// Removed.
+        None => "none",
+        /// Moved to `<script>.LEGAL.txt`, published next to the script.
+        External => "external",
+        /// As `external`, with a comment at the end of the script that names the file.
+        Linked => "linked",
+    }
+);
+
+option_enum!(
     /// What to drop from the output (`drop`).
     DropKind, "drop" {
         Console => "console",
@@ -197,8 +214,10 @@ impl Loader {
 pub struct JsBuildOptions {
     /// The published path of the result (`targetPath`), slash-separated without a leading `/`.
     pub target_path: Option<String>,
-    /// Minify whitespace, identifiers and syntax.
+    /// Minify whitespace, identifiers and syntax; comments go too, but legal ones (see
+    /// `legal_comments`).
     pub minify: bool,
+    pub legal_comments: LegalComments,
     pub source_map: SourceMap,
     /// Include the sources in the source map (default true).
     pub sources_content: bool,
@@ -229,6 +248,7 @@ impl Default for JsBuildOptions {
         Self {
             target_path: None,
             minify: false,
+            legal_comments: LegalComments::Eof,
             source_map: SourceMap::None,
             sources_content: true,
             target: Target::EsNext,
@@ -274,6 +294,9 @@ impl JsBuildOptions {
                     o.target_path = (!p.is_empty()).then(|| p.to_owned());
                 }
                 "minify" => o.minify = boolean("minify", v)?,
+                "legalcomments" => {
+                    o.legal_comments = LegalComments::parse(&string("legalComments", v)?)?;
+                }
                 "sourcemap" => o.source_map = SourceMap::parse(&string("sourceMap", v)?)?,
                 "sourcescontent" => o.sources_content = boolean("sourcesContent", v)?,
                 "target" => o.target = Target::parse(&string("target", v)?)?,

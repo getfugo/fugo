@@ -321,3 +321,104 @@ fn builds_from_a_thread_pool() {
         assert!(outputs.iter().all(|o| *o == want), "threads {threads}");
     }
 }
+
+/// Comments: minified, only legal comments stay (no `@__PURE__`, no coverage hints); legal
+/// comments go to the end of the script once each (`legalComments: eof`, the default, as
+/// esbuild does for bundles), stay where they are (`inline`) or go (`none`).
+#[test]
+fn comments_and_legal_comments() {
+    let lib = "/*! lib v1 | MIT */\n/* istanbul ignore next */\nexport const make = () => /* @__PURE__ */ new Map();\n";
+    let other = "/*! lib v1 | MIT */\nexport const twice = (n) => n * 2;\n";
+    let s = site(
+        "comments",
+        &[
+            ("assets/lib/a.js", lib),
+            ("assets/lib/b.js", other),
+            (
+                "assets/main.js",
+                "/*! main | Apache-2.0 */\nimport { make } from \"./lib/a.js\";\nimport { twice } from \"./lib/b.js\";\nexport const run = () => [make(), twice(2)];\n",
+            ),
+        ],
+    );
+    let min = s.code("main.js", &json!({"minify": true, "format": "esm"}));
+    assert!(!min.contains("__PURE__"), "{min}");
+    assert!(!min.contains("istanbul"), "{min}");
+    assert_eq!(min.matches("/*! lib v1 | MIT */").count(), 1, "{min}");
+    assert!(
+        min.trim_end()
+            .ends_with("/*! lib v1 | MIT */\n/*! main | Apache-2.0 */")
+            || min
+                .trim_end()
+                .ends_with("/*! main | Apache-2.0 */\n/*! lib v1 | MIT */"),
+        "the legal comments are at the end:\n{min}"
+    );
+
+    let inline = s.code(
+        "main.js",
+        &json!({"minify": true, "format": "esm", "legalComments": "inline"}),
+    );
+    assert_eq!(inline.matches("/*! lib v1 | MIT */").count(), 2, "{inline}");
+
+    let none = s.code(
+        "main.js",
+        &json!({"minify": true, "format": "esm", "legalComments": "none"}),
+    );
+    assert!(!none.contains("/*"), "{none}");
+
+    let plain = s.code("main.js", &json!({"format": "esm"}));
+    assert!(
+        plain.contains("__PURE__"),
+        "not minified, annotations stay:\n{plain}"
+    );
+    assert_eq!(plain.matches("/*! lib v1 | MIT */").count(), 1, "{plain}");
+
+    let external = s
+        .build(
+            "main.js",
+            &json!({"minify": true, "format": "esm", "legalComments": "external"}),
+        )
+        .unwrap();
+    let code = String::from_utf8(external.code).unwrap();
+    assert!(!code.contains("/*"), "{code}");
+    let legal = String::from_utf8(external.legal.expect("a legal file")).unwrap();
+    assert_eq!(legal.matches("/*! lib v1 | MIT */").count(), 1, "{legal}");
+    assert!(legal.contains("/*! main | Apache-2.0 */"), "{legal}");
+
+    let linked = s
+        .build(
+            "main.js",
+            &json!({"minify": true, "format": "esm", "legalComments": "linked"}),
+        )
+        .unwrap();
+    let code = String::from_utf8(linked.code).unwrap();
+    assert!(
+        code.trim_end()
+            .ends_with("/*! For license information please see main.js.LEGAL.txt */"),
+        "{code}"
+    );
+    assert!(linked.legal.is_some());
+
+    let plain_external = s
+        .build("lib/b.js", &json!({"legalComments": "inline"}))
+        .unwrap();
+    assert!(plain_external.legal.is_none(), "inline writes no file");
+
+    let bad = JsBuildOptions::from_json(&json!({"legalComments": "somewhere"}));
+    assert!(bad.is_err());
+}
+
+/// A script without legal comments gets no legal file, whatever the mode.
+#[test]
+fn no_legal_file_without_legal_comments() {
+    let s = site("no-legal", &[("assets/a.js", "export const a = 1;\n")]);
+    for mode in ["external", "linked"] {
+        let out = s
+            .build("a.js", &json!({"format": "esm", "legalComments": mode}))
+            .unwrap();
+        assert!(out.legal.is_none(), "{mode}");
+        assert!(
+            !String::from_utf8(out.code).unwrap().contains("LEGAL"),
+            "{mode}"
+        );
+    }
+}

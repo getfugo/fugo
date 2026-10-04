@@ -7,17 +7,21 @@ use std::sync::Arc;
 use base64::Engine as _;
 use rolldown::{
     Bundler, BundlerOptions, BundlerTransformOptions, CodeSplittingMode, Either,
-    GeneratedCodeOptions, GlobalsOutputOption, InjectImport, InputItem, JsxOptions, LegalComments,
-    ModuleType, OutputExports, OutputFormat, Platform as RolldownPlatform, RawCompressOptions,
-    RawMangleOptions, RawMinifyOptions, RawMinifyOptionsDetailed, SourceMapType, TsConfig,
+    GeneratedCodeOptions, GlobalsOutputOption, InjectImport, InputItem, JsxOptions,
+    LegalComments as RolldownLegalComments, ModuleType, OutputExports, OutputFormat,
+    Platform as RolldownPlatform, RawCompressOptions, RawMangleOptions, RawMinifyOptions,
+    RawMinifyOptionsDetailed, SourceMapType, TsConfig,
 };
-use rolldown_common::Output;
+use rolldown_common::{CommentsOptions, Output};
 use rolldown_error::BuildDiagnostic;
 use rolldown_plugin::Plugin as _;
 
 use crate::executor;
+use crate::legal;
 use crate::lower::es5;
-use crate::options::{DropKind, Format, JsBuildOptions, Jsx, Loader, Platform, SourceMap, Target};
+use crate::options::{
+    DropKind, Format, JsBuildOptions, Jsx, LegalComments, Loader, Platform, SourceMap, Target,
+};
 use crate::plugin::{self, BuildContext, ContextParts, SitePlugin};
 use crate::resolve::{AssetEntry, Assets, ComponentResolver, dir};
 use crate::sourcemap;
@@ -99,6 +103,9 @@ pub struct JsBuildOutput {
     pub code: Vec<u8>,
     /// For `external` and `linked` source maps: published at `target_path` + `.map`.
     pub source_map: Option<Vec<u8>>,
+    /// For `legalComments` `external` and `linked`, when the script has legal comments: published
+    /// at `target_path` + `.LEGAL.txt`.
+    pub legal: Option<Vec<u8>>,
     pub warnings: Vec<Diagnostic>,
 }
 
@@ -201,11 +208,32 @@ impl JsBuilder {
         }
         .map_err(JsBuildError::Build)?;
 
-        let (mut code, map) = if options.target == Target::Es5 {
+        let (mut code, mut map) = if options.target == Target::Es5 {
             lower_to_es5(&built, options)?
         } else {
             (built.code, built.map)
         };
+        let mut legal_file = None;
+        match options.legal_comments {
+            LegalComments::Eof => (code, map) = legal::move_to_end(code, map),
+            LegalComments::External | LegalComments::Linked => {
+                let comments;
+                (code, map, comments) = legal::extract(code, map);
+                if !comments.is_empty() {
+                    if options.legal_comments == LegalComments::Linked {
+                        let name = target_path.rsplit('/').next().unwrap_or(&target_path);
+                        if !code.is_empty() && !code.ends_with('\n') {
+                            code.push('\n');
+                        }
+                        code.push_str(&format!(
+                            "/*! For license information please see {name}.LEGAL.txt */\n"
+                        ));
+                    }
+                    legal_file = Some(legal::file_text(&comments).into_bytes());
+                }
+            }
+            LegalComments::Inline | LegalComments::None => {}
+        }
         // rolldown writes no map when nothing in the output maps to a source (an entry that only
         // imports externals); js.Build still publishes one naming the entry.
         let map = map.or_else(|| {
@@ -254,6 +282,7 @@ impl JsBuilder {
             target_path,
             code: code.into_bytes(),
             source_map,
+            legal: legal_file,
             warnings: built.warnings,
         })
     }
@@ -361,7 +390,19 @@ impl JsBuilder {
             globals: (o.format == Format::Iife).then(require_globals),
             // js.Build always writes one script, dynamic imports included.
             code_splitting: Some(CodeSplittingMode::Bool(false)),
-            legal_comments: Some(LegalComments::Inline),
+            // Legal comments stay (`eof` moves them afterwards: `legal::move_to_end`) unless
+            // `none`; minified, the annotations go too (`@__PURE__`, coverage hints: hints for a
+            // later minifier, and this is the last).
+            legal_comments: Some(if o.legal_comments == LegalComments::None {
+                RolldownLegalComments::None
+            } else {
+                RolldownLegalComments::Inline
+            }),
+            comments: Some(CommentsOptions {
+                legal: o.legal_comments != LegalComments::None,
+                annotation: !o.minify,
+                jsdoc: true,
+            }),
             // For ES5, namespace objects without `Symbol.toStringTag`, which would throw in
             // engines without `Symbol`.
             generated_code: (o.target == Target::Es5).then(GeneratedCodeOptions::es5),

@@ -267,6 +267,25 @@ impl ResourceStore {
             published.insert(target);
             stats.files += 1;
         }
+        // Realizing a pending transform above registers its companions (a source map, a legal
+        // comment file): they go with it.
+        for id in self.pipes.companions_of(&wanted) {
+            if wanted.contains(&id) {
+                continue;
+            }
+            let r = self.resource(id);
+            if r.policy == PublishPolicy::Never || published.contains(&r.target) {
+                continue;
+            }
+            let bytes = self.content(id)?;
+            sink.write(&r.target, &bytes)
+                .map_err(|source| ResourceError::Write {
+                    path: r.target.clone(),
+                    source,
+                })?;
+            published.insert(r.target.clone());
+            stats.files += 1;
+        }
         if !images.is_empty() {
             let queue = self.cfg.images.as_ref().ok_or_else(|| {
                 ResourceError::NotAnImage(
