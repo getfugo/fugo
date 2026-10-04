@@ -39,7 +39,7 @@ jobs:
       contents: read
       packages: write # push to ghcr.io
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # The release (the tag given, else the latest release) and the tags it moves: <version>
       # always; <major>.<minor>, <major> and latest when no published release of that line, or
@@ -88,14 +88,14 @@ jobs:
           } >>"$GITHUB_OUTPUT"
           echo "$TAG ($commit): $image:{${tags// /,}}"
 
-      - uses: docker/setup-qemu-action@v3
-      - uses: docker/setup-buildx-action@v3
+      - uses: docker/setup-qemu-action@v4
+      - uses: docker/setup-buildx-action@v4
 
       # The amd64 image, loaded to run it as a user would: the Dockerfile has already checked
       # that the binary runs and prints the version; this builds a tiny site, written as the
       # runner's user through a mounted directory, as the README says to.
       - name: Build (linux/amd64)
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           platforms: linux/amd64
@@ -115,14 +115,14 @@ jobs:
 
       - name: Log in to ghcr.io
         if: github.event_name == 'workflow_dispatch'
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ github.token }}
 
       - name: Build and push (linux/amd64, linux/arm64)
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           platforms: linux/amd64,linux/arm64
