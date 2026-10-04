@@ -1,5 +1,6 @@
-Every file of the Go build of the testsite: `python3 tools/rust-port/i01/sites.py make testsite
-<dir>`, then `hugo -d public` in <dir> with Go hugo built offline from this repository (026ce07c).
+Every file of the Go build of the testsite: `cargo dev sites make testsite <dir>` (at the time
+`tools/rust-port/i01/sites.py`), then `hugo -d public` in <dir> with Go hugo built offline from
+this repository (026ce07c).
 Go's 56th output, `hugo_stats.json`, is in the project directory, not in `public`. The footer
 year is `now.Year` (2026), which the Rust test pins with its clock. Regenerate after a change to
 the testsite: build it again and write `public` as txtar (sorted paths).

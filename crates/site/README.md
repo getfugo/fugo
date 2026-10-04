@@ -129,7 +129,7 @@ reviewed class of `expected_diffs.toml` (`[[class]]`, exact counts).
 | `build` | `oracle/sitebuild/build/*` (26 sites incl. the 9 build-* sites) | every (language, page, format) Go rendered is rendered here (1,647), its target is a file Go wrote (1,642 non-empty), pagers 2..N via `Model::pager_paths` are files Go wrote (344) |
 | `golden` | `testdata/golden/<site>/structure.json[.gz]` + `FUGO_SITES` | the structure oracle gate (targets and permalinks per (page, format), resource URLs per (page, name)); skips with a message without the dump (the golden data is frozen at 44529028) or the site; a self-test runs the reader |
 | `data`, `model` | as T23a | |
-| `real_sites` (ignored) | `sites.py make docs\|testsite` | `FUGO_SITES=<dir>:… cargo test -p ssg-site real_sites -- --ignored --nocapture`: page counts, made pages, terms, outputs, shared target files |
+| `real_sites` (ignored) | `cargo dev sites make docs\|testsite` | `FUGO_SITES=<dir>:… cargo test -p ssg-site real_sites -- --ignored --nocapture`: page counts, made pages, terms, outputs, shared target files |
 
 **Segment-aware prefix lookup**: every ancestor lookup (parent, sections, owners, lists, node
 dates, cascades) is segment-wise; on all 17 + 19 + 26 oracle sites it gives Go's result

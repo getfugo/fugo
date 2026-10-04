@@ -6613,6 +6613,30 @@ dependencies = [
 ]
 
 [[package]]
+name = "ssg-dev"
+version = "0.0.0-DEV"
+dependencies = [
+ "clap 4.6.7",
+ "crc32fast",
+ "entities",
+ "filetime",
+ "flate2",
+ "indexmap",
+ "pretty_assertions",
+ "regex",
+ "serde_json",
+ "sha2 0.11.0",
+ "ssg-base",
+ "ssg-workspace-hack",
+ "tar",
+ "tempfile",
+ "toml",
+ "unicode-normalization",
+ "unicode-properties",
+ "walkdir",
+]
+
+[[package]]
 name = "ssg-funcs"
 version = "0.0.0-DEV"
 dependencies = [
@@ -6642,6 +6666,7 @@ dependencies = [
 name = "ssg-highlight"
 version = "0.0.0-DEV"
 dependencies = [
+ "flate2",
  "quick-xml",
  "serde",
  "serde_json",

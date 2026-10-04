@@ -3,7 +3,7 @@
 //! the Go build of a real site (`testdata/golden/<site>/structure.json[.gz]`, written by
 //! T01's `structure` oracle) against the model of the same site.
 //!
-//! The site itself comes from `tools/rust-port/i01/sites.py make <site> <dir>`: set
+//! The site itself comes from `cargo dev sites make <site> <dir>`: set
 //! `FUGO_SITES=<dir>[:<dir>…]` (the directory's name is the site's name). Without the
 //! dump or the site the test says why it skips.
 //!
@@ -173,8 +173,8 @@ fn structure_oracle_targets_permalinks_resources() {
     }
     if checked == 0 {
         eprintln!(
-            "structure oracle: no site checked (needs FUGO_SITES=<dir made by sites.py> and \
-             testdata/golden/<site>/structure.json[.gz])"
+            "structure oracle: no site checked (needs FUGO_SITES=<dir of `cargo dev sites make`> \
+             and testdata/golden/<site>/structure.json[.gz])"
         );
     }
     t.finish("golden");

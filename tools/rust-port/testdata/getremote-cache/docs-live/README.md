@@ -1,7 +1,7 @@
 # GetRemote responses of the published docs build (docs-live)
 
-`sites.py cache docs-live <dir>` copies these into `<dir>/docs-live/filecache/getresource/`
-(a `.gz` file decompressed), the `--cacheDir` of gate A-D3 (`compare.sh docs-live`), whose
+`cargo dev sites cache docs-live <dir>` copies these into
+`<dir>/docs-live/filecache/getresource/` (a `.gz` file decompressed), the `--cacheDir` of gate A-D3 (`compare.sh docs-live`), whose
 build runs without network access. Each file is a cached response as fugo stores it (an HTTP
 response: status line, headers, blank line, body) under its cache key, the hash fugo derives
 from the URL and the request options. They are the responses the published site

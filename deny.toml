@@ -1,7 +1,7 @@
 # Licence policy of the Rust workspace (docs/rust-port/REWRITE_PLAN.md §5), in cargo-deny
-# format. tools/dev/licence-check.sh evaluates it (SPDX expressions, Python stdlib) at T00
-# and at every phase end; `cargo deny check licenses bans` can replace the script later without
-# redefining the policy.
+# format. `cargo dev licence-check` (crates/dev/src/licence.rs) evaluates it (SPDX expressions)
+# in CI's Lint job; `cargo deny check licenses bans` can replace it later without redefining
+# the policy.
 
 [graph]
 targets = ["x86_64-unknown-linux-gnu"]
@@ -23,6 +23,7 @@ allow = [
     "Unicode-3.0",
     "CDLA-Permissive-2.0", # webpki roots
     "MPL-2.0",             # lightningcss / cssparser (file-level copyleft)
+    "PSF-2.0",             # CPython's library ported in crates/dev (THIRD_PARTY/cpython)
 ]
 confidence-threshold = 0.93
 # Per-crate additions to the allowlist.

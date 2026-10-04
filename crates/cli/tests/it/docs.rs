@@ -4,8 +4,8 @@
 //! Gate A-D2 (REWRITE_PLAN.md §7.3, T66): the legacy docs site with the `reduced` docs
 //! patches, built by the binary against the committed golden data of the Go build
 //! (`testdata/golden/docs-reduced/`) through the acceptance harness:
-//! `tools/dev/compare.sh docs-reduced --ref golden` (`sites.py make docs-reduced --overlay
-//! sites/docs`, both passes, `structdiff.py` and the ratchet of
+//! `tools/dev/compare.sh docs-reduced --ref golden` (`cargo dev sites make docs-reduced --overlay
+//! sites/docs`, both passes, `cargo dev structdiff` and the ratchet of
 //! `testdata/baselines/docs-reduced.json`).
 //!
 //! The reduced variant keeps Chroma highlighting (with `hl` inline/`noClasses` and
@@ -42,7 +42,7 @@ fn gate_a_d2() {
 /// `testdata/golden/docs-live/` is the manifest of the published site's repository at a1928152,
 /// the Go build of 2025-10-13 (testdata/golden/README.md). One unminified
 /// pass (the site is published unminified) at that build's clock, its GetRemote responses
-/// from `sites.py cache docs-live`. The gate: L1 2372/2372, L2 and L4 on every file, every
+/// from `cargo dev sites cache docs-live`. The gate: L1 2372/2372, L2 and L4 on every file, every
 /// page's visible text (A7 1.0) and a clean ratchet (`testdata/baselines/docs-live.json`).
 #[test]
 fn gate_a_d3() {

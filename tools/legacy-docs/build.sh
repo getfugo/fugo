@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 # Builds the legacy docs site (testdata/legacy-docs, the test fixture that was docs/ until fugo
 # got its own documentation) with the binary, as https://getfugo.github.io/ published it:
-# the Tera overlay sites/docs (`sites.py make docs-live`, no patches) and the site's own node
-# modules (`npm ci` of testdata/legacy-docs/package.json with tools/legacy-docs/package-lock.json,
-# which resolves to the versions the published site was built with), the way the Go release
+# the Tera overlay sites/docs (`cargo dev sites make docs-live`, no patches) and the site's own
+# node modules (`npm ci` of testdata/legacy-docs/package.json with
+# tools/legacy-docs/package-lock.json, which resolves to the versions the published site was
+# built with), the way the Go release
 # workflow built it (`npm install`, then the Go version's build: no --minify, the production
 # environment, network access for GetRemote: GitHub stars and releases, X posts, a font).
 # Gate A-D3 (crates/cli/tests/it/docs.rs) compares this site with the published one. fugo's
@@ -68,11 +69,11 @@ command -v npm >/dev/null || { log "npm is needed (the docs site's Alpine.js and
 # The site: testdata/legacy-docs unpatched with the Tera overlay.
 site=$WORK/docs-live
 rm -rf "$site"
-python3 "$ROOT/tools/rust-port/i01/sites.py" make docs-live "$site" --overlay "$ROOT/sites/docs" >/dev/null
+(cd "$ROOT" && cargo run --quiet --locked -p ssg-dev -- sites make docs-live "$site" --overlay "$ROOT/sites/docs") >/dev/null
 
 # The docs site's node modules, installed once per lock file.
 lock=$HERE/package-lock.json
-lock_hash=$(python3 -c 'import hashlib, sys; print(hashlib.sha256(open(sys.argv[1], "rb").read()).hexdigest()[:16])' "$lock")
+lock_hash=$(sha256sum "$lock" | cut -c1-16)
 npm_dir=$WORK/npm-$lock_hash
 if [ ! -d "$npm_dir/node_modules" ]; then
 	log "installing the docs node modules (npm ci, tools/legacy-docs/package-lock.json)"

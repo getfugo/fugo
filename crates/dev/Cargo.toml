@@ -1,0 +1,48 @@
+[package]
+name = "ssg-dev"
+description = "The repository's tools: test sites, build manifests, structdiff, licence checks and release archives"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+autotests = false
+
+[lib]
+doctest = false
+test = false # tests live only in tests/it
+
+[[bin]]
+name = "ssg-dev"
+path = "src/main.rs"
+test = false
+doctest = false
+
+[[test]]
+name = "it"
+path = "tests/it/main.rs"
+
+[lints]
+workspace = true
+
+[dependencies]
+ssg-workspace-hack.workspace = true
+ssg-base.workspace = true
+clap.workspace = true
+serde_json.workspace = true
+toml.workspace = true
+indexmap.workspace = true
+regex.workspace = true
+unicode-normalization.workspace = true
+unicode-properties.workspace = true
+entities.workspace = true
+flate2.workspace = true
+tar.workspace = true
+crc32fast.workspace = true
+sha2.workspace = true
+filetime.workspace = true
+walkdir.workspace = true
+tempfile.workspace = true
+
+[dev-dependencies]
+pretty_assertions.workspace = true

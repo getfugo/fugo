@@ -1,17 +1,21 @@
 # tools/rust-port
 
-Site inputs for fugo's acceptance harness. The comparison itself lives in `tools/dev/`
-(`compare.sh`, `structdiff.py`, `manifest.py`; see `docs/rust-port/HANDOFF.md`).
+Site inputs for fugo's acceptance harness. The comparison itself is `tools/dev/compare.sh` with
+the commands of ssg-dev (`crates/dev`: `sites`, `manifest`, `structdiff`; see
+`docs/rust-port/HANDOFF.md`).
 
-- `i01/sites.py` generates every test site outside the repository (`make`, `cache`, `list`) and
-  keeps `i01/patches.json` and the Tera patch files of `sites/docs/patches/` in step
-  (`patches [--check]`). `tools/dev/compare.sh` and the gate tests in
-  `crates/cli/tests/it/` call it, as `tools/dev/oracle.sh` (at `44529028`) did for the golden data.
+- `cargo dev sites` (`crates/dev/src/sites.rs`) generates every test site outside the repository
+  (`make`, `cache`, `list`). `tools/dev/compare.sh` and the gate tests in
+  `crates/cli/tests/it/` use it, as `tools/dev/oracle.sh` (at `44529028`) did for the golden
+  data, with the site generator of that time (`tools/rust-port/i01/sites.py`).
+- `i01/patches.json`: the edits of the legacy docs site per variant (i01, reduced, live), in
+  the order they are applied. `cargo dev sites patches` rewrites it in its canonical form and
+  checks it against the Tera patch files of `sites/docs/patches/` (a test of ssg-dev too).
 - `i01/testsite.txtar`, `i01/errors.txtar`: inputs of the testsite and the error-text site
-  (`sites.py make`).
+  (`cargo dev sites make`).
 - `testdata/getremote-cache/docs-live/`: the GetRemote responses of the published docs build
-  (its README.md lists them); `sites.py cache docs-live` serves them, and `sites.py cache mini`
-  serves the mini site's entry from `testdata/oracle/commands/e2e/e2e.json.gz`.
+  (its README.md lists them); `cargo dev sites cache docs-live` serves them, and `cargo dev
+  sites cache mini` serves the mini site's entry from `testdata/oracle/commands/e2e/e2e.json.gz`.
 
 **Golden data.** The reference of every comparison is what the Go version built, frozen since
 the Go implementation was removed after commit `44529028`:

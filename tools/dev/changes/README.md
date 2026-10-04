@@ -1,6 +1,6 @@
 # Ratchet changes (`tools/dev/changes/<task-id>.md`)
 
-The acceptance comparison (`tools/dev/compare.sh`, `tools/dev/structdiff.py`;
+The acceptance comparison (`tools/dev/compare.sh`, `cargo dev structdiff`;
 docs/rust-port/REWRITE_PLAN.md §7.2) compares the Rust build of a site with the golden data of the
 Go build (`testdata/golden/`, frozen at `44529028`), file by file and level by level, and
 checks the result against the site's **baseline** (`testdata/baselines/<label>.json`). A task
@@ -12,7 +12,7 @@ unlisted new or changed difference fails the run.**
 tools/dev/compare.sh docs-reduced --task T66            # compare; fails on unlisted changes
 tools/dev/compare.sh docs-reduced --task T66 --update   # also write the baseline (listed changes)
 tools/dev/compare.sh docs-reduced --report-only         # the numbers, never fails
-tools/dev/structdiff.py changes                      # validate every changes file
+cargo dev structdiff changes                            # validate every changes file
 ```
 
 ## Entries
@@ -33,8 +33,8 @@ One Markdown list item per entry; every other line (headings, prose) is free tex
 - `<levels>`: one or more of `L1`, `L2`, `L3`, `L4`, `S`, comma-separated.
 - `<key>`: what changed, in backticks: a file (its path below `publishDir` after the L1
   normalisation, e.g. `images/x_hu_H.jpg`; `project:<name>` for a project file, the stats file
-  under the Go build's name, `GO_STATS_KEY` of `manifest.py`, which `project:*` matches; `dir/**`
-  for a collapsed collision directory at L1) or a structure fact (`record <lang> <path> <kind> <format>`,
+  under the Go build's name, which `project:*` matches (structdiff leaves those entries out since
+  T75); `dir/**` for a collapsed collision directory at L1) or a structure fact (`record <lang> <path> <kind> <format>`,
   `alias <file> <lang> <path> <format>`, `pager <file> <lang> <path> <format>`,
   `resource <lang> <path> <name>`, `page <lang> <path> <kind>`), exactly as the report and
   `structdiff.json` print them. Shell-style wildcards (`*`, `?`, `[…]`; `*` also matches `/`)

@@ -6,4 +6,5 @@ mod fence;
 mod golden;
 mod lexers;
 mod oracle;
+mod testdata;
 mod xml2rust;

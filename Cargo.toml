@@ -131,6 +131,9 @@ url = "2.5"
 # across render threads.
 rquickjs = { version = "0.14", default-features = false, features = ["std", "parallel"] }
 emojis = "0.8"         # emojify (T31); already locked through comrak `shortcodes`
+# ssg-dev: the HTML5 named character references of the manifest extractor; already locked
+# through comrak
+entities = "1"
 
 # ── time & locale (ICU4X, Unicode-3.0) ──
 jiff = { version = "0.2.37", features = ["serde"] }

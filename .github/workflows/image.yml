@@ -56,7 +56,7 @@ jobs:
           if [ -z "$TAG" ]; then
             TAG=$(gh release view --json tagName --jq .tagName)
           fi
-          version=$(python3 tools/dev/version.py tag "$TAG")
+          version=$(tools/dev/version.sh tag "$TAG")
           commit=$(gh api "repos/$GH_REPO/commits/$TAG" --jq .sha)
           major=${version%%.*}
           minor=${version#*.}
