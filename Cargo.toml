@@ -6,6 +6,8 @@
 [workspace]
 resolver = "3"
 members = ["crates/*"]
+# Vendored third-party crates: path dependencies, not members (PROVENANCE.md).
+exclude = ["vendor/grass_compiler"]
 
 [workspace.package]
 # The version of builds not made from a release tag: a release takes its tag's (ssg_base::VERSION;
@@ -271,3 +273,8 @@ zerotrie = { version = "0.2", default-features = false, features = ["alloc", "yo
 serde_core = { version = "1", features = ["alloc", "rc", "result", "std"] }
 allocator-api2 = { version = "0.2", features = ["alloc", "std"] }
 zerovec = { version = "0.11", default-features = false, features = ["alloc", "derive", "yoke"] }
+
+# grass's compiler, vendored to carry fixes (vendor/grass_compiler, PROVENANCE.md): grass has had
+# no release since 0.13.4.
+[patch.crates-io]
+grass_compiler = { path = "vendor/grass_compiler" }
