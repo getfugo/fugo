@@ -717,7 +717,7 @@ fn default_mounts_follow_the_dirs() {
 }
 
 /// Discovery on whole sites: `FUGO_VFS_SITES=<dir>:<dir> cargo test -p ssg-vfs --
-/// --ignored discover_sites` (sites from `tools/rust-port/i01/sites.py make <site> <dir>`).
+/// --ignored discover_sites` (sites from `cargo dev sites make <site> <dir>`).
 #[test]
 #[ignore = "needs FUGO_VFS_SITES"]
 fn discover_sites() {

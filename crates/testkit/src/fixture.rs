@@ -118,7 +118,7 @@ pub const UPSTREAM: [&str; 5] = [
 pub const LEGACY_WORKSPACE: &str = "rust";
 
 /// The legacy docs site (the Go implementation's documentation, as this repository's Go tree had
-/// it in `docs/`): a frozen fixture of the docs gates (`tools/rust-port/i01/sites.py`) and of the
+/// it in `docs/`): a frozen fixture of the docs gates (`cargo dev sites make docs`) and of the
 /// tests that read its content, config and assets. It moved here when `docs/` became this
 /// project's own documentation; fixtures still name its files `docs/...` (see [`repo_file`]).
 pub const LEGACY_DOCS: &str = "testdata/legacy-docs";
@@ -293,9 +293,9 @@ pub fn oracle_lines<T: DeserializeOwned>(rel: &str) -> Vec<T> {
     read_jsonl(&testdata(rel)).unwrap_or_else(|e| panic!("{e}"))
 }
 
-/// The record count of a fixture, as `tools/dev/fixtures2json.py` defines it: the number of
-/// lines of a JSONL file, the length of a top-level array, or for a top-level object the sum
-/// over its members of their length (arrays and objects) or 1.
+/// The record count of a fixture, as the fixture schema defines it (DEVELOPMENT.md, "Test data:
+/// the fugo schema"): the number of lines of a JSONL file, the length of a top-level array, or
+/// for a top-level object the sum over its members of their length (arrays and objects) or 1.
 #[must_use]
 pub fn records(layout: Layout, doc: &[Value]) -> usize {
     let len = |v: &Value| match v {

@@ -17,8 +17,8 @@
 Go wrapped a config section in its keys with `dict $sections $section`; here each key wraps
 it, innermost first, with `[[key, value]] | from_pairs` (map literal keys are constants).
 
-The i01 variant (sites.py DOCS_REPLACE): no highlighting (the code is escaped into a plain
-<pre><code>), and every tab shows JSON (remarshal → "json").
+The i01 variant (tools/rust-port/i01/patches.json): no highlighting (the code is escaped into a
+plain <pre><code>), and every tab shows JSON (remarshal → "json").
 -#}
 {#- Get parameters. #}
 {%- set config = shortcode | arg(name="config", default="") %}

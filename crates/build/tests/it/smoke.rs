@@ -1,6 +1,6 @@
 //! Manual smoke builds of real sites (ignored): `FUGO_SITES=<dir>[:<dir>…] cargo test -p
 //! ssg-build smoke -- --ignored --nocapture` with directories from
-//! `tools/rust-port/i01/sites.py make <site> <dir>` (Tera layouts copied over for the sites
+//! `cargo dev sites make <site> <dir>` (Tera layouts copied over for the sites
 //! that have them in `sites/<site>`). Prints the report or the error of each build.
 
 use std::path::PathBuf;

@@ -1,7 +1,7 @@
 //! The structure dump (REWRITE_PLAN.md §6.4, §7.2): with `FUGO_STRUCTURE_OUT=<file>` in the
 //! environment, [`build`](crate::build) writes what it did in the schema of the Go structure
 //! oracle (`ssg-structure/1`, `testdata/golden/README.md`), which
-//! `tools/dev/structdiff.py` and our parity test compare with Go's dump of the same
+//! `cargo dev structdiff` and our parity test compare with Go's dump of the same
 //! site. Without the variable nothing is recorded.
 //!
 //! - `records`: every page and standalone job of wave 1 (pager 1 of a paginated page) per

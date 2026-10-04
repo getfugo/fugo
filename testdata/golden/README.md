@@ -28,7 +28,7 @@ ones the Rust tests use.
 
 ## Labels and file counts
 
-| Label | Site (`tools/rust-port/i01/sites.py make <label> <dir>`) | Files (L1) | Golden files |
+| Label | Site (`cargo dev sites make <label> <dir>`) | Files (L1) | Golden files |
 |---|---|---:|---|
 | `testsite` | `testdata/upstream/testsite` + `testsite.txtar` | **56** = 55 in `public` + the stats file | manifests, structure |
 | `docs-i01` | `testdata/legacy-docs/` (the legacy docs site) with `--docs-patches i01` | **888** = 887 in `public` + the stats file | manifests, structure |
@@ -39,7 +39,7 @@ ones the Rust tests use.
 The Go build writes its stats file into the project directory (next to its configuration file),
 not into `publishDir`; the manifests list it under a `project:` key, the Go build's file name,
 and count it, as the old port's harness did (it copied the file into the output tree). A count
-without it is one less. Since T75 fugo writes no stats file, and `tools/dev/structdiff.py`
+without it is one less. Since T75 fugo writes no stats file, and structdiff (`cargo dev structdiff`)
 leaves the `project:` entries out: the gates compare 55, 887, 888 and 2372 files.
 
 `docs-reduced` has one page more than `docs-i01`: `content/en/shortcodes/highlight.md` is removed
@@ -55,14 +55,14 @@ Go release workflow wrote with `npm install` and the Go version's build in the d
 0.149.0-DEV, no `--minify`, the production environment, network access) — from the same legacy
 docs content this repository has. Gate A-D3 (`crates/cli/tests/it/docs.rs`, `compare.sh docs-live`) compares the
 Rust build of those docs (`testdata/legacy-docs/`, the Go tree's `docs/`) without patches with it. To regenerate (the published files are frozen
-at that commit; the manifest only changes with manifest.py):
+at that commit; the manifest only changes with the extractor, `cargo dev manifest extract`):
 
 ```sh
 git clone https://github.com/getfugo/getfugo.github.io <pub>
 git -C <pub> checkout a1928152d8320bfa4db9b363298d038c9841f4a1 && rm -rf <pub>/.git
-python3 tools/rust-port/i01/sites.py make docs-live <proj>/docs-live    # base URL, static/
+cargo dev sites make docs-live <proj>/docs-live                        # base URL, static/
 cp testdata/legacy-docs/<stats file> <proj>/docs-live/build_stats.json   # the Go build's stats (below)
-python3 tools/dev/manifest.py extract <pub> --project <proj>/docs-live --levels L1,L2,L3,L4 \
+cargo dev manifest extract <pub> --project <proj>/docs-live --levels L1,L2,L3,L4 \
   --site docs-live --pass unminified --full-text -o testdata/golden/docs-live/manifest.unminified.json.gz
 ```
 
@@ -74,14 +74,15 @@ structure dump (the published site has none). The project file is the stats file
 and committed with that content.
 The candidate builds at the clock of the published build, `2025-10-13T15:00:00Z` (13 deprecated
 pages have an `expiryDate` between then and today), with the GetRemote responses of that day
-(`sites.py cache docs-live`, `tools/rust-port/testdata/getremote-cache/docs-live/README.md`).
+(`cargo dev sites cache docs-live`, `tools/rust-port/testdata/getremote-cache/docs-live/README.md`).
 
 ## How the Go builds run
 
-Per label and pass, `sites.py` writes the site afresh outside the repository, and the Go binary
+Per label and pass, the site generator (then `tools/rust-port/i01/sites.py`, now `cargo dev sites
+make`) writes the site afresh outside the repository, and the Go binary
 builds it from the site directory with `--clock 2026-09-27T12:00:00Z [--minify] -d <out>` in a
 clean environment: `HOME` and the Go program's cache-directory environment variable in the work
-directory (the cache holds the site's golden GetRemote entries, `sites.py cache <label>`),
+directory (the cache holds the site's golden GetRemote entries, `sites cache <label>`),
 `TZ=UTC`, its worker-multiplier variable at 1 (one last writer for colliding targets), every proxy variable pointing at a refusing port
 (`127.0.0.1:9`: outbound HTTP disabled, GetRemote is served from the cache or fails), and the
 node modules as a `node_modules` symlink in the site plus `node_modules/.bin` on `PATH`.
@@ -197,8 +198,9 @@ format). Read by
 
 ## `manifest.<pass>.json` (schema `ssg-manifest/1`)
 
-Written by `tools/dev/manifest.py extract` over the output directory (the same extractor
-runs over the Rust output):
+Written by the manifest extractor over the output directory (then `tools/dev/manifest.py
+extract`; now `cargo dev manifest extract`, which reads the same facts from a build; the same
+extractor runs over the Rust output):
 
 ```json
 {
@@ -238,7 +240,7 @@ runs over the Rust output):
   fragment kept (`/functions/images/mask/#usage`); external URLs are kept whole.
 - **L3** (unminified pass): `html`: `text` (the visible text: tags, comments, `script` and
   `style` removed, entities decoded, typographic quotes/dashes/ellipsis/nbsp mapped to ASCII,
-  whitespace collapsed; its `sha256`, `len` in characters and `words`; `manifest.py
+  whitespace collapsed; its `sha256`, `len` in characters and `words`; `manifest extract
   --full-text` adds the text as `t`) and `ids` (the `id`s of `h1`–`h6` in document order);
   `stats`: the `tags`, `classes` and `ids` sets of the stats file.
 - **L4** (minified pass): `size` and `sha256` of every file, `static: true` for files that
@@ -246,7 +248,7 @@ runs over the Rust output):
   header (`jpeg`, `png`, `webp`, `gif`, `bmp`, `ico`); `css`/`js`: `nonEmpty` and
   `referenced` (some HTML page links it).
 
-`manifest.py summary <file>…` prints the counts of manifests and structure dumps.
+`cargo dev manifest summary <file>…` prints the counts of manifests and structure dumps.
 
 ## `images/`
 
@@ -257,17 +259,19 @@ runs over the Rust output):
 applies to the previous result; filter `image` paths are relative to the repository root; no
 per-recipe `imaging`, all use the default `[imaging]`). Paths recorded below `rust/` (where the
 workspace was until it moved to the root) are read without that prefix (`repo_file` of
-`ssg_testkit::fixture` and of `sites.py`). `oracle.sh images` (44529028) writes the
-recipes as a Go site (`sites.py make images`: `.Process` for a spec, `images.Filter` with the
+`ssg_testkit::fixture` and of `ssg_dev::sites`). `oracle.sh images` (44529028) writes the
+recipes as a Go site (`cargo dev sites make images`: `.Process` for a spec, `images.Filter` with the
 `images.*` functions for filters), builds it with the Go binary and copies each result here
 under its `golden` name.
 
 ## Docs patch variants: `tools/rust-port/i01/patches.json`
 
-Not in this directory: `sites.py patches` writes it next to `sites.py` from its `DOCS_REMOVE`,
-`DOCS_REPLACE` and `DOCS_WRITE` lists, and `sites.py patches --check` (which `oracle.sh sites`
-ran before the docs labels) asserts that it is current and that the Tera patch files of
-`sites/docs/patches/<variant>/` correspond 1:1 to its layout entries. Schema
+Not in this directory: the edits of the docs site per variant, applied by `cargo dev sites make
+docs-<variant>` (until v1.0.0 generated from the `DOCS_REMOVE`, `DOCS_REPLACE` and `DOCS_WRITE`
+lists of `tools/rust-port/i01/sites.py`, which `oracle.sh sites` ran before the docs labels).
+`cargo dev sites patches [--check]` (and a test of ssg-dev) asserts that it is in its canonical
+form and that the Tera patch files of `sites/docs/patches/<variant>/` correspond 1:1 to its
+layout entries. Schema
 `ssg-docs-patches/1`: `variants` (`["i01", "reduced", "live"]`; `live` has no patches but the
 removal of the committed stats file) and `patches`, in application order,
 each `{"op": "remove" | "replace" | "write", "file": "<path in the site>", "old"/"new"

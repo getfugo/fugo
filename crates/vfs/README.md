@@ -85,7 +85,8 @@ Mounts → one union file view per component, walkers, ignore rules and the path
   mounts below a component and single-file mounts, ignore rules, filters, disabled and unknown
   mount languages, symlinks, leaf bundles, duplicates, NFC names on macOS
   (`file_names_are_nfc_on_macos`; the normalisation itself is unit-tested on every platform).
-- `walk::discover_sites` (ignored; `FUGO_VFS_SITES=<dir>:…`): whole `sites.py` sites.
+- `walk::discover_sites` (ignored; `FUGO_VFS_SITES=<dir>:…`): whole sites of
+  `cargo dev sites make`.
 
 ## Accepted deviations
 

@@ -3,8 +3,8 @@
 //! `structdiff.json` (REWRITE_PLAN.md §7.2, §7.3). The Go binaries are not needed.
 //!
 //! The sites' scripts import node modules (`tools/dev/node.sh`, which compare.sh links into each
-//! site as its `node_modules`); without them, or without `python3` and `bash`, [`compare`]
-//! prints `SKIPPED` and returns `None`.
+//! site as its `node_modules`); without them, or without `bash`, [`compare`] prints `SKIPPED`
+//! and returns `None`. compare.sh builds the harness's tools (ssg-dev) with cargo.
 
 use std::process::Command;
 
@@ -25,8 +25,8 @@ fn tools(gate: &str) -> Option<()> {
         eprintln!("SKIPPED {gate}: {why}");
         None
     };
-    if !runs("python3") || !runs("bash") {
-        return skip("python3 and bash are needed on PATH".to_owned());
+    if !runs("bash") {
+        return skip("bash is needed on PATH".to_owned());
     }
     let Some(node_modules) = ssg_testkit::fixture::node_tools() else {
         return skip("tools/dev/node.sh does not run".to_owned());

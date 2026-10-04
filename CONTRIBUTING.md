@@ -53,7 +53,7 @@ If it is of some complexity, the contributor is expected to maintain and support
 Any non-trivial code change needs to update an open [issue](https://github.com/getfugo/fugo/issues). A non-trivial code change without an issue reference with one of the labels `type: bug` or `type: feature` (the labels the issue templates apply) will not be merged.
 
 A new third-party crate goes into `[workspace.dependencies]` of `Cargo.toml` (members
-never add their own `features =`) and must pass `tools/dev/licence-check.sh`, which allows
+never add their own `features =`) and must pass `cargo dev licence-check`, which allows
 only the licences of `deny.toml`. Code or data taken from another project needs a row in
 `PROVENANCE.md` first (and its licence in `THIRD_PARTY/` when cargo cannot see it);
 Zola 0.22 and later (EUPL-1.2) must not be opened or copied.
@@ -90,7 +90,7 @@ the most important part being that each commit message should have a title/subje
 Most title/subjects should have a lower-cased prefix with a colon and one whitespace. The prefix can be:
 
 * The name of the crate where (most of) the changes are made, as its directory in `crates/` names it (e.g. `images: Add the dither filter`)
-* For a change outside `crates`, the area: `CI` (`.github/workflows`), `harness` (`tools/dev`), `sites.py`, `provenance`, `docs`.
+* For a change outside `crates`, the area: `CI` (`.github/workflows`), `harness` (`tools/dev`, `tools/rust-port`), `provenance`, `docs`.
 * If this commit touches several crates with a common functional topic, use that as a prefix, e.g. `errors: Resolve correct line numbers`)
 * If this commit touches many crates without a common functional topic, prefix with `all:` (e.g. `all: Apply the clippy lints of Rust 1.95`)
 * If this is a documentation update, prefix with `docs:`.
@@ -171,15 +171,13 @@ To run the tests of the crate you are working on (package `ssg-<crate>`; `crates
 cargo test -p ssg-<crate>
 ```
 
-The checks of the CI workflow, from the repository root (the last one checks the docs patches of `tools/rust-port/i01/patches.json` against `sites/docs/patches/`):
+The checks of the CI workflow, from the repository root (the tests include those of the harness's tools, `crates/dev`: structdiff's self-test and the check of the docs patches of `tools/rust-port/i01/patches.json` against `sites/docs/patches/`):
 
 ```bash
 cargo fmt --all --check
 cargo clippy --workspace --all-targets --locked -- -D warnings
 cargo test --workspace --locked --no-fail-fast -- --show-output
-tools/dev/licence-check.sh
-python3 tools/dev/selftest.py
-python3 tools/rust-port/i01/sites.py patches --check
+cargo dev licence-check
 ```
 
 The docs gates need the node modules the legacy docs site imports (Alpine.js, Turbo). Without them a gate prints `SKIPPED` and passes, so look for `SKIPPED` in the output before trusting a green run. To install them once (network, npm) into `tools/dev/node_modules` of the main checkout, where the tests find them:
@@ -188,4 +186,4 @@ The docs gates need the node modules the legacy docs site imports (Alpine.js, Tu
 tools/dev/node.sh
 ```
 
-The tests compare fugo with the Go implementation through data it generated: the oracle fixtures (`testdata/oracle/`), the golden data of the test sites (`testdata/golden/`), `crates/build/tests/it/testsite-go.txtar`, `crates/highlight/tests/data/` with `crates/highlight/src/data/chroma-lexers.tsv`, `crates/funcs/tests/fixtures/remarshal/go.txt`, and `docs/data/docs.yaml` (written by the Go binary's `gen docshelper`). It is frozen at commit `44529028`, the last commit with the Go tree: do not edit it. The same holds for the Go outputs the old port recorded at `be02933a`, such as `testdata/corpus/minify/*.tsv` (`PROVENANCE.md`). To regenerate the data of `44529028`, run the old recipe in a worktree of that commit (`git worktree add <dir> 44529028`; `testdata/golden/README.md`, `crates/highlight/README.md`, `tools/dev/fixtures2json.py`) and copy the result back.
+The tests compare fugo with the Go implementation through data it generated: the oracle fixtures (`testdata/oracle/`), the golden data of the test sites (`testdata/golden/`), `crates/build/tests/it/testsite-go.txtar`, `crates/highlight/tests/data/` with `crates/highlight/src/data/chroma-lexers.tsv`, `crates/funcs/tests/fixtures/remarshal/go.txt`, and `docs/data/docs.yaml` (written by the Go binary's `gen docshelper`). It is frozen at commit `44529028`, the last commit with the Go tree: do not edit it. The same holds for the Go outputs the old port recorded at `be02933a`, such as `testdata/corpus/minify/*.tsv` (`PROVENANCE.md`). To regenerate the data of `44529028`, run the old recipe in a worktree of that commit (`git worktree add <dir> 44529028`; `testdata/golden/README.md`, `crates/highlight/README.md`, and for oracle fixtures the conversion of DEVELOPMENT.md, "Test data: the fugo schema") and copy the result back.

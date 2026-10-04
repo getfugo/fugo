@@ -55,10 +55,10 @@ fn cascade_index_nearest_branch() {
 }
 
 /// Loading twice gives the same model (parallel capture and meta are order-independent).
-/// Real sites written by `tools/rust-port/i01/sites.py make <site> <dir>`: set
+/// Real sites written by `cargo dev sites make <site> <dir>`: set
 /// `FUGO_SITES=<dir>[:<dir>…]` and run with `--ignored`.
 #[test]
-#[ignore = "needs sites written by sites.py (FUGO_SITES)"]
+#[ignore = "needs sites written by `cargo dev sites make` (FUGO_SITES)"]
 fn real_sites() {
     let dirs = std::env::var("FUGO_SITES").expect("FUGO_SITES");
     for dir in dirs.split(':') {

@@ -183,7 +183,7 @@ Output: a header line, the diagnostics, the coverage listing, `N error(s), M war
 | `embedded::embedded_template_errors` | argument errors and warnings of the embedded templates (snapshot `errors`) |
 | `embedded::goat_code_block` | the goat code block hook, byte-identical to Go's output (`diagrams.Goat`'s bytes): `viewBox` of GoAT's size, `width`/`class` attributes, GoAT's SVG |
 | `embedded::qr_shortcode_equals_go_s` | the `qr` shortcode against Go's `TestQRShortcode`: image names, sizes and attributes; images published |
-| `build::testsite_matches_go` | `sites.py`'s testsite with `sites/testsite/layouts`, built by the binary with compare.sh's command line (`--clock … -d …`, no command) and with `build --source … --destination … --cleanDestinationDir -q`: **55/55 files byte-identical** to `crates/build/tests/it/testsite-go.txtar` |
+| `build::testsite_matches_go` | the testsite of `cargo dev sites make` with `sites/testsite/layouts`, built by the binary with compare.sh's command line (`--clock … -d …`, no command) and with `build --source … --destination … --cleanDestinationDir -q`: **55/55 files byte-identical** to `crates/build/tests/it/testsite-go.txtar` |
 | `build::flags_and_environment` | every configuration flag in both spellings, `-e`, no environment variable read (not the environment, not settings), `-M` writes nothing |
 | `build::explicit_false_overrides_the_configuration` | `-D=false`, `--buildFuture=f` and `--cleanDestinationDir=false` against `buildDrafts`, `buildFuture` and `cleanDestinationDir = true` in the configuration: drafts and future pages left out, a stale file kept |
 | `build::errors_are_reported_with_positions` | render and syntax errors with `file:line:col` and snippet, diagnostics, a missing project: exit 1 |

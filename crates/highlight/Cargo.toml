@@ -32,5 +32,7 @@ unicode-properties.workspace = true
 ssg-testkit.workspace = true
 # The converter of Chroma's XML lexers and styles to Rust (tests/it/xml2rust.rs).
 quick-xml.workspace = true
+# The writer of the Chroma test-suite fixture (tests/it/testdata.rs).
+flate2.workspace = true
 serde.workspace = true
 serde_json.workspace = true

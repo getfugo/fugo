@@ -48,7 +48,7 @@ fn write_txtar(archive: &str, to: &Path) {
     }
 }
 
-/// The testsite as `sites.py make testsite` writes it, with the Tera layouts of
+/// The testsite as `cargo dev sites make testsite` writes it, with the Tera layouts of
 /// `sites/testsite/layouts` (as ssg-build's skeleton test builds it).
 pub fn testsite(dir: &Path) {
     let root = repo_dir();

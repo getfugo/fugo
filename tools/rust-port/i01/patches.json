@@ -1,5 +1,5 @@
 {
-"about": "Written by tools/rust-port/i01/sites.py (`sites.py patches`) from its DOCS_REMOVE, DOCS_REPLACE and DOCS_WRITE lists: the edits of the docs site per variant. `tera` is the file below sites/docs/patches/<variant>/ that mirrors a layout patch in the Tera overlay (null: the patch changes the site input both builds share).",
+"about": "The edits of the legacy docs site per variant, in the order `cargo dev sites make docs-<variant>` applies them (crates/dev/src/sites.rs): `remove` a file, `replace` the one occurrence of `old` with `new`, or `write` `content`. `tera` is the file below sites/docs/patches/<variant>/ that mirrors a layout patch in the Tera overlay (null: the patch changes the site input both builds share). `cargo dev sites patches` rewrites this file in its canonical form (sorted keys, one patch per line) and checks it against the Tera patch files.",
 "patches": [
 {"file": "content/en/news/_content.gotmpl", "op": "remove", "tera": null, "variants": ["i01", "reduced"], "why": "GetRemote of GitHub releases (a content adapter)"},
 {"file": "content/en/functions/images/Text.md", "op": "remove", "tera": null, "variants": ["i01", "reduced"], "why": "GetRemote of a font (images.Text)"},

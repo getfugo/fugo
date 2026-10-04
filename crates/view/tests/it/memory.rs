@@ -1,4 +1,4 @@
-//! Real sites (`tools/rust-port/i01/sites.py make <site> <dir>`): the Meta generation and two
+//! Real sites (`cargo dev sites make <site> <dir>`): the Meta generation and two
 //! Full generations (`Html` and a format variant) for every page, every documented key, list
 //! sharing, and the heap the views keep compared with the model's (dhat).
 //!
@@ -211,7 +211,7 @@ fn check_site(dir: &Path) {
 }
 
 #[test]
-#[ignore = "needs sites written by sites.py (FUGO_SITES)"]
+#[ignore = "needs sites written by `cargo dev sites make` (FUGO_SITES)"]
 fn real_sites() {
     let dirs = std::env::var("FUGO_SITES").expect("FUGO_SITES");
     let _profiler = dhat::Profiler::builder().testing().build();
