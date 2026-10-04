@@ -6,8 +6,6 @@
 [workspace]
 resolver = "3"
 members = ["crates/*"]
-# Vendored third-party crates: path dependencies, not members (PROVENANCE.md).
-exclude = ["vendor/grass_compiler"]
 
 [workspace.package]
 # The version of builds not made from a release tag: a release takes its tag's (ssg_base::VERSION;
@@ -60,7 +58,7 @@ opt-level = 3
 opt-level = 3
 [profile.dev.package.libwebp-sys] # the C build reads this crate's opt-level, not webp's
 opt-level = 3
-[profile.dev.package.grass]
+[profile.dev.package.fugo-sass]
 opt-level = 3
 # minify-html's parser `debug_assert`s that a raw-text element's end tag has its name, which
 # `<script>x</scriptx>` violates (release builds accept it); T26 needs dev to behave like release.
@@ -151,7 +149,8 @@ mime_guess = "2"
 filetime = "0.2"
 
 # ── css / js / html output ──
-grass = { version = "0.13.4", default-features = false, features = ["random"] }
+# fugo-sass: grass, forked by the fugo project (github.com/getfugo/fugo-sass); its API is grass's.
+grass = { package = "fugo-sass", version = "0.14.0", default-features = false, features = ["random"] }
 minify-html = "0.18.1"
 lightningcss = { version = "1.0.0-alpha.72", default-features = false, features = ["browserslist"] }
 browserslist-rs = "0.19" # the project's browserslist configuration → lightningcss targets
@@ -275,8 +274,3 @@ zerotrie = { version = "0.2", default-features = false, features = ["alloc", "yo
 serde_core = { version = "1", features = ["alloc", "rc", "result", "std"] }
 allocator-api2 = { version = "0.2", features = ["alloc", "std"] }
 zerovec = { version = "0.11", default-features = false, features = ["alloc", "derive", "yoke"] }
-
-# grass's compiler, vendored to carry fixes (vendor/grass_compiler, PROVENANCE.md): grass has had
-# no release since 0.13.4.
-[patch.crates-io]
-grass_compiler = { path = "vendor/grass_compiler" }

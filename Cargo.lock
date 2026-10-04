@@ -2012,6 +2012,30 @@ dependencies = [
 ]
 
 [[package]]
+name = "fugo-sass"
+version = "0.14.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6a6de00a8cc8a1c4ba3e4f107618f9f2a02b6a569038695cb55068ac87ed3eba"
+dependencies = [
+ "fugo-sass-compiler",
+ "getrandom 0.2.17",
+]
+
+[[package]]
+name = "fugo-sass-compiler"
+version = "0.14.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0bcc8f4287de0413ed4e27d2bd6849eebeaad829b609209ac63a83fc8f94a3ad"
+dependencies = [
+ "codemap",
+ "indexmap",
+ "lasso",
+ "once_cell",
+ "phf 0.11.3",
+ "rand 0.8.8",
+]
+
+[[package]]
 name = "funty"
 version = "2.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2221,28 +2245,6 @@ checksum = "e20f99e46474f56bd905c56e817ebddcf377a611f94c53ac4649e4d3fa3c0cd0"
 dependencies = [
  "arraydeque",
  "smallvec",
-]
-
-[[package]]
-name = "grass"
-version = "0.13.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f7a68216437ef68f0738e48d6c7bb9e6e6a92237e001b03d838314b068f33c94"
-dependencies = [
- "getrandom 0.2.17",
- "grass_compiler",
-]
-
-[[package]]
-name = "grass_compiler"
-version = "0.13.4"
-dependencies = [
- "codemap",
- "indexmap",
- "lasso",
- "once_cell",
- "phf 0.11.3",
- "rand 0.8.8",
 ]
 
 [[package]]
@@ -6966,7 +6968,7 @@ name = "ssg-resources"
 version = "0.0.0-DEV"
 dependencies = [
  "base64 0.23.1",
- "grass",
+ "fugo-sass",
  "md-5",
  "mime_guess",
  "serde_json",
