@@ -152,7 +152,7 @@ filetime = "0.2"
 grass = { version = "0.13.4", default-features = false, features = ["random"] }
 minify-html = "0.18.1"
 lightningcss = { version = "1.0.0-alpha.72", default-features = false, features = ["browserslist"] }
-browserslist-rs = "0.19" # the project's browserslist configuration → lightningcss targets
+browserslist-rs = "0.21" # the project's browserslist configuration → lightningcss targets
 oxc_minifier = "0.95" # lockstep with minify-html's oxc
 oxc_allocator = "0.95" # the oxc pipeline around oxc_minifier (T26), same lockstep
 oxc_parser = "0.95"
