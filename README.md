@@ -97,7 +97,7 @@ v1.0.0 replaces the Go build, under a new name and its own version numbers. What
 
 Prerequisites to build fugo from source:
 
-- Rust 1.96 or later (`rust-version` in `Cargo.toml`; CI builds with 1.99.0)
+- Rust 1.99 or later (`rust-version` in `Cargo.toml`, which CI builds with)
 - A C compiler (libwebp and ring are compiled with the `cc` crate)
 
 Build fugo:

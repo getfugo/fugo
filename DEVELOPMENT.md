@@ -189,10 +189,10 @@ is, or the standard text of `THIRD_PARTY/spdx/` (BSD-3-Clause, CC0-1.0, BSL-1.0)
 crate fails the step, so it is noticed before a release.
 
 **Toolchain.** CI installs `RUST_TOOLCHAIN` (1.99.0, the toolchain the workspace is developed
-with) through rustup; `rust-version = "1.96"` in `Cargo.toml` stays the MSRV, set by rolldown's
-oxc (1.96 for oxc 0.152). rolldown and the oxc it pins are exact pins (`=`): their Rust API has
-no semver promise and each release moves oxc, which in turn raises its MSRV every few
-releases, so a rolldown upgrade is its own change that also moves `rust-version` and
+with) through rustup; `rust-version = "1.99"` in `Cargo.toml` is the MSRV, set by fugo-sass (0.15
+needs 1.99; rolldown's oxc 0.152 needs 1.96). rolldown and the oxc it pins are exact pins (`=`):
+their Rust API has no semver promise and each release moves oxc, which in turn raises its MSRV
+every few releases, so a rolldown upgrade is its own change that also moves `rust-version` and
 `RUST_TOOLCHAIN` when needed. A newer clippy brings new lints, which `-D warnings` turns into
 failures, so the pin moves in a commit of its own that also fixes the new findings. There is
 deliberately no `rust-toolchain.toml`: a pinned channel makes rustup look for a toolchain named
