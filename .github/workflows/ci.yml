@@ -260,7 +260,7 @@ jobs:
           dev notices "$TARGET" "$RUNNER_TEMP/THIRD_PARTY_NOTICES.txt"
           SOURCE_DATE_EPOCH=$(git log -1 --format=%ct) dev package "$BINARY" "$TARGET" dist "$RUNNER_TEMP/THIRD_PARTY_NOTICES.txt"
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: ${{ env.APP_NAME }}-${{ matrix.target }}
           path: dist/*
