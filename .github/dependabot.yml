@@ -26,11 +26,13 @@ updates:
       # Pinned exactly ("=2.4.0" in Cargo.toml) on purpose, a young engine whose behaviour the
       # layouts rely on (docs/rust-port/REWRITE_PLAN.md §9, risk 3): moved by hand.
       - dependency-name: "tera"
-      # Versions that follow other crates' rather than the latest release: a new 0.x minor (a
-      # breaking change for Cargo) adds a second copy beside the one the graph uses instead of
-      # moving it. The 0.x crates of the "workspace-hack only" block of Cargo.toml (the versions
-      # the graph uses, with the union of their features: DEVELOPMENT.md, "Feature
-      # unification"), the oxc crates minify-html locks, tungstenite (axum's): moved by hand.
+      # Versions that follow other crates' rather than the latest release: a new major, or a new
+      # 0.x minor (a breaking change for Cargo), adds a second copy beside the one the graph uses
+      # instead of moving it. The 0.x crates of the "workspace-hack only" block of Cargo.toml
+      # (the versions the graph uses, with the union of their features: DEVELOPMENT.md,
+      # "Feature unification"), the oxc crates minify-html locks, and the crates Cargo.toml
+      # locks through another: tungstenite (axum's), emojis (comrak's), browserslist-rs
+      # (lightningcss's), similar (insta's). Moved by hand.
       - { dependency-name: "allocator-api2", update-types: ["version-update:semver-major", "version-update:semver-minor"] }
       - { dependency-name: "getrandom", update-types: ["version-update:semver-major", "version-update:semver-minor"] }
       - { dependency-name: "hashbrown", update-types: ["version-update:semver-major", "version-update:semver-minor"] }
@@ -52,6 +54,9 @@ updates:
       - { dependency-name: "zerovec", update-types: ["version-update:semver-major", "version-update:semver-minor"] }
       - { dependency-name: "oxc_*", update-types: ["version-update:semver-major", "version-update:semver-minor"] }
       - { dependency-name: "tungstenite", update-types: ["version-update:semver-major", "version-update:semver-minor"] }
+      - { dependency-name: "emojis", update-types: ["version-update:semver-major", "version-update:semver-minor"] }
+      - { dependency-name: "browserslist-rs", update-types: ["version-update:semver-major", "version-update:semver-minor"] }
+      - { dependency-name: "similar", update-types: ["version-update:semver-major"] }
 
   - package-ecosystem: "github-actions"
     directory: "/"
