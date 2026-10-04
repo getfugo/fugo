@@ -1,0 +1,6 @@
+{
+  "name": "ssg-cms-scripts",
+  "private": true,
+  "description": "Marks the JavaScript of this crate as ES modules: the editor and the Worker built from web/ (assets/admin/cms.js, assets/worker.js) and their tests (tests/js/, run by `cargo test -p ssg-cms` with node --test).",
+  "type": "module"
+}

@@ -2,6 +2,8 @@
 # Node tooling of the target sites (docs/rust-port/REWRITE_PLAN.md §7.2, D8): installs the node
 # modules pinned by tools/dev/node/package-lock.json, which the scripts of the sites import:
 #   - alpinejs, @alpinejs/{focus,persist}, @hotwired/turbo: js_build imports of the docs sites;
+#   - marked, smol-toml, yaml: the CMS editor's libraries, typescript: its type check
+#     (crates/cms/web, tools/cms/build.sh);
 # CI (.github/workflows/ci.yml) runs this script; the tests find the result with `path`
 # (ssg_testkit::fixture::node_tools).
 #
@@ -52,7 +54,7 @@ install)
 	rm -rf "$target"
 	mv "$stage/node_modules" "$target"
 	echo "node.sh: installed into $target ($(du -sh "$target" | cut -f1)):"
-	for pkg in alpinejs @alpinejs/focus @alpinejs/persist @hotwired/turbo; do
+	for pkg in alpinejs @alpinejs/focus @alpinejs/persist @hotwired/turbo marked smol-toml yaml typescript; do
 		echo "  $pkg $(node -p "require('$target/$pkg/package.json').version")"
 	done
 	;;

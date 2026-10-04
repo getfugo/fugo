@@ -6539,6 +6539,7 @@ dependencies = [
  "rayon",
  "serde_json",
  "ssg-base",
+ "ssg-cms",
  "ssg-config",
  "ssg-layouts",
  "ssg-publish",
@@ -6578,6 +6579,20 @@ dependencies = [
  "tempfile",
  "tera",
  "toml",
+]
+
+[[package]]
+name = "ssg-cms"
+version = "0.0.0-DEV"
+dependencies = [
+ "serde",
+ "serde_json",
+ "ssg-base",
+ "ssg-config",
+ "ssg-pageparser",
+ "ssg-workspace-hack",
+ "tempfile",
+ "thiserror 2.0.21",
 ]
 
 [[package]]

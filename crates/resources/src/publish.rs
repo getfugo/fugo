@@ -16,7 +16,7 @@ use ssg_base::paths::OutputPath;
 use ssg_base::url::{Component, unescape};
 use ssg_base::{Idx as _, ImageOpId, ResourceId, Sink};
 
-use crate::store::{Body, PublishPolicy, Resource, ResourceError, ResourceStore, lock};
+use crate::store::{Body, Origin, PublishPolicy, Resource, ResourceError, ResourceStore, lock};
 
 /// What [`ResourceStore::publish`] did.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
@@ -147,6 +147,25 @@ pub(crate) fn canonical(token: &str) -> Option<String> {
     })
 }
 
+/// The resources `id` derives from by transforms and metadata views (its source, the source's
+/// source, …), nearest first.
+fn sources_of(resources: &[Arc<Resource>], id: ResourceId) -> Vec<ResourceId> {
+    let mut out = Vec::new();
+    let mut at = id;
+    while let Some(r) = resources.get(at.index()) {
+        let (Origin::Transformed { from, .. } | Origin::Meta { from }) = r.origin else {
+            break;
+        };
+        // Sources are registered before what derives from them; anything else is not a chain.
+        if from >= at || out.contains(&from) {
+            break;
+        }
+        out.push(from);
+        at = from;
+    }
+    out
+}
+
 impl ResourceStore {
     /// The canonical URL forms of every resource: relative and absolute.
     fn url_index(resources: &[Arc<Resource>]) -> HashMap<String, Vec<ResourceId>> {
@@ -204,13 +223,31 @@ impl ResourceStore {
         let companions = self.pipes.companions_of(&wanted);
         wanted.extend(companions);
 
-        // One writer per target: the lowest id.
-        let mut by_target: BTreeMap<OutputPath, &Resource> = BTreeMap::new();
+        // One writer per target. A transform that keeps its source's path (`js_build` of a
+        // `.js` asset without `targetPath`, `to_css` onto a `.css` path) shares the source's
+        // URL, so a link to the result names both: the result replaces its source, as Go
+        // publishes what the template linked. Of the other candidates, the lowest id.
+        let mut candidates: BTreeMap<OutputPath, Vec<&Resource>> = BTreeMap::new();
         for r in wanted.iter().filter_map(|&id| resources.get(id.index())) {
             if r.policy != PublishPolicy::Never {
-                by_target.entry(r.target.clone()).or_insert(r);
+                candidates.entry(r.target.clone()).or_default().push(r);
             }
         }
+        let by_target: BTreeMap<OutputPath, &Resource> = candidates
+            .into_iter()
+            .map(|(target, rs)| {
+                let sources: BTreeSet<ResourceId> = rs
+                    .iter()
+                    .flat_map(|r| sources_of(&resources, r.id))
+                    .collect();
+                let winner = rs
+                    .iter()
+                    .copied()
+                    .find(|r| !sources.contains(&r.id))
+                    .unwrap_or(rs[0]);
+                (target, winner)
+            })
+            .collect();
         let mut published = lock(&self.published);
         let mut images: BTreeMap<OutputPath, ImageOpId> = BTreeMap::new();
         for (target, r) in by_target {

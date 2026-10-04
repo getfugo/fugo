@@ -1,6 +1,6 @@
 ---
 title: Host and deploy
-description: Publish a fugo site on any static host — GitHub Pages, GitLab Pages, Netlify, Cloudflare Pages or your own server.
+description: Publish a fugo site on any static host — GitHub Pages, GitLab Pages, Netlify, Cloudflare Workers or Pages, or your own server.
 weight: 90
 ---
 

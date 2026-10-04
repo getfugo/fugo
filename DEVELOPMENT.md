@@ -60,6 +60,7 @@ tools/dev/              the harness (compare.sh, structdiff.py, manifest.py, sel
                             fixtures2json.py
 tools/rust-port/            i01/sites.py (every test site), patches.json and the site txtars; the
                             docs-live GetRemote cache (its README.md)
+tools/cms/                  build.sh: the CMS editor (crates/cms/web, TypeScript and Sass) into crates/cms/assets
 docs/                       fugo's documentation site (tools/docs/build.sh); docs/rust-port/: the
                             plan, the handoff, template-api.md
 testdata/legacy-docs/       the Go build's documentation site, a test site (frozen)

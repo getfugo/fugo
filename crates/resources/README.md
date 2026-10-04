@@ -76,9 +76,13 @@ typed and decoded from the template's map with `from_json` (keys case-insensitiv
 
 ## Publishing
 
-`publish` writes what was not written yet, one writer per target (the lowest id), in target
-order: `Eager` resources, resources marked with `mark_published`, and resources named by a URL
-token (never `Never`). Tokens are canonicalised before lookup: HTML character references
+`publish` writes what was not written yet, one writer per target, in target order. A transform
+that keeps its source's path (`js_build` of a `.js` asset without `targetPath`, `to_css` onto a
+`.css` path) has its source's URL, so a token names both: the result is written, not the
+source (Go publishes what the template linked; a template that links the source and only reads
+the result's `.content` gets the result here). Otherwise the lowest id wins. Candidates are
+`Eager` resources, resources marked with `mark_published`, and resources named by a URL token
+(never `Never`). Tokens are canonicalised before lookup: HTML character references
 (`&amp;`, `&#39;`, `&#x27;`) and JSON escapes (`\/`, `&`) decoded, query and fragment
 dropped, percent-escapes decoded (either case), scheme dropped and host lower-cased for
 absolute and protocol-relative URLs. Each resource is indexed under its relative permalink and

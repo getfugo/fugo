@@ -27,5 +27,6 @@ settings mostly carry over; see [Introduction](/configuration/introduction/) for
 | `[privacy]`, `[services]` | [Privacy and services](/configuration/privacy/) |
 | `[security]` | [Security](/configuration/security/) |
 | `[build]`, `[minify]` | [Build and minify](/configuration/build/) |
+| `[cms]` | [CMS editor](/configuration/cms/), [Editing in the browser](/content-management/cms/) |
 
 `fugo config` prints the configuration as fugo resolved it, defaults included.

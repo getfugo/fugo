@@ -5,6 +5,7 @@ mod acceptance;
 mod build;
 mod check;
 mod cli;
+mod cms;
 mod docs;
 mod docs_data;
 mod docs_site;

@@ -145,3 +145,71 @@ fn js_build_docs() {
     );
     check(&p, "oracle/resource-transformers/jsbuild/docs.json.gz", 6);
 }
+
+/// A transform that keeps its source's path (`js_build` of a `.js` asset without `targetPath`,
+/// `to_css` of a `.css` asset) shares the source's URL: a link to it publishes the result, not
+/// the source. A link to a source that has no such transform still publishes the source.
+#[test]
+fn a_result_on_its_sources_path_is_what_is_published() {
+    use ssg_resources::Transform;
+    use ssg_resources::pipes::{JsBuildSpec, ToCssOptions};
+
+    let site = super::mini_site(&[
+        ("config.toml", "baseURL = \"https://example.org/\"\n"),
+        (
+            "assets/js/main.js",
+            "import { x } from \"./b.js\";\nconsole.log(x);\n",
+        ),
+        ("assets/js/b.js", "export const x = 41 + 1;\n"),
+        ("assets/js/plain.js", "console.log(\"plain\");\n"),
+        ("assets/css/a.css", "$c: red;\na { color: $c; }\n"),
+    ]);
+    let p = project(site.path(), |_| {});
+    let s = &p.store;
+    let main = p.asset("js/main.js");
+    let built = s
+        .transform(
+            main,
+            Transform::JsBuild(Box::new(
+                JsBuildSpec::from_json(&serde_json::json!({})).unwrap(),
+            )),
+        )
+        .unwrap();
+    s.realize(built).unwrap();
+    let css = p.asset("css/a.css");
+    let compiled = s
+        .transform(
+            css,
+            Transform::ToCss(ToCssOptions::from_json(&serde_json::json!({})).unwrap()),
+        )
+        .unwrap();
+    s.realize(compiled).unwrap();
+    assert_eq!(
+        s.resource(built).rel_permalink,
+        s.resource(main).rel_permalink
+    );
+    assert_eq!(
+        s.resource(compiled).rel_permalink,
+        s.resource(css).rel_permalink
+    );
+    let plain = p.asset("js/plain.js");
+
+    let sink = MemSink::default();
+    let links = [
+        s.resource(built).rel_permalink.clone(),
+        s.resource(compiled).rel_permalink.clone(),
+        s.resource(plain).rel_permalink.clone(),
+    ];
+    s.publish(links.iter().map(String::as_str), &sink).unwrap();
+    let files = sink.0.lock().unwrap();
+    let js = String::from_utf8(files["js/main.js"].clone()).unwrap();
+    assert!(!js.contains("import"), "the source was published:\n{js}");
+    assert!(js.contains("41 + 1") || js.contains("42"), "{js}");
+    let css = String::from_utf8(files["css/a.css"].clone()).unwrap();
+    assert!(!css.contains('$'), "the source was published:\n{css}");
+    assert!(css.contains("color: red"), "{css}");
+    assert_eq!(
+        String::from_utf8(files["js/plain.js"].clone()).unwrap(),
+        "console.log(\"plain\");\n"
+    );
+}

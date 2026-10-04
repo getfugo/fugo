@@ -1,0 +1,4 @@
+{%- set cms = get_asset(path="cms.ts") | js_build(options={"format": "esm", "target": "es2022", "minify": true, "targetPath": "admin/cms.js"}) %}
+{%- set css = get_asset(path="cms.scss") | to_css(options={"targetPath": "admin/cms.css"}) %}
+{%- set worker = get_asset(path="worker.ts") | js_build(options={"format": "esm", "target": "es2022", "minify": true, "targetPath": "worker.js"}) %}
+{{ cms.rel_permalink }} {{ css.rel_permalink }} {{ worker.rel_permalink }}

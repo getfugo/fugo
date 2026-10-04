@@ -31,6 +31,8 @@ ssg-publish.workspace = true
 # Phases E5–E6: post-process placeholders, resource and image publishing (the image queue and the highlighter are reached through the session's
 # `Handles`, so `ssg-images` and `ssg-highlight` need no edge of their own).
 ssg-resources.workspace = true
+# Phase E6b: the CMS editor of `[cms]`.
+ssg-cms.workspace = true
 jiff.workspace = true
 rayon.workspace = true
 thiserror.workspace = true

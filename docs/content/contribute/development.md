@@ -34,6 +34,7 @@ binary `fugo` is the package `ssg-cli`.
 | `resources`, `images`, `jsbuild`, `minify` | asset pipelines |
 | `npm` | installing `package.json` (Deno's npm installer) |
 | `publish`, `serve` | writing files, the development server |
+| `cms` | the [browser editor](/content-management/cms/): its settings, content index and API Worker |
 | `locale`, `nav`, `base` | languages, menus and pagination, shared types |
 | `testkit` | fixtures, the contract tests, a local npm registry |
 
@@ -53,6 +54,21 @@ Many tests compare fugo with the Go implementation's output, recorded once from 
 kept in `testdata/`: its documentation site (`testdata/legacy-docs/`), test sites, and the
 outputs of its functions. A change that alters output must say why, in the crate's
 `expected_diffs.toml` or README.
+
+## The browser editor's scripts
+
+The editor and its API Worker are TypeScript and Sass in `crates/cms/web/`. The crate embeds
+what they build to (`crates/cms/assets/admin/cms.js`, `cms.css`, `assets/worker.js`), so after
+changing them, rebuild those files with fugo itself:
+
+```sh
+tools/dev/node.sh                     # once: the libraries the editor bundles, and tsc
+cargo build --release -p ssg-cli
+tools/cms/build.sh                    # type-check (strict), then build into crates/cms/assets
+cargo test -p ssg-cms                 # the editor's and the Worker's tests (node --test)
+```
+
+A test of `ssg-cli` fails when the embedded files are not what the sources build to.
 
 ## Adding a template function
 

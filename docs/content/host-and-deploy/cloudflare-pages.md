@@ -17,3 +17,7 @@ Build output directory
 
 `$CF_PAGES_URL` is the deployment's URL; for the production site with a custom domain, set
 `baseURL` in `config.toml` and drop `--base-url`.
+
+For new sites, and for the [browser editor](/content-management/cms/), use
+[Cloudflare Workers](/host-and-deploy/cloudflare-workers/) instead: Cloudflare suggests Workers
+for new projects, and the editor's API runs in the site's Worker.

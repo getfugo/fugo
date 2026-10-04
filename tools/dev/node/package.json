@@ -2,12 +2,16 @@
   "name": "ssg-node-tools",
   "version": "1.0.0",
   "private": true,
-  "description": "Node modules the scripts of the target sites import (tools/dev/node.sh; docs/rust-port/REWRITE_PLAN.md \u00a77.2). Versions follow docs/package.json.",
+  "description": "Node modules of the tools: what the scripts of the target sites import (Alpine.js, Turbo; versions follow docs/package.json), and the CMS editor's libraries and type checker (crates/cms/web; tools/cms/build.sh). Installed by tools/dev/node.sh (docs/rust-port/REWRITE_PLAN.md §7.2).",
   "license": "Apache-2.0",
   "dependencies": {
     "@alpinejs/focus": "3.14.9",
     "@alpinejs/persist": "3.14.9",
     "@hotwired/turbo": "8.0.23",
-    "alpinejs": "3.14.9"
+    "alpinejs": "3.14.9",
+    "marked": "18.0.14",
+    "smol-toml": "1.9.0",
+    "typescript": "7.0.2",
+    "yaml": "2.9.1"
   }
 }

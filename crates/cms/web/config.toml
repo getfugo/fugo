@@ -1,0 +1,6 @@
+# The sources of the CMS editor, built by tools/cms/build.sh with the site generator itself:
+# assets/cms.ts (with codec.ts, common.ts and the libraries of node_modules) into admin/cms.js,
+# assets/cms.scss into admin/cms.css, and assets/worker.ts (with common.ts) into worker.js. The
+# results are what crates/cms embeds (assets/admin/, assets/worker.js).
+baseURL = "/"
+disableKinds = ["page", "section", "taxonomy", "term", "rss", "sitemap", "robotstxt", "404"]

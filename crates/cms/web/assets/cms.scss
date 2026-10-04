@@ -1,0 +1,590 @@
+// The CMS editor's styles. Colours are custom properties (they change with the colour scheme at
+// run time); sizes and fonts are Sass variables.
+
+$mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+$radius: 6px;
+$radius-large: 8px;
+$header-height: 3rem;
+$sidebar-width: 15rem;
+$narrow: 720px;
+
+@mixin colours($bg, $panel, $text, $muted, $line, $accent, $accent-text, $danger, $ok, $warn-bg, $add, $del) {
+  --bg: #{$bg};
+  --panel: #{$panel};
+  --text: #{$text};
+  --muted: #{$muted};
+  --line: #{$line};
+  --accent: #{$accent};
+  --accent-text: #{$accent-text};
+  --danger: #{$danger};
+  --ok: #{$ok};
+  --warn-bg: #{$warn-bg};
+  --add: #{$add};
+  --del: #{$del};
+}
+
+:root {
+  @include colours(#ffffff, #f6f7f9, #1d2025, #646b75, #dde1e6, #2f5bd3, #ffffff, #b42318, #1e7a3c, #fff4e0, #e6f6ea, #fde8e6);
+  color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    @include colours(#15171b, #1d2026, #e6e8eb, #9aa1ab, #2e333b, #7a9cff, #0d1220, #ff8a80, #7bd88f, #3a2e14, #183a22, #43201d);
+  }
+}
+
+@mixin mono($size: 13px) {
+  font: #{$size}/1.5 $mono;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+a {
+  color: var(--accent);
+}
+
+code {
+  font: 13px $mono;
+}
+
+.loading {
+  padding: 2rem;
+  color: var(--muted);
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.warn {
+  background: var(--warn-bg);
+  padding: 0.6rem 0.8rem;
+  border-radius: $radius;
+}
+
+.spacer {
+  flex: 1;
+}
+
+// ── Layout ──
+
+header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.6rem 1rem;
+  border-bottom: 1px solid var(--line);
+  background: var(--panel);
+  position: sticky;
+  top: 0;
+  z-index: 2;
+
+  .brand {
+    font-weight: 700;
+    color: var(--text);
+    text-decoration: none;
+  }
+
+  .user {
+    color: var(--muted);
+    font-size: 13px;
+  }
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: $sidebar-width 1fr;
+  min-height: calc(100vh - #{$header-height});
+}
+
+.sidebar {
+  border-right: 1px solid var(--line);
+  padding: 0.5rem 0;
+  overflow-y: auto;
+  max-height: calc(100vh - #{$header-height});
+  position: sticky;
+  top: $header-height;
+
+  h2 {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--muted);
+    margin: 0.5rem 1rem;
+  }
+
+  ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  a {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.25rem 1rem;
+    color: var(--text);
+    text-decoration: none;
+
+    &:hover,
+    &.active {
+      background: var(--line);
+    }
+  }
+
+  .count {
+    color: var(--muted);
+    font-size: 12px;
+  }
+}
+
+main {
+  padding: 1rem 1.5rem 5rem;
+  min-width: 0;
+}
+
+h1 {
+  font-size: 1.5rem;
+  margin: 0.2rem 0 0.8rem;
+}
+
+h2 {
+  font-size: 1.1rem;
+  margin: 1.5rem 0 0.5rem;
+}
+
+.title-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.crumbs {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+// ── Lists of pages and drafts ──
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr));
+  gap: 0.6rem;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  padding: 0.7rem 0.9rem;
+  border: 1px solid var(--line);
+  border-radius: $radius-large;
+  text-decoration: none;
+  color: var(--text);
+  background: var(--panel);
+}
+
+.filter {
+  width: 100%;
+  max-width: 28rem;
+  margin: 0.3rem 0 0.8rem;
+}
+
+table.entries {
+  width: 100%;
+  border-collapse: collapse;
+
+  td,
+  th {
+    text-align: left;
+    padding: 0.35rem 0.5rem;
+    border-bottom: 1px solid var(--line);
+    vertical-align: top;
+  }
+}
+
+.badge {
+  display: inline-block;
+  font-size: 11px;
+  padding: 0 0.4rem;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  margin-right: 0.25rem;
+  color: var(--muted);
+  text-decoration: none;
+
+  &.draft {
+    border-style: dashed;
+  }
+
+  @each $name, $colour in (pending: var(--accent), added: var(--ok), removed: var(--danger)) {
+    &.#{$name} {
+      border-color: $colour;
+      color: $colour;
+    }
+  }
+}
+
+// ── Controls ──
+
+button,
+.button {
+  font: inherit;
+  padding: 0.35rem 0.8rem;
+  border: 1px solid var(--line);
+  border-radius: $radius;
+  background: var(--panel);
+  color: var(--text);
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-block;
+
+  &:hover {
+    border-color: var(--muted);
+  }
+}
+
+button {
+  &.primary {
+    background: var(--accent);
+    color: var(--accent-text);
+    border-color: var(--accent);
+  }
+
+  &.danger {
+    color: var(--danger);
+  }
+
+  &.subtle {
+    border-color: transparent;
+    background: none;
+  }
+
+  &.small {
+    padding: 0.1rem 0.5rem;
+    font-size: 13px;
+  }
+
+  &.icon {
+    border: none;
+    background: none;
+    padding: 0 0.3rem;
+    color: var(--muted);
+    font-size: 15px;
+    line-height: 1;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+}
+
+input,
+select,
+textarea {
+  font: inherit;
+  color: var(--text);
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: $radius;
+  padding: 0.3rem 0.5rem;
+
+  &:focus {
+    outline: 2px solid var(--accent);
+    outline-offset: -1px;
+  }
+}
+
+input.invalid {
+  border-color: var(--danger);
+}
+
+textarea {
+  width: 100%;
+  resize: vertical;
+
+  &.raw,
+  &.body {
+    @include mono;
+  }
+}
+
+// ── The page editor ──
+
+.tabs {
+  display: flex;
+  gap: 0.3rem;
+  flex-wrap: wrap;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 1rem;
+}
+
+.tab {
+  border: 1px solid transparent;
+  border-bottom: none;
+  border-radius: $radius $radius 0 0;
+  background: none;
+
+  &.active {
+    border-color: var(--line);
+    background: var(--bg);
+    position: relative;
+    top: 1px;
+  }
+
+  &.add {
+    color: var(--muted);
+  }
+}
+
+.doc-head {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 0.4rem 0;
+}
+
+.toggle {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
+  gap: 0.6rem 1.2rem;
+  margin-bottom: 1rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+
+  &.wide {
+    grid-column: 1 / -1;
+  }
+
+  > label {
+    font-size: 13px;
+    font-weight: 600;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  input[type="text"],
+  input[type="number"],
+  select {
+    width: 100%;
+  }
+}
+
+.row {
+  display: flex;
+  gap: 0.4rem;
+  align-items: center;
+
+  input {
+    flex: 1;
+    min-width: 0;
+  }
+}
+
+fieldset.group {
+  border: 1px solid var(--line);
+  border-radius: $radius-large;
+  padding: 0.5rem 0.8rem 0.8rem;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
+  gap: 0.5rem 1rem;
+}
+
+.objects {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: flex-start;
+
+  > fieldset {
+    width: 100%;
+  }
+}
+
+legend {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  align-items: flex-start;
+
+  .row {
+    width: 100%;
+  }
+}
+
+.terms {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: $radius;
+  padding: 0.25rem;
+
+  input {
+    border: none;
+    flex: 1;
+    min-width: 8rem;
+  }
+}
+
+.chip {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0 0.2rem 0 0.6rem;
+  font-size: 13px;
+}
+
+.add-field {
+  grid-column: 1 / -1;
+}
+
+iframe.preview {
+  width: 100%;
+  height: 32rem;
+  border: 1px solid var(--line);
+  border-radius: $radius;
+  background: #fff;
+}
+
+.files {
+  margin-top: 1.5rem;
+}
+
+.file-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  columns: 2 18rem;
+
+  li {
+    padding: 0.1rem 0;
+
+    &.deleted code {
+      text-decoration: line-through;
+      color: var(--muted);
+    }
+
+    &.new code {
+      color: var(--ok);
+    }
+  }
+}
+
+.actions {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  margin-top: 1.5rem;
+
+  &.sticky {
+    position: sticky;
+    bottom: 0;
+    background: var(--bg);
+    padding: 0.8rem 0;
+    border-top: 1px solid var(--line);
+  }
+}
+
+// ── Drafts ──
+
+details.change {
+  border: 1px solid var(--line);
+  border-radius: $radius;
+  margin: 0.4rem 0;
+  padding: 0.3rem 0.6rem;
+}
+
+pre.diff {
+  overflow-x: auto;
+  margin: 0.4rem 0;
+  @include mono(12px);
+
+  .add {
+    background: var(--add);
+    display: block;
+  }
+
+  .del {
+    background: var(--del);
+    display: block;
+  }
+
+  .hunk {
+    color: var(--muted);
+  }
+}
+
+// ── Messages ──
+
+.toast {
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+  max-width: 32rem;
+  padding: 0.7rem 1rem;
+  border-radius: $radius-large;
+  background: var(--text);
+  color: var(--bg);
+  box-shadow: 0 4px 16px rgb(0 0 0 / 0.2);
+  z-index: 5;
+
+  &.error {
+    background: var(--danger);
+    color: #fff;
+  }
+
+  &.ok {
+    background: var(--ok);
+    color: #fff;
+  }
+
+  &.hidden {
+    display: none;
+  }
+}
+
+@media (max-width: $narrow) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar {
+    position: static;
+    max-height: none;
+    border-right: none;
+    border-bottom: 1px solid var(--line);
+  }
+
+  main {
+    padding: 1rem;
+  }
+}

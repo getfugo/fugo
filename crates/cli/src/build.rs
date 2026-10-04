@@ -87,4 +87,7 @@ pub(crate) fn print_summary(r: &BuildReport) {
     if !r.collisions.is_empty() {
         println!("target collisions {}", r.collisions.len());
     }
+    if let Some(path) = &r.cms {
+        println!("CMS editor at {path} (API Worker: _worker.js)");
+    }
 }

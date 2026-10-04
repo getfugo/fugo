@@ -94,6 +94,7 @@ ssg-serve = { path = "crates/serve" }
 ssg-testkit = { path = "crates/testkit" }
 ssg-migrate = { path = "crates/migrate" }
 ssg-npm = { path = "crates/npm" }
+ssg-cms = { path = "crates/cms" }
 
 # ── data formats ──
 serde = { version = "1.0.229", features = ["derive", "rc", "alloc"] }

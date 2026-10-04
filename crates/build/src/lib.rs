@@ -14,6 +14,7 @@
 //! | E3 | wave 2: pagers 2..N, `page/1/` aliases, the language redirect | `waves` |
 //! | E5 | `defer(...)` templates once per key, post-process fields → `patch_held` | `deferred` (render pool) |
 //! | E6 | resources named by URL tokens (and eager bundle files), processed images | `publish_resources` |
+//! | E6b | the CMS editor of `[cms]`: its page, content index and API Worker | `ssg_cms` |
 //! | E7 | sorted, de-duplicated diagnostics; errors fail the build | `build` |
 //!
 //! **Structure dump.** With [`STRUCTURE_ENV`] (`FUGO_STRUCTURE_OUT=<file>`) set, the waves
@@ -146,6 +147,8 @@ pub enum BuildError {
     Publish(#[from] PublishError),
     #[error(transparent)]
     Resource(#[from] ResourceError),
+    #[error(transparent)]
+    Cms(#[from] ssg_cms::CmsError),
     /// The render pool could not be started.
     #[error("render pool: {0}")]
     Pool(String),
@@ -179,6 +182,8 @@ pub struct BuildReport {
     pub images: usize,
     /// Static files copied.
     pub static_files: usize,
+    /// The URL path of the CMS editor (`/admin/`), when the configuration has `[cms]`.
+    pub cms: Option<String>,
     /// Target collisions, by path then loser order.
     pub collisions: Vec<Collision>,
     /// Sorted, de-duplicated warnings.
@@ -424,6 +429,15 @@ pub fn build(r: BuildRequest) -> Result<BuildReport, BuildError> {
     // E6.
     publish_resources(&session, &publisher, sink.as_ref(), &pool, &mut report)?;
     laps.lap(&mut report, "resources");
+
+    // E6b: after the site, so the editor replaces any output at its path.
+    if let Some(cms) = ssg_cms::publish(&cfg, sink.as_ref())? {
+        for w in cms.warnings {
+            session.diagnostics().push(w);
+        }
+        report.cms = Some(cms.path);
+        laps.lap(&mut report, "cms");
+    }
 
     // E7.
     let diagnostics = session.diagnostics().report();
