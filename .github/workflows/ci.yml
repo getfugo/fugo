@@ -47,7 +47,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Install Rust ${{ env.RUST_TOOLCHAIN }}
         run: |
@@ -83,7 +83,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 60
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Install Rust ${{ env.RUST_TOOLCHAIN }}
         run: |
@@ -97,7 +97,7 @@ jobs:
       # node on PATH runs the ssg-jsbuild tests' scripts (the oracle's and fugo's bundles side by
       # side). tools/dev/node.sh (pinned npm ci) installs the modules the docs gates' scripts
       # import (Alpine.js, Turbo); a failure fails the job.
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: "22"
 
@@ -173,7 +173,7 @@ jobs:
       # releases did (the vendor was their ldflags' vendorInfo); the Version step adds the date.
       FUGO_BUILD_COMMIT: ${{ github.sha }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Install Rust ${{ env.RUST_TOOLCHAIN }}
         run: |
@@ -260,7 +260,7 @@ jobs:
           dev notices "$TARGET" "$RUNNER_TEMP/THIRD_PARTY_NOTICES.txt"
           SOURCE_DATE_EPOCH=$(git log -1 --format=%ct) dev package "$BINARY" "$TARGET" dist "$RUNNER_TEMP/THIRD_PARTY_NOTICES.txt"
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: ${{ env.APP_NAME }}-${{ matrix.target }}
           path: dist/*
