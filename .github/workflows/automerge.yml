@@ -1,0 +1,64 @@
+# Auto-merge of dependabot's cargo updates (DEVELOPMENT.md, "CI and releases", "Dependabot"): a
+# patch or minor update is squash-merged once the checks the `main` ruleset requires pass (Lint,
+# Test, Build). Left for review: majors; an update after which Cargo.lock holds more versions of a
+# crate than before, the mark of a requirement that has to follow another crate's (dependabot.yml,
+# `ignore`); and the GitHub Actions group, since this workflow's token cannot change workflow
+# files.
+name: Dependabot auto-merge
+
+on: pull_request
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  automerge:
+    name: Auto-merge
+    # dependabot's own pushes only: a commit someone else adds to its branch is reviewed by hand.
+    if: github.event.pull_request.user.login == 'dependabot[bot]' && github.actor == 'dependabot[bot]'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - id: meta
+        uses: dependabot/fetch-metadata@25dd0e34f4fe68f24cc83900b1fe3fe149efef98 # v3.1.0
+
+      - name: Merge when CI passes
+        if: >-
+          steps.meta.outputs.package-ecosystem == 'cargo' &&
+          (steps.meta.outputs.update-type == 'version-update:semver-patch' ||
+           steps.meta.outputs.update-type == 'version-update:semver-minor')
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.html_url }}
+          REPO: ${{ github.repository }}
+          BASE: ${{ github.event.pull_request.base.sha }}
+          HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          export LC_ALL=C
+          # Cargo.lock at a commit → "<crate> <number of versions>" lines, sorted by crate
+          copies() {
+            gh api -H "Accept: application/vnd.github.raw" "repos/$REPO/contents/Cargo.lock?ref=$1" |
+              sed -n 's/^name = "\(.*\)"$/\1/p' | sort | uniq -c | awk '{ print $2, $1 }'
+          }
+          copies "$BASE" > "$RUNNER_TEMP/base.txt"
+          copies "$HEAD" > "$RUNNER_TEMP/head.txt"
+          more=$(join -a 2 -e 0 -o 0,1.2,2.2 "$RUNNER_TEMP/base.txt" "$RUNNER_TEMP/head.txt" |
+            awk '$3 > $2 && $3 > 1 { printf "%s`%s`", sep, $1; sep = ", " }')
+          if [ -z "$more" ]; then
+            gh pr merge --auto --squash "$PR"
+            exit 0
+          fi
+          echo "::warning::Cargo.lock gains another version of $more: not merged automatically"
+          gh pr merge --disable-auto "$PR" 2>/dev/null || true
+          marker='<!-- automerge: another version -->'
+          if ! gh pr view "$PR" --json comments --jq '.comments[].body' | grep -qF "$marker"; then
+            gh pr comment "$PR" --body "$marker
+          Not merged automatically: \`Cargo.lock\` gains another version of $more. A requirement that has to follow another crate's version adds a copy instead of moving the one in use (see the \`ignore\` list of \`.github/dependabot.yml\`)."
+          fi
