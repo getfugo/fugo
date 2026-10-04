@@ -1,0 +1,9 @@
+dynamic-extent
+ignore
+optimize
+ftype
+inline
+special
+ignorable
+notinline
+type
