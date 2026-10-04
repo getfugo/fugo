@@ -70,9 +70,7 @@ mkdir -p $T/nhoracle/tomath && cp crates/funcs/tests/fixtures/tomath-oracle/main
 (cd $T && GOFLAGS=-mod=mod go build -o oracle ./nhoracle/tomath)
 curl -sLo $T/ss_data.yaml https://raw.githubusercontent.com/KaTeX/KaTeX/v0.16.22/test/screenshotter/ss_data.yaml
 NODE_PATH=tools/dev/node_modules node crates/funcs/tests/fixtures/tomath-oracle/cases.js \
-  $T/ss_data.yaml testdata/legacy-docs/content | $T/oracle | python3 -c 'import gzip, sys; \
-  sys.stdout.buffer.write(gzip.compress(sys.stdin.buffer.read(), 9, mtime=0))' \
-  >crates/funcs/tests/fixtures/tomath.jsonl.gz
+  $T/ss_data.yaml testdata/legacy-docs/content | $T/oracle | gzip -9n >crates/funcs/tests/fixtures/tomath.jsonl.gz
 ```
 
 ### Accepted deviations

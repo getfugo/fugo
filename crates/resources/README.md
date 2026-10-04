@@ -98,7 +98,7 @@ batch.
 - **Importer**: on a miss, the entry the Go build would have written for the call (named by
   `go_keys`, Go's hashstructure/xxHash64 of `[url, options]` or of `key`) is looked up in
   the cache directory itself and in `RemoteConfig::import_dirs`, and copied under this crate's
-  name. A cache directory filled by the Go build (via `sites.py cache`, which sets the Go
+  name. A cache directory filled by the Go build (via `cargo dev sites cache`, which sets the Go
   program's cache-directory environment variable) is thereby replayed offline.
 - Only then, if `RemoteConfig::network`, the URL is fetched with `ureq` (no retries); the
   response is cached unless it is a redirect or `maxAge` is 0.

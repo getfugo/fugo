@@ -1,0 +1,4 @@
+# Only aliases: builds use Cargo's defaults (DEVELOPMENT.md, "Rules for agents").
+[alias]
+# The repository's tools (crates/dev): `cargo dev --help`.
+dev = "run --quiet --locked -p ssg-dev --"

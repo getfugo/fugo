@@ -103,7 +103,7 @@ thread-locals: the scope is the context value `__nh`. Content adapters (`_conten
 - `state`: pagination recorder (first call, identical re-call, conflict with both positions),
   page-store transactions, deferred registry. `scope`: the scope through a Tera render.
 - `memory::real_sites` (ignored): `FUGO_SITES=<dir>[:<dir>…] cargo test -p ssg-view
-  real_sites -- --ignored --nocapture` with sites from `tools/rust-port/i01/sites.py make`:
+  real_sites -- --ignored --nocapture` with sites from `cargo dev sites make`:
   every page's full value in the Meta and two Full generations has every key, lists share
   summaries, and dhat measures the heap kept. Last run:
 

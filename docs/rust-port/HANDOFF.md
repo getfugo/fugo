@@ -54,10 +54,12 @@ crates/<name>/              one crate each; README.md per crate (API, state, acc
 sites/<site>/               the Tera layouts of the test sites (testsite, docs + patches)
 testdata/                   Go-oracle fixtures (oracle/), corpora, golden Go-build data (golden/),
                             the Go tree's test data (upstream/), the ratchet baselines (baselines/)
-tools/dev/              harness: compare.sh, structdiff.py, manifest.py, selftest.py,
-                            node.sh, licence-check.sh, notices.py, package.py,
-                            changes/ (the ratchet's changes files)
-tools/rust-port/i01/        sites.py (generates every test site), patches.json, site txtars
+crates/dev/                 ssg-dev, the repository's tools (`cargo dev <command>`): the test
+                            sites, manifests, structdiff and its self-test, the licence check,
+                            the release notices and archives (crates/dev/README.md)
+tools/dev/                  harness: compare.sh, changes/ (the ratchet's changes files),
+                            node.sh, version.sh
+tools/rust-port/i01/        patches.json (the docs patches), site txtars
 .github/workflows/ci.yml    CI and releases of fugo
 docs/rust-port/             this file, template-api.md (the template API, generated from
                             crates/funcs/src/spec.rs), REWRITE_PLAN.md, archive/ (the old
@@ -102,6 +104,7 @@ Dependencies point down the table (lower crates never depend on higher ones). Li
 | `cli` | `fugo` | the `fugo` binary (clap); the gate tests live in its `tests/it` | 1.9k + 2.0k |
 | `migrate` | `ssg-migrate` | stub (T73: Go-template → Tera converter) | – |
 | `testkit` | `ssg-testkit` | dev-only: fixture readers, txtar sites, the template contract test, a local npm registry | 0.9k + 0.7k |
+| `dev` | `ssg-dev` | the repository's tools (`cargo dev`, not in the binary): test sites, manifests, structdiff and its self-test, the licence check, release notices and archives | 8.6k + 0.7k |
 | `workspace-hack` | `ssg-workspace-hack` | feature unification of shared dependencies | – |
 
 ## 2. Build, test, run
@@ -121,9 +124,7 @@ tools/dev/node.sh check                               # once: tools/dev/node.sh
 cargo test --workspace --offline --locked             # includes the gate tests A-T, A-D2, A-D3
 cargo fmt --all --check
 cargo clippy --workspace --all-targets --offline --locked -- -D warnings
-tools/dev/licence-check.sh
-python3 tools/dev/selftest.py                         # the harness's self-test
-python3 tools/rust-port/i01/sites.py patches --check      # patches.json ↔ sites/docs/patches
+cargo dev licence-check
 ```
 
 A test whose external tool is missing prints `SKIPPED …` and passes (DEVELOPMENT.md lists the
@@ -155,7 +156,7 @@ default cache directory `fugo_cache`, the generator meta `fugo <version>`, `@imp
 `package.config.json` among the JS config files, the reserved layouts directory `_internal/`
 and the ids of `js_build`'s virtual modules (`ssg:entry`, `\0ssg-params`, …). The
 tests replay the Go oracles with these names (`ssg_testkit::fixture::local_path`, the
-harness's `sites.py as_local_site`). Templates read the build's version and environment as
+harness's `as_local_site` of `crates/dev/src/sites.rs`). Templates read the build's version and environment as
 `build` (`build.environment`, `build.is_production`, `build.is_development`,
 `build.is_server`, `build.version`, `build.generator`; `@build` in components). Every
 environment variable fugo reads or sets is `FUGO_*`: the harness switches
@@ -195,11 +196,11 @@ The oracle is the golden data the Go build wrote to `testdata/golden/<label>/` (
 of a minified and an unminified build, the structure dump; `tools/dev/oracle.sh` with the Go
 binaries), frozen at `44529028` (§9; `testdata/golden/README.md` has the recipe to
 regenerate it in a worktree of that commit). Sites are generated outside the repository by
-`tools/rust-port/i01/sites.py make <site> <dir> [--overlay sites/<site>] [--docs-patches
-i01|reduced]`; the Rust side replaces the layouts with the overlay's Tera files.
+`cargo dev sites make <site> <dir> [--overlay sites/<site>] [--docs-patches
+i01|reduced|live]`; the Rust side replaces the layouts with the overlay's Tera files.
 
 `tools/dev/compare.sh <label> [--ref golden] [--task Txx] [--update] [--report-only]`
-builds the Rust side (both passes, plus its structure dump), compares with `structdiff.py` at
+builds the Rust side (both passes, plus its structure dump), compares with `cargo dev structdiff` at
 the levels of REWRITE_PLAN.md §7.2 (L1 file set, L2 links and URLs, L3 visible text and
 heading IDs, L4 assets, S the structure oracle, A7 the share of pages with equal text) and
 checks the result against the **ratchet**: the baseline `testdata/baselines/<label>.json`
@@ -216,19 +217,22 @@ fails (`tools/dev/changes/README.md`).
 | A-DET | mini, edge trees | `cargo test -p ssg-build --test it determinism` | passed (T36) |
 | A-P | docs (release) | §5 | goals met (T70) |
 
-The gate tests need python3, bash, node and the node tools (else `SKIPPED`).
+The gate tests need bash, node and the node tools (else `SKIPPED`); compare.sh builds ssg-dev
+with cargo. ssg-dev's own tests (`cargo test -p ssg-dev`) run structdiff's self-test and check
+`patches.json` against `sites/docs/patches/`.
 
 ## 4. CI/CD
 
 `.github/workflows/ci.yml` is the repository's only build workflow (`bump.yml` cuts releases,
 `stale.yml` manages issues).
 It runs on pushes to `main` and `rust-port`, on every pull request (no path filters), on
-`v[0-9]*` tags and by hand. Jobs: **Lint** (fmt, clippy `-D warnings`, licence check, structdiff
-self-test, `sites.py patches --check`, a tag is a release tag), **Test** (Linux only, §8: the
-whole workspace with the node modules of `tools/dev/node.sh`; a test that
+`v[0-9]*` tags and by hand. Jobs: **Lint** (fmt, clippy `-D warnings`, `cargo dev
+licence-check`, a tag is a release tag), **Test** (Linux only, §8: the whole workspace, ssg-dev's
+self-test and patches check included, with the node modules of `tools/dev/node.sh`; a test that
 prints `SKIPPED` fails the job), **Build** (release for `x86_64`/`aarch64` Linux,
 `x86_64`/`aarch64` macOS, `x86_64` Windows, with the version (a tag's), commit, date and
-vendor of `fugo version`; `notices.py` writes `THIRD_PARTY_NOTICES.txt`, `package.py` the archive), **Release**
+vendor of `fugo version`; ssg-dev's `notices` writes `THIRD_PARTY_NOTICES.txt`, its `package` the
+archive), **Release**
 (tags only: the GitHub release `v<version>` with the five archives and
 `fugo_<version>_checksums.txt`; a version with a `-` makes a pre-release, any other is latest
 only if no release has a higher version). Cutting a release: run **Bump version** (`bump.yml`,
@@ -240,7 +244,8 @@ tag; nothing in the repository is edited (DEVELOPMENT.md "CI and releases").
 Release build of the Rust `fugo` (default features), the Go `fugo` that `oracle.sh install`
 built for T01 (`go build -trimpath -ldflags="-s -w"`; the Go tree and `oracle.sh` are at
 `44529028`, §9).
-Each run: a freshly generated site (`sites.py make`; Rust with its overlay), the environment of
+Each run: a freshly generated site (then `sites.py make`, now `cargo dev sites make`; Rust with
+its overlay), the environment of
 `compare.sh` (clean env, `TZ=UTC`, HTTP disabled, the golden GetRemote cache, node modules on
 `PATH`) but with each implementation's default parallelism (no worker-multiplier variable),
 `--clock 2026-09-27T12:00:00Z --minify -d <out>`. **Cold:** no `resources/`, empty cache
@@ -285,11 +290,11 @@ licence, verbatim/modified/rewritten/generated), and material cargo cannot see h
 in `THIRD_PARTY/` (the Go implementation, CLDR via ICU4X, emoji data, Chroma (lexers, styles) and regexp2,
 KaTeX, GoAT, smartcrop, gift, goldmark, flect, prose, Go's JPEG writer and decoder IDCT, Go fonts,
 x/image, rsc.io/qr, hashstructure, livereload-js, and the Lato font of A-D3's test data).
-`tools/dev/licence-check.sh` checks every crate of the dependency graph against
-`deny.toml`; `tools/dev/notices.py <target> <file>` writes the notices of the linked
+`cargo dev licence-check` checks every crate of the dependency graph against
+`deny.toml`; `cargo dev notices <target> <file>` writes the notices of the linked
 crates for a release (a crate without a licence file gets the MIT or Apache-2.0 text when that
-is one of its licences, anything else fails). No Zola code: Zola ≥ 0.22 (EUPL-1.2) was never
-opened; no pre-0.22 MIT Zola file was copied either (D2 allowed it; none was needed).
+is one of its licences, or a standard text of `THIRD_PARTY/spdx/`; anything else fails). No Zola code: Zola ≥ 0.22 (EUPL-1.2) was never opened; no pre-0.22 MIT
+Zola file was copied either (D2 allowed it; none was needed).
 
 T70 audit: 535 third-party packages pass the licence check, 438 linked packages have notices;
 no Go-source, "Copyright" or Zola text in the sources besides the attributed ports listed in
@@ -419,7 +424,7 @@ that comments and READMEs cite.
 - **Test data moved:** the Go tree's test data the tests read is in `testdata/upstream/` at its
   Go-tree path (`testsite`, `resources/testdata`, `resources/images/testdata`,
   `tpl/images/testdata`, `media/testdata/fake.png`; 90 files). Fixture ids keep the old paths;
-  `ssg_testkit::fixture::repo_file` resolves them (and `tools/rust-port/i01/sites.py` does
+  `ssg_testkit::fixture::repo_file` resolves them (and `ssg_dev::sites::repo_file` does
   the same for the testsite). The image oracles read five more Go-tree images and
   `snap/local/logo.png` from byte-identical copies (`crates/images/tests/it/common.rs`). The
   `FUGO_GOROOT` hook for Go's own image test data is gone: the 80 files of it the image
@@ -460,14 +465,15 @@ that comments and READMEs cite.
   and `testdata/legacy-docs/data/docs.yaml`; so do the Go outputs the old port recorded at `be02933a`, such as
   `testdata/corpus/minify/*.tsv` (PROVENANCE.md). To regenerate, run the old recipe in a
   worktree of `44529028` and copy the result back (`testdata/golden/README.md`,
-  `crates/highlight/README.md`, `tools/dev/fixtures2json.py`). `compare.sh` takes only
-  `--ref golden`; `selftest.py` perturbs the Go testsite output of `testsite-go.txtar`.
+  `crates/highlight/README.md`; oracle output converted to the fixture schema, DEVELOPMENT.md).
+  `compare.sh` takes only `--ref golden`; structdiff's self-test (`cargo dev selftest`) perturbs
+  the Go testsite output of `testsite-go.txtar`.
 - **Workspace at the root:** the Cargo workspace moved from `rust/` to the repository root
   (`Cargo.toml`, `crates/`, `sites/`, `testdata/`, `THIRD_PARTY/`, `PROVENANCE.md`; build output
   in `target/`); `rust/README.md` became `DEVELOPMENT.md`, `rust/docs/template-api.md` this
   directory's `template-api.md`, and the workflow `rust.yml` became `ci.yml` (name `CI`). Ids
   recorded below `rust/` (the sources of `testdata/golden/images/manifest.json`) resolve at the
-  root through `repo_file` (`ssg_testkit::fixture`, `sites.py`).
+  root through `repo_file` (`ssg_testkit::fixture`, `ssg_dev::sites`).
 - **Releases:** tags `v<version>` instead of `rust-v<version>`; the CI workflow publishes the
   GitHub release (a pre-release if the version has a `-`, else latest only if no release has a
   higher version). The Go releases (`v0.148.2` and older) and their tags were removed on
@@ -662,3 +668,18 @@ Follow-ups outside the repository:
   release archive, it does not compile), and `.github/workflows/image.yml`, dispatched by the
   Release job, pushes it to `ghcr.io/getfugo/fugo` for linux/amd64 and linux/arm64
   (DEVELOPMENT.md "Container image").
+- 2026-10-04: **no Python in the repository.** The harness and the release tools were Python
+  scripts; they are now ssg-dev (`crates/dev`, `cargo dev <command>`): `sites` (was
+  `tools/rust-port/i01/sites.py`; `patches.json` is now the source of the docs patches),
+  `manifest`, `structdiff` and `selftest` (were `tools/dev/{manifest,structdiff,selftest}.py`),
+  `licence-check`, `notices` and `package` (were `licence-check.sh` and `{notices,package}.py`);
+  `tools/dev/version.sh` replaces `version.py`, and the Chroma test-suite fixture is written by
+  `crates/highlight/tests/it/testdata.rs`. The one-off converters of T00/T31
+  (`fixtures2json.py`, `extract_tplfuncs.py`) stay in the history (`git show v1.0.0:<path>`).
+  ssg-dev is written with Rust libraries, not translated from the scripts: html5gum and
+  quick-xml read the pages and feeds, `url` and `percent-encoding` the links, serde types
+  hold the manifests, results and baselines, `similar` makes A7's word hunks, `globset`
+  matches the changes files' patterns, `spdx` evaluates the licence expressions (of
+  `cargo metadata` read into serde types), `tar`, `flate2` and `zip` write the archives. The golden data did not
+  change: the four gates find no difference with the unchanged manifests and baselines
+  (`crates/dev/README.md`). CI needs no Python; the gate tests need bash, not python3.

@@ -3,7 +3,7 @@
 `emojify` (`crates/funcs`, T31) and the Markdown `emoji` extension (`crates/markup`, comrak's
 `shortcodes` feature, T22) look emoji up with the [`emojis`](https://crates.io/crates/emojis)
 crate, version 0.8.2. The crate is an ordinary dependency (licence
-`(MIT OR Apache-2.0) AND Unicode-3.0`, checked by `tools/dev/licence-check.sh`); the data it
+`(MIT OR Apache-2.0) AND Unicode-3.0`, checked by `cargo dev licence-check`); the data it
 compiles into the `fugo` binary comes from two sources, whose licences are kept here:
 
 | Data | Source | Licence |

@@ -18,7 +18,7 @@
 //!   and the heading-ID list.
 //! - **Structure oracle**: the build's own dump (`FUGO_STRUCTURE_OUT`, `ssg-build`'s
 //!   `structure.rs`) against Go's (`testdata/golden/testsite/structure.json`, T01), with
-//!   the facts `tools/dev/structdiff.py` compares: per (lang, page, kind, format) the
+//!   the facts `cargo dev structdiff` compares: per (lang, page, kind, format) the
 //!   target, `.RelPermalink`, `.Permalink`, template and base template (an embedded one marked
 //!   as such), `written` and `pagers`; per alias file and `page/1/` alias the page, format,
 //!   kind and permalink; per bundle resource the link, file and `publish`; per page its output
@@ -477,7 +477,7 @@ fn template_id(r: &serde_json::Value, name: &str, file: &str) -> String {
 }
 
 /// Every compared fact of a structure dump by key (the keys and fields of
-/// `tools/dev/structdiff.py`'s `structure_items`).
+/// `structure_items` of `crates/dev/src/structdiff.rs`).
 fn structure_facts(doc: &serde_json::Value) -> BTreeMap<String, serde_json::Value> {
     let s = |v: &serde_json::Value, k: &str| v[k].as_str().unwrap_or_default().to_owned();
     let rows = |k: &str| doc[k].as_array().cloned().unwrap_or_default();

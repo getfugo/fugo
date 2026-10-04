@@ -65,7 +65,7 @@ pub const APP_NAME: &str = app_name!();
 pub const ENV_PREFIX: &str = env_prefix!();
 
 /// The program's version: `<PREFIX>_BUILD_VERSION` at compile time when it is set and not
-/// empty (CI sets it from the release tag, `v<version>`; `tools/dev/version.py`), else the
+/// empty (CI sets it from the release tag, `v<version>`; `tools/dev/version.sh`), else the
 /// workspace's `version`, which is that of builds not made from a tag (`0.0.0-DEV`).
 pub const VERSION: &str = match option_env!(env_var!("BUILD_VERSION")) {
     Some(v) if !v.is_empty() => v,

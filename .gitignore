@@ -17,6 +17,3 @@ public/
 /tools/dev/node_modules/
 # Test data is stored verbatim, whatever the rules above match.
 !/testdata/**
-
-# Python bytecode
-__pycache__/

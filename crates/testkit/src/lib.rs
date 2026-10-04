@@ -2,7 +2,7 @@
 //!
 //! - [`fixture`]: reads the plain-JSON Go-oracle fixtures under `testdata/` (`.json`,
 //!   `.jsonl`, either optionally gzipped) and decodes the `$nh:` tagged leaves of the fixture
-//!   schema (see `tools/dev/fixtures2json.py`).
+//!   schema (DEVELOPMENT.md, "Test data: the fugo schema").
 //! - [`txtar`]: Go's txtar archive format, used for small test sites.
 //! - [`snapshot`]: the shared insta settings.
 //! - [`contract`]: the template contract (REWRITE_PLAN.md §4.8): converted templates load against

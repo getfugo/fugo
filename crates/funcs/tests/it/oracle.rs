@@ -1,7 +1,8 @@
 //! Agreement with the Go oracle cases of the old port's `nh-tplfuncs` (extracted from the
-//! `go-parity-final` tag into `tests/fixtures/tplfuncs.jsonl.gz` by
-//! `tests/fixtures/extract_tplfuncs.py`). Run with `--nocapture` for the per-family table;
-//! `NH_ORACLE_FAMILY=<family>` lists every disagreement of one family.
+//! `go-parity-final` tag into `tests/fixtures/tplfuncs.jsonl.gz` by a one-off script, in the
+//! history: `git show v1.0.0:crates/funcs/tests/fixtures/extract_tplfuncs.py`). Run with
+//! `--nocapture` for the per-family table; `NH_ORACLE_FAMILY=<family>` lists every disagreement
+//! of one family.
 //!
 //! A case agrees when both sides fail (error texts are never compared), or both succeed with the
 //! same value: numbers compare numerically, and where Go returns `template.HTML` but this port a

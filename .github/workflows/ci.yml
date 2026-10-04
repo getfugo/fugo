@@ -6,7 +6,7 @@ name: CI
 on:
   push:
     branches: [main, rust-port]
-    # Releases: v<version>, e.g. v1.0.0 (tools/dev/version.py). The version comes from the tag;
+    # Releases: v<version>, e.g. v1.0.0 (tools/dev/version.sh). The version comes from the tag;
     # bump.yml makes the tag and starts this workflow on it (workflow_dispatch with the tag as
     # ref), and a tag pushed by hand starts it too.
     tags: ["v[0-9]*"]
@@ -57,7 +57,7 @@ jobs:
       - name: Release tag is a version
         if: startsWith(github.ref, 'refs/tags/v')
         run: |
-          python3 tools/dev/version.py tag "$GITHUB_REF_NAME" || {
+          tools/dev/version.sh tag "$GITHUB_REF_NAME" || {
             echo "::error::tag $GITHUB_REF_NAME is not a release tag (v<major>.<minor>.<patch>[-<pre-release>], v1.0.0 or later)"
             exit 1
           }
@@ -72,18 +72,11 @@ jobs:
       - name: cargo clippy
         run: cargo clippy --workspace --all-targets --locked -- -D warnings
 
+      # The licences of the dependency graph against deny.toml (crates/dev). The harness's checks
+      # (structdiff's self-test, patches.json against the Tera patch files) are tests of
+      # ssg-dev, run by the Test job.
       - name: Licence check
-        run: tools/dev/licence-check.sh
-
-      # structdiff's self-test (§7.2): perturbations of Go's testsite output must be classified
-      # correctly, and the ratchet must reject unlisted differences.
-      - name: structdiff self-test
-        run: python3 tools/dev/selftest.py
-
-      # sites.py's docs patches must match patches.json, and the Tera patch files the layout
-      # patches 1:1 (no cargo test checks this).
-      - name: sites.py patches
-        run: python3 tools/rust-port/i01/sites.py patches --check
+        run: cargo dev licence-check
 
   test:
     name: Test
@@ -203,13 +196,8 @@ jobs:
           key: ${{ matrix.target }}
           save-if: ${{ env.SAVE_CACHE }}
 
-      # package.py reads Cargo.toml with tomllib (Python 3.11 or later; Ubuntu 22.04 has 3.10).
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-
-      # BuildDate: the commit's time in UTC, RFC 3339 (Go's vcs.time). sys.stdout.write, not
-      # print: Python on Windows ends a printed line with CRLF, which $(…) would keep the CR of.
+      # BuildDate: the commit's time in UTC, RFC 3339 (Go's vcs.time): GNU date (Linux, and Git
+      # Bash on Windows) takes `-d @<seconds>`, the BSD date of macOS `-r <seconds>`.
       # A release tag v<version> gives the version (FUGO_BUILD_VERSION, read at compile time by
       # ssg_base::VERSION; the Lint job checks the tag); other builds have Cargo.toml's.
       - name: Version
@@ -217,7 +205,8 @@ jobs:
           case $GITHUB_REF in
             refs/tags/v*) echo "FUGO_BUILD_VERSION=${GITHUB_REF_NAME#v}" >>"$GITHUB_ENV" ;;
           esac
-          date=$(python -c 'import datetime, sys; sys.stdout.write(datetime.datetime.fromtimestamp(int(sys.argv[1]), datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"))' "$(git log -1 --format=%ct)")
+          seconds=$(git log -1 --format=%ct)
+          date=$(date -u -d "@$seconds" +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || date -u -r "$seconds" +%Y-%m-%dT%H:%M:%SZ)
           echo "FUGO_BUILD_DATE=$date" >>"$GITHUB_ENV"
           # The vendor and the binary's path, from the name (a job's env cannot read env.APP_NAME).
           echo "FUGO_VENDOR_INFO=$APP_NAME" >>"$GITHUB_ENV"
@@ -247,20 +236,29 @@ jobs:
           printf 'baseURL = "https://example.org/"\nenableRobotsTXT = true\n' >"$site/config.toml"
           printf -- '---\ntitle: Home\n---\n' >"$site/content/_index.md"
           "$BINARY" -s "$site" -q
-          python -c 'import pathlib, sys; cr = [p for p in sys.argv[1:] if b"\r" in pathlib.Path(p).read_bytes()]; cr and print(f"::error::CR line endings in {cr}"); sys.exit(1 if cr else 0)' \
-            "$site/public/sitemap.xml" "$site/public/index.xml" "$site/public/robots.txt"
+          cr=
+          for f in "$site/public/sitemap.xml" "$site/public/index.xml" "$site/public/robots.txt"; do
+            [ "$(tr -cd '\r' <"$f" | wc -c | tr -d ' ')" = 0 ] || cr="$cr $f"
+          done
+          if [ -n "$cr" ]; then
+            echo "::error::CR line endings in$cr"
+            exit 1
+          fi
 
-      # notices.py writes the licences of the crates linked for this target (MIT, BSD and
-      # Apache-2.0 ask for them in binary distributions); it fails if a linked crate ships no
-      # licence file and is neither MIT nor Apache-2.0 (those get the MIT text, or a reference
-      # to the Apache-2.0 text another linked crate ships). package.py writes
+      # The commands of ssg-dev (crates/dev), built like the binary (release, for the same target),
+      # so that it reuses the binary's build of their shared dependencies. `notices` writes the
+      # licences of the crates linked for this target (MIT, BSD and Apache-2.0 ask for them in
+      # binary distributions); it fails if a linked crate ships no licence file and has no known
+      # licence text (MIT gets the MIT text; Apache-2.0 a reference to the text another linked
+      # crate ships; BSD-3-Clause, CC0-1.0 and BSL-1.0 THIRD_PARTY/spdx/). `package` writes
       # <name>_<version>_<os>-<arch>.tar.gz (.zip for Windows) and its .sha256, after checking
       # that `<binary> version` prints v<version>-$FUGO_BUILD_COMMIT (the version:
       # $FUGO_BUILD_VERSION, else Cargo.toml's).
       - name: Package
         run: |
-          python tools/dev/notices.py "$TARGET" "$RUNNER_TEMP/THIRD_PARTY_NOTICES.txt"
-          SOURCE_DATE_EPOCH=$(git log -1 --format=%ct) python tools/dev/package.py "$BINARY" "$TARGET" dist "$RUNNER_TEMP/THIRD_PARTY_NOTICES.txt"
+          dev() { cargo run --release --locked -p ssg-dev --target "$TARGET" -- "$@"; }
+          dev notices "$TARGET" "$RUNNER_TEMP/THIRD_PARTY_NOTICES.txt"
+          SOURCE_DATE_EPOCH=$(git log -1 --format=%ct) dev package "$BINARY" "$TARGET" dist "$RUNNER_TEMP/THIRD_PARTY_NOTICES.txt"
 
       - uses: actions/upload-artifact@v4
         with:

@@ -237,8 +237,8 @@ FUGO_HL_XML2RUST=$C/styles:crates/highlight/src/styles \
 | `legacy-docs-html.json.gz` | per docs item (`key` = FNV-1a of `lang\0code\0options-JSON`): FNV-1a of the Go implementation's HTML with the docs config |
 | `go-html.json` | the option matrix with the Go implementation's HTML (`golden.rs`) |
 | `solarized-dark{,.omit-empty}.css` | `WriteCSS` of Chroma's HTML formatter (`--omitEmpty` = `WithClasses`) |
-| `chroma-testdata.json.gz` | Chroma's lexer test suite: each `lexers/testdata` input, its lexer, the FNV-1a of Chroma's `*.expected` tokens (`type\0text\0…`) and the lexer Chroma's `Analyse` picks (`lexers.rs`) |
-| `oracle/chroma.go.txt`, `oracle/chroma_testdata.py`, `oracle/export.go.txt` | the Chroma oracle (tokens, `Analyse`, registration order), the script that writes `chroma-testdata.json.gz`, and the exporter of the Go lexers' rules (Chroma XML, converted to `src/chroma/golexers/exported/`) |
+| `chroma-testdata.json.gz` | Chroma's lexer test suite: each `lexers/testdata` input, its lexer, the FNV-1a of Chroma's `*.expected` tokens (`type\0text\0…`) and the lexer Chroma's `Analyse` picks (`lexers.rs`); written by `tests/it/testdata.rs` (below) |
+| `oracle/chroma.go.txt`, `oracle/export.go.txt` | the Chroma oracle (tokens, `Analyse`, registration order) and the exporter of the Go lexers' rules (Chroma XML, converted to `src/chroma/golexers/exported/`) |
 
 The first four (and `src/data/chroma-lexers.tsv`) come from the Go implementation's
 `markup/highlight` with Chroma v2.19.0, by the oracle at commit 44529028: in a worktree of it
@@ -268,9 +268,10 @@ C=$(go env GOMODCACHE)/github.com/alecthomas/chroma/v2@v2.19.0; D=crates/highlig
 O=$(mktemp -d); cp $D/oracle/chroma.go.txt $O/main.go; mkdir $O/export; cp $D/oracle/export.go.txt $O/export/main.go
 printf 'module gochroma\ngo 1.22\nrequire (\n\tgithub.com/alecthomas/chroma/v2 v2.19.0\n\tgithub.com/dlclark/regexp2 v1.11.5\n)\n' > $O/go.mod
 (cd $O && GOFLAGS=-mod=mod GOPROXY=off go build -o chroma . && GOFLAGS=-mod=mod GOPROXY=off go build -o export ./export)
-python3 $D/oracle/chroma_testdata.py $C $O/cases.jsonl
+FUGO_HL_TESTDATA=$C:$O/cases.jsonl cargo test -p ssg-highlight --test it chroma_testdata
 $O/chroma analyse < $O/cases.jsonl > $O/analyse.txt
-python3 $D/oracle/chroma_testdata.py $C $O/cases.jsonl $O/analyse.txt $D/chroma-testdata.json.gz
+FUGO_HL_TESTDATA=$C:$O/cases.jsonl:$O/analyse.txt:$D/chroma-testdata.json.gz \
+  cargo test -p ssg-highlight --test it chroma_testdata   # tests/it/testdata.rs writes the fixture
 $O/export $O/golexers   # then the rename export.go.txt describes, and convert:
 FUGO_HL_XML2RUST=$O/golexers:crates/highlight/src/chroma/golexers/exported \
   cargo test -p ssg-highlight --test it xml_to_rust

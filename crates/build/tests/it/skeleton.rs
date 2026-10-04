@@ -1,4 +1,4 @@
-//! T38 walking skeleton: the testsite (`tools/rust-port/i01/sites.py make testsite` with the
+//! T38 walking skeleton: the testsite (`cargo dev sites make testsite`, with the
 //! Tera layouts of `sites/testsite`) built into a `MemorySink`, and its file list (L1) and
 //! bytes compared with the Go build's (`tests/it/testsite-go.txtar`).
 
@@ -60,8 +60,8 @@ fn write_txtar(archive: &str, to: &Path) {
     }
 }
 
-/// The testsite as `sites.py make testsite` writes it, with the Go layouts replaced by the Tera
-/// layouts of `sites/testsite/layouts`.
+/// The testsite as `cargo dev sites make testsite` writes it, with the Go layouts replaced by the
+/// Tera layouts of `sites/testsite/layouts`.
 fn testsite(dir: &Path) {
     let root = repo_dir();
     copy_tree(&repo_file("testsite"), dir);
