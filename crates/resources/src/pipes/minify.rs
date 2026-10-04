@@ -20,5 +20,6 @@ pub(super) fn run(env: &TransformEnv, r: &Resource, input: &[u8]) -> Result<Outp
     Ok(Output {
         bytes: format!("{bom}{min}").into_bytes(),
         source_map: None,
+        legal: None,
     })
 }

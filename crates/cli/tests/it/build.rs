@@ -318,3 +318,40 @@ fn errors_are_reported_with_positions() {
         stderr(&o)
     );
 }
+
+/// A script's companion files are published with it in a site build: an external source map
+/// and the legal comment file of `legalComments: external`. (They are made while the script is
+/// bundled, which in a build happens when it is published.)
+#[test]
+fn js_build_companion_files_are_published() {
+    let dir = tempfile::tempdir().expect("tempdir");
+    for (path, text) in [
+        (
+            "config.toml",
+            "baseURL = \"https://example.org/\"\ndisableKinds = [\"page\", \"section\", \"taxonomy\", \"term\", \"rss\", \"sitemap\", \"robotstxt\", \"404\"]\n",
+        ),
+        (
+            "assets/a.js",
+            "/*! a | MIT */\nexport const a = 1;\nconsole.log(a);\n",
+        ),
+        (
+            "layouts/home.html",
+            "{% set js = get_asset(path=\"a.js\") | js_build(options={\"sourceMap\": \"external\", \"legalComments\": \"external\", \"targetPath\": \"js/b.js\"}) %}{{ js.rel_permalink }}",
+        ),
+    ] {
+        let p = dir.path().join(path);
+        fs::create_dir_all(p.parent().expect("parent")).expect("mkdir");
+        fs::write(p, text).expect("write");
+    }
+    let o = binary(dir.path(), &["build", "--quiet"], &[]);
+    assert!(o.status.success(), "{}", stderr(&o));
+    let public = dir.path().join("public/js");
+    assert!(public.join("b.js").is_file());
+    assert!(public.join("b.js.map").is_file(), "the source map");
+    assert_eq!(
+        fs::read_to_string(public.join("b.js.LEGAL.txt")).expect("legal file"),
+        "/*! a | MIT */\n"
+    );
+    let js = fs::read_to_string(public.join("b.js")).expect("b.js");
+    assert!(!js.contains("/*!"), "{js}");
+}

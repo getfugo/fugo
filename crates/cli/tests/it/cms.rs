@@ -132,13 +132,42 @@ fn editor_assets_are_built_from_their_sources() {
         &[],
     );
     assert!(o.status.success(), "{}{}", stderr(&o), stdout(&o));
-    for f in ["admin/cms.js", "admin/cms.css", "worker.js"] {
+    let files = [
+        "admin/cms.js",
+        "admin/cms.js.LEGAL.txt",
+        "admin/cms.css",
+        "worker.js",
+    ];
+    let mut written = Vec::new();
+    collect_files(&out, &out, &mut written);
+    written.retain(|f| f != "index.html");
+    written.sort();
+    let mut want: Vec<String> = files.iter().map(|f| (*f).to_owned()).collect();
+    want.sort();
+    assert_eq!(
+        written, want,
+        "the build writes other files than crates/cms embeds"
+    );
+    for f in files {
         let built = std::fs::read(out.join(f)).expect("built");
         let embedded = std::fs::read(repo.join("assets").join(f)).expect("embedded");
         assert!(
             built == embedded,
             "crates/cms/assets/{f} is not what crates/cms/web builds to: run tools/cms/build.sh"
         );
+    }
+}
+
+#[cfg(unix)]
+fn collect_files(root: &std::path::Path, dir: &std::path::Path, out: &mut Vec<String>) {
+    for e in std::fs::read_dir(dir).expect("read_dir") {
+        let path = e.expect("entry").path();
+        if path.is_dir() {
+            collect_files(root, &path, out);
+        } else {
+            let rel = path.strip_prefix(root).expect("under root");
+            out.push(rel.to_string_lossy().replace('\\', "/"));
+        }
     }
 }
 

@@ -28,5 +28,6 @@ pub(super) fn run(
     Ok(Output {
         bytes: out.code,
         source_map: out.source_map,
+        legal: out.legal,
     })
 }

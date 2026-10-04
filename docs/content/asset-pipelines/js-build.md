@@ -23,7 +23,21 @@ Imports resolve in `assets/` first (so `import "./menu"` and `import "js/menu"` 
 : The published path. Default: the asset's path with `.js`.
 
 `minify`
-: Minify whitespace, names and syntax.
+: Minify whitespace, names and syntax. Comments go too (including `@__PURE__` annotations and
+  coverage hints), but legal comments: see `legalComments`.
+
+`legalComments`
+: Where comments that start with `/*!` or `//!`, or contain `@license` or `@preserve`, go:
+  - `eof` (default): to the end of the script, once each (a bundle of many modules of one
+    package otherwise repeats its licence once per module);
+  - `external`: to a file of their own, `<script>.LEGAL.txt`, published next to the script, which
+    then has no comments at all;
+  - `linked`: as `external`, with one comment at the end of the script that names the file;
+  - `inline`: where they are;
+  - `none`: removed.
+
+  Most open-source licences ask for their notice in every copy of the code, minified or not: keep
+  the notices (`eof`, `external` or `linked`) unless you ship them another way.
 
 `format`
 : `iife` (default), `esm` or `cjs`.
