@@ -187,7 +187,7 @@ its licences, a reference to the Apache-2.0 text another linked crate ships when
 is, or the standard text of `THIRD_PARTY/spdx/` (BSD-3-Clause, CC0-1.0, BSL-1.0); any other such
 crate fails the step, so it is noticed before a release.
 
-**Toolchain.** CI installs `RUST_TOOLCHAIN` (1.96.0, the toolchain the workspace is developed
+**Toolchain.** CI installs `RUST_TOOLCHAIN` (1.99.0, the toolchain the workspace is developed
 with) through rustup; `rust-version = "1.96"` in `Cargo.toml` stays the MSRV, set by rolldown's
 oxc (1.96 for oxc 0.152). rolldown and the oxc it pins are exact pins (`=`): their Rust API has
 no semver promise and each release moves oxc, which in turn raises its MSRV every few
