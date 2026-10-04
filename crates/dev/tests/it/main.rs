@@ -1,6 +1,7 @@
 //! Tests of ssg-dev (the crate's single test binary): the manifest extractor, structdiff's
-//! self-test, the docs patches, the changes files, and the release tools.
+//! self-test, the docs patches, the changes files, the release tools, and the file-length check.
 
 mod extract;
+mod file_length;
 mod harness;
 mod release;

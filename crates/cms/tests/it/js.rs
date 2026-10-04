@@ -29,7 +29,7 @@ fn javascript_tests_pass() {
         .collect();
     tests.sort();
     assert!(!tests.is_empty(), "no tests/js/*.test.js");
-    // A Worker as a build publishes it (worker.test.js loads it and calls its default export).
+    // A Worker as a build publishes it (worker-publish.test.js loads it and calls its default export).
     let tmp = tempfile::tempdir().expect("tempdir");
     let published = tmp.path().join("_worker.mjs");
     std::fs::write(

@@ -90,13 +90,41 @@ pub(crate) fn registry() -> Registry {
     reg.register(Arc::new(TypeRemappingLexer::new(
         Arc::new(embedded("common_lisp")),
         &[
-            (T::NameVariable, T::NameFunction, lisp::CL_BUILTIN_FUNCTIONS),
-            (T::NameVariable, T::Keyword, lisp::CL_SPECIAL_FORMS),
-            (T::NameVariable, T::NameBuiltin, lisp::CL_MACROS),
-            (T::NameVariable, T::Keyword, lisp::CL_LAMBDA_LIST_KEYWORDS),
-            (T::NameVariable, T::Keyword, lisp::CL_DECLARATIONS),
-            (T::NameVariable, T::KeywordType, lisp::CL_BUILTIN_TYPES),
-            (T::NameVariable, T::NameClass, lisp::CL_BUILTIN_CLASSES),
+            (
+                T::NameVariable,
+                T::NameFunction,
+                &lisp::words(lisp::CL_BUILTIN_FUNCTIONS),
+            ),
+            (
+                T::NameVariable,
+                T::Keyword,
+                &lisp::words(lisp::CL_SPECIAL_FORMS),
+            ),
+            (
+                T::NameVariable,
+                T::NameBuiltin,
+                &lisp::words(lisp::CL_MACROS),
+            ),
+            (
+                T::NameVariable,
+                T::Keyword,
+                &lisp::words(lisp::CL_LAMBDA_LIST_KEYWORDS),
+            ),
+            (
+                T::NameVariable,
+                T::Keyword,
+                &lisp::words(lisp::CL_DECLARATIONS),
+            ),
+            (
+                T::NameVariable,
+                T::KeywordType,
+                &lisp::words(lisp::CL_BUILTIN_TYPES),
+            ),
+            (
+                T::NameVariable,
+                T::NameClass,
+                &lisp::words(lisp::CL_BUILTIN_CLASSES),
+            ),
         ],
     )));
     reg.register(Arc::new(TypeRemappingLexer::new(
@@ -105,24 +133,32 @@ pub(crate) fn registry() -> Registry {
             (
                 T::NameVariable,
                 T::NameFunction,
-                lisp::EMACS_BUILTIN_FUNCTION,
-            ),
-            (T::NameVariable, T::NameBuiltin, lisp::EMACS_SPECIAL_FORMS),
-            (
-                T::NameVariable,
-                T::NameException,
-                lisp::EMACS_ERROR_KEYWORDS,
+                &lisp::words(lisp::EMACS_BUILTIN_FUNCTION),
             ),
             (
                 T::NameVariable,
                 T::NameBuiltin,
-                lisp::EMACS_BUILTIN_FUNCTION_HIGHLIGHTED,
+                &lisp::words(lisp::EMACS_SPECIAL_FORMS),
             ),
-            (T::NameVariable, T::NameBuiltin, lisp::EMACS_MACROS),
+            (
+                T::NameVariable,
+                T::NameException,
+                &lisp::words(lisp::EMACS_ERROR_KEYWORDS),
+            ),
+            (
+                T::NameVariable,
+                T::NameBuiltin,
+                &lisp::words(lisp::EMACS_BUILTIN_FUNCTION_HIGHLIGHTED),
+            ),
+            (
+                T::NameVariable,
+                T::NameBuiltin,
+                &lisp::words(lisp::EMACS_MACROS),
+            ),
             (
                 T::NameVariable,
                 T::KeywordPseudo,
-                lisp::EMACS_LAMBDA_LIST_KEYWORDS,
+                &lisp::words(lisp::EMACS_LAMBDA_LIST_KEYWORDS),
             ),
         ],
     )));

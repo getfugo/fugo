@@ -1,0 +1,6 @@
+cl-assert
+cl-check-type
+error
+signal
+user-error
+warn

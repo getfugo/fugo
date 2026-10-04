@@ -1,6 +1,6 @@
 //! `docs/data/objects.toml`, the template objects of the documentation's reference, describes
-//! exactly the fields of the views (`src/views.rs`): every serialised field of the structs an
-//! object lists has a description, and every description names such a field.
+//! exactly the fields of the views (`src/views.rs` and `src/views/`): every serialised field of
+//! the structs an object lists has a description, and every description names such a field.
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -44,8 +44,18 @@ fn struct_fields(src: &str) -> BTreeMap<String, BTreeSet<String>> {
 
 #[test]
 fn docs_objects_cover_the_views() {
-    let src = std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/src/views.rs"))
-        .expect("views.rs");
+    let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("src");
+    let mut files = vec![dir.join("views.rs")];
+    let mut modules: Vec<_> = std::fs::read_dir(dir.join("views"))
+        .expect("src/views")
+        .map(|e| e.expect("directory entry").path())
+        .collect();
+    modules.sort();
+    files.extend(modules);
+    let src: String = files
+        .iter()
+        .map(|f| std::fs::read_to_string(f).unwrap_or_else(|e| panic!("{}: {e}", f.display())))
+        .collect();
     let structs = struct_fields(&src);
     let path = ssg_testkit::fixture::repo_dir().join("docs/data/objects.toml");
     let doc: toml::Table = std::fs::read_to_string(&path)
@@ -64,7 +74,7 @@ fn docs_objects_cover_the_views() {
         for n in &names {
             match structs.get(*n) {
                 Some(f) => want.extend(f.iter().cloned()),
-                None => problems.push(format!("{object}: no struct {n} in src/views.rs")),
+                None => problems.push(format!("{object}: no struct {n} in the views")),
             }
         }
         let have: BTreeSet<String> = entry["fields"]

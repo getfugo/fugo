@@ -1,5 +1,6 @@
 {#- A page per template object, from data/objects.toml (its fields are checked against the
-    views of crates/view/src/views.rs by ssg-view's test docs_objects_cover_the_views). -#}
+    views of crates/view/src/views.rs and views/ by ssg-view's test
+    docs_objects_cover_the_views). -#}
 {%- for key, o in site.data.objects %}
   {%- set fields = ["`" ~ name ~ "`\n: " ~ text for name, text in o.fields] %}
   {%- set md = o.intro ~ "\n\n## Fields\n\n" ~ (fields | join(sep="\n\n")) ~ "\n" %}
