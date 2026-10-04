@@ -73,6 +73,10 @@ fn disabled_and_unknown_types_pass_through() {
         "<style>a { color : red }</style>"
     );
     assert_eq!(min(MinifyTarget::Html, html), "<style>a{color:red}</style>");
+    // And inline JavaScript and JSON when those are disabled.
+    let m = Minifier::with_options(Options::default(), &[MinifyTarget::Js, MinifyTarget::Json]);
+    let html = "<script>f( 1 )</script><script type=application/ld+json>{ \"a\" : 1 }</script>";
+    assert_eq!(m.minify(MinifyTarget::Html, html).unwrap(), html);
 }
 
 #[test]
@@ -81,10 +85,12 @@ fn html() {
                 <title>A &amp; B</title>\n  </head>\n  <body>\n    <!-- note -->\n    \
                 <p class=\"x\">one\n   two</p>\n    <script>\n      var answer = 40 + 2;\n      \
                 console.log(answer);\n    </script>\n  </body>\n</html>\n";
+    // `answer` is a global: another script may read it.
     assert_eq!(
         min(MinifyTarget::Html, page),
         "<!doctype html><html lang=en><head><meta charset=utf-8><title>A & B</title></head>\
-         <body><p class=x>one two</p><script>console.log(42);</script></body></html>"
+         <body><p class=x>one two</p><script>var answer=42;console.log(answer);</script>\
+         </body></html>"
     );
     // Go's defaults keep end tags and the document tags.
     assert_eq!(
@@ -133,6 +139,91 @@ fn html_templates() {
     assert!(
         out.contains("{{ if .x }}") && out.contains("{{ end }}"),
         "{out}"
+    );
+    // `{{x}}` parses as JavaScript (two blocks): a script with template syntax is kept.
+    let input = "<script> {{x}} </script>";
+    assert_eq!(with(o, MinifyTarget::Html, input), "<script>{{x}}</script>");
+}
+
+#[test]
+fn html_scripts() {
+    // Google Tag Manager's snippet: minify-html's own JS minification printed a longer result
+    // (`/* @__PURE__ */` annotations) and kept the snippet with its line breaks.
+    let gtm = "<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':\n\
+               new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],\n\
+               j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=\n\
+               'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);\n\
+               })(window,document,'script','dataLayer',\"GTM-0000\");</script>";
+    assert_eq!(
+        min(MinifyTarget::Html, gtm),
+        "<script>(function(e,t,n,r,i){e[r]=e[r]||[],e[r].push({\"gtm.start\":new Date().getTime(),\
+         event:`gtm.js`});var a=t.getElementsByTagName(n)[0],o=t.createElement(n),\
+         s=r==`dataLayer`?``:`&l=`+r;o.async=!0,o.src=`https://www.googletagmanager.com/gtm.js?id=`\
+         +i+s,a.parentNode.insertBefore(o,a)})(window,document,`script`,`dataLayer`,`GTM-0000`);\
+         </script>"
+    );
+    // A classic script's top-level names are globals: kept, even when unused.
+    assert_eq!(
+        min(
+            MinifyTarget::Html,
+            "<script>\n  window.dataLayer = window.dataLayer || [];\n  \
+             function gtag(){dataLayer.push(arguments);}\n  gtag('js', new Date());\n</script>"
+        ),
+        "<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}\
+         gtag(`js`,new Date);</script>"
+    );
+    assert_eq!(
+        min(
+            MinifyTarget::Html,
+            "<script type=module>\nimport { a } from './a.js';\nconst b = a + 1;\nconsole.log(b);\n</script>"
+        ),
+        "<script type=module>import{a}from\"./a.js\";const b=a+1;console.log(b);</script>"
+    );
+    // JSON: structured data, import maps; strings are copied.
+    assert_eq!(
+        min(
+            MinifyTarget::Html,
+            "<script type=\"application/ld+json\">\n  {\n    \"@context\": \"https://schema.org\",\n    \
+             \"name\": \"Snack  Diary\"\n  }\n</script>\
+             <SCRIPT TYPE=\"Application/LD+JSON\">{ \"a\" : 1 }</SCRIPT>\
+             <script type=importmap>\n{ \"imports\": { \"a\": \"./a.js\" } }\n</script>"
+        ),
+        "<script type=application/ld+json>{\"@context\":\"https://schema.org\",\"name\":\"Snack  Diary\"}\
+         </script><script type=application/ld+json>{\"a\":1}</script>\
+         <script type=importmap>{\"imports\":{\"a\":\"./a.js\"}}</script>"
+    );
+    // Kept as written: other types (client-side templates), content that does not parse, a
+    // result that would open an HTML comment, an SVG script (its text is markup), and `<script>`
+    // in text, attribute values and comments.
+    for kept in [
+        "<script type=text/x-tmpl-mustache>\n  <div>{{ title }}</div>\n</script>",
+        "<script>var = ;</script>",
+        "<script type=application/ld+json>{ \"a\": [1, 2 }</script>",
+        "<script>var  s = \"<!--\";</script>",
+        "<svg><script>if (a &lt; b) { go( ) }</script></svg>",
+        "<textarea><script> go( 1 ) </script></textarea>",
+        "<p title=\"<script> x( 1 ) </script>\">x</p>",
+    ] {
+        assert_eq!(min(MinifyTarget::Html, kept), kept);
+    }
+    assert_eq!(
+        min(
+            MinifyTarget::Html,
+            "<!-- <script> y( 2 ) </script> --><svg/><script>  z( 3 )  </script>"
+        ),
+        "<svg/><script>z(3);</script>"
+    );
+    // Local names are mangled unless `keepVarNames`.
+    let local = "<script>function f(input){ return input * 2 }</script>";
+    assert_eq!(
+        min(MinifyTarget::Html, local),
+        "<script>function f(e){return e*2}</script>"
+    );
+    let mut o = Options::default();
+    o.js.keep_var_names = true;
+    assert_eq!(
+        with(o, MinifyTarget::Html, local),
+        "<script>function f(input){return input*2}</script>"
     );
 }
 
@@ -187,6 +278,14 @@ fn js() {
             "import { a } from './a.js';\nexport const b = a + 1;\n"
         ),
         "import{a}from\"./a.js\";export const b=a+1;"
+    );
+    // A `with` body looks names up on an object: nothing is renamed or rewritten.
+    assert_eq!(
+        min(
+            MinifyTarget::Js,
+            "function f(obj) {\n  var value = 1;\n  with (obj) { console.log(value) }\n}"
+        ),
+        "function f(obj){var value=1;with(obj){console.log(value)}}"
     );
     let err = Minifier::default().minify(MinifyTarget::Js, "var = ;");
     assert!(matches!(err, Err(MinifyError::Js(_))), "{err:?}");

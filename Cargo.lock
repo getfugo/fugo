@@ -6816,6 +6816,8 @@ dependencies = [
  "lightningcss",
  "minify-html",
  "oxc_allocator 0.95.0",
+ "oxc_ast 0.95.0",
+ "oxc_ast_visit 0.95.0",
  "oxc_codegen 0.95.0",
  "oxc_minifier 0.95.0",
  "oxc_parser 0.95.0",

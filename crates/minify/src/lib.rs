@@ -13,7 +13,8 @@
 //! wants more leniency publishes the input unchanged on `Err`. CSS never fails, as in tdewolff:
 //! rules lightningcss rejects (Tailwind's `@media screen(md)`, stray tokens, `@import` after
 //! rules) are passed through with only comments and whitespace removed, the rest is minified.
-//! HTML never fails either: minify-html leaves inline CSS/JS it cannot parse as written.
+//! HTML never fails either: inline CSS, JavaScript and JSON that do not parse are left as
+//! written.
 
 #![forbid(unsafe_code)]
 
@@ -159,12 +160,7 @@ impl Minifier {
         }
         let o = &self.options;
         let out = match target {
-            MinifyTarget::Html => html::minify(
-                &o.html,
-                self.is_enabled(MinifyTarget::Css),
-                self.is_enabled(MinifyTarget::Js),
-                input,
-            )?,
+            MinifyTarget::Html => html::minify(self, input)?,
             MinifyTarget::Css => css::minify(&o.css, input),
             MinifyTarget::Js => js::minify(&o.js, input)?,
             MinifyTarget::Json => json::minify(input)?,
