@@ -131,9 +131,6 @@ url = "2.5"
 # across render threads.
 rquickjs = { version = "0.14", default-features = false, features = ["std", "parallel"] }
 emojis = "0.8"         # emojify (T31); already locked through comrak `shortcodes`
-# ssg-dev: the HTML5 named character references of the manifest extractor; already locked
-# through comrak
-entities = "1"
 
 # ── time & locale (ICU4X, Unicode-3.0) ──
 jiff = { version = "0.2.37", features = ["serde"] }
@@ -229,6 +226,13 @@ rustls = { version = "0.23", default-features = false, features = ["ring", "std"
 
 # ── dev ──
 insta = { version = "1", features = ["yaml", "glob", "redactions"] }
+# ssg-dev (the repository's tools): the word hunks of structdiff's A7 report (locked through
+# insta, with the features insta turns on: one build), the release archives' zip, the licence
+# check's SPDX expressions. Not cargo_metadata: it turns on serde_json's `unbounded_depth`
+# (crates/dev/src/metadata.rs).
+similar = { version = "2.7", features = ["inline"] }
+zip = { version = "8.6", default-features = false, features = ["deflate-flate2"] }
+spdx = "0.13"
 tempfile = "3"
 pretty_assertions = "1"
 dhat = "0.3" # T33 allocation measurement (it binary only)

@@ -3,7 +3,8 @@
 
 use std::path::Path;
 
-use ssg_dev::{root, selftest, sites, structdiff};
+use ssg_dev::ratchet::{self, Baseline};
+use ssg_dev::{root, selftest, sites};
 
 /// Perturbations of Go's testsite output are classified exactly, and the ratchet rejects
 /// unlisted differences (docs/rust-port/REWRITE_PLAN.md §7.2).
@@ -28,7 +29,7 @@ fn docs_patches() {
 
 #[test]
 fn changes_files_and_baselines() {
-    let dir = structdiff::changes_dir();
+    let dir = ratchet::changes_dir();
     let mut entries = 0;
     for e in std::fs::read_dir(&dir).expect("tools/dev/changes") {
         let path = e.expect("an entry").path();
@@ -40,19 +41,19 @@ fn changes_files_and_baselines() {
         let Some(task) = name.strip_suffix(".md").filter(|t| *t != "README") else {
             continue;
         };
-        let (changes, errors) = structdiff::parse_changes(&path, task).expect("a changes file");
+        let (changes, errors) = ratchet::parse_changes(&path, task).expect("a changes file");
         assert_eq!(errors, Vec::<String>::new(), "{name}");
         entries += changes.len();
     }
     assert!(entries > 0);
     for e in std::fs::read_dir(root().join("testdata/baselines")).expect("testdata/baselines") {
         let path = e.expect("an entry").path();
-        let baseline = structdiff::read_baseline(&path)
+        let baseline = Baseline::read(&path)
             .expect("a baseline")
             .expect("it exists");
         // Written as they are read: the ratchet rewrites only what changes.
         assert_eq!(
-            structdiff::dump_baseline(&baseline),
+            baseline.to_text(),
             std::fs::read_to_string(&path).expect("a baseline"),
             "{}",
             path.display()

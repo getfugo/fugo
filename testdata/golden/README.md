@@ -199,8 +199,8 @@ format). Read by
 ## `manifest.<pass>.json` (schema `ssg-manifest/1`)
 
 Written by the manifest extractor over the output directory (then `tools/dev/manifest.py
-extract`; now `cargo dev manifest extract`, which writes the same bytes; the same extractor runs
-over the Rust output):
+extract`; now `cargo dev manifest extract`, which reads the same facts from a build; the same
+extractor runs over the Rust output):
 
 ```json
 {

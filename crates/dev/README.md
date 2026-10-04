@@ -18,35 +18,33 @@ The module documentation has the details (`src/sites.rs`, `src/manifest.rs`, `sr
 `src/selftest.rs`, `src/licence.rs`, `src/notices.rs`, `src/package.rs`). Release versions are
 `tools/dev/version.sh` (POSIX sh: `bump.yml` and `image.yml` run it without a Rust toolchain).
 
-## The first implementation
+## How it is built
 
 Until v1.0.0 these tools were Python scripts (`tools/dev/*.py`, `tools/rust-port/i01/sites.py`;
-`git show v1.0.0:<path>`). The golden manifests of `testdata/golden/` and the diff fingerprints
-of `testdata/baselines/` were written by them, so this port reproduces their output byte for
-byte: the HTML tokenizer is CPython's `html.parser` (`src/html.rs`), the URL functions are
-`urllib.parse` (`src/url.rs`), the word hunks are `difflib` (`src/difflib.rs`), the change
-patterns are `fnmatch` (`src/fnmatch.rs`), and JSON, `repr`, floats and whitespace follow
-Python's rules (`src/py.rs`); PROVENANCE.md and `THIRD_PARTY/cpython/`.
+`git show v1.0.0:<path>`), which wrote the golden manifests of `testdata/golden/`. ssg-dev is
+written with Rust libraries rather than translated from them:
 
-When it was ported, both implementations gave the same bytes for:
+| Module | What | Libraries |
+|---|---|---|
+| `src/scan.rs` | what a manifest reads from a page: title, `rel` links, URLs, alias target, visible text, heading ids; the items of feeds and sitemaps | html5gum (the element's text state set as a browser's tree builder sets it: `script`, `style`, `textarea`, `title` …), quick-xml |
+| `src/urls.rs` | internal links as site paths, percent-decoded and NFC-normalised | url, percent-encoding, unicode-normalization |
+| `src/manifest.rs` | the manifest of a build, as serde types | serde, image (image headers), toml (base URLs) |
+| `src/structdiff.rs`, `src/ratchet.rs` | the comparison, A7, the ratchet and its baselines | serde, similar (word hunks), globset (the changes files' key patterns) |
+| `src/json.rs` | the JSON text of the harness's files: sorted keys, `, ` and `: `, one entry per line, gzip without name or time | serde_json, flate2 |
+| `src/sites.rs` | the sites; `patches.json` as serde types | serde, filetime |
+| `src/licence.rs`, `src/notices.rs`, `src/metadata.rs` | the licence check and the release notices; `cargo metadata`'s output as serde types (not the cargo_metadata crate, which turns on serde_json's `unbounded_depth`: `cargo dev` would build a second serde_json) | spdx (lax: `A/B` is `A OR B`), serde, semver |
+| `src/package.rs` | the release archives | tar, flate2, zip, jiff |
 
-- the manifests (all levels, with the full text) of the testsite and of docs-i01, docs-reduced
-  and docs-live, both passes; of five generated sites of 1,500 pages each, with feeds,
-  sitemaps, JSON and image files full of edge cases (malformed tags and attributes, character
-  references, raw-text elements, URLs), and 3,000 JSON files, valid and invalid; and of 2,499
-  real docs pages mutated at random;
-- the reports, JSON results and written baselines of structdiff over 13 comparisons with and
-  without differences, baselines, changes files and `--update`;
-- every site of `sites list`, with and without the overlay (paths, bytes, modes, file times), and
-  the caches;
-- the licence check, the notices of four release targets, the archives' entries, and the
-  self-test's output.
-
-`tests/data/reference.json` keeps the values of the first implementation for synthetic inputs;
-`tests/it/reference.rs` checks the port against them.
+What must agree with the golden data is what the comparison compares, not the bytes the tools
+write: the four gates (A-T, A-D1, A-D2, A-D3) find no difference between the Rust builds and
+the unchanged golden manifests, structure dumps and baselines. A difference's fingerprint is
+the first 12 hex digits of the SHA-256 of the compared values' canonical JSON; the baselines
+hold no difference, so none of the first implementation's fingerprints was kept.
 
 ## Tests
 
-`cargo test -p ssg-dev`: the reference values, structdiff's self-test, `patches.json` against
-the Tera patch files, the changes files and the baselines, the sites, the SPDX expressions,
-`version.sh` (in a scratch git repository) and the archives of `package`.
+`cargo test -p ssg-dev`: the page and feed scans, the URL and path normalisation, txtar and the
+JSON text (`tests/it/extract.rs`); structdiff's self-test, `patches.json` against the Tera
+patch files, the changes files and the baselines (each written back as it was read), the sites
+(`tests/it/harness.rs`); the SPDX expressions, `version.sh` (in a scratch git repository) and
+the archives of `package` (`tests/it/release.rs`).

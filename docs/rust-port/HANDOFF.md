@@ -293,9 +293,7 @@ x/image, rsc.io/qr, hashstructure, livereload-js, and the Lato font of A-D3's te
 `cargo dev licence-check` checks every crate of the dependency graph against
 `deny.toml`; `cargo dev notices <target> <file>` writes the notices of the linked
 crates for a release (a crate without a licence file gets the MIT or Apache-2.0 text when that
-is one of its licences, or a standard text of `THIRD_PARTY/spdx/`; anything else fails). The
-harness's ports of CPython's library (ssg-dev, not in the binary) are in
-`THIRD_PARTY/cpython/`. No Zola code: Zola ≥ 0.22 (EUPL-1.2) was never opened; no pre-0.22 MIT
+is one of its licences, or a standard text of `THIRD_PARTY/spdx/`; anything else fails). No Zola code: Zola ≥ 0.22 (EUPL-1.2) was never opened; no pre-0.22 MIT
 Zola file was copied either (D2 allowed it; none was needed).
 
 T70 audit: 535 third-party packages pass the licence check, 438 linked packages have notices;
@@ -678,9 +676,10 @@ Follow-ups outside the repository:
   `tools/dev/version.sh` replaces `version.py`, and the Chroma test-suite fixture is written by
   `crates/highlight/tests/it/testdata.rs`. The one-off converters of T00/T31
   (`fixtures2json.py`, `extract_tplfuncs.py`) stay in the history (`git show v1.0.0:<path>`).
-  The port reproduces the first implementation's output byte for byte (the golden manifests
-  and the baselines' fingerprints were written by it): its HTML tokenizer, URL functions,
-  word hunks and change patterns are translations of CPython's `html.parser`,
-  `urllib.parse`, `difflib` and `fnmatch` (PSF-2.0, `THIRD_PARTY/cpython/`; `deny.toml` now
-  allows PSF-2.0), checked against the Python tools on every site, fuzzed inputs and recorded
-  values (`crates/dev/README.md`). CI needs no Python; the gate tests need bash, not python3.
+  ssg-dev is written with Rust libraries, not translated from the scripts: html5gum and
+  quick-xml read the pages and feeds, `url` and `percent-encoding` the links, serde types
+  hold the manifests, results and baselines, `similar` makes A7's word hunks, `globset`
+  matches the changes files' patterns, `spdx` evaluates the licence expressions (of
+  `cargo metadata` read into serde types), `tar`, `flate2` and `zip` write the archives. The golden data did not
+  change: the four gates find no difference with the unchanged manifests and baselines
+  (`crates/dev/README.md`). CI needs no Python; the gate tests need bash, not python3.

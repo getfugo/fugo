@@ -3,36 +3,31 @@
 
 use indexmap::IndexMap;
 
+/// The name of a file marker line (`-- name --`).
+fn marker(line: &str) -> Option<&str> {
+    let name = line.strip_prefix("-- ")?.strip_suffix(" --")?.trim();
+    (!name.is_empty()).then_some(name)
+}
+
 /// The files of a txtar archive, in order. Every non-empty file ends with a newline (the last
 /// file of an archive without a final newline gets one).
 #[must_use]
 pub fn parse(text: &str) -> IndexMap<String, String> {
     let mut files = IndexMap::new();
-    let mut name: Option<String> = None;
-    let mut buf: Vec<&str> = Vec::new();
-    for line in text.split('\n') {
-        if line.starts_with("-- ") && line.ends_with(" --") && line.len() > 6 {
-            if let Some(n) = name.take() {
-                files.insert(n, buf.join("\n"));
-            }
-            name = Some(crate::py::strip(&line[3..line.len() - 3]).to_owned());
-            buf.clear();
-        } else if name.is_some() {
-            buf.push(line);
+    let mut current: Option<(String, String)> = None;
+    for line in text.split_inclusive('\n') {
+        if let Some(name) = marker(line.trim_end_matches('\n')) {
+            files.extend(current.take());
+            current = Some((name.to_owned(), String::new()));
+        } else if let Some((_, body)) = &mut current {
+            body.push_str(line);
         }
     }
-    if let Some(n) = name {
-        files.insert(n, buf.join("\n"));
+    files.extend(current);
+    for body in files.values_mut() {
+        if !body.is_empty() && !body.ends_with('\n') {
+            body.push('\n');
+        }
     }
     files
-        .into_iter()
-        .map(|(k, v)| {
-            let v = if v.is_empty() || v.ends_with('\n') {
-                v
-            } else {
-                v + "\n"
-            };
-            (k, v)
-        })
-        .collect()
 }

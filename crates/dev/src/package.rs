@@ -23,16 +23,45 @@
 //! .sha256 files and joins them into <name>_<version>_checksums.txt, the checksums file of the
 //! Go releases (DEVELOPMENT.md, "CI and releases").
 
-use std::io::Write as _;
+use std::io::{Cursor, Write as _};
 use std::path::{Path, PathBuf};
 
+use serde::Deserialize;
 use sha2::{Digest, Sha256};
+use zip::write::SimpleFileOptions;
 
 use crate::{Fail, fail};
 
-fn read_toml(path: &Path) -> Result<toml::Table, Fail> {
+fn read_toml<T: serde::de::DeserializeOwned>(path: &Path) -> Result<T, Fail> {
     let text = std::fs::read_to_string(path).map_err(|e| fail!("{}: {e}", path.display()))?;
     toml::from_str(&text).map_err(|e| fail!("{}: {e}", path.display()))
+}
+
+/// The root Cargo.toml, as far as it is read here.
+#[derive(Deserialize)]
+struct RootManifest {
+    workspace: Workspace,
+}
+
+#[derive(Deserialize)]
+struct Workspace {
+    package: WorkspacePackage,
+}
+
+#[derive(Deserialize)]
+struct WorkspacePackage {
+    version: String,
+}
+
+/// crates/cli/Cargo.toml, as far as it is read here.
+#[derive(Deserialize)]
+struct CliManifest {
+    bin: Vec<Bin>,
+}
+
+#[derive(Deserialize)]
+struct Bin {
+    name: String,
 }
 
 /// The version the binary was built with: `$<PREFIX>_BUILD_VERSION`, else the workspace's.
@@ -46,13 +75,8 @@ pub fn build_version() -> Result<String, Fail> {
     {
         return Ok(v);
     }
-    let t = read_toml(&crate::root().join("Cargo.toml"))?;
-    t.get("workspace")
-        .and_then(|w| w.get("package"))
-        .and_then(|p| p.get("version"))
-        .and_then(toml::Value::as_str)
-        .map(str::to_owned)
-        .ok_or_else(|| fail!("Cargo.toml: no [workspace.package] version"))
+    let m: RootManifest = read_toml(&crate::root().join("Cargo.toml"))?;
+    Ok(m.workspace.package.version)
 }
 
 /// The binary's name: `[[bin]] name` of crates/cli/Cargo.toml.
@@ -60,14 +84,24 @@ pub fn build_version() -> Result<String, Fail> {
 /// # Errors
 /// An unreadable manifest.
 pub fn app_name() -> Result<String, Fail> {
-    let t = read_toml(&crate::root().join("crates/cli/Cargo.toml"))?;
-    t.get("bin")
-        .and_then(toml::Value::as_array)
-        .and_then(|b| b.first())
-        .and_then(|b| b.get("name"))
-        .and_then(toml::Value::as_str)
-        .map(str::to_owned)
+    let m: CliManifest = read_toml(&crate::root().join("crates/cli/Cargo.toml"))?;
+    m.bin
+        .into_iter()
+        .next()
+        .map(|b| b.name)
         .ok_or_else(|| fail!("crates/cli/Cargo.toml: no [[bin]] name"))
+}
+
+/// Whether `token` is `v<version>-<commit>` for an abbreviated or full hex commit.
+fn with_any_commit(token: &str, base: &str) -> bool {
+    token == base
+        || token
+            .strip_prefix(base)
+            .and_then(|t| t.strip_prefix('-'))
+            .is_some_and(|c| {
+                (7..=40).contains(&c.len())
+                    && c.bytes().all(|b| matches!(b, b'0'..=b'9' | b'a'..=b'f'))
+            })
 }
 
 /// `<binary> version` must print the version line of `version` (and of
@@ -85,34 +119,26 @@ fn check_binary(binary: &Path, version: &str, app: &str) -> Result<String, Fail>
         ));
     }
     let stdout = String::from_utf8_lossy(&out.stdout).into_owned();
-    let words: Vec<&str> = stdout.split_whitespace().collect();
-    let token = (words.len() > 1 && words[0] == app).then(|| words[1]);
-    let mut want = format!("v{version}");
-    let ok = match std::env::var(ssg_base::env_var!("BUILD_COMMIT"))
+    let mut words = stdout.split_whitespace();
+    let token = (words.next() == Some(app)).then(|| words.next()).flatten();
+    let base = format!("v{version}");
+    let (ok, want) = match std::env::var(ssg_base::env_var!("BUILD_COMMIT"))
         .ok()
         .filter(|c| !c.is_empty())
     {
         Some(commit) => {
-            want = format!("{want}-{commit}");
-            token == Some(want.as_str())
+            let want = format!("{base}-{commit}");
+            (token == Some(want.as_str()), want)
         }
-        None => {
-            let base = want.clone();
-            want = format!("{want}[-<commit>]");
-            token.is_some_and(|t| {
-                t == base
-                    || t.strip_prefix(&format!("{base}-")).is_some_and(|c| {
-                        (7..=40).contains(&c.len())
-                            && c.bytes().all(|b| matches!(b, b'0'..=b'9' | b'a'..=b'f'))
-                    })
-            })
-        }
+        None => (
+            token.is_some_and(|t| with_any_commit(t, &base)),
+            format!("{base}[-<commit>]"),
+        ),
     };
     if !ok {
         return Err(fail!(
-            "`{} version` printed {}, not '{app} {want} …' (${}, else the version of Cargo.toml)",
+            "`{} version` printed {stdout:?}, not '{app} {want} …' (${}, else the version of Cargo.toml)",
             binary.display(),
-            crate::py::repr_str(&stdout),
             ssg_base::env_var!("BUILD_VERSION"),
         ));
     }
@@ -124,241 +150,166 @@ fn check_binary(binary: &Path, version: &str, app: &str) -> Result<String, Fail>
 /// # Errors
 /// A triple with no Go names.
 pub fn go_platform(target: &str) -> Result<String, Fail> {
+    let unknown = || fail!("no Go os/arch names for the target {target:?}");
     let mut parts = target.split('-');
     let arch = match parts.next() {
         Some("x86_64") => "amd64",
         Some("aarch64") => "arm64",
-        _ => {
-            return Err(fail!(
-                "no Go os/arch names for the target {}",
-                crate::py::repr_str(target)
-            ));
-        }
+        _ => return Err(unknown()),
     };
-    let oses: Vec<&str> = parts
+    match parts
         .filter(|p| matches!(*p, "linux" | "darwin" | "windows"))
-        .collect();
-    match oses.as_slice() {
+        .collect::<Vec<_>>()[..]
+    {
         [os] => Ok(format!("{os}-{arch}")),
-        _ => Err(fail!(
-            "no Go os/arch names for the target {}",
-            crate::py::repr_str(target)
-        )),
+        _ => Err(unknown()),
     }
 }
 
-/// An archive entry: its name, its source file (none for a directory) and its mode.
-type Item = (String, Option<PathBuf>, u32);
+/// An archive entry: a directory (its name without the trailing `/`) or a file and its source.
+struct Item {
+    name: String,
+    source: Option<PathBuf>,
+    mode: u32,
+}
 
 fn entries(binary: &Path, notices: Option<&Path>) -> Result<Vec<Item>, Fail> {
     let root = crate::root();
-    let name = binary
+    let file = |name: &str, source: PathBuf, mode| Item {
+        name: name.to_owned(),
+        source: Some(source),
+        mode,
+    };
+    let binary_name = binary
         .file_name()
         .map(|n| n.to_string_lossy().into_owned())
         .unwrap_or_default();
-    let mut files: Vec<Item> = vec![(name, Some(binary.to_owned()), 0o755)];
+    let mut items = vec![file(&binary_name, binary.to_owned(), 0o755)];
     for f in ["README.md", "LICENSE", "NOTICE", "PROVENANCE.md"] {
-        files.push((f.to_owned(), Some(root.join(f)), 0o644));
+        items.push(file(f, root.join(f), 0o644));
     }
     if let Some(n) = notices {
-        files.push((
-            "THIRD_PARTY_NOTICES.txt".to_owned(),
-            Some(n.to_owned()),
-            0o644,
-        ));
+        items.push(file("THIRD_PARTY_NOTICES.txt", n.to_owned(), 0o644));
     }
-    let mut dirs = vec!["THIRD_PARTY".to_owned()];
-    for rel in walk_with_dirs(&root.join("THIRD_PARTY")) {
-        let (rel, is_dir) = rel;
-        let name = format!("THIRD_PARTY/{rel}");
-        if is_dir {
-            dirs.push(name);
-        } else {
-            files.push((name, Some(root.join("THIRD_PARTY").join(&rel)), 0o644));
-        }
-    }
-    for (_, src, _) in &files {
-        let src = src.as_ref().expect("a file");
-        if !src.is_file() {
-            return Err(fail!("{} is missing", src.display()));
-        }
-    }
-    let mut items: Vec<Item> = dirs.into_iter().map(|d| (d, None, 0o755)).collect();
-    items.extend(files);
-    items.sort_by(|a, b| a.0.cmp(&b.0));
-    Ok(items)
-}
-
-/// The entries below `dir`: (`/`-separated relative path, whether it is a directory).
-fn walk_with_dirs(dir: &Path) -> Vec<(String, bool)> {
-    walkdir::WalkDir::new(dir)
+    items.push(Item {
+        name: "THIRD_PARTY".into(),
+        source: None,
+        mode: 0o755,
+    });
+    let third_party = root.join("THIRD_PARTY");
+    for e in walkdir::WalkDir::new(&third_party)
         .min_depth(1)
         .into_iter()
         .filter_map(Result::ok)
-        .map(|e| {
-            let rel = e.path().strip_prefix(dir).expect("below the root");
-            let rel = rel
-                .components()
-                .map(|c| c.as_os_str().to_string_lossy())
-                .collect::<Vec<_>>()
-                .join("/");
-            (rel, e.path().is_dir())
-        })
-        .collect()
+    {
+        let rel = e.path().strip_prefix(&third_party).expect("below the root");
+        let rel: Vec<_> = rel
+            .components()
+            .map(|c| c.as_os_str().to_string_lossy())
+            .collect();
+        let name = format!("THIRD_PARTY/{}", rel.join("/"));
+        items.push(if e.path().is_dir() {
+            Item {
+                name,
+                source: None,
+                mode: 0o755,
+            }
+        } else {
+            file(&name, e.path().to_owned(), 0o644)
+        });
+    }
+    if let Some(missing) = items
+        .iter()
+        .filter_map(|i| i.source.as_ref())
+        .find(|s| !s.is_file())
+    {
+        return Err(fail!("{} is missing", missing.display()));
+    }
+    items.sort_by(|a, b| a.name.cmp(&b.name));
+    Ok(items)
 }
 
 fn read(src: &Path) -> Result<Vec<u8>, Fail> {
     std::fs::read(src).map_err(|e| fail!("{}: {e}", src.display()))
 }
 
-fn write_tar_gz(path: &Path, items: &[Item], mtime: u64) -> Result<(), Fail> {
+fn write_tar_gz(items: &[Item], mtime: jiff::Timestamp) -> Result<Vec<u8>, Fail> {
+    let seconds = mtime.as_second();
     let gz = flate2::GzBuilder::new()
-        .mtime(u32::try_from(mtime).unwrap_or(0))
+        .mtime(u32::try_from(seconds).unwrap_or(0))
         .write(Vec::new(), flate2::Compression::best());
     let mut tar = tar::Builder::new(gz);
-    for (name, src, mode) in items {
+    for item in items {
         let mut h = tar::Header::new_ustar();
-        h.set_mode(*mode);
-        h.set_mtime(mtime);
+        h.set_mode(item.mode);
+        h.set_mtime(u64::try_from(seconds).unwrap_or(0));
         h.set_uid(0);
         h.set_gid(0);
-        h.set_username("").map_err(|e| fail!("{name}: {e}"))?;
-        h.set_groupname("").map_err(|e| fail!("{name}: {e}"))?;
-        let data = match src {
+        let (path, data) = match &item.source {
             None => {
                 h.set_entry_type(tar::EntryType::Directory);
-                Vec::new()
+                (format!("{}/", item.name), Vec::new())
             }
             Some(src) => {
                 h.set_entry_type(tar::EntryType::Regular);
-                read(src)?
+                (item.name.clone(), read(src)?)
             }
         };
         h.set_size(data.len() as u64);
-        let entry_name = if src.is_none() {
-            format!("{name}/")
-        } else {
-            name.clone()
-        };
-        tar.append_data(&mut h, &entry_name, &data[..])
-            .map_err(|e| fail!("{name}: {e}"))?;
+        tar.append_data(&mut h, &path, &data[..])
+            .map_err(|e| fail!("{}: {e}", item.name))?;
     }
-    let gz = tar
-        .into_inner()
-        .map_err(|e| fail!("{}: {e}", path.display()))?;
-    let bytes = gz.finish().map_err(|e| fail!("{}: {e}", path.display()))?;
-    std::fs::write(path, bytes).map_err(|e| fail!("{}: {e}", path.display()))
+    let gz = tar.into_inner().map_err(|e| fail!("tar: {e}"))?;
+    gz.finish().map_err(|e| fail!("gzip: {e}"))
 }
 
-/// The civil date (year, month, day) of a day count since 1970-01-01.
-fn civil_from_days(z: i64) -> (i64, u32, u32) {
-    let z = z + 719_468;
-    let era = z.div_euclid(146_097);
-    let doe = z.rem_euclid(146_097);
-    let yoe = (doe - doe / 1460 + doe / 36524 - doe / 146_096) / 365;
-    let doy = doe - (365 * yoe + yoe / 4 - yoe / 100);
-    let mp = (5 * doy + 2) / 153;
-    let d = u32::try_from(doy - (153 * mp + 2) / 5 + 1).expect("a day");
-    let m = u32::try_from(if mp < 10 { mp + 3 } else { mp - 9 }).expect("a month");
-    (yoe + era * 400 + i64::from(m <= 2), m, d)
-}
-
-/// The MS-DOS date and time of a Unix time (UTC; zip dates start in 1980).
-fn dos_time(mtime: u64) -> (u16, u16) {
-    let t = i64::try_from(mtime.max(315_532_800)).unwrap_or(i64::MAX);
-    let (y, m, d) = civil_from_days(t.div_euclid(86_400));
-    let secs = t.rem_euclid(86_400);
-    let (hh, mm, ss) = (secs / 3600, secs % 3600 / 60, secs % 60);
-    let date = u16::try_from(((y - 1980) << 9) | i64::from(m << 5) | i64::from(d)).unwrap_or(0);
-    let time = u16::try_from((hh << 11) | (mm << 5) | (ss / 2)).unwrap_or(0);
-    (date, time)
-}
-
-/// A zip archive (deflated files, stored directories, Unix modes, no data descriptors).
-fn write_zip(path: &Path, items: &[Item], mtime: u64) -> Result<(), Fail> {
-    let (date, time) = dos_time(mtime);
-    let mut out: Vec<u8> = Vec::new();
-    let mut central: Vec<u8> = Vec::new();
-    let le16 = |v: &mut Vec<u8>, x: u16| v.extend_from_slice(&x.to_le_bytes());
-    let le32 = |v: &mut Vec<u8>, x: u32| v.extend_from_slice(&x.to_le_bytes());
-    let too_big = |what: &str| {
-        fail!(
-            "{}: {what} too large for a zip without Zip64",
-            path.display()
-        )
-    };
-    for (name, src, mode) in items {
-        let (name, data, method, attr) = match src {
-            None => (
-                format!("{name}/"),
-                Vec::new(),
-                0u16,
-                ((0o40000 | mode) << 16) | 0x10,
-            ),
-            Some(src) => (name.clone(), read(src)?, 8u16, (0o100000 | mode) << 16),
-        };
-        let crc = crc32fast::hash(&data);
-        let stored = if method == 8 {
-            let mut z =
-                flate2::write::DeflateEncoder::new(Vec::new(), flate2::Compression::default());
-            z.write_all(&data).map_err(|e| fail!("{name}: {e}"))?;
-            z.finish().map_err(|e| fail!("{name}: {e}"))?
-        } else {
-            data.clone()
-        };
-        let offset = u32::try_from(out.len()).map_err(|_| too_big("the archive"))?;
-        let (csize, usize_) = (
-            u32::try_from(stored.len()).map_err(|_| too_big(&name))?,
-            u32::try_from(data.len()).map_err(|_| too_big(&name))?,
-        );
-        let name_len = u16::try_from(name.len()).map_err(|_| too_big(&name))?;
-        // Local file header.
-        le32(&mut out, 0x0403_4b50);
-        le16(&mut out, 20); // version needed
-        le16(&mut out, 0); // flags
-        le16(&mut out, method);
-        le16(&mut out, time);
-        le16(&mut out, date);
-        le32(&mut out, crc);
-        le32(&mut out, csize);
-        le32(&mut out, usize_);
-        le16(&mut out, name_len);
-        le16(&mut out, 0); // extra
-        out.extend_from_slice(name.as_bytes());
-        out.extend_from_slice(&stored);
-        // Central directory entry.
-        le32(&mut central, 0x0201_4b50);
-        le16(&mut central, (3 << 8) | 20); // made by Unix, 2.0
-        le16(&mut central, 20);
-        le16(&mut central, 0);
-        le16(&mut central, method);
-        le16(&mut central, time);
-        le16(&mut central, date);
-        le32(&mut central, crc);
-        le32(&mut central, csize);
-        le32(&mut central, usize_);
-        le16(&mut central, name_len);
-        le16(&mut central, 0); // extra
-        le16(&mut central, 0); // comment
-        le16(&mut central, 0); // disk
-        le16(&mut central, 0); // internal attributes
-        le32(&mut central, attr);
-        le32(&mut central, offset);
-        central.extend_from_slice(name.as_bytes());
+/// A zip archive: deflated files, directories, Unix modes, the time in UTC (zip times have no
+/// zone and start in 1980).
+fn write_zip(items: &[Item], mtime: jiff::Timestamp) -> Result<Vec<u8>, Fail> {
+    let t = mtime.to_zoned(jiff::tz::TimeZone::UTC);
+    let narrow = |x: i8| u8::try_from(x).unwrap_or(0);
+    let time = zip::DateTime::from_date_and_time(
+        u16::try_from(t.year()).unwrap_or(1980),
+        narrow(t.month()),
+        narrow(t.day()),
+        narrow(t.hour()),
+        narrow(t.minute()),
+        narrow(t.second()),
+    )
+    .unwrap_or_default();
+    let mut zip = zip::ZipWriter::new(Cursor::new(Vec::new()));
+    for item in items {
+        let options = SimpleFileOptions::default()
+            .last_modified_time(time)
+            .unix_permissions(item.mode);
+        let e = |e: &dyn std::fmt::Display| fail!("{}: {e}", item.name);
+        match &item.source {
+            None => zip.add_directory(&item.name, options).map_err(|x| e(&x))?,
+            Some(src) => {
+                zip.start_file(
+                    &item.name,
+                    options.compression_method(zip::CompressionMethod::Deflated),
+                )
+                .map_err(|x| e(&x))?;
+                zip.write_all(&read(src)?).map_err(|x| e(&x))?;
+            }
+        }
     }
-    let count = u16::try_from(items.len()).map_err(|_| too_big("the entry count"))?;
-    let cd_offset = u32::try_from(out.len()).map_err(|_| too_big("the archive"))?;
-    let cd_size = u32::try_from(central.len()).map_err(|_| too_big("the central directory"))?;
-    out.extend_from_slice(&central);
-    le32(&mut out, 0x0605_4b50);
-    le16(&mut out, 0);
-    le16(&mut out, 0);
-    le16(&mut out, count);
-    le16(&mut out, count);
-    le32(&mut out, cd_size);
-    le32(&mut out, cd_offset);
-    le16(&mut out, 0);
-    std::fs::write(path, out).map_err(|e| fail!("{}: {e}", path.display()))
+    Ok(zip.finish().map_err(|e| fail!("zip: {e}"))?.into_inner())
+}
+
+/// `SOURCE_DATE_EPOCH`, else now.
+fn source_date() -> Result<jiff::Timestamp, Fail> {
+    match std::env::var("SOURCE_DATE_EPOCH")
+        .ok()
+        .filter(|s| !s.is_empty())
+    {
+        Some(s) => {
+            let seconds: i64 = s.parse().map_err(|e| fail!("SOURCE_DATE_EPOCH: {e}"))?;
+            jiff::Timestamp::from_second(seconds).map_err(|e| fail!("SOURCE_DATE_EPOCH: {e}"))
+        }
+        None => Ok(jiff::Timestamp::now()),
+    }
 }
 
 /// Packages `binary` for `target` into `out`.
@@ -370,43 +321,28 @@ pub fn run(binary: &Path, target: &str, out: &Path, notices: Option<&Path>) -> R
     let version = build_version()?;
     let app = app_name()?;
     let line = check_binary(binary, &version, &app)?;
-    let ext = if target.contains("windows") {
-        "zip"
-    } else {
-        "tar.gz"
-    };
-    let archive = out.join(format!("{app}_{version}_{}.{ext}", go_platform(target)?));
-    let mtime = std::env::var("SOURCE_DATE_EPOCH")
-        .ok()
-        .filter(|s| !s.is_empty())
-        .map(|s| {
-            s.parse::<u64>()
-                .map_err(|e| fail!("SOURCE_DATE_EPOCH: {e}"))
-        })
-        .transpose()?
-        .unwrap_or_else(|| {
-            std::time::SystemTime::now()
-                .duration_since(std::time::UNIX_EPOCH)
-                .map_or(0, |d| d.as_secs())
-        });
-    std::fs::create_dir_all(out).map_err(|e| fail!("{}: {e}", out.display()))?;
+    let zip = target.contains("windows");
+    let file_name = format!(
+        "{app}_{version}_{}.{}",
+        go_platform(target)?,
+        if zip { "zip" } else { "tar.gz" }
+    );
+    let mtime = source_date()?;
     let items = entries(binary, notices)?;
-    if ext == "zip" {
-        write_zip(&archive, &items, mtime)?;
+    let bytes = if zip {
+        write_zip(&items, mtime)?
     } else {
-        write_tar_gz(&archive, &items, mtime)?;
-    }
-    let bytes = std::fs::read(&archive).map_err(|e| fail!("{}: {e}", archive.display()))?;
+        write_tar_gz(&items, mtime)?
+    };
+    std::fs::create_dir_all(out).map_err(|e| fail!("{}: {e}", out.display()))?;
+    let archive = out.join(&file_name);
+    std::fs::write(&archive, &bytes).map_err(|e| fail!("{}: {e}", archive.display()))?;
     let digest: String = Sha256::digest(&bytes)
         .iter()
         .map(|b| format!("{b:02x}"))
         .collect();
-    let file_name = archive
-        .file_name()
-        .map(|n| n.to_string_lossy().into_owned())
-        .unwrap_or_default();
     let sha_line = format!("{digest}  {file_name}\n");
-    let sha_path = PathBuf::from(format!("{}.sha256", archive.display()));
+    let sha_path = out.join(format!("{file_name}.sha256"));
     std::fs::write(&sha_path, &sha_line).map_err(|e| fail!("{}: {e}", sha_path.display()))?;
     println!(
         "{line}: {} ({} bytes, {} entries)",

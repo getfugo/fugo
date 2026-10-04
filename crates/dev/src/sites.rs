@@ -22,10 +22,13 @@
 //!
 //! Files are copied with their permissions and times, as the golden builds' inputs were.
 
+use std::collections::BTreeMap;
 use std::path::{Component, Path, PathBuf};
 
-use crate::py::{self, Py};
-use crate::{Fail, fail, manifest, txtar};
+use serde::{Deserialize, Serialize};
+use serde_json::Value;
+
+use crate::{Fail, fail, json, manifest, txtar};
 
 /// The I01 site: offline, no Chroma, passthrough, emoji, Tailwind or node modules (acceptance
 /// gate A-D1).
@@ -59,10 +62,7 @@ fn i01_dir() -> PathBuf {
     crate::root().join("tools/rust-port/i01")
 }
 
-/// tools/rust-port/i01/patches.json: the edits of the docs site per variant, in the order they
-/// are applied (`op` remove, replace or write; `tera`: the file below
-/// sites/docs/patches/<variant>/ that mirrors a layout patch in the Tera overlay, null when the
-/// patch changes the site input both builds share).
+/// tools/rust-port/i01/patches.json: the edits of the docs site per variant.
 #[must_use]
 pub fn patches_json() -> PathBuf {
     i01_dir().join("patches.json")
@@ -89,7 +89,7 @@ fn edit(dir: &Path, rel: &str, old: &str, new: &str) -> Result<(), Fail> {
     let s = std::fs::read_to_string(&path).map_err(io(&path))?;
     let count = s.matches(old).count();
     if count != 1 {
-        return Err(fail!("{rel}: {} found {count} times", py::repr_str(old)));
+        return Err(fail!("{rel}: {old:?} found {count} times"));
     }
     std::fs::write(&path, s.replacen(old, new, 1)).map_err(io(&path))
 }
@@ -112,8 +112,7 @@ fn copy_stat(src: &Path, dst: &Path) -> Result<(), Fail> {
     .map_err(io(dst))
 }
 
-/// Copies the tree `src` into `dst` (created if missing), following symbolic links, as
-/// `shutil.copytree` does.
+/// Copies the tree `src` into `dst` (created if missing), following symbolic links.
 fn copy_tree(src: &Path, dst: &Path) -> Result<(), Fail> {
     copy_dir(src, dst, false, true)
 }
@@ -158,8 +157,7 @@ fn as_local_site(dir: &Path) -> Result<(), Fail> {
     for ext in EXTS {
         let from = dir.join(format!("{GO_NAME}.{ext}"));
         if from.exists() {
-            let to = dir.join(format!("config.{ext}"));
-            std::fs::rename(&from, &to).map_err(io(&from))?;
+            std::fs::rename(&from, dir.join(format!("config.{ext}"))).map_err(io(&from))?;
         }
     }
     let go = format!("^{}_", GO_NAME.to_uppercase());
@@ -192,20 +190,14 @@ pub fn repo_file(rel: &str) -> PathBuf {
     let upstream = UPSTREAM
         .iter()
         .any(|p| rel == *p || rel.starts_with(&format!("{p}/")));
-    if !upstream && format!("{rel}/").starts_with("docs/") && !rel.starts_with("docs/rust-port") {
+    if upstream {
+        return testdata().join("upstream").join(rel);
+    }
+    if format!("{rel}/").starts_with("docs/") && !rel.starts_with("docs/rust-port") {
         let rest: Vec<&str> = rel.split('/').skip(1).collect();
         return testdata().join("legacy-docs").join(rest.join("/"));
     }
-    let rel = if upstream {
-        rel
-    } else {
-        rel.strip_prefix(LEGACY_WORKSPACE).unwrap_or(rel)
-    };
-    if upstream {
-        testdata().join("upstream").join(rel)
-    } else {
-        crate::root().join(rel)
-    }
+    crate::root().join(rel.strip_prefix(LEGACY_WORKSPACE).unwrap_or(rel))
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -215,49 +207,75 @@ pub fn repo_file(rel: &str) -> PathBuf {
 // path> for every variant it belongs to (`sites patches` checks the 1:1 correspondence); all
 // other patches change the site input both builds share.
 
-/// The patches.json document.
-///
-/// # Errors
-/// A missing or invalid patches.json.
-pub fn docs_patches() -> Result<Py, Fail> {
-    manifest::read_json(&patches_json())
+/// patches.json.
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct Patches {
+    pub schema: String,
+    pub about: String,
+    pub variants: Vec<String>,
+    /// In the order they are applied.
+    pub patches: Vec<Patch>,
 }
 
-fn patch_list(doc: &Py) -> &[Py] {
-    doc.get("patches").and_then(Py::as_list).unwrap_or(&[])
+/// An edit of the docs site.
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct Patch {
+    pub file: String,
+    #[serde(flatten)]
+    pub edit: Edit,
+    /// The variants it belongs to.
+    pub variants: Vec<String>,
+    pub why: String,
+    /// The file below sites/docs/patches/<variant>/ that mirrors a layout patch in the Tera
+    /// overlay (none: the patch changes the site input both builds share).
+    pub tera: Option<String>,
 }
 
-fn in_variant(p: &Py, variant: &str) -> bool {
-    p.get("variants")
-        .and_then(Py::as_list)
-        .unwrap_or(&[])
-        .iter()
-        .any(|v| v.as_str() == Some(variant))
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(tag = "op", rename_all = "lowercase")]
+pub enum Edit {
+    Remove,
+    /// The one occurrence of `old` replaced with `new`.
+    Replace {
+        old: String,
+        new: String,
+    },
+    Write {
+        content: String,
+    },
 }
 
-fn field<'a>(p: &'a Py, k: &str) -> Result<&'a str, Fail> {
-    p.get(k)
-        .and_then(Py::as_str)
-        .ok_or_else(|| fail!("patches.json: a patch without {k}: {}", py::dumps(p, false)))
+impl Patch {
+    fn in_variant(&self, variant: &str) -> bool {
+        self.variants.iter().any(|v| v == variant)
+    }
 }
 
-/// patches.json in its canonical form: sorted keys, one patch per line.
-#[must_use]
-pub fn patches_json_text(doc: &Py) -> String {
-    let mut lines: Vec<String> = doc
-        .as_dict()
-        .into_iter()
-        .flatten()
-        .filter(|(k, _)| *k != "patches")
-        .map(|(k, v)| format!("{}: {}", py::json_str(k, false), py::dumps(v, false)))
-        .collect();
-    let patches: Vec<String> = patch_list(doc)
-        .iter()
-        .map(|p| py::dumps(p, false))
-        .collect();
-    lines.push(format!("\"patches\": [\n{}\n]", patches.join(",\n")));
-    lines.sort();
-    format!("{{\n{}\n}}\n", lines.join(",\n"))
+impl Patches {
+    /// tools/rust-port/i01/patches.json.
+    ///
+    /// # Errors
+    /// A missing or invalid patches.json.
+    pub fn read() -> Result<Patches, Fail> {
+        json::read(&patches_json())
+    }
+
+    /// The file in its canonical form: sorted keys, one patch per line.
+    #[must_use]
+    pub fn to_text(&self) -> String {
+        let doc = serde_json::to_value(self).expect("patches serialize");
+        let mut lines: Vec<String> = doc
+            .as_object()
+            .expect("an object")
+            .iter()
+            .filter(|(k, _)| *k != "patches")
+            .map(|(k, v)| format!("{}: {}", json::string(k), json::line(v)))
+            .collect();
+        let patches: Vec<String> = self.patches.iter().map(json::line).collect();
+        lines.push(format!("\"patches\": [\n{}\n]", patches.join(",\n")));
+        lines.sort();
+        format!("{{\n{}\n}}\n", lines.join(",\n"))
+    }
 }
 
 /// The errors of patches.json: not in its canonical form, a `tera` field that is not the file
@@ -267,41 +285,28 @@ pub fn patches_json_text(doc: &Py) -> String {
 /// A missing or invalid patches.json.
 pub fn check_patches() -> Result<Vec<String>, Fail> {
     let path = patches_json();
-    let mut errors = Vec::new();
     let text = std::fs::read_to_string(&path).map_err(io(&path))?;
-    let doc = docs_patches()?;
-    if text != patches_json_text(&doc) {
+    let doc = Patches::read()?;
+    let mut errors = Vec::new();
+    if text != doc.to_text() {
         errors.push(format!(
             "{} is not in its canonical form (run `cargo dev sites patches`)",
             path.display()
         ));
     }
-    for p in patch_list(&doc) {
-        let file = field(p, "file")?;
-        let want = if file.starts_with("layouts/") {
-            Py::Str(file.to_owned())
-        } else {
-            Py::None
-        };
-        if *p.get_or_none("tera") != want {
-            errors.push(format!(
-                "{file}: `tera` must be {}",
-                py::dumps(&want, false)
-            ));
-        }
-        if !matches!(field(p, "op")?, "remove" | "replace" | "write") {
-            errors.push(format!(
-                "{file}: unknown op {}",
-                py::repr(p.get_or_none("op"))
-            ));
+    for p in &doc.patches {
+        let want = p.file.starts_with("layouts/").then(|| p.file.clone());
+        if p.tera != want {
+            errors.push(format!("{}: `tera` must be {want:?}", p.file));
         }
     }
     let root = tera_patches();
     for v in DOCS_VARIANTS {
-        let mut want: Vec<String> = patch_list(&doc)
+        let mut want: Vec<&String> = doc
+            .patches
             .iter()
-            .filter(|p| in_variant(p, v))
-            .filter_map(|p| p.get("tera").and_then(Py::as_str).map(str::to_owned))
+            .filter(|p| p.in_variant(v))
+            .filter_map(|p| p.tera.as_ref())
             .collect();
         want.sort();
         want.dedup();
@@ -342,25 +347,26 @@ pub fn check_patches() -> Result<Vec<String>, Fail> {
 fn make_docs(dir: &Path, variant: &str) -> Result<(), Fail> {
     if !DOCS_VARIANTS.contains(&variant) {
         return Err(fail!(
-            "unknown docs patch variant {} (one of {})",
-            py::repr_str(variant),
+            "unknown docs patch variant {variant:?} (one of {})",
             DOCS_VARIANTS.join(", ")
         ));
     }
     copy_site(&testdata().join("legacy-docs"), dir)?;
     as_local_site(dir)?;
-    let doc = docs_patches()?;
-    for p in patch_list(&doc).iter().filter(|p| in_variant(p, variant)) {
-        let file = field(p, "file")?;
-        match field(p, "op")? {
-            "remove" => {
-                let path = dir.join(file);
+    for p in Patches::read()?
+        .patches
+        .iter()
+        .filter(|p| p.in_variant(variant))
+    {
+        match &p.edit {
+            Edit::Remove => {
+                let path = dir.join(&p.file);
                 if path.exists() {
                     std::fs::remove_file(&path).map_err(io(&path))?;
                 }
             }
-            "replace" => edit(dir, file, field(p, "old")?, field(p, "new")?)?,
-            _ => write(dir, file, field(p, "content")?.as_bytes())?,
+            Edit::Replace { old, new } => edit(dir, &p.file, old, new)?,
+            Edit::Write { content } => write(dir, &p.file, content.as_bytes())?,
         }
     }
     Ok(())
@@ -385,6 +391,27 @@ fn make_testsite(dir: &Path) -> Result<(), Fail> {
 // ---------------------------------------------------------------------------------------------
 // The T24 build sites.
 
+#[derive(Deserialize)]
+struct BuildFixture {
+    site: FixtureSite,
+}
+
+#[derive(Deserialize)]
+struct FixtureSite {
+    toml: String,
+    files: Vec<FixtureFile>,
+}
+
+/// A file of a fixture site: a repository file (`repo`) or its content.
+#[derive(Deserialize)]
+struct FixtureFile {
+    path: String,
+    #[serde(default)]
+    repo: Option<String>,
+    #[serde(default)]
+    content: Option<String>,
+}
+
 fn build_fixtures() -> PathBuf {
     testdata().join("oracle/sitebuild/build")
 }
@@ -406,13 +433,8 @@ fn t24_names() -> Result<Vec<String>, Fail> {
 }
 
 fn make_t24(name: &str, dir: &Path) -> Result<(), Fail> {
-    let doc = manifest::read_json(&build_fixtures().join(format!("{name}.json.gz")))?;
-    let site = doc.get_or_none("site");
-    let mut toml = site
-        .get("toml")
-        .and_then(Py::as_str)
-        .ok_or_else(|| fail!("t24-{name}: no toml"))?
-        .to_owned();
+    let fixture: BuildFixture = json::read(&build_fixtures().join(format!("{name}.json.gz")))?;
+    let mut toml = fixture.site.toml;
     if name == "docs" {
         // t24-docs keeps code fences as plain <pre><code> (codeFences = false), as its T24
         // build-oracle comparison was set up before this port had a highlighter.
@@ -424,14 +446,16 @@ fn make_t24(name: &str, dir: &Path) -> Result<(), Fail> {
     }
     std::fs::create_dir_all(dir).map_err(io(dir))?;
     write(dir, "config.toml", toml.as_bytes())?;
-    for f in site.get("files").and_then(Py::as_list).unwrap_or(&[]) {
-        let path = field(f, "path")?;
-        match f.get("repo").filter(|r| r.truthy()) {
-            Some(repo) => {
-                let src = repo_file(&py::str_of(repo));
-                write(dir, path, &std::fs::read(&src).map_err(io(&src))?)?;
+    for f in fixture.site.files {
+        match (f.repo.filter(|r| !r.is_empty()), f.content) {
+            (Some(repo), _) => {
+                let src = repo_file(&repo);
+                write(dir, &f.path, &std::fs::read(&src).map_err(io(&src))?)?;
             }
-            None => write(dir, path, field(f, "content")?.as_bytes())?,
+            (None, Some(content)) => write(dir, &f.path, content.as_bytes())?,
+            (None, None) => {
+                return Err(fail!("t24-{name}: {} has neither repo nor content", f.path));
+            }
         }
     }
     Ok(())
@@ -444,23 +468,17 @@ fn docs_live_cache(dir: &Path) -> Result<(), Fail> {
         .join("tools/rust-port/testdata/getremote-cache/docs-live/filecache/getresource");
     let out = dir.join("docs-live/filecache/getresource");
     std::fs::create_dir_all(&out).map_err(io(&out))?;
-    let mut names: Vec<String> = std::fs::read_dir(&src)
-        .map_err(io(&src))?
-        .filter_map(Result::ok)
-        .map(|e| e.file_name().to_string_lossy().into_owned())
-        .collect();
-    names.sort();
     let is_key =
         |n: &str| !n.is_empty() && n.bytes().all(|b| matches!(b, b'0'..=b'9' | b'a'..=b'f'));
-    for name in names {
-        let from = src.join(&name);
+    for e in std::fs::read_dir(&src)
+        .map_err(io(&src))?
+        .filter_map(Result::ok)
+    {
+        let name = e.file_name().to_string_lossy().into_owned();
+        let from = e.path();
         if let Some(key) = name.strip_suffix(".gz") {
-            let raw = std::fs::read(&from).map_err(io(&from))?;
-            let mut data = Vec::new();
-            std::io::Read::read_to_end(&mut flate2::read::GzDecoder::new(&raw[..]), &mut data)
-                .map_err(io(&from))?;
             let to = out.join(key);
-            std::fs::write(&to, data).map_err(io(&to))?;
+            std::fs::write(&to, json::read_bytes(&from)?).map_err(io(&to))?;
         } else if is_key(&name) {
             let to = out.join(&name);
             std::fs::write(&to, std::fs::read(&from).map_err(io(&from))?).map_err(io(&to))?;
@@ -514,18 +532,26 @@ yhtml = "<em>h</em>"
 +++
 "#;
 
+#[derive(Deserialize)]
+struct Probe {
+    files: BTreeMap<String, String>,
+}
+
 /// T13's probe site (the template-engine spec's Appendix A/B probe lines) built for real: the
 /// store oracle's three home layouts, and a home page whose front matter holds the values of
 /// the oracle's stub page (the real page and func map, not the minimal test FuncMap).
 fn make_probe(dir: &Path) -> Result<(), Fail> {
-    let doc = manifest::read_json(&testdata().join("oracle/tplimpl/probe/probe.json.gz"))?;
+    let probe: Probe = json::read(&testdata().join("oracle/tplimpl/probe/probe.json.gz"))?;
     std::fs::create_dir_all(dir).map_err(io(dir))?;
-    for (k, v) in doc.get("files").and_then(Py::as_dict).into_iter().flatten() {
+    for (k, v) in &probe.files {
         // With the real func map `js` is the Go implementation's js namespace: `.Title | js`
         // prints the namespace struct, which Go prints with its pointer addresses (different
         // in every Go run).
-        let v = py::str_of(v).replace("{{ .Title | js }}", "JS-NAMESPACE");
-        write(dir, k, v.as_bytes())?;
+        write(
+            dir,
+            k,
+            v.replace("{{ .Title | js }}", "JS-NAMESPACE").as_bytes(),
+        )?;
     }
     write(dir, "config.toml", PROBE_CONFIG.as_bytes())?;
     write(dir, "content/_index.md", PROBE_HOME.as_bytes())
@@ -535,6 +561,18 @@ fn make_probe(dir: &Path) -> Result<(), Fail> {
 // mini: the e2e oracle's small en/th site (testdata/oracle/commands/e2e/mini.txtar). Its one
 // GetRemote call is served from the getresource entry the oracle recorded with the case
 // (e2e.json.gz, `_cache/site/filecache/getresource/<key>`).
+
+#[derive(Deserialize)]
+struct E2e {
+    cases: Vec<E2eCase>,
+}
+
+#[derive(Deserialize)]
+struct E2eCase {
+    name: String,
+    #[serde(default)]
+    files: BTreeMap<String, Value>,
+}
 
 fn make_mini(dir: &Path) -> Result<(), Fail> {
     if dir.file_name().is_none_or(|n| n != "mini") {
@@ -548,24 +586,19 @@ fn make_mini(dir: &Path) -> Result<(), Fail> {
 fn mini_cache(dir: &Path) -> Result<(), Fail> {
     let out = dir.join("mini/filecache/getresource");
     std::fs::create_dir_all(&out).map_err(io(&out))?;
-    let doc = manifest::read_json(&testdata().join("oracle/commands/e2e/e2e.json.gz"))?;
-    let case = doc
-        .get("cases")
-        .and_then(Py::as_list)
-        .unwrap_or(&[])
-        .iter()
-        .find(|c| c.get("name").and_then(Py::as_str) == Some("mini"))
-        .ok_or_else(|| fail!("e2e.json.gz: no case mini"))?;
-    let prefix = "_cache/site/filecache/getresource/";
-    for (name, content) in case
-        .get("files")
-        .and_then(Py::as_dict)
+    let e2e: E2e = json::read(&testdata().join("oracle/commands/e2e/e2e.json.gz"))?;
+    let case = e2e
+        .cases
         .into_iter()
-        .flatten()
-    {
-        if let Some(key) = name.strip_prefix(prefix) {
+        .find(|c| c.name == "mini")
+        .ok_or_else(|| fail!("e2e.json.gz: no case mini"))?;
+    for (name, content) in &case.files {
+        if let (Some(key), Some(content)) = (
+            name.strip_prefix("_cache/site/filecache/getresource/"),
+            content.as_str(),
+        ) {
             let to = out.join(key);
-            std::fs::write(&to, py::str_of(content)).map_err(io(&to))?;
+            std::fs::write(&to, content).map_err(io(&to))?;
         }
     }
     Ok(())
@@ -576,6 +609,26 @@ fn mini_cache(dir: &Path) -> Result<(), Fail> {
 // gate of T41) as a site whose home page runs every recipe with Go's image processing and
 // prints `<golden name> <RelPermalink>` per line (tools/dev/oracle.sh, frozen at 44529028,
 // copied the published files into testdata/golden/images).
+
+#[derive(Deserialize)]
+struct Recipe {
+    golden: String,
+    source: String,
+    steps: Vec<Step>,
+    #[serde(default)]
+    imaging: Option<Value>,
+}
+
+#[derive(Deserialize)]
+#[serde(untagged)]
+enum Step {
+    Spec {
+        spec: String,
+    },
+    Filters {
+        filters: Vec<serde_json::Map<String, Value>>,
+    },
+}
 
 /// The filters of the recipes (the JSON of `ssg_images::ImageFilter`) as Go template calls:
 /// the images.* function and the keys of its arguments.
@@ -602,12 +655,17 @@ const FILTER_ARGS: [(&str, &str, &[&str]); 16] = [
     ("auto_orient", "AutoOrient", &[]),
 ];
 
-/// A filter argument as a Go template literal.
-fn go_value(v: &Py) -> Result<String, Fail> {
+/// A filter argument as a Go template literal: a string quoted, a number as an integer or a
+/// float with a fraction.
+fn go_value(v: &Value) -> Result<String, Fail> {
     match v {
-        Py::Str(s) => Ok(py::json_str(s, true)),
-        Py::Int(_) | Py::BigInt(_) | Py::Float(_) => Ok(py::repr(v)),
-        _ => Err(fail!("images: unsupported filter argument {}", py::repr(v))),
+        Value::String(s) => Ok(json::string(s)),
+        Value::Number(n) if n.is_i64() || n.is_u64() => Ok(n.to_string()),
+        Value::Number(n) => n
+            .as_f64()
+            .map(|f| format!("{f:?}"))
+            .ok_or_else(|| fail!("images: number {n}")),
+        other => Err(fail!("images: unsupported filter argument {other}")),
     }
 }
 
@@ -619,34 +677,38 @@ struct Images<'a> {
 
 impl Images<'_> {
     fn asset(&mut self, repo_path: &str) -> Result<String, Fail> {
-        let name = match self.files.iter().find(|(r, _)| r == repo_path) {
-            Some((_, a)) => a.clone(),
-            None => {
-                let a = format!(
-                    "g/{:02}{}",
-                    self.files.len(),
-                    py::splitext_ext(repo_path).to_lowercase()
-                );
-                let src = repo_file(repo_path);
-                write(
-                    self.dir,
-                    &format!("assets/{a}"),
-                    &std::fs::read(&src).map_err(io(&src))?,
-                )?;
-                self.files.push((repo_path.to_owned(), a.clone()));
-                a
-            }
+        let name = if let Some((_, a)) = self.files.iter().find(|(r, _)| r == repo_path) {
+            a.clone()
+        } else {
+            let ext = Path::new(repo_path)
+                .extension()
+                .map(|e| format!(".{}", e.to_string_lossy().to_lowercase()))
+                .unwrap_or_default();
+            let a = format!("g/{:02}{ext}", self.files.len());
+            let src = repo_file(repo_path);
+            write(
+                self.dir,
+                &format!("assets/{a}"),
+                &std::fs::read(&src).map_err(io(&src))?,
+            )?;
+            self.files.push((repo_path.to_owned(), a.clone()));
+            a
         };
         Ok(format!("(resources.Get \"{name}\")"))
     }
 
-    fn filter_call(&mut self, f: &Py) -> Result<String, Fail> {
-        let op = py::str_of(f.get_or_none("op"));
+    fn filter_call(&mut self, f: &serde_json::Map<String, Value>) -> Result<String, Fail> {
+        let op = f
+            .get("op")
+            .and_then(Value::as_str)
+            .unwrap_or_default()
+            .to_owned();
         let arg = |k: &str| {
             f.get(k)
                 .ok_or_else(|| fail!("images: filter {op} without {k}"))
                 .and_then(go_value)
         };
+        let zero = Value::from(0);
         if let Some((_, name, keys)) = FILTER_ARGS.iter().find(|(o, _, _)| *o == op) {
             let mut parts = vec![format!("images.{name}")];
             for k in *keys {
@@ -656,15 +718,19 @@ impl Images<'_> {
         }
         match op.as_str() {
             "padding" => {
-                let margin: Vec<Py> = match f.get("margin").filter(|m| m.truthy()) {
-                    Some(m) => m.as_list().unwrap_or(&[]).to_vec(),
+                let margin: Vec<&Value> = match f
+                    .get("margin")
+                    .and_then(Value::as_array)
+                    .filter(|m| !m.is_empty())
+                {
+                    Some(m) => m.iter().collect(),
                     None => ["top", "right", "bottom", "left"]
                         .iter()
-                        .map(|k| f.get(k).cloned().unwrap_or(Py::Int(0)))
+                        .map(|k| f.get(*k).unwrap_or(&zero))
                         .collect(),
                 };
                 let mut parts = vec!["images.Padding".to_owned()];
-                for m in &margin {
+                for m in margin {
                     parts.push(go_value(m)?);
                 }
                 if let Some(c) = f.get("color") {
@@ -673,60 +739,58 @@ impl Images<'_> {
                 Ok(parts.join(" "))
             }
             "overlay" => {
-                let image = self.asset(&py::str_of(f.get_or_none("image")))?;
-                let (x, y) = (
-                    f.get("x").cloned().unwrap_or(Py::Int(0)),
-                    f.get("y").cloned().unwrap_or(Py::Int(0)),
-                );
+                let image =
+                    self.asset(f.get("image").and_then(Value::as_str).unwrap_or_default())?;
+                let (x, y) = (f.get("x").unwrap_or(&zero), f.get("y").unwrap_or(&zero));
                 Ok(format!(
                     "images.Overlay {image} {} {}",
-                    go_value(&x)?,
-                    go_value(&y)?
+                    go_value(x)?,
+                    go_value(y)?
                 ))
             }
             "mask" => Ok(format!(
                 "images.Mask {}",
-                self.asset(&py::str_of(f.get_or_none("image")))?
+                self.asset(f.get("image").and_then(Value::as_str).unwrap_or_default())?
             )),
             "process" => Ok(format!("images.Process {}", arg("spec")?)),
-            _ => Err(fail!("images: unsupported filter {}", py::repr_str(&op))),
+            _ => Err(fail!("images: unsupported filter {op:?}")),
         }
     }
 }
 
 fn make_images(dir: &Path) -> Result<(), Fail> {
-    let recipes = manifest::read_json(&testdata().join("golden/images/manifest.json"))?;
+    let recipes: Vec<Recipe> = json::read(&testdata().join("golden/images/manifest.json"))?;
     let mut im = Images {
         dir,
         files: Vec::new(),
     };
     let mut lines = Vec::new();
-    for r in recipes.as_list().unwrap_or(&[]) {
-        let golden = py::str_of(r.get_or_none("golden"));
-        if r.get("imaging").is_some_and(Py::truthy) {
+    for r in &recipes {
+        if r.imaging.as_ref().is_some_and(|i| !i.is_null()) {
             return Err(fail!(
-                "images: {golden}: a recipe's own [imaging] is not supported (one site)"
+                "images: {}: a recipe's own [imaging] is not supported (one site)",
+                r.golden
             ));
         }
-        lines.push(format!(
-            "{{{{- $r := {} }}}}",
-            im.asset(&py::str_of(r.get_or_none("source")))?
-        ));
-        for step in r.get("steps").and_then(Py::as_list).unwrap_or(&[]) {
-            if let Some(spec) = step.get("spec") {
-                lines.push(format!("{{{{- $r = $r.Process {} }}}}", go_value(spec)?));
-            } else {
-                let mut fs = Vec::new();
-                for f in step.get("filters").and_then(Py::as_list).unwrap_or(&[]) {
-                    fs.push(format!("({})", im.filter_call(f)?));
+        lines.push(format!("{{{{- $r := {} }}}}", im.asset(&r.source)?));
+        for step in &r.steps {
+            match step {
+                Step::Spec { spec } => {
+                    lines.push(format!("{{{{- $r = $r.Process {} }}}}", json::string(spec)));
                 }
-                lines.push(format!(
-                    "{{{{- $r = $r | images.Filter (slice {}) }}}}",
-                    fs.join(" ")
-                ));
+                Step::Filters { filters } => {
+                    let calls = filters
+                        .iter()
+                        .map(|f| im.filter_call(f).map(|c| format!("({c})")))
+                        .collect::<Result<Vec<_>, _>>()?;
+                    lines.push(format!(
+                        "{{{{- $r = $r | images.Filter (slice {}) }}}}",
+                        calls.join(" ")
+                    ));
+                }
             }
         }
-        lines.push(format!("{golden} {{{{ $r.RelPermalink }}}}"));
+        lines.push(format!("{} {{{{ $r.RelPermalink }}}}", r.golden));
     }
     write(
         dir,
@@ -781,9 +845,10 @@ fn apply_overlay(dir: &Path, overlay: &Path, variant: Option<&str>) -> Result<()
         let vdir = overlay.join("patches").join(variant);
         if vdir.is_dir() {
             copy_tree(&vdir, dir)?;
-        } else if patch_list(&docs_patches()?)
+        } else if Patches::read()?
+            .patches
             .iter()
-            .any(|p| p.get("tera").is_some_and(Py::truthy) && in_variant(p, variant))
+            .any(|p| p.tera.is_some() && p.in_variant(variant))
         {
             return Err(fail!("{} has no patches/{variant}", overlay.display()));
         }
@@ -801,11 +866,8 @@ pub fn site_and_variant(
 ) -> Result<(String, Option<String>), Fail> {
     let (base, v) = name.split_once('-').unwrap_or((name, ""));
     if base == "docs" && DOCS_VARIANTS.contains(&v) {
-        if variant.is_some_and(|x| x != v) {
-            return Err(fail!(
-                "{name} contradicts --docs-patches {}",
-                variant.unwrap_or_default()
-            ));
+        if let Some(other) = variant.filter(|x| *x != v) {
+            return Err(fail!("{name} contradicts --docs-patches {other}"));
         }
         return Ok((base.to_owned(), Some(v.to_owned())));
     }
@@ -905,9 +967,10 @@ pub fn cache(name: &str, dir: &Path) -> Result<(), Fail> {
 /// # Errors
 /// A missing or invalid patches.json.
 pub fn patches(check: bool) -> Result<i32, Fail> {
+    let doc = Patches::read()?;
     if !check {
         let path = patches_json();
-        std::fs::write(&path, patches_json_text(&docs_patches()?)).map_err(io(&path))?;
+        std::fs::write(&path, doc.to_text()).map_err(io(&path))?;
     }
     let errors = check_patches()?;
     for e in &errors {
@@ -918,7 +981,7 @@ pub fn patches(check: bool) -> Result<i32, Fail> {
     }
     println!(
         "patches.json: {} entries; the Tera patch files of {} correspond 1:1",
-        patch_list(&docs_patches()?).len(),
+        doc.patches.len(),
         DOCS_VARIANTS.join(", ")
     );
     Ok(0)

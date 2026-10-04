@@ -26,8 +26,7 @@ use std::collections::hash_map::Entry;
 use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 
-use serde_json::Value;
-
+use crate::metadata::{Metadata, Package};
 use crate::{Fail, fail};
 
 const PREFIXES: [&str; 8] = [
@@ -39,6 +38,9 @@ const PREFIXES: [&str; 8] = [
     "unlicense",
     "authors",
     "patents",
+];
+const NOT_NOTICES: [&str; 9] = [
+    ".rs", ".py", ".sh", ".toml", ".json", ".yml", ".yaml", ".c", ".h",
 ];
 const SKIP_DIRS: [&str; 7] = [
     ".git", "tests", "test", "benches", "examples", "target", "fuzz",
@@ -66,16 +68,13 @@ fn is_notice(path: &Path) -> bool {
         .unwrap_or_default();
     path.is_file()
         && PREFIXES.iter().any(|p| name.starts_with(p))
-        && ![
-            ".rs", ".py", ".sh", ".toml", ".json", ".yml", ".yaml", ".c", ".h",
-        ]
-        .iter()
-        .any(|e| name.ends_with(e))
+        && !NOT_NOTICES.iter().any(|e| name.ends_with(e))
 }
 
 /// The package's root and its licence and notice files.
-fn notice_files(pkg: &Value) -> (PathBuf, Vec<PathBuf>) {
-    let root = Path::new(pkg["manifest_path"].as_str().unwrap_or(""))
+fn notice_files(pkg: &Package) -> (PathBuf, Vec<PathBuf>) {
+    let root: PathBuf = pkg
+        .manifest_path
         .parent()
         .map(Path::to_owned)
         .unwrap_or_default();
@@ -87,93 +86,50 @@ fn notice_files(pkg: &Value) -> (PathBuf, Vec<PathBuf>) {
         .filter(|p| is_notice(p))
         .collect();
     found.sort();
-    let builds_c = pkg["links"].as_str().is_some_and(|l| !l.is_empty())
-        || pkg["name"].as_str().is_some_and(|n| n.ends_with("-sys"));
+    let builds_c =
+        pkg.links.as_deref().is_some_and(|l| !l.is_empty()) || pkg.name.ends_with("-sys");
     if builds_c {
-        let mut below: Vec<PathBuf> = walkdir::WalkDir::new(&root)
-            .min_depth(1)
+        let below = walkdir::WalkDir::new(&root)
+            .min_depth(2)
+            .sort_by_file_name()
             .into_iter()
+            .filter_entry(|e| {
+                !(e.file_type().is_dir() && SKIP_DIRS.iter().any(|d| e.file_name() == *d))
+            })
             .filter_map(Result::ok)
             .map(walkdir::DirEntry::into_path)
-            .collect();
-        below.sort();
-        for path in below {
-            let rel = path.strip_prefix(&root).expect("below the root");
-            let parts: Vec<String> = rel
-                .components()
-                .map(|c| c.as_os_str().to_string_lossy().into_owned())
-                .collect();
-            let skipped = parts[..parts.len() - 1]
-                .iter()
-                .any(|p| SKIP_DIRS.contains(&p.as_str()));
-            if parts.len() > 1 && !skipped && is_notice(&path) {
-                found.push(path);
-            }
-        }
+            .filter(|p| is_notice(p));
+        found.extend(below);
     }
     (root, found)
 }
 
-fn is_proc_macro(pkg: &Value) -> bool {
-    pkg["targets"].as_array().into_iter().flatten().any(|t| {
-        t["kind"]
-            .as_array()
-            .into_iter()
-            .flatten()
-            .any(|k| k == "proc-macro")
-    })
-}
-
-/// Package ids linked into `target_pkg`: its normal-dependency closure without proc macros,
-/// itself excluded.
-fn closure(
-    meta: &Value,
-    packages: &HashMap<&str, &Value>,
-    target_pkg: &str,
-) -> Result<HashSet<String>, Fail> {
-    let members: HashSet<&str> = meta["workspace_members"]
-        .as_array()
-        .into_iter()
-        .flatten()
-        .filter_map(Value::as_str)
-        .collect();
-    let nodes: HashMap<&str, &Value> = meta["resolve"]["nodes"]
-        .as_array()
-        .into_iter()
-        .flatten()
-        .filter_map(|n| Some((n["id"].as_str()?, n)))
-        .collect();
-    let root = meta["packages"]
-        .as_array()
-        .into_iter()
-        .flatten()
-        .find(|p| p["name"] == target_pkg && p["id"].as_str().is_some_and(|i| members.contains(i)))
-        .and_then(|p| p["id"].as_str())
-        .ok_or_else(|| fail!("no workspace package {target_pkg}"))?;
-    let (mut seen, mut todo) = (HashSet::new(), vec![root.to_owned()]);
+/// The packages linked into the workspace package `name`: its normal-dependency closure
+/// without proc macros, itself excluded.
+fn closure<'m>(meta: &'m Metadata, name: &str) -> Result<HashSet<&'m String>, Fail> {
+    let packages: HashMap<&String, &Package> = meta.packages.iter().map(|p| (&p.id, p)).collect();
+    let nodes: HashMap<&String, _> = meta.resolve.nodes.iter().map(|n| (&n.id, n)).collect();
+    let root = meta
+        .member(name)
+        .ok_or_else(|| fail!("no workspace package {name}"))?;
+    let (mut seen, mut todo) = (HashSet::new(), vec![&root.id]);
     while let Some(id) = todo.pop() {
-        for dep in nodes
-            .get(id.as_str())
-            .and_then(|n| n["deps"].as_array())
-            .into_iter()
-            .flatten()
-        {
-            let pid = dep["pkg"].as_str().unwrap_or("");
-            let normal = dep["dep_kinds"]
-                .as_array()
-                .into_iter()
-                .flatten()
-                .any(|k| k["kind"].is_null());
-            if normal && !seen.contains(pid) && !packages.get(pid).is_some_and(|p| is_proc_macro(p))
+        for dep in nodes.get(id).into_iter().flat_map(|n| &n.deps) {
+            let normal = dep.dep_kinds.iter().any(|k| k.kind.is_none());
+            if normal
+                && !packages
+                    .get(&dep.pkg)
+                    .is_some_and(|p| p.has_target("proc-macro"))
+                && seen.insert(&dep.pkg)
             {
-                seen.insert(pid.to_owned());
-                todo.push(pid.to_owned());
+                todo.push(&dep.pkg);
             }
         }
     }
     Ok(seen)
 }
 
+/// Whether the licence expression names `licence` (as one of its terms).
 fn offers(expr: Option<&str>, licence: &str) -> bool {
     expr.unwrap_or("")
         .replace(['(', ')', '/'], " ")
@@ -181,14 +137,14 @@ fn offers(expr: Option<&str>, licence: &str) -> bool {
         .any(|w| w == licence)
 }
 
-/// A text file as Python's text mode reads it: invalid UTF-8 replaced, newlines as `\n`;
-/// trailing whitespace stripped and one newline added.
+/// A text file with invalid UTF-8 replaced, newlines as `\n`, trailing whitespace stripped
+/// and one newline added.
 fn read_text(path: &Path) -> String {
     let raw = std::fs::read(path).unwrap_or_default();
     let text = String::from_utf8_lossy(&raw)
         .replace("\r\n", "\n")
         .replace('\r', "\n");
-    format!("{}\n", text.trim_end_matches(crate::py::is_space))
+    format!("{}\n", text.trim_end())
 }
 
 fn rel_name(path: &Path, root: &Path) -> String {
@@ -199,35 +155,41 @@ fn rel_name(path: &Path, root: &Path) -> String {
         .join("/")
 }
 
-fn name_version(pkg: &Value) -> (String, String) {
-    (
-        pkg["name"].as_str().unwrap_or("").to_owned(),
-        pkg["version"].as_str().unwrap_or("").to_owned(),
-    )
+/// The first Apache-2.0 licence file a linked package ships: (text, "<name> <version>, <file>").
+fn apache_text(linked: &[&Package]) -> Option<(String, String)> {
+    linked.iter().find_map(|pkg| {
+        let (root, files) = notice_files(pkg);
+        files.into_iter().find_map(|path| {
+            let named = path
+                .file_name()
+                .is_some_and(|n| n.to_string_lossy().to_lowercase().contains("apache"));
+            let text = if named { read_text(&path) } else { return None };
+            (text.contains("Apache License") && text.contains("Version 2.0")).then(|| {
+                (
+                    text,
+                    format!("{} {}, {}", pkg.name, pkg.version, rel_name(&path, &root)),
+                )
+            })
+        })
+    })
 }
 
-/// The first Apache-2.0 licence file a linked package ships: (text, "<name> <version>, <file>").
-fn apache_text(ids: &[String], packages: &HashMap<&str, &Value>) -> Option<(String, String)> {
-    for pid in ids {
-        let pkg = packages[pid.as_str()];
-        let (root, files) = notice_files(pkg);
-        for path in files {
-            if path
-                .file_name()
-                .is_some_and(|n| n.to_string_lossy().to_lowercase().contains("apache"))
-            {
-                let text = read_text(&path);
-                if text.contains("Apache License") && text.contains("Version 2.0") {
-                    let (name, version) = name_version(pkg);
-                    return Some((
-                        text,
-                        format!("{name} {version}, {}", rel_name(&path, &root)),
-                    ));
-                }
+/// The licence texts already printed, and where.
+#[derive(Default)]
+struct Printed(HashMap<String, String>);
+
+impl Printed {
+    /// `text` with its source, unless it was printed before.
+    fn first(&mut self, text: String, source: String) -> Option<String> {
+        match self.0.entry(text) {
+            Entry::Vacant(e) => {
+                let text = e.key().clone();
+                e.insert(source);
+                Some(text)
             }
+            Entry::Occupied(_) => None,
         }
     }
-    None
 }
 
 /// Writes the notices of `target` to `out`; the exit status (1 when a package ships no licence
@@ -236,40 +198,22 @@ fn apache_text(ids: &[String], packages: &HashMap<&str, &Value>) -> Option<(Stri
 /// # Errors
 /// Failing `cargo metadata` or a file that cannot be written.
 pub fn run(target: &str, out: &Path, allow_missing: bool) -> Result<i32, Fail> {
-    let meta = crate::licence::cargo_metadata(&["--filter-platform", target])?;
-    let packages: HashMap<&str, &Value> = meta["packages"]
-        .as_array()
+    let meta = Metadata::read(&["--filter-platform", target])?;
+    let members: HashSet<&String> = meta.workspace_members.iter().collect();
+    let app = meta
+        .member("ssg-cli")
         .into_iter()
-        .flatten()
-        .filter_map(|p| Some((p["id"].as_str()?, p)))
+        .flat_map(|p| &p.targets)
+        .find(|t| t.kind.iter().any(|k| k == "bin"))
+        .map(|t| t.name.clone())
+        .ok_or_else(|| fail!("ssg-cli has no binary"))?;
+    let ids = closure(&meta, "ssg-cli")?;
+    let mut linked: Vec<&Package> = meta
+        .packages
+        .iter()
+        .filter(|p| ids.contains(&p.id) && !members.contains(&p.id))
         .collect();
-    let members: HashSet<&str> = meta["workspace_members"]
-        .as_array()
-        .into_iter()
-        .flatten()
-        .filter_map(Value::as_str)
-        .collect();
-    let app = meta["packages"]
-        .as_array()
-        .into_iter()
-        .flatten()
-        .filter(|p| p["name"] == "ssg-cli")
-        .flat_map(|p| p["targets"].as_array().into_iter().flatten())
-        .find(|t| {
-            t["kind"]
-                .as_array()
-                .into_iter()
-                .flatten()
-                .any(|k| k == "bin")
-        })
-        .and_then(|t| t["name"].as_str())
-        .ok_or_else(|| fail!("ssg-cli has no binary"))?
-        .to_owned();
-    let mut ids: Vec<String> = closure(&meta, &packages, "ssg-cli")?
-        .into_iter()
-        .filter(|i| !members.contains(i.as_str()))
-        .collect();
-    ids.sort_by_key(|i| name_version(packages[i.as_str()]));
+    linked.sort_by(|a, b| a.key().cmp(&b.key()));
 
     let spdx_dir = crate::root().join("THIRD_PARTY/spdx");
     let mut spdx: Vec<PathBuf> = std::fs::read_dir(&spdx_dir)
@@ -281,14 +225,13 @@ pub fn run(target: &str, out: &Path, allow_missing: bool) -> Result<i32, Fail> {
     spdx.sort();
 
     let mut missing = Vec::new();
-    let mut printed: HashMap<String, String> = HashMap::new(); // licence text -> where it was printed
+    let mut printed = Printed::default();
     let title = format!("Third-party software in {app}");
     let mut parts = vec![
-        format!("{title}\n"),
-        format!("{}\n\n", "=".repeat(title.chars().count())),
+        format!("{title}\n{}\n\n", "=".repeat(title.chars().count())),
         format!(
             "{app} for {target} links the {} packages below. Their licence and notice\n",
-            ids.len()
+            linked.len()
         ),
         "files follow each entry. The source code of every package is available from\n".to_owned(),
         "https://crates.io/crates/<name>/<version> and from the repository listed with it.\n"
@@ -296,82 +239,61 @@ pub fn run(target: &str, out: &Path, allow_missing: bool) -> Result<i32, Fail> {
         "Files copied into the source tree (data, fonts, scripts) are listed in\n".to_owned(),
         "PROVENANCE.md, with their licences in THIRD_PARTY/.\n".to_owned(),
     ];
-    for pid in &ids {
-        let pkg = packages[pid.as_str()];
-        let (name, version) = name_version(pkg);
-        let expr = pkg["license"].as_str();
+    for pkg in &linked {
+        let (name, version) = (&pkg.name, &pkg.version);
+        let expr = pkg.license.as_deref().filter(|e| !e.is_empty());
         let (root, files) = notice_files(pkg);
-        parts.push(format!("\n{}\n", "=".repeat(78)));
-        parts.push(format!("{name} {version}\n"));
-        let shown = expr
-            .filter(|e| !e.is_empty())
-            .or_else(|| pkg["license_file"].as_str().filter(|f| !f.is_empty()))
-            .unwrap_or("unknown");
-        parts.push(format!("License: {shown}\n"));
-        let authors: Vec<&str> = pkg["authors"]
-            .as_array()
-            .into_iter()
-            .flatten()
-            .filter_map(Value::as_str)
-            .collect();
-        if !authors.is_empty() {
-            parts.push(format!("Authors: {}\n", authors.join(", ")));
+        parts.push(format!("\n{}\n{name} {version}\n", "=".repeat(78)));
+        let shown = expr.map(str::to_owned).or_else(|| pkg.license_file.clone());
+        parts.push(format!(
+            "License: {}\n",
+            shown.as_deref().unwrap_or("unknown")
+        ));
+        if !pkg.authors.is_empty() {
+            parts.push(format!("Authors: {}\n", pkg.authors.join(", ")));
         }
         parts.push(format!(
             "Source: https://crates.io/crates/{name}/{version}\n"
         ));
-        if let Some(repo) = pkg["repository"].as_str().filter(|r| !r.is_empty()) {
+        if let Some(repo) = pkg.repository.as_deref().filter(|r| !r.is_empty()) {
             parts.push(format!("Repository: {repo}\n"));
         }
         if files.is_empty() {
             let apache = if offers(expr, "Apache-2.0") {
-                apache_text(&ids, &packages)
+                apache_text(&linked)
             } else {
                 None
             };
+            let standard = spdx
+                .iter()
+                .find(|t| offers(expr, &t.file_stem().unwrap_or_default().to_string_lossy()));
             if offers(expr, "MIT") {
                 parts.push(format!(
                     "\nThe package ships no licence file. It is licensed under MIT (one of the choices above); the MIT licence text follows, the copyright holders being its authors listed above.\n\n{MIT}"
                 ));
             } else if let Some((text, source)) = apache {
-                let place = if printed.contains_key(&text) {
-                    "above"
-                } else {
-                    "here"
-                };
+                let first = printed.first(text, source.clone());
+                let place = if first.is_some() { "here" } else { "above" };
                 parts.push(format!(
                     "\nThe package ships no licence file. It is licensed under Apache-2.0; the licence text is the same as {source}, printed {place}.\n"
                 ));
-                if let Entry::Vacant(e) = printed.entry(text) {
-                    parts.push(format!("\n{}", e.key()));
-                    e.insert(source);
-                }
-            } else if let Some(file) = spdx
-                .iter()
-                .find(|t| offers(expr, &t.file_stem().unwrap_or_default().to_string_lossy()))
-            {
-                let text = read_text(file);
-                let stem = file
-                    .file_stem()
-                    .unwrap_or_default()
-                    .to_string_lossy()
-                    .into_owned();
+                parts.extend(first.map(|t| format!("\n{t}")));
+            } else if let Some(file) = standard {
+                let stem = file.file_stem().unwrap_or_default().to_string_lossy();
                 let source = format!(
                     "THIRD_PARTY/spdx/{}",
                     file.file_name().unwrap_or_default().to_string_lossy()
                 );
-                let tail = if printed.contains_key(&text) {
-                    format!("is {source}, printed above.\n")
-                } else {
+                let first = printed.first(read_text(file), source.clone());
+                let tail = if first.is_some() {
                     "follows.\n".to_owned()
+                } else {
+                    format!("is {source}, printed above.\n")
                 };
                 parts.push(format!(
                     "\nThe package ships no licence file. It is licensed under {stem}; the copyright holders being its authors listed above, the licence text {tail}"
                 ));
-                if let Entry::Vacant(e) = printed.entry(text) {
-                    parts.push(format!("\n{}", e.key()));
-                    e.insert(source);
-                }
+                parts.extend(first.map(|t| format!("\n{t}")));
             } else {
                 missing.push(format!("{name} {version} ({})", expr.unwrap_or("None")));
                 parts.push(
@@ -383,13 +305,14 @@ pub fn run(target: &str, out: &Path, allow_missing: bool) -> Result<i32, Fail> {
         for path in &files {
             let rel = rel_name(path, &root);
             let text = read_text(path);
-            if let Some(source) = printed.get(&text) {
-                parts.push(format!(
+            match printed.0.get(&text) {
+                Some(source) => parts.push(format!(
                     "\n--- {rel}: the same text as {source} above ---\n"
-                ));
-            } else {
-                parts.push(format!("\n--- {rel} ---\n\n{text}"));
-                printed.insert(text, format!("{name} {version}, {rel}"));
+                )),
+                None => {
+                    parts.push(format!("\n--- {rel} ---\n\n{text}"));
+                    printed.0.insert(text, format!("{name} {version}, {rel}"));
+                }
             }
         }
     }
@@ -400,7 +323,7 @@ pub fn run(target: &str, out: &Path, allow_missing: bool) -> Result<i32, Fail> {
     std::fs::write(out, &text).map_err(|e| fail!("{}: {e}", out.display()))?;
     println!(
         "notices: {} packages, {} bytes -> {}",
-        ids.len(),
+        linked.len(),
         text.len(),
         out.display()
     );

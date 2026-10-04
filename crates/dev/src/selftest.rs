@@ -22,17 +22,19 @@
 //! output (crates/build/tests/it/testsite-go.txtar) with a Thai page and a PNG added (the
 //! testsite has neither). Everything happens in a temporary directory.
 
-use std::collections::{BTreeMap, HashSet};
-use std::io::Write as _;
+use std::collections::{BTreeMap, BTreeSet, HashSet};
+use std::io::Cursor;
 use std::path::{Path, PathBuf};
 use std::sync::OnceLock;
 
+use percent_encoding::{AsciiSet, NON_ALPHANUMERIC, percent_decode_str, utf8_percent_encode};
 use regex::{Captures, Regex};
 
-use crate::manifest::{self, Urls, norm_path, page_url};
-use crate::py::{self, Py};
-use crate::structdiff::{self as sd, Side};
-use crate::{Fail, fail, txtar, url};
+use crate::manifest::{self, Kind, L2, Manifest, norm_path, page_url};
+use crate::ratchet::{self, Accepted, Baseline};
+use crate::structdiff::{self as sd, Comparison, Level, Side, Status};
+use crate::urls::SiteUrls;
+use crate::{Fail, fail, json, txtar};
 
 fn re(cell: &'static OnceLock<Regex>, pattern: &str) -> &'static Regex {
     cell.get_or_init(|| Regex::new(pattern).expect("a valid expression"))
@@ -53,38 +55,14 @@ fn read(root: &Path, rel: &str) -> Result<String, Fail> {
     std::fs::read_to_string(&p).map_err(|e| fail!("{}: {e}", p.display()))
 }
 
-/// A valid RGB PNG of the given size.
-#[must_use]
-pub fn png(width: u32, height: u32) -> Vec<u8> {
-    fn chunk(kind: &[u8], data: &[u8]) -> Vec<u8> {
-        let mut out = u32::try_from(data.len())
-            .expect("a small chunk")
-            .to_be_bytes()
-            .to_vec();
-        out.extend_from_slice(kind);
-        out.extend_from_slice(data);
-        let mut crc = crc32fast::Hasher::new();
-        crc.update(kind);
-        crc.update(data);
-        out.extend_from_slice(&crc.finalize().to_be_bytes());
-        out
-    }
-    // Each row: filter type 0, then the pixels.
-    let row: Vec<u8> = std::iter::once(0)
-        .chain(b"\x80\x40\x20".repeat(width as usize))
-        .collect();
-    let raw = row.repeat(height as usize);
-    let mut z = flate2::write::ZlibEncoder::new(Vec::new(), flate2::Compression::default());
-    z.write_all(&raw).expect("write to memory");
-    let idat = z.finish().expect("write to memory");
-    let mut ihdr = width.to_be_bytes().to_vec();
-    ihdr.extend_from_slice(&height.to_be_bytes());
-    ihdr.extend_from_slice(&[8, 2, 0, 0, 0]);
-    let mut out = b"\x89PNG\r\n\x1a\n".to_vec();
-    out.extend(chunk(b"IHDR", &ihdr));
-    out.extend(chunk(b"IDAT", &idat));
-    out.extend(chunk(b"IEND", b""));
-    out
+/// A PNG of the given size, one colour.
+fn png(width: u32, height: u32) -> Vec<u8> {
+    let image = image::RgbImage::from_pixel(width, height, image::Rgb([0x80, 0x40, 0x20]));
+    let mut out = Cursor::new(Vec::new());
+    image
+        .write_to(&mut out, image::ImageFormat::Png)
+        .expect("encode to memory");
+    out.into_inner()
 }
 
 /// Go's testsite output plus a Thai page and an image (what the testsite lacks).
@@ -115,49 +93,42 @@ struct Run {
 }
 
 impl Run {
+    fn manifest(&self, out: &Path, pass: &str) -> Result<Manifest, Fail> {
+        sd::load_manifest(out, self.project.as_deref(), &self.site, pass)
+    }
+
     fn side(&self, name: &str, out: &Path) -> Result<Side, Fail> {
         Ok(Side {
             name: name.to_owned(),
-            min: sd::load_manifest(Some(out), self.project.as_deref(), &self.site, "minified")?,
-            unmin: sd::load_manifest(Some(out), self.project.as_deref(), &self.site, "unminified")?,
+            min: Some(self.manifest(out, "minified")?),
+            unmin: Some(self.manifest(out, "unminified")?),
             structure: None,
         })
     }
 
-    fn compare(&self, r: &Path, c: &Path) -> Result<py::Dict, Fail> {
-        let mut res = sd::compare(
+    fn compare(&self, r: &Path, c: &Path) -> Result<Comparison, Fail> {
+        Ok(sd::compare(
             &self.site,
             &self.side("go", r)?,
             &self.side("perturbed", c)?,
             &[],
-        );
-        sd::summarize(&mut res);
-        Ok(res)
+        ))
     }
 }
 
-type Diffs = BTreeMap<(String, String), Vec<String>>;
+/// A (key, level) of a comparison.
+type Key = (String, Level);
+type Diffs = BTreeMap<Key, Vec<String>>;
 
-/// {(key, level): classes} of every entry that is not ok.
-fn diffs(res: &py::Dict) -> Diffs {
-    let mut out = BTreeMap::new();
-    for section in ["files", "structure"] {
-        for (k, levels) in res[section].as_dict().into_iter().flatten() {
-            for (lv, e) in levels.as_dict().into_iter().flatten() {
-                if e.get("status").and_then(Py::as_str) != Some("ok") {
-                    let classes = e
-                        .get("classes")
-                        .and_then(Py::as_list)
-                        .unwrap_or(&[])
-                        .iter()
-                        .map(py::str_of)
-                        .collect();
-                    out.insert((k.clone(), lv.clone()), classes);
-                }
-            }
-        }
-    }
-    out
+/// The classes of every (key, level) that is not ok.
+fn diffs(res: &Comparison) -> Diffs {
+    [&res.files, &res.structure]
+        .into_iter()
+        .flat_map(|section| section.iter())
+        .flat_map(|(k, levels)| levels.iter().map(move |(lv, o)| ((k.clone(), *lv), o)))
+        .filter(|(_, o)| o.status != Status::Ok)
+        .map(|(key, o)| (key, o.classes.clone()))
+        .collect()
 }
 
 fn html_files(root: &Path) -> Vec<String> {
@@ -167,64 +138,47 @@ fn html_files(root: &Path) -> Vec<String> {
         .collect()
 }
 
-fn files(man: &Py) -> &py::Dict {
-    man.get("files").and_then(Py::as_dict).expect("a manifest")
-}
-
-fn type_of(e: &Py) -> &str {
-    e.get("type").and_then(Py::as_str).unwrap_or("")
+fn is_html(man: &Manifest, rel: &str) -> bool {
+    man.files.get(rel).is_some_and(|e| e.kind == Kind::Html)
 }
 
 // ---------------------------------------------------------------------------------------------
 // The perturbations: each changes the copy `d` and returns (description, {(key, level): class})
 
-type Want = BTreeMap<(String, String), String>;
-type Perturbation = fn(&Path, &Run, &Py) -> Result<(String, Want), Fail>;
+type Want = BTreeMap<Key, String>;
+type Perturbation = fn(&Path, &Run, &Manifest) -> Result<(String, Want), Fail>;
 
-fn want(items: &[(&str, &str, &str)]) -> Want {
+fn want(items: &[(&str, Level, &str)]) -> Want {
     items
         .iter()
-        .map(|(k, l, c)| (((*k).to_owned(), (*l).to_owned()), (*c).to_owned()))
+        .map(|(k, l, c)| (((*k).to_owned(), *l), (*c).to_owned()))
         .collect()
 }
 
 /// The files with a link (or alias target) that only `rel` resolves.
-fn linking(man: &Py, rel: &str) -> Vec<String> {
-    let all: HashSet<String> = files(man).keys().map(|r| norm_path(r)).collect();
+fn linking(man: &Manifest, rel: &str) -> Vec<String> {
+    let all: HashSet<String> = man.files.keys().map(|r| norm_path(r)).collect();
     let mut rest = all.clone();
     rest.remove(&norm_path(rel));
-    let mut out = Vec::new();
-    for (r, e) in files(man) {
-        if r == rel || !matches!(type_of(e), "html" | "alias") {
-            continue;
-        }
-        let l2 = e.get("L2").cloned().unwrap_or_else(|| crate::dict! {});
-        let mut links: Vec<String> = l2
-            .get("links")
-            .and_then(Py::as_list)
-            .unwrap_or(&[])
-            .iter()
-            .map(py::str_of)
-            .collect();
-        if let Some(Py::Str(a)) = l2.get("alias") {
-            links.push(a.clone());
-        }
-        if links
-            .iter()
-            .any(|x| x.starts_with('/') && sd::resolves(x, &all) && !sd::resolves(x, &rest))
-        {
-            out.push(r.clone());
-        }
-    }
-    out
+    man.files
+        .iter()
+        .filter(|(r, e)| *r != rel && matches!(e.kind, Kind::Html | Kind::Alias))
+        .filter(|(_, e)| {
+            sd::links_of(e)
+                .iter()
+                .any(|x| x.starts_with('/') && sd::resolves(x, &all) && !sd::resolves(x, &rest))
+        })
+        .map(|(r, _)| r.clone())
+        .collect()
 }
 
 /// Drops an HTML page below the root; the files that link to it get dangling links (L2).
-fn drop_page(d: &Path, man: &Py, most_linked: bool) -> Result<(String, Want), Fail> {
-    let mut pages: Vec<(usize, String)> = files(man)
+fn drop_page(d: &Path, man: &Manifest, most_linked: bool) -> Result<(String, Want), Fail> {
+    let mut pages: Vec<(usize, &String)> = man
+        .files
         .iter()
-        .filter(|(r, e)| type_of(e) == "html" && r.contains('/'))
-        .map(|(r, _)| (linking(man, r).len(), r.clone()))
+        .filter(|(r, e)| e.kind == Kind::Html && r.contains('/'))
+        .map(|(r, _)| (linking(man, r).len(), r))
         .collect();
     pages.sort();
     let (_, rel) = if most_linked {
@@ -235,39 +189,40 @@ fn drop_page(d: &Path, man: &Py, most_linked: bool) -> Result<(String, Want), Fa
     .ok_or_else(|| fail!("drop: no HTML page below the root"))?;
     let p = d.join(rel);
     std::fs::remove_file(&p).map_err(|e| fail!("{}: {e}", p.display()))?;
-    let mut w = want(&[(rel, "L1", "L1 missing")]);
+    let mut w = want(&[(rel, Level::L1, "L1 missing")]);
     for r in linking(man, rel) {
-        w.insert((r, "L2".into()), "L2 dangling links".into());
+        w.insert((r, Level::L2), "L2 dangling links".into());
     }
     Ok((format!("drop {rel} ({} files link to it)", w.len() - 1), w))
 }
 
 /// The least linked page (the plain L1 case).
-fn drop_file(d: &Path, _: &Run, man: &Py) -> Result<(String, Want), Fail> {
+fn drop_file(d: &Path, _: &Run, man: &Manifest) -> Result<(String, Want), Fail> {
     drop_page(d, man, false)
 }
 
 /// The most linked page: link integrity (L2) in every file that links to it.
-fn drop_linked_page(d: &Path, _: &Run, man: &Py) -> Result<(String, Want), Fail> {
+fn drop_linked_page(d: &Path, _: &Run, man: &Manifest) -> Result<(String, Want), Fail> {
     drop_page(d, man, true)
 }
 
-fn add_file(d: &Path, _: &Run, _: &Py) -> Result<(String, Want), Fail> {
+fn add_file(d: &Path, _: &Run, _: &Manifest) -> Result<(String, Want), Fail> {
     let rel = "selftest-added/index.html";
     write(
         &d.join(rel),
         b"<!DOCTYPE html><html><head><title>Added</title></head><body><p>An added page</p><a href=\"/\">Home</a></body></html>\n",
     )?;
-    Ok((format!("add {rel}"), want(&[(rel, "L1", "L1 extra")])))
+    Ok((format!("add {rel}"), want(&[(rel, Level::L1, "L1 extra")])))
 }
 
-/// `(<a\b[^>]*?\shref=)(["'])([^"']*)\2` (case-insensitive), the quote in group 2 or 4.
+/// `<a … href="…">` or `'…'` (case-insensitive): the text up to the value, then the value in
+/// group 2 (double quotes) or 3 (single quotes).
 fn a_href_re() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
     re(&RE, r#"(?i)(<a\b[^>]*?\shref=)(?:"([^"']*)"|'([^"']*)')"#)
 }
 
-/// The quote and the value of an `a_href_re` or `href_re` match.
+/// The quote and the value of an `a_href_re` or `href` match.
 fn quoted(m: &Captures<'_>) -> (char, String) {
     match m.get(2) {
         Some(v) => ('"', v.as_str().to_owned()),
@@ -276,43 +231,31 @@ fn quoted(m: &Captures<'_>) -> (char, String) {
 }
 
 /// Every `<a href>` of one internal URL on a page, pointed at another existing page.
-fn change_link(d: &Path, _: &Run, man: &Py) -> Result<(String, Want), Fail> {
-    let bases: Vec<String> = man
-        .get("baseURLs")
-        .and_then(Py::as_list)
-        .unwrap_or(&[])
+fn change_link(d: &Path, _: &Run, man: &Manifest) -> Result<(String, Want), Fail> {
+    let urls = SiteUrls::new(&man.base_urls)?;
+    let pages: BTreeSet<String> = man
+        .files
         .iter()
-        .map(py::str_of)
-        .collect();
-    let urls = Urls::new(&bases)?;
-    let pages: Vec<String> = files(man)
-        .iter()
-        .filter(|(_, e)| type_of(e) == "html")
+        .filter(|(_, e)| e.kind == Kind::Html)
         .map(|(r, _)| page_url(r))
         .filter(|p| p.is_ascii())
-        .collect::<std::collections::BTreeSet<_>>()
-        .into_iter()
         .collect();
     for rel in html_files(d) {
-        let Some(e) = files(man).get(&rel).filter(|e| type_of(e) == "html") else {
+        let Some(e) = man.files.get(&rel).filter(|e| e.kind == Kind::Html) else {
             continue;
         };
         let text = read(d, &rel)?;
         let own = page_url(&rel);
-        let links: HashSet<String> = e
-            .get_or_none("L2")
-            .get("links")
-            .and_then(Py::as_list)
-            .unwrap_or(&[])
-            .iter()
-            .map(py::str_of)
-            .collect();
+        let links: HashSet<&String> = match &e.l2 {
+            Some(L2::Html { links, .. }) => links.iter().collect(),
+            _ => HashSet::new(),
+        };
         for m in a_href_re().captures_iter(&text) {
             let (_, raw) = quoted(&m);
-            let Some(x) = urls.internal(&raw, &own)? else {
+            let Some(x) = urls.internal(&raw, &own) else {
                 continue;
             };
-            if x == own || raw.contains('#') || raw.contains('?') {
+            if x == own || raw.contains(['#', '?']) {
                 continue;
             }
             // Every occurrence of the value is an <a href>: the page's link set loses it.
@@ -326,10 +269,10 @@ fn change_link(d: &Path, _: &Run, man: &Py) -> Result<(String, Want), Fail> {
             {
                 continue;
             }
-            let Some(target) = pages.iter().find(|p| !links.contains(*p) && **p != own) else {
+            let Some(target) = pages.iter().find(|p| !links.contains(p) && **p != own) else {
                 continue;
             };
-            let new = match bases.iter().find(|b| raw.starts_with(b.as_str())) {
+            let new = match man.base_urls.iter().find(|b| raw.starts_with(b.as_str())) {
                 Some(b) => format!("{}{target}", b.trim_end_matches('/')),
                 None => target.clone(),
             };
@@ -340,7 +283,7 @@ fn change_link(d: &Path, _: &Run, man: &Py) -> Result<(String, Want), Fail> {
             write(&d.join(&rel), out.as_bytes())?;
             return Ok((
                 format!("{rel}: <a href> {raw} -> {new}"),
-                want(&[(&rel, "L2", "L2 html links")]),
+                want(&[(&rel, Level::L2, "L2 html links")]),
             ));
         }
     }
@@ -349,8 +292,7 @@ fn change_link(d: &Path, _: &Run, man: &Py) -> Result<(String, Want), Fail> {
 
 /// Every start tag with two or more attributes, attributes reversed (comments, scripts and
 /// styles untouched); returns the text and the number of tags changed.
-#[must_use]
-pub fn reorder_tags(text: &str) -> (String, usize) {
+fn reorder_tags(text: &str) -> (String, usize) {
     static SKIP: OnceLock<Regex> = OnceLock::new();
     static TAG: OnceLock<Regex> = OnceLock::new();
     static ATTR: OnceLock<Regex> = OnceLock::new();
@@ -392,7 +334,7 @@ pub fn reorder_tags(text: &str) -> (String, usize) {
     (out, count)
 }
 
-fn reorder_attributes(d: &Path, _: &Run, _: &Py) -> Result<(String, Want), Fail> {
+fn reorder_attributes(d: &Path, _: &Run, _: &Manifest) -> Result<(String, Want), Fail> {
     let (mut total, mut changed) = (0, 0);
     for rel in html_files(d) {
         let (text, n) = reorder_tags(&read(d, &rel)?);
@@ -411,7 +353,38 @@ fn reorder_attributes(d: &Path, _: &Run, _: &Py) -> Result<(String, Want), Fail>
     ))
 }
 
-fn thai_href(d: &Path, _: &Run, _: &Py) -> Result<(String, Want), Fail> {
+/// What percent-encoding a URL escapes: all but the unreserved characters and the delimiters.
+const URL_ESCAPED: &AsciiSet = &NON_ALPHANUMERIC
+    .remove(b'-')
+    .remove(b'.')
+    .remove(b'_')
+    .remove(b'~')
+    .remove(b':')
+    .remove(b'/')
+    .remove(b'?')
+    .remove(b'#')
+    .remove(b'[')
+    .remove(b']')
+    .remove(b'@')
+    .remove(b'!')
+    .remove(b'$')
+    .remove(b'&')
+    .remove(b'\'')
+    .remove(b'(')
+    .remove(b')')
+    .remove(b'*')
+    .remove(b'+')
+    .remove(b',')
+    .remove(b';')
+    .remove(b'=')
+    .remove(b'%');
+
+fn is_thai(c: char) -> bool {
+    ('\u{0E00}'..='\u{0E7F}').contains(&c)
+}
+
+/// Thai hrefs percent-encoded, percent-encoded ones decoded: the links must not change.
+fn thai_href(d: &Path, _: &Run, _: &Manifest) -> Result<(String, Want), Fail> {
     static HREF: OnceLock<Regex> = OnceLock::new();
     static THAI: OnceLock<Regex> = OnceLock::new();
     let href = re(&HREF, r#"(?i)(\shref=)(?:"([^"']*)"|'([^"']*)')"#);
@@ -424,10 +397,10 @@ fn thai_href(d: &Path, _: &Run, _: &Py) -> Result<(String, Want), Fail> {
             if !thai.is_match(&v) {
                 return m[0].to_owned();
             }
-            let nv = if v.chars().any(|c| ('\u{0E00}'..='\u{0E7F}').contains(&c)) {
-                url::quote(&v, ":/?#[]@!$&'()*+,;=%~")
+            let nv = if v.chars().any(is_thai) {
+                utf8_percent_encode(&v, URL_ESCAPED).to_string()
             } else {
-                url::unquote(&v)
+                percent_decode_str(&v).decode_utf8_lossy().into_owned()
             };
             changed.push((rel.clone(), v.clone(), nv.clone()));
             format!("{}{q}{nv}{q}", &m[1])
@@ -453,12 +426,11 @@ fn thai_href(d: &Path, _: &Run, _: &Py) -> Result<(String, Want), Fail> {
     ))
 }
 
-/// A `<p>` from `pos` with a word of 4+ letters between whitespace: (start of the word, end).
+/// The first `<p>` from `pos` with a word of 4+ letters (between whitespace when `spaced`): the
+/// byte range of the word.
 fn p_word(text: &str, pos: usize, spaced: bool) -> Option<(usize, usize)> {
     static WORD: OnceLock<Regex> = OnceLock::new();
     static TEXT: OnceLock<Regex> = OnceLock::new();
-    // The lookahead `(?=\s)` of the first implementation is the trailing `\s` here (only the
-    // word's group is used).
     let m = if spaced {
         re(&WORD, r"(<p\b[^>]*>)([^<]*?\s)([^\W\d_]{4,})\s").captures_at(text, pos)?
     } else {
@@ -468,17 +440,18 @@ fn p_word(text: &str, pos: usize, spaced: bool) -> Option<(usize, usize)> {
     Some((w.start(), w.end()))
 }
 
+/// The byte offset of `<body` (case-insensitive), else 0.
+fn body_start(text: &str) -> usize {
+    text.to_ascii_lowercase().find("<body").unwrap_or(0)
+}
+
 /// Turns a word of a paragraph into a code element with every character in its own span, as a
 /// highlighter's token spans (Chroma and syntect split differently): the visible text must not
 /// change.
-fn split_code(d: &Path, _: &Run, man: &Py) -> Result<(String, Want), Fail> {
-    for rel in html_files(d) {
-        if !files(man).get(&rel).is_some_and(|e| type_of(e) == "html") {
-            continue;
-        }
+fn split_code(d: &Path, _: &Run, man: &Manifest) -> Result<(String, Want), Fail> {
+    for rel in html_files(d).into_iter().filter(|r| is_html(man, r)) {
         let text = read(d, &rel)?;
-        let body = text.to_ascii_lowercase().find("<body");
-        let Some((a, b)) = p_word(&text, body.unwrap_or(0), true) else {
+        let Some((a, b)) = p_word(&text, body_start(&text), true) else {
             continue;
         };
         let word = &text[a..b];
@@ -492,9 +465,8 @@ fn split_code(d: &Path, _: &Run, man: &Py) -> Result<(String, Want), Fail> {
         )?;
         return Ok((
             format!(
-                "{rel}: {} as <code> with {} spans",
-                py::repr_str(word),
-                py::len(word)
+                "{rel}: {word:?} as <code> with {} spans",
+                word.chars().count()
             ),
             Want::new(),
         ));
@@ -502,14 +474,10 @@ fn split_code(d: &Path, _: &Run, man: &Py) -> Result<(String, Want), Fail> {
     Err(fail!("split code: no <p> with a word between spaces"))
 }
 
-fn change_text(d: &Path, _: &Run, man: &Py) -> Result<(String, Want), Fail> {
-    for rel in html_files(d) {
-        if !files(man).get(&rel).is_some_and(|e| type_of(e) == "html") {
-            continue;
-        }
+fn change_text(d: &Path, _: &Run, man: &Manifest) -> Result<(String, Want), Fail> {
+    for rel in html_files(d).into_iter().filter(|r| is_html(man, r)) {
         let text = read(d, &rel)?;
-        let body = text.to_ascii_lowercase().find("<body");
-        let Some((a, b)) = p_word(&text, body.unwrap_or(0), false) else {
+        let Some((a, b)) = p_word(&text, body_start(&text), false) else {
             continue;
         };
         write(
@@ -517,16 +485,15 @@ fn change_text(d: &Path, _: &Run, man: &Py) -> Result<(String, Want), Fail> {
             format!("{}SELFTESTWORD{}", &text[..a], &text[b..]).as_bytes(),
         )?;
         return Ok((
-            format!("{rel}: {} -> 'SELFTESTWORD'", py::repr_str(&text[a..b])),
-            want(&[(&rel, "L3", "L3 text")]),
+            format!("{rel}: {:?} -> \"SELFTESTWORD\"", &text[a..b]),
+            want(&[(&rel, Level::L3, "L3 text")]),
         ));
     }
     Err(fail!("change text: no <p> with a word"))
 }
 
 /// The image with its width one pixel larger (header only).
-#[must_use]
-pub fn bump_dimensions(b: &[u8]) -> Option<Vec<u8>> {
+fn bump_dimensions(b: &[u8]) -> Option<Vec<u8>> {
     let mut b = b.to_vec();
     if b.starts_with(b"\x89PNG\r\n\x1a\n") && b.len() >= 20 {
         let w = u32::from_be_bytes([b[16], b[17], b[18], b[19]]) + 1;
@@ -545,6 +512,7 @@ pub fn bump_dimensions(b: &[u8]) -> Option<Vec<u8>> {
                 i += 2;
                 continue;
             }
+            // A start-of-frame segment: precision, height, width.
             if matches!(marker, 0xC0..=0xC3 | 0xC5..=0xC7 | 0xC9..=0xCB | 0xCD..=0xCF) {
                 let w = u16::from_be_bytes([b[i + 7], b[i + 8]]).wrapping_add(1);
                 b[i + 7..i + 9].copy_from_slice(&w.to_be_bytes());
@@ -556,10 +524,11 @@ pub fn bump_dimensions(b: &[u8]) -> Option<Vec<u8>> {
     None
 }
 
-fn change_image(d: &Path, run: &Run, man: &Py) -> Result<(String, Want), Fail> {
-    let mut cands: Vec<&String> = files(man)
+fn change_image(d: &Path, run: &Run, man: &Manifest) -> Result<(String, Want), Fail> {
+    let mut cands: Vec<&String> = man
+        .files
         .iter()
-        .filter(|(_, e)| type_of(e) == "image")
+        .filter(|(_, e)| e.kind == Kind::Image)
         .map(|(r, _)| r)
         .collect();
     // A processed or bundle image first (a static one also changes its bytes at L4).
@@ -568,7 +537,7 @@ fn change_image(d: &Path, run: &Run, man: &Py) -> Result<(String, Want), Fail> {
             .as_ref()
             .is_some_and(|p| p.join("static").join(r).is_file())
     };
-    cands.sort_by_key(|r| (is_static(r), (*r).clone()));
+    cands.sort_by_key(|r| (is_static(r), *r));
     for rel in cands {
         let p = d.join(rel);
         let Some(b) =
@@ -579,39 +548,31 @@ fn change_image(d: &Path, run: &Run, man: &Py) -> Result<(String, Want), Fail> {
         write(&p, &b)?;
         return Ok((
             format!("{rel}: width + 1 in the header"),
-            want(&[(&norm_path(rel), "L4", "L4 image")]),
+            want(&[(&norm_path(rel), Level::L4, "L4 image")]),
         ));
     }
     Err(fail!("change image: no PNG or JPEG"))
 }
 
-fn change_rss_link(d: &Path, _: &Run, man: &Py) -> Result<(String, Want), Fail> {
+fn change_rss_link(d: &Path, _: &Run, man: &Manifest) -> Result<(String, Want), Fail> {
     static ITEM: OnceLock<Regex> = OnceLock::new();
     let item = re(&ITEM, r"(?s)(<item>.*?<link>)([^<]*)(</link>)");
-    let mut feeds: Vec<&String> = files(man)
-        .iter()
-        .filter(|(_, e)| type_of(e) == "xml")
-        .map(|(r, _)| r)
-        .collect();
-    feeds.sort();
-    for rel in feeds {
+    for (rel, _) in man.files.iter().filter(|(_, e)| e.kind == Kind::Xml) {
         let text = read(d, rel)?;
         let Some(m) = item.captures(&text) else {
             continue;
         };
         let old = m.get(2).expect("a group");
-        let u = url::urlsplit(old.as_str()).map_err(Fail)?;
-        let new = url::urlunsplit(&url::Split {
-            path: format!("/selftest-moved{}", u.path),
-            ..u
-        });
+        let mut url = url::Url::parse(old.as_str())
+            .map_err(|e| fail!("{rel}: item link {}: {e}", old.as_str()))?;
+        url.set_path(&format!("/selftest-moved{}", url.path()));
         write(
             &d.join(rel),
-            format!("{}{new}{}", &text[..old.start()], &text[old.end()..]).as_bytes(),
+            format!("{}{url}{}", &text[..old.start()], &text[old.end()..]).as_bytes(),
         )?;
         return Ok((
-            format!("{rel}: first item link {} -> {new}", old.as_str()),
-            want(&[(rel, "L2", "L2 xml items")]),
+            format!("{rel}: first item link {} -> {url}", old.as_str()),
+            want(&[(rel, Level::L2, "L2 xml items")]),
         ));
     }
     Err(fail!("change RSS link: no feed with an item"))
@@ -631,15 +592,17 @@ const PERTURBATIONS: [(&str, Perturbation); 10] = [
     ("drop a linked page (link integrity)", drop_linked_page),
 ];
 
-fn listing<V: AsRef<str>>(items: impl Iterator<Item = ((String, String), V)>, n: usize) -> String {
-    let mut lines: Vec<(String, String, String)> = items
-        .map(|((k, lv), c)| (lv, k, c.as_ref().to_owned()))
-        .collect();
+/// Up to `n` of the items, as `<level> <key>: <class>`, sorted by level; "no difference" for none.
+fn listing(items: impl Iterator<Item = (Key, String)>, n: usize) -> String {
+    let mut lines: Vec<(Level, String, String)> = items.map(|((k, lv), c)| (lv, k, c)).collect();
+    if lines.is_empty() {
+        return "no difference".into();
+    }
     lines.sort();
     let shown: Vec<String> = lines
         .iter()
         .take(n)
-        .map(|(lv, k, c)| format!("{lv} {k}: {c}"))
+        .map(|(lv, k, c)| format!("{} {k}: {c}", lv.name()))
         .collect();
     let more = if lines.len() > n {
         format!("; … {} more", lines.len() - n)
@@ -657,6 +620,10 @@ fn check(got: &Diffs, want: &Want) -> bool {
             .all(|(k, c)| got.get(k).is_some_and(|g| g.contains(c)))
 }
 
+fn pass(ok: bool) -> &'static str {
+    if ok { "PASS" } else { "FAIL" }
+}
+
 // ---------------------------------------------------------------------------------------------
 // The ratchet
 
@@ -668,83 +635,66 @@ fn ratchet_checks(
 ) -> Result<Vec<(String, bool, String)>, Fail> {
     let mut results = Vec::new();
     let base_res = run.compare(base_dir, base_dir)?;
-    let baseline = tmp.join("baseline.json");
-    let (_, doc) = sd::ratchet(&base_res, None, &mut [], &run.site);
-    sd::write_baseline(&baseline, &doc)?;
+    let path = tmp.join("baseline.json");
+    let (_, doc) = ratchet::ratchet(&base_res, None, &mut [], &run.site);
+    doc.write(&path)?;
+    let baseline = || Baseline::read(&path);
     let res = run.compare(base_dir, text_dir)?;
     let d = diffs(&res);
-    let ((key, level), _) = d
-        .iter()
-        .next()
-        .filter(|_| d.len() == 1)
-        .ok_or_else(|| fail!("the text change is not one difference"))?;
-    let count = |r: &py::Dict, k: &str| r.get(k).and_then(Py::as_list).map_or(0, <[Py]>::len);
-    let (r, _) = sd::ratchet(
-        &res,
-        sd::read_baseline(&baseline)?.as_ref(),
-        &mut [],
-        &run.site,
-    );
+    let (key, level) = match d.keys().collect::<Vec<_>>()[..] {
+        [k] => k.clone(),
+        _ => return Err(fail!("the text change is not one difference")),
+    };
+    let (r, _) = ratchet::ratchet(&res, baseline()?.as_ref(), &mut [], &run.site);
     results.push((
         "an unlisted new diff fails".into(),
-        count(&r, "unlisted") > 0 && count(&r, "listed") == 0,
-        format!("{} unlisted: {level} {key}", count(&r, "unlisted")),
+        !r.unlisted.is_empty() && r.listed.is_empty(),
+        format!("{} unlisted: {} {key}", r.unlisted.len(), level.name()),
     ));
+
     let changes_dir = tmp.join("changes");
+    let entry = format!(
+        "- {} {} `{key}` accepted-deviation: the self-test's text change\n",
+        run.site,
+        level.name()
+    );
     write(
         &changes_dir.join("SELFTEST.md"),
-        format!(
-            "# SELFTEST\n\n- {} {level} `{key}` accepted-deviation: the self-test's text change\n",
-            run.site
-        )
-        .as_bytes(),
+        format!("# SELFTEST\n\n{entry}").as_bytes(),
     )?;
-    let (mut changes, errors) = sd::load_changes(&changes_dir, &["SELFTEST".into()])?;
-    let (r, doc) = sd::ratchet(
-        &res,
-        sd::read_baseline(&baseline)?.as_ref(),
-        &mut changes,
-        &run.site,
+    let (mut changes, errors) = ratchet::load_changes(&changes_dir, &["SELFTEST".into()])?;
+    let (r, doc) = ratchet::ratchet(&res, baseline()?.as_ref(), &mut changes, &run.site);
+    doc.write(&path)?;
+    let stored = baseline()?.and_then(|b| b.files.get(&key)?.get(&level).cloned());
+    let written = matches!(
+        &stored,
+        Some(Accepted::Difference { class, task, .. }) if class == "accepted-deviation" && task == "SELFTEST"
     );
-    let mut ok = errors.is_empty() && count(&r, "unlisted") == 0 && count(&r, "listed") == 1;
-    sd::write_baseline(&baseline, &doc)?;
-    let stored = sd::read_baseline(&baseline)?.and_then(|b| {
-        b.get("files")
-            .and_then(|f| f.get(key))
-            .and_then(|e| e.get(level))
-            .cloned()
-    });
-    let stored = stored.unwrap_or(Py::None);
-    ok = ok
-        && stored.get("class").and_then(Py::as_str) == Some("accepted-deviation")
-        && stored.get("task").and_then(Py::as_str) == Some("SELFTEST");
     results.push((
         "a listed diff passes and --update writes it".into(),
-        ok,
-        format!("baseline entry {}", py::repr(&stored)),
+        errors.is_empty() && r.unlisted.is_empty() && r.listed.len() == 1 && written,
+        format!(
+            "baseline entry {}",
+            stored
+                .as_ref()
+                .map_or_else(|| "none".to_owned(), json::line)
+        ),
     ));
-    let (r, _) = sd::ratchet(
-        &res,
-        sd::read_baseline(&baseline)?.as_ref(),
-        &mut [],
-        &run.site,
-    );
+
+    let (r, _) = ratchet::ratchet(&res, baseline()?.as_ref(), &mut [], &run.site);
     results.push((
         "the same diff against the updated baseline passes".into(),
-        count(&r, "unlisted") + count(&r, "listed") + count(&r, "improved") == 0,
+        r.unlisted.is_empty() && r.listed.is_empty() && r.improved.is_empty(),
         "unchanged".into(),
     ));
-    let (r, _) = sd::ratchet(
-        &base_res,
-        sd::read_baseline(&baseline)?.as_ref(),
-        &mut [],
-        &run.site,
-    );
+
+    let (r, _) = ratchet::ratchet(&base_res, baseline()?.as_ref(), &mut [], &run.site);
     results.push((
         "an unlisted improvement does not fail".into(),
-        count(&r, "unlisted") == 0 && count(&r, "improved") == 1,
-        format!("{} improved", count(&r, "improved")),
+        r.unlisted.is_empty() && r.improved.len() == 1,
+        format!("{} improved", r.improved.len()),
     ));
+
     write(
         &changes_dir.join("BAD.md"),
         format!(
@@ -753,7 +703,7 @@ fn ratchet_checks(
         )
         .as_bytes(),
     )?;
-    let (_, errors) = sd::load_changes(&changes_dir, &["BAD".into()])?;
+    let (_, errors) = ratchet::load_changes(&changes_dir, &["BAD".into()])?;
     results.push((
         "a changes entry without one triage class and a reason is an error".into(),
         errors.len() == 2,
@@ -793,11 +743,7 @@ fn copy_dir(from: &Path, to: &Path) -> Result<(), Fail> {
 
 fn run_in(tmp: &Path, go_out: Option<&Path>, project: Option<&Path>) -> Result<usize, Fail> {
     let (src, project, label) = if let Some(out) = go_out {
-        (
-            out.to_owned(),
-            project.map(Path::to_owned),
-            "go-out".to_owned(),
-        )
+        (out.to_owned(), project.map(Path::to_owned), "go-out")
     } else {
         let src = tmp.join("testsite");
         testsite_output(&src)?;
@@ -807,11 +753,7 @@ fn run_in(tmp: &Path, go_out: Option<&Path>, project: Option<&Path>) -> Result<u
             &project.join("config.toml"),
             b"baseURL = \"https://example.org/\"\n",
         )?;
-        (
-            src,
-            Some(project),
-            "testsite (Go output + Thai page + PNG)".to_owned(),
-        )
+        (src, Some(project), "testsite (Go output + Thai page + PNG)")
     };
     let base = tmp.join("base");
     copy_dir(&src, &base)?;
@@ -827,43 +769,25 @@ fn run_in(tmp: &Path, go_out: Option<&Path>, project: Option<&Path>) -> Result<u
     let ident = diffs(&run.compare(&base, &base)?);
     println!(
         "  {}  identity: {} differences",
-        if ident.is_empty() { "PASS" } else { "FAIL" },
+        pass(ident.is_empty()),
         ident.len()
     );
     failures += usize::from(!ident.is_empty());
-    let man = sd::load_manifest(Some(&base), run.project.as_deref(), &run.site, "unminified")?
-        .expect("a manifest");
+    let man = run.manifest(&base, "unminified")?;
     let mut text_dir = None;
-    for (i, (name, f)) in PERTURBATIONS.iter().enumerate() {
+    for (i, (name, perturb)) in PERTURBATIONS.iter().enumerate() {
         let d = tmp.join(format!("p{}", i + 1));
         copy_dir(&base, &d)?;
-        let (what, want) = f(&d, &run, &man)?;
+        let (what, want) = perturb(&d, &run, &man)?;
         let got = diffs(&run.compare(&base, &d)?);
         let ok = check(&got, &want);
         failures += usize::from(!ok);
-        println!(
-            "  {}  {}. {name}: {what}",
-            if ok { "PASS" } else { "FAIL" },
-            i + 1
-        );
-        let expected = listing(want.into_iter(), 4);
-        println!(
-            "          expected {}",
-            if expected.is_empty() {
-                "no difference"
-            } else {
-                &expected
-            }
-        );
+        println!("  {}  {}. {name}: {what}", pass(ok), i + 1);
+        println!("          expected {}", listing(want.into_iter(), 4));
         if !ok {
-            let got = listing(got.into_iter().map(|(k, c)| (k, c.join(", "))), 4);
             println!(
                 "          got      {}",
-                if got.is_empty() {
-                    "no difference"
-                } else {
-                    &got
-                }
+                listing(got.into_iter().map(|(k, c)| (k, c.join(", "))), 4)
             );
         }
         if *name == "change visible text" {
@@ -873,18 +797,13 @@ fn run_in(tmp: &Path, go_out: Option<&Path>, project: Option<&Path>) -> Result<u
     let text_dir = text_dir.expect("the text perturbation ran");
     for (name, ok, detail) in ratchet_checks(&run, &base, &text_dir, tmp)? {
         failures += usize::from(!ok);
-        println!(
-            "  {}  ratchet: {name} ({detail})",
-            if ok { "PASS" } else { "FAIL" }
-        );
+        println!("  {}  ratchet: {name} ({detail})", pass(ok));
     }
-    println!(
-        "selftest: {}",
-        if failures == 0 {
-            "all checks pass".to_owned()
-        } else {
-            format!("{failures} FAILED")
-        }
-    );
+    let verdict = if failures == 0 {
+        "all checks pass".to_owned()
+    } else {
+        format!("{failures} FAILED")
+    };
+    println!("selftest: {verdict}");
     Ok(failures)
 }

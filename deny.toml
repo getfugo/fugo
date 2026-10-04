@@ -23,7 +23,6 @@ allow = [
     "Unicode-3.0",
     "CDLA-Permissive-2.0", # webpki roots
     "MPL-2.0",             # lightningcss / cssparser (file-level copyleft)
-    "PSF-2.0",             # CPython's library ported in crates/dev (THIRD_PARTY/cpython)
 ]
 confidence-threshold = 0.93
 # Per-crate additions to the allowlist.

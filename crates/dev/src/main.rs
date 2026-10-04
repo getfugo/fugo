@@ -4,7 +4,7 @@ use std::path::PathBuf;
 use std::process::ExitCode;
 
 use clap::{Parser, Subcommand};
-use ssg_dev::{Fail, licence, manifest, notices, package, selftest, sites, structdiff};
+use ssg_dev::{Fail, licence, manifest, notices, package, ratchet, selftest, sites, structdiff};
 
 #[derive(Parser)]
 #[command(
@@ -93,26 +93,7 @@ enum Sites {
 #[derive(Subcommand)]
 enum Manifest {
     /// The manifest of every file below a publish directory
-    Extract {
-        publish: PathBuf,
-        /// The site directory (static/ and, without --base-url, the base URLs of config.toml)
-        #[arg(long)]
-        project: Option<PathBuf>,
-        #[arg(long = "base-url")]
-        base_url: Vec<String>,
-        #[arg(long, default_value = "L1,L2,L3,L4")]
-        levels: String,
-        #[arg(long, default_value = "")]
-        site: String,
-        #[arg(long = "pass", default_value = "")]
-        pass: String,
-        /// Record the visible text of every page
-        #[arg(long)]
-        full_text: bool,
-        /// The output file (gzipped when it ends in .gz; default: stdout)
-        #[arg(short, long)]
-        out: Option<PathBuf>,
-    },
+    Extract(Box<manifest::Extract>),
     /// One line about each manifest or structure dump
     Summary {
         #[arg(required = true)]
@@ -123,64 +104,12 @@ enum Manifest {
 #[derive(Subcommand)]
 enum Structdiff {
     /// Compares a reference with a candidate (manifest files or publish directories)
-    Compare(Box<CompareArgs>),
+    Compare(Box<structdiff::CompareArgs>),
     /// Validates every changes file
     Changes {
-        #[arg(long)]
-        changes: Option<PathBuf>,
+        #[arg(long, default_value_os_t = ratchet::changes_dir())]
+        changes: PathBuf,
     },
-}
-
-#[derive(clap::Args)]
-struct CompareArgs {
-    #[arg(long)]
-    site: String,
-    #[arg(long)]
-    ref_min: Option<PathBuf>,
-    #[arg(long)]
-    ref_unmin: Option<PathBuf>,
-    #[arg(long)]
-    ref_structure: Option<PathBuf>,
-    #[arg(long)]
-    ref_project: Option<PathBuf>,
-    #[arg(long, default_value = "golden")]
-    ref_name: String,
-    #[arg(long)]
-    cand_min: Option<PathBuf>,
-    #[arg(long)]
-    cand_unmin: Option<PathBuf>,
-    #[arg(long)]
-    cand_structure: Option<PathBuf>,
-    #[arg(long)]
-    cand_project: Option<PathBuf>,
-    #[arg(long, default_value = "rust")]
-    cand_name: String,
-    /// A directory whose files are compared only by their presence at L1
-    #[arg(long)]
-    collision_dir: Vec<String>,
-    /// Write the whole result as JSON
-    #[arg(long)]
-    json: Option<PathBuf>,
-    /// Write the report
-    #[arg(long)]
-    report: Option<PathBuf>,
-    /// The number of differences listed per level
-    #[arg(long, default_value_t = 40)]
-    show: usize,
-    /// The ratchet's baseline (testdata/baselines/<site>.json)
-    #[arg(long)]
-    baseline: Option<PathBuf>,
-    /// The task whose changes file lists the changes (tools/dev/changes/<task>.md)
-    #[arg(long)]
-    task: Vec<String>,
-    #[arg(long)]
-    changes: Option<PathBuf>,
-    /// Write the baseline with the listed changes applied
-    #[arg(long)]
-    update: bool,
-    /// Never fail
-    #[arg(long)]
-    report_only: bool,
 }
 
 fn run(cli: Cli) -> Result<i32, Fail> {
@@ -205,26 +134,8 @@ fn run(cli: Cli) -> Result<i32, Fail> {
             Ok(0)
         }
         Command::Sites(Sites::Patches { check }) => sites::patches(check),
-        Command::Manifest(Manifest::Extract {
-            publish,
-            project,
-            base_url,
-            levels,
-            site,
-            pass,
-            full_text,
-            out,
-        }) => {
-            manifest::run_extract(&manifest::Extract {
-                publish,
-                project,
-                base_urls: base_url,
-                levels,
-                site,
-                pass,
-                full_text,
-                out,
-            })?;
+        Command::Manifest(Manifest::Extract(a)) => {
+            manifest::run_extract(&a)?;
             Ok(0)
         }
         Command::Manifest(Manifest::Summary { manifests }) => {
@@ -233,33 +144,8 @@ fn run(cli: Cli) -> Result<i32, Fail> {
             }
             Ok(0)
         }
-        Command::Structdiff(Structdiff::Compare(a)) => {
-            structdiff::cmd_compare(&structdiff::CompareArgs {
-                site: a.site,
-                ref_min: a.ref_min,
-                ref_unmin: a.ref_unmin,
-                ref_structure: a.ref_structure,
-                ref_project: a.ref_project,
-                ref_name: a.ref_name,
-                cand_min: a.cand_min,
-                cand_unmin: a.cand_unmin,
-                cand_structure: a.cand_structure,
-                cand_project: a.cand_project,
-                cand_name: a.cand_name,
-                collision_dir: a.collision_dir,
-                json: a.json,
-                report: a.report,
-                show: a.show,
-                baseline: a.baseline,
-                task: a.task,
-                changes: a.changes.unwrap_or_else(structdiff::changes_dir),
-                update: a.update,
-                report_only: a.report_only,
-            })
-        }
-        Command::Structdiff(Structdiff::Changes { changes }) => {
-            structdiff::cmd_changes(&changes.unwrap_or_else(structdiff::changes_dir))
-        }
+        Command::Structdiff(Structdiff::Compare(a)) => structdiff::cmd_compare(&a),
+        Command::Structdiff(Structdiff::Changes { changes }) => ratchet::cmd_changes(&changes),
         Command::Selftest {
             go_out,
             project,

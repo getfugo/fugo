@@ -6507,6 +6507,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "spdx"
+version = "0.13.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "646c5a367da914e3babcb9cd8e91c37ccaac42325b8f86f036513ad103f2a716"
+dependencies = [
+ "smallvec",
+]
+
+[[package]]
 name = "sptr"
 version = "0.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6617,23 +6626,32 @@ name = "ssg-dev"
 version = "0.0.0-DEV"
 dependencies = [
  "clap 4.6.7",
- "crc32fast",
- "entities",
  "filetime",
  "flate2",
+ "globset",
+ "html5gum",
+ "image",
  "indexmap",
+ "jiff",
+ "percent-encoding",
  "pretty_assertions",
+ "quick-xml",
  "regex",
+ "semver",
+ "serde",
  "serde_json",
  "sha2 0.11.0",
+ "similar",
+ "spdx",
  "ssg-base",
  "ssg-workspace-hack",
  "tar",
  "tempfile",
  "toml",
  "unicode-normalization",
- "unicode-properties",
+ "url",
  "walkdir",
+ "zip",
 ]
 
 [[package]]
@@ -7720,6 +7738,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6af6ae20167a9ece4bcb41af5b80f8a1f1df981f6391189ce00fd257af04126a"
 
 [[package]]
+name = "typed-path"
+version = "0.12.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8e28f89b80c87b8fb0cf04ab448d5dd0dd0ade2f8891bae878de66a75a28600e"
+
+[[package]]
 name = "typedmap"
 version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -8539,6 +8563,19 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 3.0.6",
+]
+
+[[package]]
+name = "zip"
+version = "8.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2d04a6b5381502aa6087c94c669499eb1602eb9c5e8198e534de571f7154809b"
+dependencies = [
+ "crc32fast",
+ "flate2",
+ "indexmap",
+ "memchr",
+ "typed-path",
 ]
 
 [[package]]

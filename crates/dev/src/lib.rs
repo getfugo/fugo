@@ -5,19 +5,19 @@
 
 use std::path::{Path, PathBuf};
 
-pub mod difflib;
-pub mod fnmatch;
-pub mod html;
+pub mod json;
 pub mod licence;
 pub mod manifest;
+pub mod metadata;
 pub mod notices;
 pub mod package;
-pub mod py;
+pub mod ratchet;
+pub mod scan;
 pub mod selftest;
 pub mod sites;
 pub mod structdiff;
 pub mod txtar;
-pub mod url;
+pub mod urls;
 
 /// A failure: its message, printed by the command.
 #[derive(Debug)]

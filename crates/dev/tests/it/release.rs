@@ -12,35 +12,31 @@ fn spdx_expressions() {
     let allowed: HashSet<String> = ["MIT", "Apache-2.0", "BSD-3-Clause", "Unicode-3.0"]
         .map(str::to_owned)
         .into();
-    let cases: [(&str, Result<bool, &str>); 21] = [
-        ("MIT", Ok(true)),
-        ("MIT OR Apache-2.0", Ok(true)),
-        ("MIT AND GPL-3.0", Ok(false)),
-        ("GPL-3.0 OR MIT", Ok(true)),
-        ("(MIT OR GPL-3.0) AND Apache-2.0", Ok(true)),
-        ("Apache-2.0 WITH LLVM-exception", Ok(true)),
-        ("MIT/Apache-2.0", Ok(true)),
-        ("MIT / GPL-2.0", Ok(true)),
-        ("GPL-2.0+", Ok(false)),
-        ("Apache-2.0+", Ok(true)),
-        ("MIT AND (BSD-3-Clause OR GPL-2.0)", Ok(true)),
-        ("(MIT", Err("list index out of range")),
-        ("MIT)", Err("trailing [')']")),
-        ("AND MIT", Err("unexpected AND")),
-        ("MIT AND", Err("list index out of range")),
-        ("MIT WITH", Err("list index out of range")),
-        ("()", Err("unexpected )")),
-        ("MIT OR", Err("list index out of range")),
-        ("(MIT OR Apache-2.0) AND Unicode-3.0", Ok(true)),
-        ("Zlib OR (MIT AND Apache-2.0)", Ok(true)),
-        ("MIT Apache-2.0", Err("trailing ['Apache-2.0']")),
+    let cases: [(&str, Option<bool>); 21] = [
+        ("MIT", Some(true)),
+        ("MIT OR Apache-2.0", Some(true)),
+        ("MIT AND GPL-3.0", Some(false)),
+        ("GPL-3.0 OR MIT", Some(true)),
+        ("(MIT OR GPL-3.0) AND Apache-2.0", Some(true)),
+        ("Apache-2.0 WITH LLVM-exception", Some(true)),
+        ("MIT/Apache-2.0", Some(true)),
+        ("MIT / GPL-2.0", Some(true)),
+        ("GPL-2.0+", Some(false)),
+        ("Apache-2.0+", Some(true)),
+        ("MIT AND (BSD-3-Clause OR GPL-2.0)", Some(true)),
+        ("(MIT", None),
+        ("MIT)", None),
+        ("AND MIT", None),
+        ("MIT AND", None),
+        ("MIT WITH", None),
+        ("()", None),
+        ("MIT OR", None),
+        ("(MIT OR Apache-2.0) AND Unicode-3.0", Some(true)),
+        ("Zlib OR (MIT AND Apache-2.0)", Some(true)),
+        ("MIT Apache-2.0", None),
     ];
     for (expr, want) in cases {
-        assert_eq!(
-            licence::evaluate(expr, &allowed),
-            want.map_err(str::to_owned),
-            "{expr}"
-        );
+        assert_eq!(licence::evaluate(expr, &allowed).ok(), want, "{expr}");
     }
 }
 
@@ -146,8 +142,8 @@ fn go_platforms() {
     assert!(package::go_platform("x86_64-unknown-none").is_err());
 }
 
-/// `package` with a stand-in binary: the same archive twice, its entries, and a zip that its
-/// own central directory describes.
+/// `package` with a stand-in binary: the same archive twice, and its entries in the tar.gz and
+/// the zip.
 #[cfg(unix)]
 #[test]
 fn archives() {
@@ -244,49 +240,32 @@ fn archives() {
         assert!(names.iter().any(|n| n == want), "{want} in {names:?}");
     }
 
-    // The zip: every central directory entry's local header and data.
+    // The zip: the same entries, deflated files and directories with their Unix modes.
     let z = std::fs::read(tmp.path().join("a").join(name("zip", "windows"))).expect("an archive");
-    let u16_at = |at: usize| usize::from(u16::from_le_bytes([z[at], z[at + 1]]));
-    let u32_at = |at: usize| u32::from_le_bytes([z[at], z[at + 1], z[at + 2], z[at + 3]]);
-    let eocd = z.len() - 22;
-    assert_eq!(u32_at(eocd), 0x0605_4b50);
-    let (count, mut at) = (u16_at(eocd + 10), u32_at(eocd + 16) as usize);
+    let mut zip = zip::ZipArchive::new(std::io::Cursor::new(z)).expect("a zip");
     let mut zip_names = Vec::new();
-    for _ in 0..count {
-        assert_eq!(u32_at(at), 0x0201_4b50);
-        let (method, crc, size, len) = (
-            u16_at(at + 10),
-            u32_at(at + 16),
-            u32_at(at + 24) as usize,
-            u16_at(at + 28),
-        );
-        let attr = u32_at(at + 38);
-        let local = u32_at(at + 42) as usize;
-        let name = String::from_utf8(z[at + 46..at + 46 + len].to_vec()).expect("a name");
-        assert_eq!(u32_at(local), 0x0403_4b50);
-        let data_at = local + 30 + u16_at(local + 26) + u16_at(local + 28);
-        let csize = u32_at(local + 18) as usize;
-        let data = if method == 8 {
-            let mut out = Vec::new();
-            flate2::read::DeflateDecoder::new(&z[data_at..data_at + csize])
-                .read_to_end(&mut out)
-                .expect("deflate");
-            out
-        } else {
-            z[data_at..data_at + csize].to_vec()
-        };
-        assert_eq!((data.len(), crc32fast::hash(&data)), (size, crc), "{name}");
+    for i in 0..zip.len() {
+        let mut f = zip.by_index(i).expect("an entry");
+        let name = f.name().to_owned();
+        let mode = f.unix_mode().expect("a Unix mode");
         assert_eq!(
-            attr >> 16 & 0o170_000,
-            if name.ends_with('/') {
-                0o040_000
+            mode & 0o170_000,
+            if f.is_dir() { 0o040_000 } else { 0o100_000 },
+            "{name}"
+        );
+        assert_eq!(
+            mode & 0o777,
+            if name == app || f.is_dir() {
+                0o755
             } else {
-                0o100_000
+                0o644
             },
             "{name}"
         );
+        let mut data = Vec::new();
+        f.read_to_end(&mut data).expect("its data");
+        assert_eq!(data.len() as u64, f.size(), "{name}");
         zip_names.push(name);
-        at += 46 + len + u16_at(at + 30) + u16_at(at + 32);
     }
     assert_eq!(zip_names, names);
 }
