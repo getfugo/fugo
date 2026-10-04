@@ -95,7 +95,7 @@ jobs:
       # that the binary runs and prints the version; this builds a tiny site, written as the
       # runner's user through a mounted directory, as the README says to.
       - name: Build (linux/amd64)
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           platforms: linux/amd64
@@ -122,7 +122,7 @@ jobs:
           password: ${{ github.token }}
 
       - name: Build and push (linux/amd64, linux/arm64)
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           platforms: linux/amd64,linux/arm64
