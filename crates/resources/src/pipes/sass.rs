@@ -403,6 +403,7 @@ pub(super) fn run(
         Ok(css) => Ok(Output {
             bytes: css.into_bytes(),
             source_map: None,
+            legal: None,
         }),
         Err(e) => Err(match e.kind() {
             grass::ErrorKind::ParseError { message, loc, .. } => PipeError::Sass {

@@ -13,6 +13,7 @@
 mod build;
 mod css;
 mod executor;
+mod legal;
 mod lower;
 mod options;
 mod plugin;
@@ -21,7 +22,8 @@ mod sourcemap;
 
 pub use build::{Diagnostic, JsBuildError, JsBuildOutput, JsBuilder, Position, Source};
 pub use options::{
-    DropKind, Format, JsBuildOptions, Jsx, Loader, OptionsError, Platform, SourceMap, Target,
+    DropKind, Format, JsBuildOptions, Jsx, LegalComments, Loader, OptionsError, Platform,
+    SourceMap, Target,
 };
 pub use resolve::{AssetEntry, Assets, MountedDirs, resolve_component};
 pub use sourcemap::file_url;

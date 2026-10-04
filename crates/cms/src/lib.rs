@@ -6,7 +6,7 @@
 //!
 //! | File | What |
 //! |---|---|
-//! | `<path>/index.html`, `cms.js`, `cms.css` | the editor (static; `assets/admin/`) |
+//! | `<path>/index.html`, `cms.js`, `cms.js.LEGAL.txt`, `cms.css` | the editor (static; `assets/admin/`), and the licence notices of the libraries it bundles |
 //! | `_worker.js` | the API: the settings and the content index ([`index`], served to signed-in people only: it lists drafts), then `assets/worker.js` ([`worker_source`]) |
 //! | `.assetsignore` | keeps `_worker.js` out of the static files Cloudflare serves |
 //! | `_headers` | the editor's pages may not be framed (no clickjacking of *Publish*) |
@@ -38,6 +38,11 @@ pub use config::CmsConfig;
 /// The editor's static files, published under `<path>/` (built from `web/`).
 const ADMIN_FILES: &[(&str, &[u8])] = &[
     ("cms.js", include_bytes!("../assets/admin/cms.js")),
+    // The licence notices of the libraries cms.js bundles (`legalComments: external`).
+    (
+        "cms.js.LEGAL.txt",
+        include_bytes!("../assets/admin/cms.js.LEGAL.txt"),
+    ),
     ("cms.css", include_bytes!("../assets/admin/cms.css")),
 ];
 const INDEX_HTML: &str = include_str!("../assets/admin/index.html");

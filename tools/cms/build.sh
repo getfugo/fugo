@@ -1,6 +1,7 @@
 #!/bin/sh
 # Builds the CMS editor from its sources, crates/cms/web (TypeScript and Sass), into the files
-# crates/cms embeds: assets/admin/cms.js, assets/admin/cms.css and assets/worker.js. The
+# crates/cms embeds: assets/admin/cms.js (and the licence notices of the libraries it bundles,
+# assets/admin/cms.js.LEGAL.txt), assets/admin/cms.css and assets/worker.js. The
 # TypeScript is type-checked first (tsc, strict); then the site generator itself bundles and
 # compiles it (js_build, to_css). The libraries (yaml, smol-toml, marked) and tsc come from the
 # pinned node modules of tools/dev/node.sh; their licences are in THIRD_PARTY/cms-editor/.
@@ -40,8 +41,19 @@ ln -s "$modules" "$work/web/node_modules"
 "$modules/.bin/tsc" -p "$work/web"
 "$bin" build -s "$work/web" -d "$work/out" --quiet
 
+files="admin/cms.js admin/cms.js.LEGAL.txt admin/cms.css worker.js"
 status=0
-for f in admin/cms.js admin/cms.css worker.js; do
+extra=$(cd "$work/out" && find . -type f ! -name index.html | sed 's|^\./||' | sort)
+for f in $extra; do
+	case " $files " in
+	*" $f "*) ;;
+	*)
+		echo "build.sh: the build also wrote $f; add it to this script and to crates/cms" >&2
+		status=1
+		;;
+	esac
+done
+for f in $files; do
 	dest="$root/crates/cms/assets/$f"
 	if [ "$mode" = check ]; then
 		if ! cmp -s "$work/out/$f" "$dest"; then
