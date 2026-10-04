@@ -26,6 +26,32 @@ updates:
       # Pinned exactly ("=2.4.0" in Cargo.toml) on purpose, a young engine whose behaviour the
       # layouts rely on (docs/rust-port/REWRITE_PLAN.md §9, risk 3): moved by hand.
       - dependency-name: "tera"
+      # Versions that follow other crates' rather than the latest release: a new 0.x minor (a
+      # breaking change for Cargo) adds a second copy beside the one the graph uses instead of
+      # moving it. The 0.x crates of the "workspace-hack only" block of Cargo.toml (the versions
+      # the graph uses, with the union of their features: DEVELOPMENT.md, "Feature
+      # unification"), the oxc crates minify-html locks, tungstenite (axum's): moved by hand.
+      - { dependency-name: "allocator-api2", update-types: ["version-update:semver-major", "version-update:semver-minor"] }
+      - { dependency-name: "getrandom", update-types: ["version-update:semver-major", "version-update:semver-minor"] }
+      - { dependency-name: "hashbrown", update-types: ["version-update:semver-major", "version-update:semver-minor"] }
+      - { dependency-name: "itertools", update-types: ["version-update:semver-major", "version-update:semver-minor"] }
+      - { dependency-name: "libc", update-types: ["version-update:semver-major", "version-update:semver-minor"] }
+      - { dependency-name: "litemap", update-types: ["version-update:semver-major", "version-update:semver-minor"] }
+      - { dependency-name: "log", update-types: ["version-update:semver-major", "version-update:semver-minor"] }
+      - { dependency-name: "num-traits", update-types: ["version-update:semver-major", "version-update:semver-minor"] }
+      - { dependency-name: "potential_utf", update-types: ["version-update:semver-major", "version-update:semver-minor"] }
+      - { dependency-name: "regex-automata", update-types: ["version-update:semver-major", "version-update:semver-minor"] }
+      - { dependency-name: "regex-syntax", update-types: ["version-update:semver-major", "version-update:semver-minor"] }
+      - { dependency-name: "simd-adler32", update-types: ["version-update:semver-major", "version-update:semver-minor"] }
+      - { dependency-name: "tinystr", update-types: ["version-update:semver-major", "version-update:semver-minor"] }
+      - { dependency-name: "writeable", update-types: ["version-update:semver-major", "version-update:semver-minor"] }
+      - { dependency-name: "yoke", update-types: ["version-update:semver-major", "version-update:semver-minor"] }
+      - { dependency-name: "zerocopy", update-types: ["version-update:semver-major", "version-update:semver-minor"] }
+      - { dependency-name: "zerofrom", update-types: ["version-update:semver-major", "version-update:semver-minor"] }
+      - { dependency-name: "zerotrie", update-types: ["version-update:semver-major", "version-update:semver-minor"] }
+      - { dependency-name: "zerovec", update-types: ["version-update:semver-major", "version-update:semver-minor"] }
+      - { dependency-name: "oxc_*", update-types: ["version-update:semver-major", "version-update:semver-minor"] }
+      - { dependency-name: "tungstenite", update-types: ["version-update:semver-major", "version-update:semver-minor"] }
 
   - package-ecosystem: "github-actions"
     directory: "/"

@@ -207,7 +207,7 @@ axum = { version = "0.8.9", default-features = false, features = ["http1", "toki
 tokio = { version = "1.53", default-features = false, features = ["rt", "net", "fs", "time", "sync"] }
 # serve tests only: the LiveReload WebSocket client (locked through axum `ws`; the features
 # tokio-tungstenite enables, so that `-p ssg-cli` and `-p ssg-serve` share its build)
-tungstenite = { version = "0.30", default-features = false, features = ["handshake"] }
+tungstenite = { version = "0.29", default-features = false, features = ["handshake"] }
 
 # ── npm packages (ssg-npm): Deno's installer ──
 # Exact pins of one Deno release (the CLI 2.9.7 set): the crates have no semver promise and
@@ -242,7 +242,7 @@ anstyle = { version = "1", features = ["std"] }
 crc32fast = { version = "1", features = ["std"] }
 either = { version = "1", default-features = false, features = ["std", "use_std"] }
 fastrand = { version = "2", features = ["alloc", "std"] }
-getrandom = { version = "0.4", default-features = false, features = ["std"] }
+getrandom = { version = "0.3", default-features = false, features = ["std"] }
 hashbrown = { version = "0.16", default-features = false, features = ["allocator-api2", "default-hasher", "inline-more"] }
 # 0.17: indexmap's (no features), rquickjs-core's (default features; `math`)
 hashbrown-0-17 = { package = "hashbrown", version = "0.17" }
@@ -269,5 +269,5 @@ zerocopy = { version = "0.8", default-features = false, features = ["derive", "s
 zerofrom = { version = "0.1", default-features = false, features = ["alloc", "derive"] }
 zerotrie = { version = "0.2", default-features = false, features = ["alloc", "yoke", "zerofrom"] }
 serde_core = { version = "1", features = ["alloc", "rc", "result", "std"] }
-allocator-api2 = { version = "0.4", features = ["alloc", "std"] }
+allocator-api2 = { version = "0.2", features = ["alloc", "std"] }
 zerovec = { version = "0.11", default-features = false, features = ["alloc", "derive", "yoke"] }
