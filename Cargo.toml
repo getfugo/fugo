@@ -243,7 +243,7 @@ crc32fast = { version = "1", features = ["std"] }
 either = { version = "1", default-features = false, features = ["std", "use_std"] }
 fastrand = { version = "2", features = ["alloc", "std"] }
 getrandom = { version = "0.4", default-features = false, features = ["std"] }
-hashbrown = { version = "0.16", default-features = false, features = ["allocator-api2", "default-hasher", "inline-more"] }
+hashbrown = { version = "0.17", default-features = false, features = ["allocator-api2", "default-hasher", "inline-more"] }
 # 0.17: indexmap's (no features), rquickjs-core's (default features; `math`)
 hashbrown-0-17 = { package = "hashbrown", version = "0.17" }
 icu_locale_core = { version = "2", default-features = false, features = ["alloc", "zerovec"] }
