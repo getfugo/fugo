@@ -130,7 +130,7 @@ url = "2.5"
 # to_math: KaTeX in QuickJS-ng (MIT; C, built by cc). `parallel`: Send + Sync runtimes, pooled
 # across render threads.
 rquickjs = { version = "0.14", default-features = false, features = ["std", "parallel"] }
-emojis = "0.8"         # emojify (T31); already locked through comrak `shortcodes`
+emojis = "0.9"         # emojify (T31); already locked through comrak `shortcodes`
 
 # ── time & locale (ICU4X, Unicode-3.0) ──
 jiff = { version = "0.2.37", features = ["serde"] }

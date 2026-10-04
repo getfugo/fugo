@@ -861,7 +861,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "daa3d1ea6b01ce72405fa3f826768f51c7a44917527c89b37856ffdd17ee57e4"
 dependencies = [
  "caseless",
- "emojis",
+ "emojis 0.8.2",
  "entities",
  "finl_unicode",
  "jetscii",
@@ -1740,6 +1740,15 @@ name = "emojis"
 version = "0.8.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0a4d5d50b0b58df5173d8ff1192b4d1422ceae5d981b30d4b6f8ed1d673a2bc4"
+dependencies = [
+ "phf 0.13.1",
+]
+
+[[package]]
+name = "emojis"
+version = "0.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0b1514ced566c94991ed9563258ecf61e311fd773bf0a3f20606830386bf66e3"
 dependencies = [
  "phf 0.13.1",
 ]
@@ -6652,7 +6661,7 @@ dependencies = [
 name = "ssg-funcs"
 version = "0.0.0-DEV"
 dependencies = [
- "emojis",
+ "emojis 0.9.0",
  "html5gum",
  "insta",
  "jiff",
