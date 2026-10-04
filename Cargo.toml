@@ -206,7 +206,7 @@ axum = { version = "0.8.9", default-features = false, features = ["http1", "toki
 tokio = { version = "1.53", default-features = false, features = ["rt", "net", "fs", "time", "sync"] }
 # serve tests only: the LiveReload WebSocket client (locked through axum `ws`; the features
 # tokio-tungstenite enables, so that `-p ssg-cli` and `-p ssg-serve` share its build)
-tungstenite = { version = "0.29", default-features = false, features = ["handshake"] }
+tungstenite = { version = "0.30", default-features = false, features = ["handshake"] }
 
 # ── npm packages (ssg-npm): Deno's installer ──
 # Exact pins of one Deno release (the CLI 2.9.7 set): the crates have no semver promise and
