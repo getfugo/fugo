@@ -160,6 +160,8 @@ oxc_allocator = "0.95" # the oxc pipeline around oxc_minifier (T26), same lockst
 oxc_parser = "0.95"
 oxc_codegen = "0.95"
 oxc_span = "0.95"
+oxc_ast = "0.95"
+oxc_ast_visit = "0.95"
 # js_build: the rolldown bundler and the oxc it pins (the `oxc` umbrella crate, so the 0.95
 # crates above keep their names). Exact pins: rolldown's Rust API has no semver promise and
 # every release moves oxc.

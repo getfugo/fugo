@@ -29,3 +29,8 @@ XML file fugo writes. `disableHTML`, `disableCSS`, `disableJS`, `disableJSON`, `
 
 fugo's minifiers are lightningcss (CSS), oxc (JavaScript) and minify-html (HTML). The
 `[minify.tdewolff]` options of Go-template sites are accepted, and only some apply.
+
+In a page, each inline `<script>` is minified by its `type`: JavaScript (classic scripts and
+modules) by oxc, JSON (`application/ld+json`, `application/json`, import maps) by the JSON
+minifier. Other types, such as client-side templates (`text/x-template`), and scripts that do
+not parse are kept as written.
