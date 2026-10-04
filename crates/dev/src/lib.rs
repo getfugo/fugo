@@ -1,10 +1,11 @@
 //! The repository's tools, run with `cargo dev <command>` (an alias in .cargo/config.toml):
 //! the acceptance harness of the Go comparison (the test sites, build manifests, structdiff and
-//! its self-test, DEVELOPMENT.md "Acceptance harness"), the licence check, and the notices and
-//! archives of a release (DEVELOPMENT.md "CI and releases").
+//! its self-test, DEVELOPMENT.md "Acceptance harness"), the licence and file-length checks, and the
+//! notices and archives of a release (DEVELOPMENT.md "CI and releases").
 
 use std::path::{Path, PathBuf};
 
+pub mod file_length;
 pub mod json;
 pub mod licence;
 pub mod manifest;

@@ -4,12 +4,14 @@ use std::path::PathBuf;
 use std::process::ExitCode;
 
 use clap::{Parser, Subcommand};
-use ssg_dev::{Fail, licence, manifest, notices, package, ratchet, selftest, sites, structdiff};
+use ssg_dev::{
+    Fail, file_length, licence, manifest, notices, package, ratchet, selftest, sites, structdiff,
+};
 
 #[derive(Parser)]
 #[command(
     name = "ssg-dev",
-    about = "The repository's tools: test sites, build manifests, structdiff, licences and release archives"
+    about = "The repository's tools: test sites, build manifests, structdiff, licences, release archives and file lengths"
 )]
 struct Cli {
     #[command(subcommand)]
@@ -45,6 +47,8 @@ enum Command {
         #[arg(short)]
         v: bool,
     },
+    /// Fails when a file of code is longer than 500 lines (AGENTS.md)
+    FileLength,
     /// Writes the licence notices of the packages linked into the binary for a target
     Notices {
         /// A Rust target triple
@@ -155,6 +159,7 @@ fn run(cli: Cli) -> Result<i32, Fail> {
             Ok(i32::from(failures > 0))
         }
         Command::LicenceCheck { v } => licence::run(v),
+        Command::FileLength => file_length::run(),
         Command::Notices {
             target,
             out,

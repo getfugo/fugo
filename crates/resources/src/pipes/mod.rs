@@ -49,6 +49,9 @@ pub use postprocess::{PostProcessId, PpField, has_placeholder};
 pub use sass::{OutputStyle, SassVar, ToCssOptions};
 pub use template::TemplateExecutor;
 
+mod options;
+use options::*;
+
 /// A transform of one resource into another (see the module table).
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub enum Transform {
@@ -467,62 +470,4 @@ fn push_companion(
 /// `bytes` as text, for the text transforms.
 fn text(bytes: &[u8]) -> Result<&str, PipeError> {
     std::str::from_utf8(bytes).map_err(|_| PipeError::NotUtf8)
-}
-
-// ── option decoding ─────────────────────────────────────────────────────────────────────────
-
-/// The entries of an options map, keys lower-cased (options are matched case-insensitively);
-/// `null` is no options.
-fn option_entries(v: &Json) -> Result<Vec<(String, &Json)>, PipeError> {
-    match v {
-        Json::Null => Ok(Vec::new()),
-        Json::Object(m) => Ok(m
-            .iter()
-            .filter(|(_, v)| !v.is_null())
-            .map(|(k, v)| (k.to_ascii_lowercase(), v))
-            .collect()),
-        other => Err(PipeError::Option {
-            option: String::new(),
-            reason: format!("the options must be a map, got {other}"),
-        }),
-    }
-}
-
-fn bad(option: &str, reason: impl Into<String>) -> PipeError {
-    PipeError::Option {
-        option: option.to_owned(),
-        reason: reason.into(),
-    }
-}
-
-/// A boolean option; `"true"`/`"false"` and numbers are accepted, as templates pass them.
-fn opt_bool(option: &str, v: &Json) -> Result<bool, PipeError> {
-    match v {
-        Json::Bool(b) => Ok(*b),
-        Json::String(s) => match s.to_ascii_lowercase().as_str() {
-            "true" | "1" => Ok(true),
-            "false" | "0" | "" => Ok(false),
-            _ => Err(bad(option, format!("expected a boolean, got {s:?}"))),
-        },
-        Json::Number(n) => Ok(n.as_f64().is_some_and(|f| f != 0.0)),
-        other => Err(bad(option, format!("expected a boolean, got {other}"))),
-    }
-}
-
-/// A string option; numbers and booleans are accepted as their text.
-fn opt_string(option: &str, v: &Json) -> Result<String, PipeError> {
-    match v {
-        Json::String(s) => Ok(s.clone()),
-        Json::Number(n) => Ok(n.to_string()),
-        Json::Bool(b) => Ok(b.to_string()),
-        other => Err(bad(option, format!("expected a string, got {other}"))),
-    }
-}
-
-/// A list of strings; a single string is a one-item list.
-fn opt_strings(option: &str, v: &Json) -> Result<Vec<String>, PipeError> {
-    match v {
-        Json::Array(a) => a.iter().map(|x| opt_string(option, x)).collect(),
-        other => Ok(vec![opt_string(option, other)?]),
-    }
 }

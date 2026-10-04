@@ -78,6 +78,10 @@ jobs:
       - name: Licence check
         run: cargo dev licence-check
 
+      # No file of code longer than 500 lines (AGENTS.md).
+      - name: File length
+        run: cargo dev file-length
+
   test:
     name: Test
     runs-on: ubuntu-24.04
