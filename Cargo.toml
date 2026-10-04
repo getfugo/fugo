@@ -261,5 +261,5 @@ zerocopy = { version = "0.8", default-features = false, features = ["derive", "s
 zerofrom = { version = "0.1", default-features = false, features = ["alloc", "derive"] }
 zerotrie = { version = "0.2", default-features = false, features = ["alloc", "yoke", "zerofrom"] }
 serde_core = { version = "1", features = ["alloc", "rc", "result", "std"] }
-allocator-api2 = { version = "0.2", features = ["alloc", "std"] }
+allocator-api2 = { version = "0.4", features = ["alloc", "std"] }
 zerovec = { version = "0.11", default-features = false, features = ["alloc", "derive", "yoke"] }
