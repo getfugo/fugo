@@ -89,7 +89,7 @@ jobs:
           echo "$TAG ($commit): $image:{${tags// /,}}"
 
       - uses: docker/setup-qemu-action@v3
-      - uses: docker/setup-buildx-action@v3
+      - uses: docker/setup-buildx-action@v4
 
       # The amd64 image, loaded to run it as a user would: the Dockerfile has already checked
       # that the binary runs and prints the version; this builds a tiny site, written as the
