@@ -132,7 +132,8 @@ ICU data in `locale`, `serve`) stay out of lanes A/B until round 8.
 
 `.github/workflows/ci.yml` builds, tests and releases this workspace; it is the repository's
 only build workflow. `bump.yml` cuts a release, `image.yml` packages each release as a container
-image (below) and `stale.yml` manages issues.
+image (below), `automerge.yml` merges dependabot's cargo updates (below) and `stale.yml` manages
+issues.
 
 **When it runs.** On pushes to `main` and `rust-port`, on every pull request, on every
 `v[0-9]*` tag, and by hand (`workflow_dispatch`); there are no path filters. A newer run on the
@@ -301,6 +302,18 @@ visibility).
 them, and pull requests restore their base branch's. A cold test job builds about 3.2 GB of
 `target/` (1.8 GB of it test executables, 0.8 GB of which debug info: `debug =
 "line-tables-only"` of the dev profile already applies), well within the runner's disk.
+
+**Dependabot.** `.github/dependabot.yml` opens weekly updates: the cargo patch and minor updates
+in two grouped pull requests (any other cargo update one each), and every GitHub Actions update in
+one. `automerge.yml` squash-merges a cargo patch or minor update once CI passes: the `main`
+ruleset requires Lint, Test and the five Build jobs (repository admins bypass it, so a direct
+push still works). It leaves for review majors, a pull request someone other than dependabot
+pushed to, the GitHub Actions group (the workflow's token cannot change workflow files), and an
+update after which `Cargo.lock` holds more versions of a crate than before (it comments on the
+pull request): that is what a requirement that has to follow another crate's version does, the
+workspace-hack entries and the crates locked through another (`ignore` in dependabot.yml). A
+merge made with the workflow's token starts no workflow, so `main`'s CI, and its cache save,
+waits for the next other push.
 
 ## Test data: the fugo schema
 
