@@ -394,7 +394,8 @@ pub fn walk(root: &Path) -> Vec<String> {
         .min_depth(1)
         .into_iter()
         .filter_map(Result::ok)
-        .filter(|e| !e.file_type().is_dir() && !(e.file_type().is_symlink() && e.path().is_dir()))
+        // Not directories, nor symbolic links to them (`is_dir` follows a link).
+        .filter(|e| !e.path().is_dir())
         .map(|e| {
             let rel = e.path().strip_prefix(root).expect("below the root");
             rel.components()
