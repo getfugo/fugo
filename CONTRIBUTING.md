@@ -115,7 +115,7 @@ Fixes #1949
 
 ###  Fetching the Sources From GitHub
 
-Fugo is the Cargo workspace at the repository root. Building it needs Rust 1.96 or later (`rust-version` in `Cargo.toml`; CI uses 1.99.0) and a C compiler. Clone the repository:
+Fugo is the Cargo workspace at the repository root. Building it needs Rust 1.99 or later (`rust-version` in `Cargo.toml`, which CI uses too) and a C compiler. Clone the repository:
 
 ```bash
 mkdir $HOME/src

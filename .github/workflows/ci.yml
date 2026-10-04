@@ -31,7 +31,7 @@ env:
   # after it.
   APP_NAME: fugo
   # The toolchain CI builds with: the one the workspace is developed with. Cargo.toml's
-  # rust-version (1.96, what rolldown's oxc needs) is the MSRV. A newer clippy brings new lints that -D warnings turns into
+  # rust-version (1.99, what fugo-sass needs) is the MSRV. A newer clippy brings new lints that -D warnings turns into
   # failures, so this moves only on purpose (DEVELOPMENT.md, "CI and releases").
   RUST_TOOLCHAIN: "1.99.0"
   CARGO_TERM_COLOR: always

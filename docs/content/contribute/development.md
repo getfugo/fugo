@@ -6,7 +6,7 @@ weight: 10
 
 ## Build
 
-You need Rust 1.96 or later and a C compiler:
+You need Rust 1.99 or later and a C compiler:
 
 ```sh
 git clone https://github.com/getfugo/fugo.git
