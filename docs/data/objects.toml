@@ -1,8 +1,8 @@
 # The template objects of the documentation's reference (/reference/objects/): every field of
-# the views in crates/view/src/views.rs, described. `structs` names the Rust views an object
-# is made of; ssg-view's test `docs_objects_cover_the_views` fails when a field of one of them
-# has no description here, or a description names a field that does not exist. A field
-# description is Markdown.
+# the views in crates/view/src/views.rs and views/, described. `structs` names the Rust views
+# an object is made of; ssg-view's test `docs_objects_cover_the_views` fails when a field of
+# one of them has no description here, or a description names a field that does not exist. A
+# field description is Markdown.
 
 [page]
 title = "Page"
