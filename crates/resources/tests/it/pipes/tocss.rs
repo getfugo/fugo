@@ -406,3 +406,29 @@ fn tocss_explicit_extension_imports_use_the_load_paths() {
     let err = p.store.realize(out).unwrap_err().to_string();
     assert!(err.contains("Can't find stylesheet to import"), "{err}");
 }
+
+#[test]
+fn tocss_extend_reaches_every_rule_of_a_selector() {
+    // grass hashed its style rules' selectors by address but compared them by value, so of
+    // two rules with the same selector the second lost its extensions whenever the random
+    // hasher made their hashes meet: a few of these 200 rules on every run.
+    let site = super::mini_site(&[("config.toml", "baseURL = \"https://example.org/\"\n")]);
+    let p = project(site.path(), |_| {});
+    let mut src: String = (0..200)
+        .map(|i| format!(".a {{ order: {i}; }}\n"))
+        .collect();
+    src.push_str(".b { @extend .a; }\n");
+    let id = p
+        .store
+        .from_string(
+            "extend.scss",
+            &src,
+            &ssg_resources::CallSite::in_lang(p.lang()),
+        )
+        .unwrap();
+    let opts =
+        ToCssOptions::from_json(&serde_json::json!({ "outputStyle": "compressed" })).unwrap();
+    let out = p.store.transform(id, Transform::ToCss(opts)).unwrap();
+    let css = String::from_utf8(p.store.content(out).unwrap().to_vec()).unwrap();
+    assert_eq!(css.matches(".a,.b{").count(), 200, "{css}");
+}

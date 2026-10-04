@@ -12,19 +12,20 @@ use crate::selector::{Selector, SelectorList};
 #[derive(Debug, Clone)]
 pub(crate) struct ExtendedSelector(Rc<RefCell<SelectorList>>);
 
+// fugo: compared by identity, as it is hashed (dart-sass compares its `ModifiableBox` by
+// identity too). Compared by value, the style rules of two equal selectors (`.a{…}` twice)
+// were one entry of `ExtensionStore::selectors` whenever their pointers' hashes met in the
+// table, which the random hasher decides per run: `@extend` then skipped the second rule.
 impl PartialEq for ExtendedSelector {
     fn eq(&self, other: &Self) -> bool {
-        self.0 == other.0
+        Rc::ptr_eq(&self.0, &other.0)
     }
 }
 
 impl Eq for ExtendedSelector {}
 
 impl Hash for ExtendedSelector {
-    // We hash the ptr here for efficiency.
-    // TODO: is this an issue? it probably is,
-    // but I haven't managed to find a test case
-    // that exhibits it.
+    // The box's identity (see `eq`); the selector inside changes as extensions apply.
     fn hash<H: Hasher>(&self, state: &mut H) {
         ptr::hash(&*self.0, state);
         // in case we need to hash the actual value:
