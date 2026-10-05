@@ -7,6 +7,7 @@
 use std::fmt::Write as _;
 use std::path::Path;
 
+use super::Templates;
 use crate::{Fail, fail};
 
 const SECTIONS: usize = 10;
@@ -31,54 +32,6 @@ pagerSize = 20
 [markup.tableOfContents]
 startLevel = 2
 endLevel = 3
-"#;
-
-const BASEOF: &str = r#"<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<title>{{ page.title }} | {{ site.title }}</title>
-<link rel="canonical" href="{{ page.permalink }}">
-{%- for f in page.alternative_output_formats %}
-<link rel="{{ f.rel }}" type="{{ f.media_type.type }}" href="{{ f.permalink }}">
-{%- endfor %}
-</head>
-<body>
-<header>
-<a href="{{ site.home.rel_permalink }}">{{ site.title }}</a>
-<nav>{% for e in site.menus.main or [] %}<a href="{{ e.url }}">{{ e.name }}</a> {% endfor %}</nav>
-</header>
-<main>{% block main %}{% endblock main %}</main>
-</body>
-</html>
-"#;
-
-const SINGLE: &str = r#"{% extends "baseof.html" %}
-{% block main %}
-<article>
-<h1>{{ page.title }}</h1>
-<p><time datetime="{{ page.date | date(format="%Y-%m-%d") }}">{{ page.date | date(format="%e %B %Y") }}</time>, {{ page.reading_time }} min, {{ page.word_count }} words</p>
-<nav>{{ page.table_of_contents }}</nav>
-{{ page.content }}
-{%- if page.prev_in_section %}
-<p><a href="{{ page.prev_in_section.rel_permalink }}">{{ page.prev_in_section.title }}</a></p>
-{%- endif %}
-</article>
-{% endblock main %}
-"#;
-
-const LIST: &str = r#"{% extends "baseof.html" %}
-{% block main %}
-<h1>{{ page.title }}</h1>
-{{ page.content }}
-{%- set pager = paginator() %}
-<ul>
-{%- for p in pager.pages %}
-<li><a href="{{ p.rel_permalink }}">{{ p.title }}</a><p>{{ p.summary }}</p></li>
-{%- endfor %}
-</ul>
-<nav>{% if pager.has_prev %}<a href="{{ pager.prev.url }}">Newer</a>{% endif %} {{ pager.page_number }} of {{ pager.total_pages }} {% if pager.has_next %}<a href="{{ pager.next.url }}">Older</a>{% endif %}</nav>
-{% endblock main %}
 "#;
 
 /// A linear congruential generator (Knuth's MMIX constants): the same text on every machine.
@@ -118,8 +71,8 @@ impl Lcg {
     }
 }
 
-/// Writes a site of `pages` pages into the directory `dir`, which must not exist.
-pub fn generate(dir: &Path, pages: usize) -> Result<(), Fail> {
+/// Writes a site of `pages` pages with `templates` into the directory `dir`, which must not exist.
+pub fn generate(dir: &Path, pages: usize, templates: Templates) -> Result<(), Fail> {
     if dir.exists() {
         return Err(fail!("{}: exists", dir.display()));
     }
@@ -140,9 +93,9 @@ pub fn generate(dir: &Path, pages: usize) -> Result<(), Fail> {
         );
     }
     write("config.toml", &config)?;
-    write("layouts/baseof.html", BASEOF)?;
-    write("layouts/single.html", SINGLE)?;
-    write("layouts/list.html", LIST)?;
+    for (name, text) in templates.layouts() {
+        write(&format!("layouts/{name}"), text)?;
+    }
 
     let mut rng = Lcg(0x5eed);
     write(

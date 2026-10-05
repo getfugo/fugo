@@ -1447,10 +1447,31 @@ blockquote {
   overflow-wrap: anywhere;
 }
 
+.bench__values {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.25rem 0.75rem;
+}
+
 .bench__value {
   color: var(--muted);
   font-family: var(--font-mono);
   white-space: nowrap;
+}
+
+// The Go implementation's line, value and points; fugo's are orange.
+.bench__value.bench__value--fugo {
+  color: var(--orange);
+}
+
+.bench__value.bench__value--go {
+  color: var(--link);
+}
+
+.bench__line.bench__line--go {
+  stroke: var(--link);
+  stroke-dasharray: 6 4;
 }
 
 .bench__svg {
@@ -1483,9 +1504,12 @@ blockquote {
   stroke-width: 1.5;
 }
 
+.bench__point.bench__point--go {
+  fill: var(--link);
+}
+
 a:hover > .bench__point,
 a:focus-visible > .bench__point {
-  fill: var(--orange-strong);
   r: 6;
 }
 

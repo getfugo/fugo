@@ -316,18 +316,24 @@ workspace-hack entries and the crates locked through another (`ignore` in depend
 merge made with the workflow's token starts no workflow, so `main`'s CI, and its cache save,
 waits for the next other push.
 
-**Benchmarks.** `cargo dev bench <binary> <results.json> [--runs <n>]` (`crates/dev/src/bench.rs`)
-builds fugo's documentation site and two generated sites (1,000 and 10,000 pages,
-`crates/dev/src/bench/site.rs`), once to fill the caches and then `<n>` times (5 by default), and
-writes the median build time and the median peak memory (`/usr/bin/time`) of each, as
-github-action-benchmark's custom JSON. The Benchmark job runs it on every push to `main` with the
-Linux build's binary, and github-action-benchmark adds the results, as the suite `fugo`, to
-`dev/bench/data.js` on the `gh-pages` branch, the file that also holds the Go implementation's
-history (the suite `Benchmark`, 2020 to 2025). The website is published by the repository
-getfugo/getfugo.github.io: once a day, and when run by hand, its workflow builds `docs/` at the
-latest release with that release's binary, adds `dev/bench/data.js` as `benchmarks/data.json`, and
-deploys the site with GitHub Pages. The page `/about/benchmarks/` draws the charts
-(`docs/assets/js/benchmarks.js`). getfugo/fugo itself publishes no Pages site.
+**Benchmarks.** `cargo dev bench <binary> <results.json> [--runs <n>] [--go <binary>]`
+(`crates/dev/src/bench.rs`) builds fugo's documentation site and two generated sites (1,000 and
+10,000 pages, `crates/dev/src/bench/site.rs`), once to fill the caches and then `<n>` times (5 by
+default), and writes the median build time and the median peak memory (`/usr/bin/time`) of each,
+as github-action-benchmark's custom JSON. With `--go`, the Go implementation's binary also builds
+the generated sites, from the same content with Go-template layouts (`bench/templates.rs`), and
+its results are named `… (Go)`. The Benchmark job runs it on every push to `main` with the Linux
+build's binary and the Go implementation built from its last commit, `44529028` (once; then
+cached), so each run compares the two on the same machine. github-action-benchmark adds the
+results, as the suite `fugo`, to `dev/bench/data.js` on the `gh-pages` branch, the file that also
+holds the Go implementation's micro-benchmark history (the suite `Benchmark`, 2020 to 2025).
+
+The website is published by the repository getfugo/getfugo.github.io: once a day, and when run by
+hand, its workflow builds `docs/` at the latest release with that release's binary, adds
+`dev/bench/data.js` as `benchmarks/data.json`, and deploys the site with GitHub Pages. The page
+`/about/benchmarks/` draws the charts (`docs/assets/js/benchmarks.js`), the Go line next to
+fugo's. The Pages site of getfugo/fugo itself (`/fugo/`, from `gh-pages`) only shows
+github-action-benchmark's own chart page; nothing links to it.
 
 ## Test data: the fugo schema
 

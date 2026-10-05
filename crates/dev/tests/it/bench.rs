@@ -1,6 +1,6 @@
 //! `cargo dev bench`: the parts that need no fugo binary.
 
-use ssg_dev::bench::{generate, median, peak_rss, thousands};
+use ssg_dev::bench::{Templates, generate, median, peak_rss, thousands};
 
 #[test]
 fn reports_and_numbers() {
@@ -20,8 +20,8 @@ fn reports_and_numbers() {
 fn generated_sites_are_the_same_every_time() {
     let tmp = tempfile::tempdir().expect("tempdir");
     let (a, b) = (tmp.path().join("a"), tmp.path().join("b"));
-    generate(&a, 25).expect("generate a");
-    generate(&b, 25).expect("generate b");
+    generate(&a, 25, Templates::Tera).expect("generate a");
+    generate(&b, 25, Templates::Tera).expect("generate b");
     let page = "content/section-3/page-13.md";
     let text = std::fs::read_to_string(a.join(page)).expect("page");
     assert_eq!(text, std::fs::read_to_string(b.join(page)).expect("page"));
@@ -32,5 +32,29 @@ fn generated_sites_are_the_same_every_time() {
         .filter(|e| e.as_ref().is_ok_and(|e| e.file_type().is_file()))
         .count();
     assert_eq!(pages, 25 + 10 + 1, "pages, section pages and the home page");
-    assert!(generate(&a, 1).is_err(), "the directory must not exist");
+    assert!(
+        generate(&a, 1, Templates::Tera).is_err(),
+        "the directory must not exist"
+    );
+}
+
+#[test]
+fn go_sites_differ_only_in_their_layouts() {
+    let tmp = tempfile::tempdir().expect("tempdir");
+    let (tera, go) = (tmp.path().join("tera"), tmp.path().join("go"));
+    generate(&tera, 12, Templates::Tera).expect("tera");
+    generate(&go, 12, Templates::Go).expect("go");
+    for file in [
+        "config.toml",
+        "content/_index.md",
+        "content/section-1/page-11.md",
+    ] {
+        let read = |dir: &std::path::Path| std::fs::read_to_string(dir.join(file)).expect(file);
+        assert_eq!(read(&tera), read(&go), "{file}");
+    }
+    let layout = |dir: &std::path::Path| {
+        std::fs::read_to_string(dir.join("layouts/list.html")).expect("list.html")
+    };
+    assert!(layout(&tera).contains("{% extends \"baseof.html\" %}"));
+    assert!(layout(&go).contains("{{ define \"main\" }}"));
 }
