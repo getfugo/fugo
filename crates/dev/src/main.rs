@@ -59,6 +59,9 @@ enum Command {
         /// Measured builds per site (the median counts), after a warm-up build
         #[arg(long, default_value_t = 5)]
         runs: usize,
+        /// The Go implementation's binary: also build the generated sites with it
+        #[arg(long)]
+        go: Option<PathBuf>,
     },
     /// Writes the licence notices of the packages linked into the binary for a target
     Notices {
@@ -171,7 +174,12 @@ fn run(cli: Cli) -> Result<i32, Fail> {
         }
         Command::LicenceCheck { v } => licence::run(v),
         Command::FileLength => file_length::run(),
-        Command::Bench { binary, out, runs } => bench::run(&binary, &out, runs),
+        Command::Bench {
+            binary,
+            out,
+            runs,
+            go,
+        } => bench::run(&binary, &out, runs, go.as_deref()),
         Command::Notices {
             target,
             out,

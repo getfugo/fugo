@@ -5,12 +5,19 @@
 //! history on the `gh-pages` branch, which the documentation's Benchmarks page draws
 //! (DEVELOPMENT.md, "Benchmarks").
 //!
+//! With `--go <binary>`, the generated sites are also built by the Go implementation (fugo up to
+//! 0.148, built from the repository's history), from the same content with Go templates
+//! (`templates.rs`): the results named `… (Go)` are its, measured on the same machine in the
+//! same run, so the charts compare the two.
+//!
 //! Peak memory is the maximum resident set size `/usr/bin/time` reports (`-f %M` of GNU time on
 //! Linux, `-l` on macOS); without it only times are measured.
 
 mod site;
+mod templates;
 
 pub use site::generate;
+pub use templates::Templates;
 
 use std::ffi::OsString;
 use std::path::{Path, PathBuf};
@@ -23,9 +30,12 @@ use crate::{Fail, fail};
 
 const TIME: &str = "/usr/bin/time";
 
-/// One site to build: the arguments after `build` and the environment.
+/// One site to build: the binary, the arguments after `build` and the environment.
 struct Site {
     name: String,
+    /// ` (Go)` for the Go implementation's builds.
+    suffix: String,
+    binary: PathBuf,
     args: Vec<OsString>,
     env: Vec<(&'static str, PathBuf)>,
     publish: PathBuf,
@@ -38,42 +48,61 @@ struct Measure {
     rss: Option<f64>,
 }
 
-pub fn run(binary: &Path, out: &Path, runs: usize) -> Result<i32, Fail> {
+pub fn run(binary: &Path, out: &Path, runs: usize, go: Option<&Path>) -> Result<i32, Fail> {
     if runs == 0 {
         return Err(fail!("--runs must be at least 1"));
     }
-    let binary = std::fs::canonicalize(binary).map_err(|e| fail!("{}: {e}", binary.display()))?;
+    let canonical = |b: &Path| std::fs::canonicalize(b).map_err(|e| fail!("{}: {e}", b.display()));
+    let binary = canonical(binary)?;
+    let go = go.map(canonical).transpose()?;
     let work = tempfile::tempdir().map_err(|e| fail!("temporary directory: {e}"))?;
     let memory = Path::new(TIME).is_file();
     if !memory {
         eprintln!("bench: no {TIME}: measuring build times only");
     }
 
-    let mut sites = vec![docs_site(work.path())];
+    let mut sites = vec![docs_site(&binary, work.path())];
     for pages in [1_000, 10_000] {
-        let dir = work.path().join(format!("generated-{pages}"));
-        generate(&dir, pages)?;
-        sites.push(Site {
-            name: format!("{} generated pages", thousands(pages)),
-            args: build_args(&dir, work.path(), &format!("generated-{pages}")),
-            env: Vec::new(),
-            publish: work.path().join(format!("generated-{pages}-public")),
-        });
+        let name = format!("{} generated pages", thousands(pages));
+        let mut flavours = vec![(
+            Templates::Tera,
+            binary.clone(),
+            String::new(),
+            "--cache-dir",
+        )];
+        if let Some(go) = &go {
+            flavours.push((Templates::Go, go.clone(), " (Go)".to_owned(), "--cacheDir"));
+        }
+        for (templates, binary, suffix, cache) in flavours {
+            let key = format!("generated-{pages}-{templates:?}").to_lowercase();
+            let dir = work.path().join(&key);
+            generate(&dir, pages, templates)?;
+            sites.push(Site {
+                name: name.clone(),
+                suffix,
+                binary,
+                args: build_args(&dir, work.path(), &key, cache),
+                env: Vec::new(),
+                publish: work.path().join(format!("{key}-public")),
+            });
+        }
     }
 
     let mut results = Vec::new();
     for site in &sites {
         // The warm-up build fills the caches (processed images) and counts the pages.
-        let pages = warm_up(&binary, site)?;
+        let pages = warm_up(site)?;
         let mut measures = Vec::with_capacity(runs);
         for _ in 0..runs {
-            measures.push(measure(&binary, site, memory)?);
+            measures.push(measure(site, memory)?);
         }
         let millis = median(measures.iter().map(|m| m.millis).collect());
-        let extra = format!("{pages} pages; median of {runs} builds after a warm-up build");
-        println!("{:<24} {millis:>9.0} ms", site.name);
+        let builds = format!("median of {runs} builds after a warm-up build");
+        let extra = pages.map_or(builds.clone(), |p| format!("{p} pages; {builds}"));
+        let label = format!("{}{}", site.name, site.suffix);
+        println!("{label:<30} {millis:>9.0} ms");
         results.push(json!({
-            "name": format!("{}: build time", site.name),
+            "name": format!("{}: build time{}", site.name, site.suffix),
             "unit": "ms",
             "value": round1(millis),
             "extra": extra,
@@ -81,9 +110,9 @@ pub fn run(binary: &Path, out: &Path, runs: usize) -> Result<i32, Fail> {
         let rss: Vec<f64> = measures.iter().filter_map(|m| m.rss).collect();
         if rss.len() == measures.len() {
             let rss = median(rss);
-            println!("{:<24} {rss:>9.1} MiB", site.name);
+            println!("{label:<30} {rss:>9.1} MiB");
             results.push(json!({
-                "name": format!("{}: peak memory", site.name),
+                "name": format!("{}: peak memory{}", site.name, site.suffix),
                 "unit": "MiB",
                 "value": round1(rss),
                 "extra": extra,
@@ -98,30 +127,33 @@ pub fn run(binary: &Path, out: &Path, runs: usize) -> Result<i32, Fail> {
 }
 
 /// fugo's documentation site, built as tools/docs/build.sh builds it.
-fn docs_site(work: &Path) -> Site {
+fn docs_site(binary: &Path, work: &Path) -> Site {
     let docs = crate::root().join("docs");
     Site {
         name: "docs site".to_owned(),
-        args: build_args(&docs, work, "docs"),
+        suffix: String::new(),
+        binary: binary.to_owned(),
+        args: build_args(&docs, work, "docs", "--cache-dir"),
         env: vec![("FUGO_RESOURCEDIR", work.join("docs-resources"))],
         publish: work.join("docs-public"),
     }
 }
 
-/// `-s <source> -d <work>/<name>-public --cache-dir <work>/<name>-cache`.
-fn build_args(source: &Path, work: &Path, name: &str) -> Vec<OsString> {
+/// `-s <source> -d <work>/<name>-public <cache> <work>/<name>-cache` (`--cache-dir`, or the Go
+/// implementation's `--cacheDir`).
+fn build_args(source: &Path, work: &Path, name: &str, cache: &str) -> Vec<OsString> {
     vec![
         "-s".into(),
         source.into(),
         "-d".into(),
         work.join(format!("{name}-public")).into(),
-        "--cache-dir".into(),
+        cache.into(),
         work.join(format!("{name}-cache")).into(),
     ]
 }
 
-fn command(binary: &Path, site: &Site) -> Command {
-    let mut cmd = Command::new(binary);
+fn command(site: &Site) -> Command {
+    let mut cmd = Command::new(&site.binary);
     cmd.arg("build").args(&site.args);
     for (k, v) in &site.env {
         cmd.env(k, v);
@@ -129,12 +161,12 @@ fn command(binary: &Path, site: &Site) -> Command {
     cmd
 }
 
-/// Builds `site` once, without `--quiet`, and returns the page count its summary line prints
-/// (`pages 120 | …`).
-fn warm_up(binary: &Path, site: &Site) -> Result<String, Fail> {
-    let out = command(binary, site)
+/// Builds `site` once, without `--quiet`, and returns the page count fugo's summary line prints
+/// (`pages 120 | …`; the Go implementation prints a table instead).
+fn warm_up(site: &Site) -> Result<Option<String>, Fail> {
+    let out = command(site)
         .output()
-        .map_err(|e| fail!("{}: {e}", binary.display()))?;
+        .map_err(|e| fail!("{}: {e}", site.binary.display()))?;
     if !out.status.success() {
         return Err(fail!(
             "building the {}: {}\n{}",
@@ -148,14 +180,14 @@ fn warm_up(binary: &Path, site: &Site) -> Result<String, Fail> {
         .split_whitespace()
         .skip_while(|w| *w != "pages")
         .nth(1)
-        .unwrap_or("?")
-        .to_owned();
+        .filter(|n| n.bytes().all(|b| b.is_ascii_digit()))
+        .map(str::to_owned);
     Ok(pages)
 }
 
 /// One build of `site` into an emptied publish directory, timed, under `/usr/bin/time` when
 /// `memory`.
-fn measure(binary: &Path, site: &Site, memory: bool) -> Result<Measure, Fail> {
+fn measure(site: &Site, memory: bool) -> Result<Measure, Fail> {
     if site.publish.exists() {
         std::fs::remove_dir_all(&site.publish)
             .map_err(|e| fail!("{}: {e}", site.publish.display()))?;
@@ -167,13 +199,13 @@ fn measure(binary: &Path, site: &Site, memory: bool) -> Result<Measure, Fail> {
         } else {
             c.args(["-f", "maxrss-kib %M"]);
         }
-        c.arg(binary).arg("build").args(&site.args);
+        c.arg(&site.binary).arg("build").args(&site.args);
         for (k, v) in &site.env {
             c.env(k, v);
         }
         c
     } else {
-        command(binary, site)
+        command(site)
     };
     cmd.arg("--quiet")
         .stdout(Stdio::null())
@@ -181,7 +213,7 @@ fn measure(binary: &Path, site: &Site, memory: bool) -> Result<Measure, Fail> {
     let start = Instant::now();
     let out = cmd
         .output()
-        .map_err(|e| fail!("{}: {e}", binary.display()))?;
+        .map_err(|e| fail!("{}: {e}", site.binary.display()))?;
     let millis = start.elapsed().as_secs_f64() * 1000.0;
     let stderr = String::from_utf8_lossy(&out.stderr);
     if !out.status.success() {

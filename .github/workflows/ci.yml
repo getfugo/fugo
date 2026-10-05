@@ -276,6 +276,7 @@ jobs:
   # time and peak memory of the docs site and of generated sites, measured with the Linux build's
   # binary and added to the history on the gh-pages branch (dev/bench/data.js, kept by
   # github-action-benchmark), which the documentation's Benchmarks page draws.
+  # The generated sites are also built by the Go implementation (`--go`), for the comparison.
   benchmark:
     name: Benchmark
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -286,10 +287,38 @@ jobs:
     concurrency:
       group: benchmark
       cancel-in-progress: false
+    env:
+      # The Go implementation: its last commit, frozen (cgo: it links a C++ Sass library).
+      GO_COMMIT: 4452902873d7da7232ff3a3fa552d0c903b19939
     permissions:
       contents: write # push the results to gh-pages
     steps:
       - uses: actions/checkout@v7
+
+      # Built once and cached: the commit never changes.
+      - name: Go implementation (cached)
+        id: go
+        uses: actions/cache@v6
+        with:
+          path: ~/go-impl
+          key: go-impl-${{ env.GO_COMMIT }}-${{ runner.os }}-${{ runner.arch }}
+
+      - if: steps.go.outputs.cache-hit != 'true'
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ env.GO_COMMIT }}
+          path: go-impl-src
+
+      - if: steps.go.outputs.cache-hit != 'true'
+        uses: actions/setup-go@v7
+        with:
+          go-version-file: go-impl-src/go.mod
+          cache: false
+
+      - name: Build the Go implementation
+        if: steps.go.outputs.cache-hit != 'true'
+        working-directory: go-impl-src
+        run: go build -o "$HOME/go-impl/go-impl" .
 
       - name: Install Rust ${{ env.RUST_TOOLCHAIN }}
         run: |
@@ -311,7 +340,7 @@ jobs:
           [ -x /usr/bin/time ] || sudo apt-get install -y --no-install-recommends time
           tar -xzf dist/"$APP_NAME"_*_linux-amd64.tar.gz -C dist "$APP_NAME"
           "dist/$APP_NAME" version
-          cargo dev bench "dist/$APP_NAME" "$RUNNER_TEMP/bench.json"
+          cargo dev bench "dist/$APP_NAME" "$RUNNER_TEMP/bench.json" --go "$HOME/go-impl/go-impl"
 
       - uses: benchmark-action/github-action-benchmark@v1
         with:
