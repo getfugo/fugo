@@ -96558,11 +96558,11 @@ window.BENCHMARK_DATA = {
             "username": "web-flow"
           },
           "distinct": true,
-          "id": "99422f13de6ddd9e4b68d6fee5b9945ebab79253",
+          "id": "958862f54313b9ad72bbe648682a08e87e6a597b",
           "message": "Benchmarks: measure every push to main, chart them in the docs (#175)\n\ncargo dev bench builds the docs site and generated sites of 1,000 and\n10,000 pages, and reports the median build time and peak memory as\ngithub-action-benchmark's custom JSON. The Benchmark job runs it on each\npush to main and adds the results to the history on gh-pages, next to\nthe Go implementation's. The docs get a Benchmarks page that draws both\nfrom benchmarks/data.json, which the site's publish workflow adds.\n\nCo-authored-by: Claude Opus 5.5 (1M context) <noreply@anthropic.com>",
           "timestamp": "2026-10-05T09:38:56+07:00",
           "tree_id": "f3fd408f71893727332db3a5165b2608ae459a14",
-          "url": "https://github.com/getfugo/fugo/commit/99422f13de6ddd9e4b68d6fee5b9945ebab79253"
+          "url": "https://github.com/getfugo/fugo/commit/958862f54313b9ad72bbe648682a08e87e6a597b"
         },
         "date": 1791169015262,
         "tool": "customSmallerIsBetter",
@@ -96618,11 +96618,11 @@ window.BENCHMARK_DATA = {
             "username": "web-flow"
           },
           "distinct": true,
-          "id": "870a995719ca4f29810c2d3cae135dc6f4d79c71",
+          "id": "7b59a3c9f0c5cd70de01a9adc5cc178e7dba3b5a",
           "message": "Benchmarks: compare fugo with the Go implementation on the same sites (#176)\n\ncargo dev bench --go also builds the generated sites with the Go\nimplementation, from the same content with Go-template layouts, in the\nsame run; the Benchmark job builds it from the last Go commit (cached).\nThe docs draw its results as a second line on fugo's charts.\n\nCo-authored-by: Claude Opus 5.5 (1M context) <noreply@anthropic.com>",
           "timestamp": "2026-10-05T10:41:15+07:00",
           "tree_id": "cf48aee4ce34b5f7f3cf4b7eaccf1e429142934a",
-          "url": "https://github.com/getfugo/fugo/commit/870a995719ca4f29810c2d3cae135dc6f4d79c71"
+          "url": "https://github.com/getfugo/fugo/commit/7b59a3c9f0c5cd70de01a9adc5cc178e7dba3b5a"
         },
         "date": 1791172657002,
         "tool": "customSmallerIsBetter",
@@ -96702,11 +96702,11 @@ window.BENCHMARK_DATA = {
             "username": "web-flow"
           },
           "distinct": true,
-          "id": "222efddeb9ff14f68d0000ceb51b429d903747ff",
+          "id": "72888d8ec834e94712eec1b11556bc2eea1f8260",
           "message": "Benchmarks: Rust versions of the Go micro-benchmarks, every chart, /benchmarks/ (#177)\n\nssg-microbench runs the Go implementation's benchmarks that fugo has a\nfunction for (same inputs, Go names) and adds the Go results of the same\nCI run; the docs draw each after its Go history, list every Go\nmicro-benchmark (drawn as it scrolls into view, with a filter), give\nfugo's speed-up against Go in each caption, and move to /benchmarks/\n(in the header menu; /about/benchmarks/ redirects).\n\nCo-authored-by: Claude Opus 5.5 (1M context) <noreply@anthropic.com>",
           "timestamp": "2026-10-05T11:40:26+07:00",
           "tree_id": "523bc54f5b4843735f6a4819dab54eef09559db4",
-          "url": "https://github.com/getfugo/fugo/commit/222efddeb9ff14f68d0000ceb51b429d903747ff"
+          "url": "https://github.com/getfugo/fugo/commit/72888d8ec834e94712eec1b11556bc2eea1f8260"
         },
         "date": 1791176197387,
         "tool": "customSmallerIsBetter",
@@ -96786,11 +96786,11 @@ window.BENCHMARK_DATA = {
             "username": "web-flow"
           },
           "distinct": true,
-          "id": "c49819e455bba12debd09ed83fb14dc5d39855bd",
+          "id": "a6e37375a3861c15233261054cadc44d0f6f6fd0",
           "message": "Benchmarks: measure the Go implementation once, not on every push (#178)\n\nThe run of 222efdde measured it, and the charts keep its results as a\ndated reference line; the Benchmark job runs no Go any more. The tools'\n--go options stay, to measure it again by hand.\n\nCo-authored-by: Claude Opus 5.5 (1M context) <noreply@anthropic.com>",
           "timestamp": "2026-10-05T12:07:55+07:00",
           "tree_id": "cee475ede8c809088ce0e3f82c93fa5e07ec45b7",
-          "url": "https://github.com/getfugo/fugo/commit/c49819e455bba12debd09ed83fb14dc5d39855bd"
+          "url": "https://github.com/getfugo/fugo/commit/a6e37375a3861c15233261054cadc44d0f6f6fd0"
         },
         "date": 1791177519746,
         "tool": "customSmallerIsBetter",
@@ -96848,11 +96848,11 @@ window.BENCHMARK_DATA = {
             "username": "web-flow"
           },
           "distinct": true,
-          "id": "222efddeb9ff14f68d0000ceb51b429d903747ff",
+          "id": "72888d8ec834e94712eec1b11556bc2eea1f8260",
           "message": "Benchmarks: Rust versions of the Go micro-benchmarks, every chart, /benchmarks/ (#177)\n\nssg-microbench runs the Go implementation's benchmarks that fugo has a\nfunction for (same inputs, Go names) and adds the Go results of the same\nCI run; the docs draw each after its Go history, list every Go\nmicro-benchmark (drawn as it scrolls into view, with a filter), give\nfugo's speed-up against Go in each caption, and move to /benchmarks/\n(in the header menu; /about/benchmarks/ redirects).\n\nCo-authored-by: Claude Opus 5.5 (1M context) <noreply@anthropic.com>",
           "timestamp": "2026-10-05T11:40:26+07:00",
           "tree_id": "523bc54f5b4843735f6a4819dab54eef09559db4",
-          "url": "https://github.com/getfugo/fugo/commit/222efddeb9ff14f68d0000ceb51b429d903747ff"
+          "url": "https://github.com/getfugo/fugo/commit/72888d8ec834e94712eec1b11556bc2eea1f8260"
         },
         "date": 1791176203162,
         "tool": "customSmallerIsBetter",
@@ -97017,11 +97017,11 @@ window.BENCHMARK_DATA = {
             "username": "web-flow"
           },
           "distinct": true,
-          "id": "c49819e455bba12debd09ed83fb14dc5d39855bd",
+          "id": "a6e37375a3861c15233261054cadc44d0f6f6fd0",
           "message": "Benchmarks: measure the Go implementation once, not on every push (#178)\n\nThe run of 222efdde measured it, and the charts keep its results as a\ndated reference line; the Benchmark job runs no Go any more. The tools'\n--go options stay, to measure it again by hand.\n\nCo-authored-by: Claude Opus 5.5 (1M context) <noreply@anthropic.com>",
           "timestamp": "2026-10-05T12:07:55+07:00",
           "tree_id": "cee475ede8c809088ce0e3f82c93fa5e07ec45b7",
-          "url": "https://github.com/getfugo/fugo/commit/c49819e455bba12debd09ed83fb14dc5d39855bd"
+          "url": "https://github.com/getfugo/fugo/commit/a6e37375a3861c15233261054cadc44d0f6f6fd0"
         },
         "date": 1791177525055,
         "tool": "customSmallerIsBetter",
