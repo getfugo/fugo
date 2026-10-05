@@ -1,5 +1,7 @@
 //! What `ssg_cms::publish` writes: the editor, its index, the Worker and `.assetsignore`.
 
+use std::collections::BTreeMap;
+
 use serde_json::Value;
 use ssg_base::Sink;
 use ssg_base::paths::OutputPath;
@@ -61,7 +63,7 @@ fn project(extra_cms: &str) -> tempfile::TempDir {
 
 fn publish(dir: &std::path::Path, env: &str) -> (TestSink, Option<ssg_cms::Published>) {
     let sink = TestSink::default();
-    let out = ssg_cms::publish(&load(dir, env), &sink).expect("publish");
+    let out = ssg_cms::publish(&load(dir, env), &sink, &BTreeMap::new()).expect("publish");
     (sink, out)
 }
 
@@ -96,6 +98,27 @@ fn writes_the_editor_the_index_and_the_worker() {
     assert_eq!(
         sink.text("_headers"),
         "/admin/*\n  X-Frame-Options: DENY\n  Content-Security-Policy: frame-ancestors 'none'\n  Referrer-Policy: same-origin\n"
+    );
+}
+
+#[test]
+fn the_index_has_the_urls_of_the_rendered_pages() {
+    let dir = project("");
+    let sink = TestSink::default();
+    let urls = BTreeMap::from([(
+        "content/almonds/honey/index.en.md".to_owned(),
+        "/almonds/honey/".to_owned(),
+    )]);
+    ssg_cms::publish(&load(dir.path(), "production"), &sink, &urls).expect("publish");
+    let index = index_of(&sink.text("_worker.js"));
+    let honey = &index["entries"][2];
+    assert_eq!(honey["key"], "almonds/honey");
+    assert_eq!(honey["files"][0]["url"], "/almonds/honey/");
+    // A file the build did not render (here: not in `urls`) has none.
+    assert!(
+        honey["files"][1].get("url").is_none(),
+        "{}",
+        honey["files"][1]
     );
 }
 
@@ -325,16 +348,24 @@ fn media_directory_and_its_names() {
         config.replace("[cms]\n", "[cms]\nmedia = \"layouts/x\"\n"),
     )
     .expect("write");
-    let err = ssg_cms::publish(&load(dir.path(), "production"), &TestSink::default())
-        .expect_err("media outside");
+    let err = ssg_cms::publish(
+        &load(dir.path(), "production"),
+        &TestSink::default(),
+        &BTreeMap::new(),
+    )
+    .expect_err("media outside");
     assert!(err.to_string().contains("cms.media"), "{err}");
 }
 
 #[test]
 fn a_role_that_reaches_no_area_is_an_error() {
     let dir = project("[cms.roles.dev]\nedit = [\"layouts/**\"]\n");
-    let err = ssg_cms::publish(&load(dir.path(), "production"), &TestSink::default())
-        .expect_err("layouts");
+    let err = ssg_cms::publish(
+        &load(dir.path(), "production"),
+        &TestSink::default(),
+        &BTreeMap::new(),
+    )
+    .expect_err("layouts");
     let msg = err.to_string();
     assert!(
         msg.contains("cms.roles.dev.edit") && msg.contains("layouts/**"),
@@ -406,7 +437,7 @@ fn keeps_a_static_assetsignore_and_warns_about_a_page_it_replaces() {
         .expect("write");
     sink.write(&OutputPath::new("admin/index.html"), b"<p>a page</p>")
         .expect("write");
-    let out = ssg_cms::publish(&load(dir.path(), "production"), &sink)
+    let out = ssg_cms::publish(&load(dir.path(), "production"), &sink, &BTreeMap::new())
         .expect("publish")
         .expect("cms");
     assert_eq!(
@@ -417,7 +448,7 @@ fn keeps_a_static_assetsignore_and_warns_about_a_page_it_replaces() {
     assert_eq!(out.warnings[0].id.as_deref(), Some("cms-path-taken"));
 
     // A second build over the first (a disk sink keeps the files) warns about nothing.
-    let again = ssg_cms::publish(&load(dir.path(), "production"), &sink)
+    let again = ssg_cms::publish(&load(dir.path(), "production"), &sink, &BTreeMap::new())
         .expect("publish")
         .expect("cms");
     assert!(again.warnings.is_empty(), "{:?}", again.warnings);

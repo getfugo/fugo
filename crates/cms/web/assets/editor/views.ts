@@ -1,10 +1,11 @@
 // The layout (header and sidebar) and the views of the site and its sections.
 
-import { askNewPage, newPage } from "./changes";
+import { askNewPage, newFolder, newPage } from "./changes";
+import { type Section } from "./data";
 import { h, render } from "./dom";
 import { draftList } from "./drafts";
-import { foldersOf } from "./folders";
-import { draftOf, drafts, me, site } from "./state";
+import { type Folder, foldersOf } from "./folders";
+import { draftOf, drafts, me, pending, site } from "./state";
 
 export function header(): HTMLElement {
   return h(
@@ -94,30 +95,11 @@ export function sectionView(key: string): void {
     );
   });
   const body = h("tbody", {}, rows);
-  // A section with folders of its own asks which one a new page goes in.
-  const folders = foldersOf(section, site.entries);
-  const folder = h(
-    "select",
-    { required: true, "aria-label": "Folder" },
-    h("option", { value: "", disabled: true, selected: true }, "Folder…"),
-    h("option", { value: section.key }, section.title),
-    folders.map((f) => h("option", { value: f.key }, `${"\u00a0\u00a0".repeat(f.depth)}${f.title}`)),
-  );
-  const title = h("input", { type: "text", required: true, placeholder: "Title", "aria-label": "Title" });
-  const newPageForm = h(
-    "form",
-    {
-      class: "new-page",
-      hidden: true,
-      onsubmit: (ev: Event) => {
-        ev.preventDefault();
-        newPage(section, title.value.trim(), folder.value);
-      },
-    },
-    folder,
-    title,
-    h("button", { class: "primary", type: "submit" }, "Create"),
-  );
+  // A section with folders of its own asks which one a new page goes in; any section but the
+  // root can have a new folder (an index page in a new directory).
+  const folders = foldersOf(section, [...site.entries, ...pending.values()]);
+  const pageForm = createForm(section, folders, "Create page", (title, folder) => newPage(section, title, folder));
+  const folderForm = createForm(section, folders, "Create folder", (title, folder) => newFolder(section, title, folder));
   const table = h(
     "table",
     { class: "entries" },
@@ -129,10 +111,44 @@ export function sectionView(key: string): void {
     for (const tr of Array.from(body.rows)) tr.hidden = q !== "" && !(tr.dataset.text ?? "").includes(q);
   });
   render(
-    h("div", { class: "title-row" }, h("h1", {}, section.title), h("button", { class: "primary", onclick: () => (folders.length ? newPageForm.toggleAttribute("hidden") : askNewPage(section)) }, "New page")),
-    newPageForm,
+    h(
+      "div",
+      { class: "title-row" },
+      h("h1", {}, section.title),
+      h("button", { class: "primary", onclick: () => (folders.length ? pageForm.toggleAttribute("hidden") : askNewPage(section)) }, "New page"),
+      section.key ? h("button", { onclick: () => folderForm.toggleAttribute("hidden") }, "New folder") : null,
+    ),
+    pageForm,
+    folderForm,
     filter,
     table,
+  );
+}
+
+/** A form for something new in `section`: the folder it goes in (the section's own or one of
+ * `folders`) and its title. */
+function createForm(section: Section, folders: Folder[], label: string, create: (title: string, folder: string) => void): HTMLFormElement {
+  const folder = h(
+    "select",
+    { required: true, "aria-label": "Folder" },
+    h("option", { value: "", disabled: true, selected: true }, "Folder…"),
+    h("option", { value: section.key }, section.title),
+    folders.map((f) => h("option", { value: f.key }, `${"\u00a0\u00a0".repeat(f.depth)}${f.title}`)),
+  );
+  const title = h("input", { type: "text", required: true, placeholder: "Title", "aria-label": "Title" });
+  return h(
+    "form",
+    {
+      class: "new-page",
+      hidden: true,
+      onsubmit: (ev: Event) => {
+        ev.preventDefault();
+        create(title.value.trim(), folder.value);
+      },
+    },
+    folder,
+    title,
+    h("button", { class: "primary", type: "submit" }, label),
   );
 }
 

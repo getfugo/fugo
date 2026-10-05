@@ -31,6 +31,7 @@
 #![forbid(unsafe_code)]
 
 mod adapters;
+mod cms;
 mod deferred;
 mod structure;
 mod waves;
@@ -431,7 +432,8 @@ pub fn build(r: BuildRequest) -> Result<BuildReport, BuildError> {
     laps.lap(&mut report, "resources");
 
     // E6b: after the site, so the editor replaces any output at its path.
-    if let Some(cms) = ssg_cms::publish(&cfg, sink.as_ref())? {
+    let urls = cms::content_urls(&cfg, session.model());
+    if let Some(cms) = ssg_cms::publish(&cfg, sink.as_ref(), &urls)? {
         for w in cms.warnings {
             session.diagnostics().push(w);
         }

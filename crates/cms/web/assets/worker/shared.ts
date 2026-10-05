@@ -64,6 +64,8 @@ export interface Change {
   delete?: true;
   content?: string;
   encoding?: "base64" | "utf-8";
+  /** A move: the file is the one at `from`, which the same save deletes. */
+  from?: string;
 }
 
 /** A tree entry: a blob (`sha`, null deletes) or content. */

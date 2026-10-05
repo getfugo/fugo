@@ -4,6 +4,7 @@ import { create, type FrontMatter, join } from "../codec";
 import { api, ApiError, messageOf } from "./api";
 import { type Change, type EntryFile, type Section } from "./data";
 import { toast } from "./dom";
+import { movedPath } from "./folders";
 import { emptyOf, taxonomies } from "./form";
 import { docText, makeDoc, openPage, pageView } from "./pages";
 import { route } from "./route";
@@ -58,6 +59,81 @@ export function newPage(section: Section, title: string, folder = section.key): 
   const doc = makeDoc(path, join(create(section.style.format, data, "")), null, true);
   pending.set(key, { key, section: section.key, kind: "page", bundle: section.style.bundle, title, resources: [], isNew: true, files: [{ lang, path, doc }] });
   location.hash = `#/e/${encodeURIComponent(key)}`;
+}
+
+/** A new folder titled `title` in `parent` (the section's own, or one below it): its index page. */
+export function newFolder(section: Section, title: string, parent = section.key): void {
+  const slug = slugify(title) || `folder-${Date.now()}`;
+  const dir = parent ? `${parent}/${slug}` : slug;
+  const key = `${dir}/_index`;
+  if (pending.has(key) || site.entries.some((e) => e.key === key || e.key === dir || e.key.startsWith(`${dir}/`))) {
+    toast(`${dir} exists already`, "error");
+    return;
+  }
+  const lang = site.default_language;
+  const path = pathFor(section, dir, lang, true).replace(/\/index(\.[^/]+)$/, "/_index$1");
+  if (!canEdit(path)) {
+    toast(`You may not create ${path}`, "error");
+    return;
+  }
+  const doc = makeDoc(path, join(create(section.style.format, { title }, "")), null, true);
+  pending.set(key, { key, section: section.key, kind: "section", bundle: false, title, resources: [], isNew: true, files: [{ lang, path, doc }] });
+  location.hash = `#/e/${encodeURIComponent(key)}`;
+}
+
+/**
+ * Moves the open page into `folder` (its section's own, or one below it), with all its files.
+ * Each language's file keeps the URL it had in `aliases`, so that old links still work.
+ */
+export async function movePage(folder: string): Promise<void> {
+  const p = current();
+  const { entry } = p;
+  const name = entry.key.split("/").pop() ?? entry.key;
+  const key = folder ? `${folder}/${name}` : name;
+  if (key === entry.key) return;
+  if (pending.has(key) || site.entries.some((e) => e.key === key)) {
+    toast(`A page ${key} exists already`, "error");
+    return;
+  }
+  if (p.uploads.length > 0 || p.deletes.size > 0) {
+    toast("Save the page's files first", "error");
+    return;
+  }
+  const changes: Change[] = [];
+  const files: EntryFile[] = [];
+  for (const [lang, doc] of p.docs) {
+    const path = movedPath(doc.path, entry.key, key);
+    const moved = makeDoc(path, docText(doc), null, true);
+    const url = entry.files.find((f) => f.lang === lang)?.url;
+    if (url && moved.data) {
+      const aliases = Array.isArray(moved.data.aliases) ? moved.data.aliases.map(String) : [];
+      if (!aliases.includes(url)) moved.data.aliases = [...aliases, url];
+    }
+    if (!doc.isNew) changes.push({ path: doc.path, delete: true, base: doc.sha });
+    changes.push({ path, content: docText(moved), encoding: "utf-8", base: null });
+    files.push({ lang, path, format: moved.parts.format, title: String(moved.data?.title ?? "") });
+  }
+  const resources = entry.resources.map((r) => movedPath(r, entry.key, key));
+  entry.resources.forEach((r, i) => changes.push({ path: r, delete: true }, { path: resources[i], from: r, base: null }));
+  if (!changes.every((c) => canEdit(c.path))) {
+    toast("You may not move every file of this page", "error");
+    return;
+  }
+  if (!confirm(`Move ${entry.title} to ${folder || "the top"}? Its URL changes; the old one keeps working.`)) return;
+  try {
+    const title = p.docs.get(site.default_language)?.data?.title ?? entry.title;
+    // The save is the page's at its new key: in review, the draft is the moved page's.
+    const res = await api<{ draft: string | null }>("POST", "save", null, { entry: key, title: String(title ?? ""), changes });
+    toast(res.draft ? "Moved, as a draft" : "Moved: the site updates after its next build", "ok");
+    const old = site.entries.indexOf(entry);
+    if (!res.draft && old >= 0) site.entries.splice(old, 1);
+    site.entries.push({ ...entry, key, files, resources, isNew: undefined });
+    await loadDrafts();
+    await openPage(key);
+  } catch (e) {
+    const stale = e instanceof ApiError ? e.data.stale : undefined;
+    toast(Array.isArray(stale) ? `${messageOf(e)}: ${stale.join(", ")}` : messageOf(e), "error");
+  }
 }
 
 export function addTranslation(lang: string): void {

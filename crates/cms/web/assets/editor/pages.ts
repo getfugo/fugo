@@ -3,10 +3,11 @@
 import { clone, decode, encode, join, split } from "../codec";
 import { base64ToText } from "../common";
 import { api, ApiError, messageOf } from "./api";
-import { addTranslation, deletePage, discard, publish, save } from "./changes";
+import { addTranslation, deletePage, discard, movePage, publish, save } from "./changes";
 import { type Doc } from "./data";
 import { h, render, toast, valueOf } from "./dom";
 import { bodyEditor, filesPanel } from "./files";
+import { foldersOf } from "./folders";
 import { fieldsForm } from "./form";
 import { canEdit, current, draftOf, langName, me, pending, setPage, site } from "./state";
 import { notFound } from "./views";
@@ -104,9 +105,29 @@ export function pageView(): void {
         : h("span", { class: "muted" }, "You may not change this page."),
       draft && me.publish ? h("button", { onclick: () => publish(draft.id) }, "Publish draft") : null,
       draft ? h("button", { class: "danger", onclick: () => discard(draft.id) }, "Discard draft") : null,
+      editable ? moveControl() : null,
       editable && !entry.isNew ? h("button", { class: "danger subtle", onclick: deletePage }, "Delete page") : null,
     ),
   );
+}
+
+/** Moving a saved page to another folder of its section (none in a section without folders). */
+function moveControl(): HTMLElement | null {
+  const { entry } = current();
+  const section = site.sections.find((s) => s.key === entry.section);
+  if (entry.kind !== "page" || entry.isNew || !section) return null;
+  const folders = foldersOf(section, [...site.entries, ...pending.values()]);
+  if (folders.length === 0) return null;
+  const here = entry.key.includes("/") ? entry.key.slice(0, entry.key.lastIndexOf("/")) : "";
+  const target = h(
+    "select",
+    { "aria-label": "Move to" },
+    h("option", { value: "", disabled: true, selected: true }, "Move to…"),
+    [{ key: section.key, title: section.title, depth: 0 }, ...folders].map((f) =>
+      h("option", { value: f.key, disabled: f.key === here }, `${"\u00a0\u00a0".repeat(f.depth)}${f.title}`),
+    ),
+  );
+  return h("span", { class: "move" }, target, h("button", { onclick: () => { if (target.value) void movePage(target.value); } }, "Move"));
 }
 
 function docEditor(doc: Doc): HTMLElement {

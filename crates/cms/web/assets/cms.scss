@@ -201,7 +201,13 @@ h2 {
   margin: 0.3rem 0 0.8rem;
 }
 
-// A new page in a section with folders: the folder, the title, Create.
+// Moving a page: the folder it goes to, Move.
+.move {
+  display: inline-flex;
+  gap: 0.4rem;
+}
+
+// A new page or folder in a section: the folder it goes in, the title, Create.
 .new-page {
   display: flex;
   flex-wrap: wrap;

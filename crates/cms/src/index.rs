@@ -126,6 +126,10 @@ pub struct File {
     pub title: String,
     #[serde(skip_serializing_if = "std::ops::Not::not")]
     pub draft: bool,
+    /// The URL path of its page as the build made it (`/posts/hello/`), for pages the build
+    /// rendered: a page the editor moves keeps it as an alias.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub url: Option<String>,
     /// The name carries the language (`index.th.md`).
     #[serde(skip)]
     suffixed: bool,
@@ -142,11 +146,16 @@ struct Found {
     order: usize,
 }
 
-/// Reads the index of a site.
+/// Reads the index of a site; `urls` are the URLs of the pages of the content files the build
+/// rendered, by the files' paths in the project.
 ///
 /// # Errors
 /// Unreadable content directories.
-pub fn read(cfg: &Config, cms: &CmsConfig) -> std::io::Result<Index> {
+pub fn read(
+    cfg: &Config,
+    cms: &CmsConfig,
+    urls: &BTreeMap<String, String>,
+) -> std::io::Result<Index> {
     let default_lang = cfg.default_site().language.key.clone();
     let lang_order: BTreeMap<&str, usize> = cfg
         .sites
@@ -255,6 +264,7 @@ pub fn read(cfg: &Config, cms: &CmsConfig) -> std::io::Result<Index> {
                 .to_owned();
             let draft = get_ci(&fm, "draft").and_then(Value::as_bool) == Some(true);
             let keys = fm.iter().map(|(k, v)| (k.to_owned(), kind_of(v))).collect();
+            let url = urls.get(&path).cloned();
             found.push(Found {
                 order: lang_order
                     .get(file_lang.as_str())
@@ -269,6 +279,7 @@ pub fn read(cfg: &Config, cms: &CmsConfig) -> std::io::Result<Index> {
                     format,
                     title,
                     draft,
+                    url,
                     suffixed,
                     keys,
                 },

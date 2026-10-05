@@ -264,6 +264,12 @@ page and redo your change.
   section's front matter format and language suffixes.
   In a section with folders of its own (a folder with an `_index` page, such as
   `docs/guides/install/`), *New page* asks which folder the page goes in.
+- **New folders**: *New folder* makes a folder in the section, or in one of its folders, with
+  an `_index` page that holds the folder's title and text.
+- **Moving a page** to another folder of its section, with all its files (translations,
+  images, everything in its bundle). Each language's file keeps the URL its page had in
+  `aliases`, so that old links still work. A move saves the page like an edit: in a draft, with
+  `workflow = "review"`.
 
 Saving changes only what was edited. A file nobody changed is not written; in YAML front matter,
 the keys that did not change keep their text, comments and formatting. TOML and JSON front
@@ -295,6 +301,8 @@ try it (in a `config/staging/cms.toml` built with `-e staging`, for example).
 
 - At most 30 files per save, and uploads up to `maxUpload` (10 MB by default, 25 MB at most:
   the largest static file Cloudflare serves).
+- Moving a page counts each of its files twice (its old and its new path), so a page with more
+  than 15 files cannot be moved in the editor (move it in git).
 - On the Workers free plan, a request may use 10 ms of CPU time: large uploads may exceed it.
   The paid plan raises the limit.
 - Pages the build makes from content adapters are not files, so the editor does not list them.

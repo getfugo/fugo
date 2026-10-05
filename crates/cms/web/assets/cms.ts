@@ -99,7 +99,7 @@ import { loadSite, page } from "./editor/state";
 
 export * from "./codec";
 export * from "./common";
-export { foldersOf } from "./editor/folders";
+export { foldersOf, movedPath } from "./editor/folders";
 
 /** Loads the index and the signed-in person, then shows the page the address names. */
 export async function start(): Promise<void> {

@@ -27,3 +27,16 @@ export function foldersOf(section: Pick<Section, "key">, entries: Pick<Entry, "k
     .filter((f) => f.depth > 0)
     .sort((a, b) => a.key.localeCompare(b.key));
 }
+
+/**
+ * The path of a file of the page at `oldKey` once the page is at `newKey`: its folder (a bundle,
+ * `content/a/x/index.md` → `content/b/x/index.md`) or its name (`content/a/x.md` →
+ * `content/b/x.md`) replaced.
+ */
+export function movedPath(path: string, oldKey: string, newKey: string): string {
+  for (const end of ["/", "."]) {
+    const at = path.indexOf(`/${oldKey}${end}`);
+    if (at >= 0) return `${path.slice(0, at)}/${newKey}${path.slice(at + 1 + oldKey.length)}`;
+  }
+  throw new Error(`${path} is not a file of ${oldKey}`);
+}

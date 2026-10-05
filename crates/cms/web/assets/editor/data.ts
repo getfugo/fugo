@@ -37,6 +37,8 @@ export interface EntryFile {
   path: string;
   format?: string;
   title?: string;
+  /** The URL of its page as the site was last built (none for pages not built yet). */
+  url?: string;
   draft?: boolean;
   /** A file of a page the editor is making (not saved yet). */
   doc?: Doc;
@@ -142,4 +144,6 @@ export interface Change {
   encoding?: "utf-8" | "base64";
   delete?: true;
   base?: string | null;
+  /** A move: the file is the one at `from`, which the same save deletes. */
+  from?: string;
 }
