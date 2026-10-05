@@ -323,24 +323,29 @@ default), and writes the median build time and the median peak memory (`/usr/bin
 as github-action-benchmark's custom JSON. With `--go`, the Go implementation's binary also builds
 the generated sites, from the same content with Go-template layouts (`bench/templates.rs`), and
 its results are named `… (Go)`. The Benchmark job runs it on every push to `main` with the Linux
-build's binary and the Go implementation built from its last commit, `44529028` (setup-go
-caches its modules and build), so each run compares the two on the same machine. github-action-benchmark adds the
-results, as the suite `fugo`, to `dev/bench/data.js` on the `gh-pages` branch, the file that also
-holds the Go implementation's micro-benchmark history (the suite `Benchmark`, 2020 to 2025).
+build's binary, fugo alone: the Go implementation (built from its last commit, `44529028`) was
+measured once, with `--go`, by the run of `222efdde` on 2026-10-05, and the charts keep those
+results as its reference; CI runs no Go since. github-action-benchmark adds the results, as
+the suite `fugo`, to `dev/bench/data.js` on the `gh-pages` branch, the file that also holds
+the Go implementation's micro-benchmark history (the suite `Benchmark`, 2020 to 2025).
 
 The crate `ssg-microbench` (`crates/microbench`) continues that history: each of its cases is a Go
 benchmark that fugo has a function for, with the Go benchmark's input, under the Go name
-(`BenchmarkSanitize/Spaces`). The Benchmark job runs those Go benchmarks in the Go tree
-(`ssg-microbench --go-test-args` gives the `go test` arguments), then
-`cargo run --release -p ssg-microbench -- <results.json> --go <go-test-output>`, which times
-the Rust cases as Go's `testing.B` does and adds the Go results as `… (Go)`: the suite `micro`.
+(`BenchmarkSanitize/Spaces`). The Benchmark job runs
+`cargo run --release -p ssg-microbench -- <results.json>`, which times the cases as Go's
+`testing.B` does: the suite `micro`. The same run of `222efdde` ran the Go benchmarks once in the
+Go tree (`ssg-microbench --go-test-args` gives the `go test` arguments) and added them with
+`--go <go-test-output>` as `… (Go)`, the reference the charts keep. To measure the Go
+implementation again (by hand, on a machine like CI's), build it from `44529028` and use the two
+tools' `--go` options.
 
 The website is published by the repository getfugo/getfugo.github.io: once a day, and when run by
 hand, its workflow builds `docs/` at the latest release with that release's binary, adds
 `dev/bench/data.js` as `benchmarks/data.json`, and deploys the site with GitHub Pages. The page
 `/benchmarks/` draws the charts (`docs/assets/js/benchmarks.js`, `bench-chart.js`): the Go lines
-next to fugo's, and each Go micro-benchmark's history followed by the suite `micro`. The Pages site of getfugo/fugo itself (`/fugo/`, from `gh-pages`) only shows
-github-action-benchmark's own chart page; nothing links to it.
+next to fugo's, and each Go micro-benchmark's history followed by the suite `micro`. The Pages
+site of getfugo/fugo itself (`/fugo/`, from `gh-pages`) only shows github-action-benchmark's own
+chart page; nothing links to it.
 
 ## Test data: the fugo schema
 
