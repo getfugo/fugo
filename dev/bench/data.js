@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791176203709,
+  "lastUpdate": 1791177522944,
   "repoUrl": "https://github.com/getfugo/fugo",
   "entries": {
     "Benchmark": [
@@ -96770,6 +96770,66 @@ window.BENCHMARK_DATA = {
             "value": 1743.5,
             "unit": "MiB",
             "extra": "median of 5 builds after a warm-up build"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "blackb1rd.mov@gmail.com",
+            "name": "Prachya Saechua",
+            "username": "blackb1rd"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "c49819e455bba12debd09ed83fb14dc5d39855bd",
+          "message": "Benchmarks: measure the Go implementation once, not on every push (#178)\n\nThe run of 222efdde measured it, and the charts keep its results as a\ndated reference line; the Benchmark job runs no Go any more. The tools'\n--go options stay, to measure it again by hand.\n\nCo-authored-by: Claude Opus 5.5 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-10-05T12:07:55+07:00",
+          "tree_id": "cee475ede8c809088ce0e3f82c93fa5e07ec45b7",
+          "url": "https://github.com/getfugo/fugo/commit/c49819e455bba12debd09ed83fb14dc5d39855bd"
+        },
+        "date": 1791177519746,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "docs site: build time",
+            "value": 138.3,
+            "unit": "ms",
+            "extra": "331 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "docs site: peak memory",
+            "value": 77,
+            "unit": "MiB",
+            "extra": "331 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "1,000 generated pages: build time",
+            "value": 203.4,
+            "unit": "ms",
+            "extra": "1061 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "1,000 generated pages: peak memory",
+            "value": 86.5,
+            "unit": "MiB",
+            "extra": "1061 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "10,000 generated pages: build time",
+            "value": 3003.2,
+            "unit": "ms",
+            "extra": "10061 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "10,000 generated pages: peak memory",
+            "value": 514.3,
+            "unit": "MiB",
+            "extra": "10061 pages; median of 5 builds after a warm-up build"
           }
         ]
       }
