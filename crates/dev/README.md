@@ -13,9 +13,12 @@ The repository's tools, one binary: `cargo dev <command>` (the alias of `.cargo/
 | `licence-check [-v]` | the licences of the dependency graph against `deny.toml` | CI's Lint job |
 | `notices <triple> <file>` | `THIRD_PARTY_NOTICES.txt`: the licences of the crates linked into `fugo` for a target | CI's Build job |
 | `package <binary> <triple> <out-dir> [<notices>]` | the release archive (`.tar.gz`, `.zip` for Windows) and its `.sha256` | CI's Build job |
+| `file-length` | fails when a file of code is longer than 500 lines (AGENTS.md) | CI's Lint job |
+| `bench <binary> <results.json> [--runs <n>] [--go <binary>]` | build time and peak memory of the docs site and generated sites, fugo's and the Go implementation's (DEVELOPMENT.md, "Benchmarks") | CI's Benchmark job |
 
 The module documentation has the details (`src/sites.rs`, `src/manifest.rs`, `src/structdiff.rs`,
-`src/selftest.rs`, `src/licence.rs`, `src/notices.rs`, `src/package.rs`). Release versions are
+`src/selftest.rs`, `src/licence.rs`, `src/notices.rs`, `src/package.rs`, `src/file_length.rs`,
+`src/bench.rs`). Release versions are
 `tools/dev/version.sh` (POSIX sh: `bump.yml` and `image.yml` run it without a Rust toolchain).
 
 ## How it is built

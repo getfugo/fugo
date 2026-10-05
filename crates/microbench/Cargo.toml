@@ -1,0 +1,33 @@
+[package]
+name = "ssg-microbench"
+description = "Micro-benchmarks of fugo's functions, matched to the Go implementation's (cargo run --release -p ssg-microbench)"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+autotests = false
+
+[lib]
+doctest = false
+test = false # tests live only in tests/it
+
+[[bin]]
+name = "ssg-microbench"
+path = "src/main.rs"
+test = false
+doctest = false
+
+[[test]]
+name = "it"
+path = "tests/it/main.rs"
+
+[lints]
+workspace = true
+
+[dependencies]
+ssg-workspace-hack.workspace = true
+ssg-base.workspace = true
+ssg-markup.workspace = true
+ssg-pageparser.workspace = true
+serde_json.workspace = true

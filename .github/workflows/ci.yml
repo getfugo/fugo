@@ -282,7 +282,7 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: build
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    timeout-minutes: 45
     # One push to gh-pages at a time; the results of a newer push wait instead of cancelling.
     concurrency:
       group: benchmark
@@ -295,28 +295,18 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      # Built once and cached: the commit never changes.
-      - name: Go implementation (cached)
-        id: go
-        uses: actions/cache@v6
-        with:
-          path: ~/go-impl
-          key: go-impl-${{ env.GO_COMMIT }}-${{ runner.os }}-${{ runner.arch }}
-
-      - if: steps.go.outputs.cache-hit != 'true'
-        uses: actions/checkout@v7
+      # Its tree, for the binary and for its benchmarks; setup-go caches the modules and the build.
+      - uses: actions/checkout@v7
         with:
           ref: ${{ env.GO_COMMIT }}
           path: go-impl-src
 
-      - if: steps.go.outputs.cache-hit != 'true'
-        uses: actions/setup-go@v7
+      - uses: actions/setup-go@v7
         with:
           go-version-file: go-impl-src/go.mod
-          cache: false
+          cache-dependency-path: go-impl-src/go.sum
 
       - name: Build the Go implementation
-        if: steps.go.outputs.cache-hit != 'true'
         working-directory: go-impl-src
         run: go build -o "$HOME/go-impl/go-impl" .
 
@@ -342,11 +332,30 @@ jobs:
           "dist/$APP_NAME" version
           cargo dev bench "dist/$APP_NAME" "$RUNNER_TEMP/bench.json" --go "$HOME/go-impl/go-impl"
 
+      # The micro-benchmarks: the Go implementation's benchmarks that fugo has a version of
+      # (ssg-microbench lists them), run in its tree, then fugo's versions with the same inputs.
+      - name: Micro-benchmarks
+        run: |
+          cargo build --release --locked -p ssg-microbench
+          args=$(target/release/ssg-microbench --go-test-args)
+          (cd go-impl-src && go test -run '^$' $args) | tee "$RUNNER_TEMP/go-bench.txt"
+          target/release/ssg-microbench "$RUNNER_TEMP/micro.json" --go "$RUNNER_TEMP/go-bench.txt"
+
       - uses: benchmark-action/github-action-benchmark@v1
         with:
           name: fugo
           tool: customSmallerIsBetter
           output-file-path: ${{ runner.temp }}/bench.json
+          gh-pages-branch: gh-pages
+          benchmark-data-dir-path: dev/bench
+          github-token: ${{ github.token }}
+          auto-push: true
+
+      - uses: benchmark-action/github-action-benchmark@v1
+        with:
+          name: micro
+          tool: customSmallerIsBetter
+          output-file-path: ${{ runner.temp }}/micro.json
           gh-pages-branch: gh-pages
           benchmark-data-dir-path: dev/bench
           github-token: ${{ github.token }}
