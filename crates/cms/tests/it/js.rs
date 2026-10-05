@@ -1,5 +1,7 @@
 //! The JavaScript tests of the editor and the Worker (`tests/js/*.test.js`), run with
-//! `node --test`. Without node on `PATH` the test prints `SKIPPED` (CI fails on that).
+//! `node --test`. Without node on `PATH` the test prints `SKIPPED` (CI fails on that), and so it
+//! does without the modules of `tools/dev/node.sh` (happy-dom, which the tests of the editor's
+//! views draw it in; the other tests run).
 
 use std::path::{Path, PathBuf};
 use std::process::Command;
@@ -37,13 +39,18 @@ fn javascript_tests_pass() {
         ssg_cms::worker_source(&published_settings(), r#"{"title":"Snacks","entries":[]}"#),
     )
     .expect("write _worker.mjs");
-    let out = Command::new(node)
-        .arg("--test")
+    let mut cmd = Command::new(node);
+    cmd.arg("--test")
         .args(&tests)
         .current_dir(crate_dir)
-        .env("CMS_PUBLISHED_WORKER", &published)
-        .output()
-        .expect("node --test");
+        .env("CMS_PUBLISHED_WORKER", &published);
+    match ssg_testkit::fixture::node_tools().filter(|m| m.join("happy-dom").is_dir()) {
+        Some(modules) => {
+            cmd.env("CMS_NODE_MODULES", modules);
+        }
+        None => eprintln!("SKIPPED cms editor view tests: no happy-dom (run tools/dev/node.sh)"),
+    }
+    let out = cmd.output().expect("node --test");
     let report = format!(
         "{}{}",
         String::from_utf8_lossy(&out.stdout),

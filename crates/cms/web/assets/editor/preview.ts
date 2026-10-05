@@ -103,15 +103,19 @@ function plain(doc: Doc): string {
 let shown: { frame: HTMLIFrameElement; doc: Doc; base: string } | null = null;
 let timer: ReturnType<typeof setTimeout> | undefined;
 
-/** Shows `doc` (the open page's document in its language) in `frame`. */
+/** Shows `doc` (the open page's document in its language) in `frame`, unless it shows it. */
 export async function showPreview(frame: HTMLIFrameElement, doc: Doc): Promise<void> {
+  if (shown?.frame === frame && shown.doc === doc) return;
   const p = current();
   const url = shellUrl(p.entry, p.lang, [...site.entries, ...pending.values()]);
-  const html = url ? await fetchShell(url) : null;
-  const page = url && html ? prepare(html, url, doc) : null;
   // A new page borrows another page's layout: its own files resolve against its own folder.
   const own = p.entry.files.find((f) => f.lang === p.lang)?.url;
-  shown = { frame, doc, base: new URL(own ?? url ?? "/", location.origin).href };
+  const showing = { frame, doc, base: new URL(own ?? url ?? "/", location.origin).href };
+  shown = showing;
+  const html = url ? await fetchShell(url) : null;
+  // Closed, or another document shown, while the page loaded.
+  if (shown !== showing) return;
+  const page = url && html ? prepare(html, url, doc) : null;
   frame.onload = () => refresh();
   frame.srcdoc = page ?? plain(doc);
 }

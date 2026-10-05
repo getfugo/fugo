@@ -6561,6 +6561,7 @@ dependencies = [
  "ssg-base",
  "ssg-config",
  "ssg-pageparser",
+ "ssg-testkit",
  "ssg-workspace-hack",
  "tempfile",
  "thiserror 2.0.21",

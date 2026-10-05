@@ -1,15 +1,17 @@
 // The open page: its documents (one per language) and their editors.
 
+import { html, nothing, type TemplateResult } from "lit-html";
+import { live } from "lit-html/directives/live.js";
 import { clone, decode, encode, join, split } from "../codec";
 import { base64ToText } from "../common";
 import { api, ApiError, messageOf } from "./api";
 import { addTranslation, deletePage, discard, movePage, publish, save } from "./changes";
 import { type Doc } from "./data";
-import { h, render, toast, valueOf } from "./dom";
+import { show, toast, valueOf } from "./dom";
 import { bodyEditor, filesPanel } from "./files";
 import { foldersOf } from "./folders";
-import { schedulePreview } from "./preview";
 import { fieldsForm } from "./form";
+import { schedulePreview } from "./preview";
 import { canEdit, current, draftOf, langName, me, pending, setPage, site } from "./state";
 import { notFound } from "./views";
 
@@ -36,7 +38,7 @@ export function docText(doc: Doc): string {
 export async function openPage(key: string): Promise<void> {
   const entry = site.entries.find((e) => e.key === key) ?? pending.get(key);
   if (!entry) return notFound();
-  render(h("p", { class: "muted" }, "Loading…"));
+  show(html`<p class="muted">Loading…</p>`);
   const draft = draftOf(key);
   const docs = new Map<string, Doc>();
   try {
@@ -62,6 +64,7 @@ export async function openPage(key: string): Promise<void> {
   pageView();
 }
 
+/** Shows the open page; called again after every change to what it shows. */
 export function pageView(): void {
   const p = current();
   const { entry, draft, docs } = p;
@@ -69,107 +72,96 @@ export function pageView(): void {
   const doc = docs.get(p.lang);
   const missing = site.languages.filter((l) => !docs.has(l.key));
   const editable = [...docs.values()].some((d) => canEdit(d.path));
-  const title = doc?.data?.title;
-  render(
-    h("div", { class: "crumbs" }, h("a", { href: `#/s/${encodeURIComponent(entry.section)}` }, section?.title ?? "Pages"), " / ", entry.key),
-    h(
-      "div",
-      { class: "title-row" },
-      h("h1", {}, typeof title === "string" && title ? title : entry.title),
-      draft ? h("a", { class: "badge pending", href: `#/d/${draft.id}` }, "has a draft") : null,
-    ),
-    h(
-      "div",
-      { class: "tabs" },
-      [...docs.keys()].map((lang) =>
-        h(
-          "button",
-          {
-            class: lang === p.lang ? "tab active" : "tab",
-            onclick: () => {
-              p.lang = lang;
-              pageView();
-            },
-          },
-          langName(lang),
-        ),
-      ),
-      missing.map((l) => h("button", { class: "tab add", onclick: () => addTranslation(l.key), title: `Add a ${l.name} version` }, `+ ${l.name}`)),
-    ),
-    doc ? docEditor(doc) : h("p", { class: "muted" }, "This page has no file in this language yet."),
-    entry.bundle || site.media ? filesPanel() : null,
-    h(
-      "div",
-      { class: "actions sticky" },
-      editable
-        ? h("button", { class: "primary", onclick: save }, me.workflow === "review" ? "Save draft" : "Save and publish")
-        : h("span", { class: "muted" }, "You may not change this page."),
-      draft && me.publish ? h("button", { onclick: () => publish(draft.id) }, "Publish draft") : null,
-      draft ? h("button", { class: "danger", onclick: () => discard(draft.id) }, "Discard draft") : null,
-      editable ? moveControl() : null,
-      editable && !entry.isNew ? h("button", { class: "danger subtle", onclick: deletePage }, "Delete page") : null,
-    ),
-  );
+  const title = typeof doc?.data?.title === "string" && doc.data.title ? doc.data.title : entry.title;
+  const openLang = (lang: string) => {
+    p.lang = lang;
+    pageView();
+  };
+  show(html`
+    <div class="crumbs"><a href="#/s/${encodeURIComponent(entry.section)}">${section?.title ?? "Pages"}</a> / ${entry.key}</div>
+    <div class="title-row">
+      <h1>${title}</h1>
+      ${draft ? html`<a class="badge pending" href="#/d/${draft.id}">has a draft</a>` : nothing}
+    </div>
+    <div class="tabs">
+      ${[...docs.keys()].map((lang) => html`<button class=${lang === p.lang ? "tab active" : "tab"} @click=${() => openLang(lang)}>${langName(lang)}</button>`)}
+      ${missing.map((l) => html`<button class="tab add" title="Add a ${l.name} version" @click=${() => addTranslation(l.key)}>+ ${l.name}</button>`)}
+    </div>
+    ${doc ? docEditor(doc) : html`<p class="muted">This page has no file in this language yet.</p>`}
+    ${entry.bundle || site.media ? filesPanel() : nothing}
+    <div class="actions sticky">
+      ${editable
+        ? html`<button class="primary" @click=${save}>${me.workflow === "review" ? "Save draft" : "Save and publish"}</button>`
+        : html`<span class="muted">You may not change this page.</span>`}
+      ${draft && me.publish ? html`<button @click=${() => publish(draft.id)}>Publish draft</button>` : nothing}
+      ${draft ? html`<button class="danger" @click=${() => discard(draft.id)}>Discard draft</button>` : nothing}
+      ${editable ? moveControl() : nothing}
+      ${editable && !entry.isNew ? html`<button class="danger subtle" @click=${deletePage}>Delete page</button>` : nothing}
+    </div>
+  `);
 }
 
 /** Moving a saved page to another folder of its section (none in a section without folders). */
-function moveControl(): HTMLElement | null {
+function moveControl(): TemplateResult | typeof nothing {
   const { entry } = current();
   const section = site.sections.find((s) => s.key === entry.section);
-  if (entry.kind !== "page" || entry.isNew || !section) return null;
+  if (entry.kind !== "page" || entry.isNew || !section) return nothing;
   const folders = foldersOf(section, [...site.entries, ...pending.values()]);
-  if (folders.length === 0) return null;
+  if (folders.length === 0) return nothing;
   const here = entry.key.includes("/") ? entry.key.slice(0, entry.key.lastIndexOf("/")) : "";
-  const target = h(
-    "select",
-    { "aria-label": "Move to" },
-    h("option", { value: "", disabled: true, selected: true }, "Move to…"),
-    [{ key: section.key, title: section.title, depth: 0 }, ...folders].map((f) =>
-      h("option", { value: f.key, disabled: f.key === here }, `${"\u00a0\u00a0".repeat(f.depth)}${f.title}`),
-    ),
-  );
-  return h("span", { class: "move" }, target, h("button", { onclick: () => { if (target.value) void movePage(target.value); } }, "Move"));
+  const submit = (ev: Event) => {
+    ev.preventDefault();
+    const folder = new FormData(ev.currentTarget as HTMLFormElement).get("folder");
+    if (folder !== null) void movePage(String(folder));
+  };
+  return html`
+    <form class="move" @submit=${submit}>
+      <select name="folder" required aria-label="Move to">
+        <option value="" disabled selected>Move to…</option>
+        ${[{ key: section.key, title: section.title, depth: 0 }, ...folders].map(
+          (f) => html`<option value=${f.key} ?disabled=${f.key === here}>${"  ".repeat(f.depth)}${f.title}</option>`,
+        )}
+      </select>
+      <button type="submit">Move</button>
+    </form>
+  `;
 }
 
-function docEditor(doc: Doc): HTMLElement {
+function docEditor(doc: Doc): TemplateResult {
   const readOnly = !canEdit(doc.path);
-  const head = h(
-    "div",
-    { class: "doc-head" },
-    h("code", {}, doc.path),
-    readOnly ? h("span", { class: "badge" }, "read only") : null,
-    h("span", { class: "spacer" }),
-    h(
-      "label",
-      { class: "toggle" },
-      h("input", {
-        type: "checkbox",
-        checked: doc.raw,
-        disabled: readOnly || (doc.error !== null && doc.raw) ? true : undefined,
-        onchange: (ev: Event) => toggleRaw(doc, (ev.target as HTMLInputElement).checked),
-      }),
-      " Edit as text",
-    ),
-  );
+  const head = html`
+    <div class="doc-head">
+      <code>${doc.path}</code>
+      ${readOnly ? html`<span class="badge">read only</span>` : nothing}
+      <span class="spacer"></span>
+      <label class="toggle">
+        <input
+          type="checkbox"
+          .checked=${live(doc.raw)}
+          ?disabled=${readOnly || (doc.error !== null && doc.raw)}
+          @change=${(ev: Event) => toggleRaw(doc, (ev.target as HTMLInputElement).checked)}
+        />
+        Edit as text
+      </label>
+    </div>
+  `;
   if (doc.raw || doc.data === null) {
-    return h(
-      "section",
-      { class: "doc" },
-      head,
-      doc.error ? h("p", { class: "warn" }, `The front matter could not be read (${doc.error}); edit the file as text.`) : null,
-      h("textarea", {
-        class: "raw",
-        rows: 30,
-        spellcheck: "false",
-        readonly: readOnly || undefined,
-        value: doc.rawText,
-        oninput: (ev: Event) => {
-          doc.rawText = valueOf(ev);
-        },
-      }),
-    );
+    return html`
+      <section class="doc">
+        ${head}
+        ${doc.error ? html`<p class="warn">The front matter could not be read (${doc.error}); edit the file as text.</p>` : nothing}
+        <textarea
+          class="raw"
+          rows="30"
+          spellcheck="false"
+          ?readonly=${readOnly}
+          .value=${live(doc.rawText)}
+          @input=${(ev: Event) => (doc.rawText = valueOf(ev))}
+        ></textarea>
+      </section>
+    `;
   }
-  return h("section", { class: "doc", oninput: schedulePreview }, head, fieldsForm(doc.data, readOnly), bodyEditor(doc, readOnly));
+  return html`<section class="doc" @input=${schedulePreview}>${head}${fieldsForm(doc.data, readOnly)}${bodyEditor(doc, readOnly)}</section>`;
 }
 
 function toggleRaw(doc: Doc, raw: boolean): void {

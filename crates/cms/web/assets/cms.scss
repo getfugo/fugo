@@ -213,10 +213,6 @@ h2 {
   flex-wrap: wrap;
   gap: 0.5rem;
   margin: 0.3rem 0 0.8rem;
-
-  &[hidden] {
-    display: none;
-  }
 }
 
 table.entries {

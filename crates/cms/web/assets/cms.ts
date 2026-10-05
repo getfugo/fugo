@@ -1,5 +1,5 @@
-/*! The browser editor of the site generator's [cms]. It bundles yaml, smol-toml and marked; these
- * are their licence notices. */
+/*! The browser editor of the site generator's [cms]. It bundles yaml, smol-toml, marked and
+ * lit-html; these are their licence notices. */
 /*! yaml (https://github.com/eemeli/yaml), ISC licence
  *
  * Copyright Eemeli Aro <eemeli@gmail.com>
@@ -53,6 +53,37 @@
  *
  * This software is provided by the copyright holders and contributors “as is” and any express or implied warranties, including, but not limited to, the implied warranties of merchantability and fitness for a particular purpose are disclaimed. In no event shall the copyright owner or contributors be liable for any direct, indirect, incidental, special, exemplary, or consequential damages (including, but not limited to, procurement of substitute goods or services; loss of use, data, or profits; or business interruption) however caused and on any theory of liability, whether in contract, strict liability, or tort (including negligence or otherwise) arising in any way out of the use of this software, even if advised of the possibility of such damage.
  */
+/*! lit-html (https://github.com/lit/lit), BSD-3-Clause licence
+ *
+ * BSD 3-Clause License
+ *
+ * Copyright (c) 2017 Google LLC. All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
+ *
+ * 3. Neither the name of the copyright holder nor the names of its
+ *    contributors may be used to endorse or promote products derived from
+ *    this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
 // smol-toml (https://github.com/squirrelchat/smol-toml), BSD-3-Clause, as its own sources have it:
 /*!
  * Copyright (c) Squirrel Chat et al., All rights reserved.
@@ -90,9 +121,10 @@
 // The module also exports the codec and the shared helpers (for the tests); it starts the
 // editor only on its page (`#app`).
 
+import { html, render } from "lit-html";
 import { messageOf } from "./editor/api";
 import { type Doc } from "./editor/data";
-import { app, h } from "./editor/dom";
+import { app } from "./editor/dom";
 import { docText } from "./editor/pages";
 import { route } from "./editor/route";
 import { loadSite, page } from "./editor/state";
@@ -107,11 +139,16 @@ export async function start(): Promise<void> {
   try {
     await loadSite();
   } catch (e) {
-    app().className = "";
-    app().replaceChildren(
-      h("h1", {}, document.title),
-      h("p", { class: "warn" }, messageOf(e)),
-      h("p", { class: "muted" }, "The editor needs its API (the site's Worker) and a sign-in through Cloudflare Access."),
+    const root = app();
+    root.className = "";
+    root.replaceChildren();
+    render(
+      html`
+        <h1>${document.title}</h1>
+        <p class="warn">${messageOf(e)}</p>
+        <p class="muted">The editor needs its API (the site's Worker) and a sign-in through Cloudflare Access.</p>
+      `,
+      root,
     );
     return;
   }

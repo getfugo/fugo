@@ -3,6 +3,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
+import "./no-dom.js";
 import { foldersOf, movedPath, shellUrl } from "../../assets/admin/cms.js";
 
 const ENTRIES = [
