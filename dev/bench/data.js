@@ -1,6 +1,6 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1760362720965,
-  "repoUrl": "https://github.com/neohugo/neohugo",
+  "lastUpdate": 1791169018497,
+  "repoUrl": "https://github.com/getfugo/fugo",
   "entries": {
     "Benchmark": [
       {
@@ -96540,6 +96540,68 @@ window.BENCHMARK_DATA = {
             "value": 2,
             "unit": "allocs/op",
             "extra": "54523 times\n4 procs"
+          }
+        ]
+      }
+    ],
+    "fugo": [
+      {
+        "commit": {
+          "author": {
+            "email": "blackb1rd.mov@gmail.com",
+            "name": "Prachya Saechua",
+            "username": "blackb1rd"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "99422f13de6ddd9e4b68d6fee5b9945ebab79253",
+          "message": "Benchmarks: measure every push to main, chart them in the docs (#175)\n\ncargo dev bench builds the docs site and generated sites of 1,000 and\n10,000 pages, and reports the median build time and peak memory as\ngithub-action-benchmark's custom JSON. The Benchmark job runs it on each\npush to main and adds the results to the history on gh-pages, next to\nthe Go implementation's. The docs get a Benchmarks page that draws both\nfrom benchmarks/data.json, which the site's publish workflow adds.\n\nCo-authored-by: Claude Opus 5.5 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-10-05T09:38:56+07:00",
+          "tree_id": "f3fd408f71893727332db3a5165b2608ae459a14",
+          "url": "https://github.com/getfugo/fugo/commit/99422f13de6ddd9e4b68d6fee5b9945ebab79253"
+        },
+        "date": 1791169015262,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "docs site: build time",
+            "value": 219.1,
+            "unit": "ms",
+            "extra": "331 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "docs site: peak memory",
+            "value": 76.5,
+            "unit": "MiB",
+            "extra": "331 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "1,000 generated pages: build time",
+            "value": 343.5,
+            "unit": "ms",
+            "extra": "1061 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "1,000 generated pages: peak memory",
+            "value": 86.1,
+            "unit": "MiB",
+            "extra": "1061 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "10,000 generated pages: build time",
+            "value": 4743.6,
+            "unit": "ms",
+            "extra": "10061 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "10,000 generated pages: peak memory",
+            "value": 509.6,
+            "unit": "MiB",
+            "extra": "10061 pages; median of 5 builds after a warm-up build"
           }
         ]
       }
