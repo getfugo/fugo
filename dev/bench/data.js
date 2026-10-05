@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791176201295,
+  "lastUpdate": 1791176203709,
   "repoUrl": "https://github.com/getfugo/fugo",
   "entries": {
     "Benchmark": [
@@ -96770,6 +96770,177 @@ window.BENCHMARK_DATA = {
             "value": 1743.5,
             "unit": "MiB",
             "extra": "median of 5 builds after a warm-up build"
+          }
+        ]
+      }
+    ],
+    "micro": [
+      {
+        "commit": {
+          "author": {
+            "email": "blackb1rd.mov@gmail.com",
+            "name": "Prachya Saechua",
+            "username": "blackb1rd"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "222efddeb9ff14f68d0000ceb51b429d903747ff",
+          "message": "Benchmarks: Rust versions of the Go micro-benchmarks, every chart, /benchmarks/ (#177)\n\nssg-microbench runs the Go implementation's benchmarks that fugo has a\nfunction for (same inputs, Go names) and adds the Go results of the same\nCI run; the docs draw each after its Go history, list every Go\nmicro-benchmark (drawn as it scrolls into view, with a filter), give\nfugo's speed-up against Go in each caption, and move to /benchmarks/\n(in the header menu; /about/benchmarks/ redirects).\n\nCo-authored-by: Claude Opus 5.5 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-10-05T11:40:26+07:00",
+          "tree_id": "523bc54f5b4843735f6a4819dab54eef09559db4",
+          "url": "https://github.com/getfugo/fugo/commit/222efddeb9ff14f68d0000ceb51b429d903747ff"
+        },
+        "date": 1791176203162,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "BenchmarkSanitizeAnchorName",
+            "value": 331.33,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSanitizeAnchorNameAsciiOnly",
+            "value": 818.26,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSanitizeAnchorNameBlackfriday",
+            "value": 409.04,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSanitizeAnchorNameString",
+            "value": 329.8,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSanitize/All_allowed",
+            "value": 148.55,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSanitize/Spaces",
+            "value": 154.61,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkRelURL",
+            "value": 229.89,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkAbsURL/relurl",
+            "value": 431.35,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkAbsURL/absurl",
+            "value": 12.67,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkTotalWords",
+            "value": 4114.14,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkStripHTML",
+            "value": 775.54,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkParse",
+            "value": 6343.81,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkDecodeYAMLToMap",
+            "value": 8351.44,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSummaryFromHTML",
+            "value": 51.71,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSummaryFromHTMLWithDivider",
+            "value": 44.19,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSanitize/All_allowed (Go)",
+            "value": 22.43,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSanitize/Spaces (Go)",
+            "value": 93.97,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkTotalWords (Go)",
+            "value": 4799,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkRelURL (Go)",
+            "value": 272.2,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkAbsURL/relurl (Go)",
+            "value": 658.8,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkAbsURL/absurl (Go)",
+            "value": 4.62,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSanitizeAnchorName (Go)",
+            "value": 236.2,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSanitizeAnchorNameAsciiOnly (Go)",
+            "value": 503.1,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSanitizeAnchorNameBlackfriday (Go)",
+            "value": 357,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSanitizeAnchorNameString (Go)",
+            "value": 259.1,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkDecodeYAMLToMap (Go)",
+            "value": 8427,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkParse (Go)",
+            "value": 10123,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSummaryFromHTML (Go)",
+            "value": 401.7,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSummaryFromHTMLWithDivider (Go)",
+            "value": 269.5,
+            "unit": "ns/op"
           }
         ]
       }
