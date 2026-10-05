@@ -262,6 +262,8 @@ page and redo your change.
 - **Files of the page**: a bundle's images and other files, uploads and deletions.
 - **New pages**, written the way the section's pages are: as bundles or single files, with the
   section's front matter format and language suffixes.
+  In a section with folders of its own (a folder with an `_index` page, such as
+  `docs/guides/install/`), *New page* asks which folder the page goes in.
 
 Saving changes only what was edited. A file nobody changed is not written; in YAML front matter,
 the keys that did not change keep their text, comments and formatting. TOML and JSON front

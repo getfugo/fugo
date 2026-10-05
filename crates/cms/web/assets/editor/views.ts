@@ -1,8 +1,9 @@
 // The layout (header and sidebar) and the views of the site and its sections.
 
-import { newPage } from "./changes";
+import { askNewPage, newPage } from "./changes";
 import { h, render } from "./dom";
 import { draftList } from "./drafts";
+import { foldersOf } from "./folders";
 import { draftOf, drafts, me, site } from "./state";
 
 export function header(): HTMLElement {
@@ -93,6 +94,30 @@ export function sectionView(key: string): void {
     );
   });
   const body = h("tbody", {}, rows);
+  // A section with folders of its own asks which one a new page goes in.
+  const folders = foldersOf(section, site.entries);
+  const folder = h(
+    "select",
+    { required: true, "aria-label": "Folder" },
+    h("option", { value: "", disabled: true, selected: true }, "Folder…"),
+    h("option", { value: section.key }, section.title),
+    folders.map((f) => h("option", { value: f.key }, `${"\u00a0\u00a0".repeat(f.depth)}${f.title}`)),
+  );
+  const title = h("input", { type: "text", required: true, placeholder: "Title", "aria-label": "Title" });
+  const newPageForm = h(
+    "form",
+    {
+      class: "new-page",
+      hidden: true,
+      onsubmit: (ev: Event) => {
+        ev.preventDefault();
+        newPage(section, title.value.trim(), folder.value);
+      },
+    },
+    folder,
+    title,
+    h("button", { class: "primary", type: "submit" }, "Create"),
+  );
   const table = h(
     "table",
     { class: "entries" },
@@ -104,7 +129,8 @@ export function sectionView(key: string): void {
     for (const tr of Array.from(body.rows)) tr.hidden = q !== "" && !(tr.dataset.text ?? "").includes(q);
   });
   render(
-    h("div", { class: "title-row" }, h("h1", {}, section.title), h("button", { class: "primary", onclick: () => newPage(section) }, "New page")),
+    h("div", { class: "title-row" }, h("h1", {}, section.title), h("button", { class: "primary", onclick: () => (folders.length ? newPageForm.toggleAttribute("hidden") : askNewPage(section)) }, "New page")),
+    newPageForm,
     filter,
     table,
   );

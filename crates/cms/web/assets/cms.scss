@@ -201,6 +201,18 @@ h2 {
   margin: 0.3rem 0 0.8rem;
 }
 
+// A new page in a section with folders: the folder, the title, Create.
+.new-page {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0.3rem 0 0.8rem;
+
+  &[hidden] {
+    display: none;
+  }
+}
+
 table.entries {
   width: 100%;
   border-collapse: collapse;

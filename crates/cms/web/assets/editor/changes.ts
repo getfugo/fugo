@@ -27,11 +27,16 @@ function pathFor(section: Section, key: string, lang: string, bundle: boolean): 
   return bundle ? `${root}/${key}/index${suffix}.${style.ext}` : `${root}/${key}${suffix}.${style.ext}`;
 }
 
-export function newPage(section: Section): void {
+/** Asks for the title of a new page in the section's own folder, and makes it. */
+export function askNewPage(section: Section): void {
   const title = prompt(`Title of the new page in ${section.title}:`)?.trim();
-  if (!title) return;
+  if (title) newPage(section, title);
+}
+
+/** A new page titled `title` in `folder`: the section's own, or one below it (`foldersOf`). */
+export function newPage(section: Section, title: string, folder = section.key): void {
   const slug = slugify(title) || `page-${Date.now()}`;
-  const key = section.key ? `${section.key}/${slug}` : slug;
+  const key = folder ? `${folder}/${slug}` : slug;
   if (site.entries.some((e) => e.key === key)) {
     toast(`A page ${key} exists already`, "error");
     return;
