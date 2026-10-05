@@ -91,7 +91,7 @@ v1.0.0 replaces the Go build, under a new name and its own version numbers. What
 - **Modules** are not downloaded (no `go.mod` resolution): themes and modules come from the themes directory, `_vendor` or an absolute path.
 - **`js.Build` bundles in process with [rolldown](https://rolldown.rs)** (the Go build linked esbuild 0.25.6): nothing to install, and the options are the same. Scripts behave as before, but their bytes differ, so fingerprinted names, `Data.Integrity` and source maps change. Other visible differences: the IIFE wrapper is `(function() { … })();`; legal comments stay where they are instead of moving to the end; error texts are rolldown's, except unresolved imports (`Could not resolve "x"`) and the `es5` target's errors, which keep esbuild's wording and positions. As with esbuild, TC39 decorators are lowered, `target: es5` checks and lowers the bundle, and CSS imported from scripts is dropped (`local-css` modules give their class names). Sass is compiled in process with dart-sass semantics, whatever `transpiler` says.
 - The Docker images of the Go build, published under the former name, are no longer updated; they stay at the last Go build. fugo's image is `ghcr.io/getfugo/fugo` ([Installation](#installation)): its entry point is `fugo` (`docker run … ghcr.io/getfugo/fugo server`, not `… <image> <program> server`), it runs as the user 1000 and has no Node.js, Dart Sass or image tools, which fugo does not use.
-- The website [getfugo.github.io](https://getfugo.github.io) is no longer redeployed on release tags, and until it is redeployed from `docs/` it documents the Go build. fugo's documentation is now `docs/`, a site with its own theme built by fugo (`tools/docs/build.sh`). The Go build's documentation site is kept as the test fixture `testdata/legacy-docs/`: `tools/legacy-docs/build.sh` builds it with fugo (Tera layouts in `sites/docs`), and gate A-D3 checks every page of that build against the published one.
+- The website [getfugo.github.io](https://getfugo.github.io) is now fugo's documentation, `docs/`, a site with its own theme built by fugo (`tools/docs/build.sh`): the repository getfugo/getfugo.github.io publishes it daily from the latest release, with the [benchmark charts](https://getfugo.github.io/about/benchmarks/). The Go build's documentation site is kept as the test fixture `testdata/legacy-docs/`: `tools/legacy-docs/build.sh` builds it with fugo (Tera layouts in `sites/docs`), and gate A-D3 checks every page of that build against the published one.
 
 ## Build from source
 
@@ -122,7 +122,7 @@ None: every asset pipeline runs in process, and fugo runs no programs. It instal
 - [crates/cli/README.md](crates/cli/README.md): the commands and flags.
 - [docs/rust-port/template-api.md](docs/rust-port/template-api.md): every template function, filter and test, with its Go-template name and how Go-template idioms translate.
 - [Upgrading from the Go build](#upgrading-from-the-go-build), above, and the known differences from the Go implementation in §7 of [docs/rust-port/HANDOFF.md](docs/rust-port/HANDOFF.md).
-- The website [getfugo.github.io](https://getfugo.github.io), which documents the Go build (v0.148.2 and earlier) until it is redeployed from `docs/`.
+- The website [getfugo.github.io](https://getfugo.github.io): this documentation (`docs/`) for the latest release, and the [benchmarks](https://getfugo.github.io/about/benchmarks/).
 
 ## Support
 

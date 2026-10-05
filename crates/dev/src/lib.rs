@@ -5,6 +5,7 @@
 
 use std::path::{Path, PathBuf};
 
+pub mod bench;
 pub mod file_length;
 pub mod json;
 pub mod licence;

@@ -145,6 +145,7 @@ same ref cancels the older one, except on tags.
 | Test | ubuntu-24.04 | `cargo test --workspace --locked --no-fail-fast` with the tools below (ssg-dev's tests include structdiff's self-test and the check of `patches.json` against `sites/docs/patches/`); the job summary lists every test that printed `SKIPPED`, and any such test fails the job |
 | Build | one native runner per target | `cargo build --release --locked -p ssg-cli --target <triple>` with the version variables (below); `fugo version`; a tiny site built, whose sitemap, RSS and `robots.txt` (embedded templates) must have no CR; ssg-dev's `notices` (licences of the linked crates) and `package` (built with `--release --target <triple>`, reusing the binary's build) → artifact `fugo-<triple>` |
 | Release | ubuntu-24.04 | tags only, after the other three: the GitHub release (below), then `image.yml` for its container image |
+| Benchmark | ubuntu-24.04 | pushes to `main` only, after the Linux build: `cargo dev bench` with that build's binary, then github-action-benchmark adds the results to the history on `gh-pages` (below, "Benchmarks") |
 
 The tests run on Linux only; the macOS and Windows binaries get the release build and its smoke
 test (the version line and one tiny site). The Go CI also ran its tests on Windows (`mage -v
@@ -314,6 +315,19 @@ pull request): that is what a requirement that has to follow another crate's ver
 workspace-hack entries and the crates locked through another (`ignore` in dependabot.yml). A
 merge made with the workflow's token starts no workflow, so `main`'s CI, and its cache save,
 waits for the next other push.
+
+**Benchmarks.** `cargo dev bench <binary> <results.json> [--runs <n>]` (`crates/dev/src/bench.rs`)
+builds fugo's documentation site and two generated sites (1,000 and 10,000 pages,
+`crates/dev/src/bench/site.rs`), once to fill the caches and then `<n>` times (5 by default), and
+writes the median build time and the median peak memory (`/usr/bin/time`) of each, as
+github-action-benchmark's custom JSON. The Benchmark job runs it on every push to `main` with the
+Linux build's binary, and github-action-benchmark adds the results, as the suite `fugo`, to
+`dev/bench/data.js` on the `gh-pages` branch, the file that also holds the Go implementation's
+history (the suite `Benchmark`, 2020 to 2025). The website is published by the repository
+getfugo/getfugo.github.io: once a day, and when run by hand, its workflow builds `docs/` at the
+latest release with that release's binary, adds `dev/bench/data.js` as `benchmarks/data.json`, and
+deploys the site with GitHub Pages. The page `/about/benchmarks/` draws the charts
+(`docs/assets/js/benchmarks.js`). getfugo/fugo itself publishes no Pages site.
 
 ## Test data: the fugo schema
 

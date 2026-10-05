@@ -1,6 +1,7 @@
 // The fugo documentation's script, bundled by `js_build` (in process, no Node.js tools):
 // client-side navigation between pages, the colour scheme toggle, the navigation drawer, copy
-// buttons, configuration tabs, the table of contents' active heading, and the search dialog.
+// buttons, configuration tabs, the table of contents' active heading, the search dialog and the
+// benchmark charts.
 //
 // Clicks are handled by delegation on the document, so the controls keep working after a
 // navigation replaces the page; what depends on the page's content runs again in `initPage`.
@@ -19,6 +20,7 @@ import {
   syncSidebar,
   toggleTheme,
 } from "./controls.js";
+import { initBenchmarks } from "./benchmarks.js";
 
 // ── Client-side navigation ───────────────────────────────────────────────────────────────
 // A click on a link to another page of the site fetches that page and replaces the part of the
@@ -340,6 +342,7 @@ function initPage(first) {
   revealCurrent(first);
   restoreFormat();
   initToc();
+  initBenchmarks();
 }
 
 document.addEventListener("DOMContentLoaded", () => {
