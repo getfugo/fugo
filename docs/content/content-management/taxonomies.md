@@ -114,3 +114,7 @@ The tree still drives `parent`, `ancestors` and `sections`. This keeps the URLs 
 taxonomy as they were when it becomes hierarchical (`:slug` would make them again from the
 title: `Cheddar & Sour Cream` is `cheddar--sour-cream` as a key but `cheddar-sour-cream` as a
 slug). When a term's URL changes, keep the old one working with `aliases` in its `_index.md`.
+
+With flat URLs, terms in different places of the tree may not end in the same segment:
+`news/sport` and `blog/sport` would both be `/categories/sport/`, and the build fails
+(`taxonomy-term-collision`). Rename one of them, or give it a `url` in its `_index.md`.

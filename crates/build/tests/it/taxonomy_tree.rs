@@ -258,6 +258,62 @@ fn flat_term_urls_keep_the_key_and_the_tree() {
 }
 
 #[test]
+fn two_terms_with_one_flat_url_fail_the_build() {
+    let config =
+        format!("{CONFIG}[permalinks.term]\nlocations = \"/locations/:sections[last]/\"\n");
+    let p = page("a", "locations: [France/Paris, USA/Texas/Paris]");
+    let (_tmp, r) = try_build(&[("config.toml", &config), (&p.0, &p.1)]);
+    let Err(BuildError::Diagnostics(d)) = r else {
+        panic!("the build did not fail with diagnostics");
+    };
+    let errors: Vec<_> = d
+        .iter()
+        .filter(|d| d.id.as_deref() == Some("taxonomy-term-collision"))
+        .collect();
+    assert_eq!(errors.len(), 1, "{d:?}");
+    assert_eq!(
+        errors[0].message,
+        "terms /locations/france/paris and /locations/usa/texas/paris have the same URL \
+         /locations/paris/; rename one or give it its own `url`"
+    );
+
+    // A term with a `url` of its own no longer collides.
+    let r = build_ok(&[
+        ("config.toml", &config),
+        (&p.0, &p.1),
+        (
+            "content/locations/usa/texas/paris/_index.md",
+            "---\ntitle: Paris\nurl: /locations/paris-texas/\n---\n",
+        ),
+    ]);
+    assert_eq!(
+        field(&r, "/locations/paris-texas/", "parent"),
+        "/locations/texas/"
+    );
+    assert_eq!(
+        field(&r, "/locations/paris/", "parent"),
+        "/locations/france/"
+    );
+}
+
+#[test]
+fn spellings_of_one_term_below_one_parent_only_warn() {
+    let config =
+        format!("{CONFIG}[permalinks.term]\nlocations = \"/locations/:sections[last]/\"\n");
+    let p = page(
+        "a",
+        "locations: [\"France/Paris (Centre)\", France/paris-centre]",
+    );
+    let r = build_ok(&[("config.toml", &config), (&p.0, &p.1)]);
+    let ids: Vec<_> = r
+        .diagnostics
+        .iter()
+        .filter_map(|d| d.id.as_deref())
+        .collect();
+    assert_eq!(ids, ["target-collision"], "{:?}", r.diagnostics);
+}
+
+#[test]
 fn the_table_form_is_checked() {
     let (_tmp, r) = try_build(&[(
         "config.toml",

@@ -96,7 +96,11 @@ translations, bundle resources, page references).
    `ssg_page::target_paths` (current section, slug/standalone base name/name, language
    prefixes — multihost writes to `/<lang>`, sitemaps are always in their language's directory
    on multilingual sites —, front matter `url` expanded when it holds `:` attributes, the
-   `[permalinks]` pattern of the kind and section) and `links` for pages with a link.
+   `[permalinks]` pattern of the kind and section) and `links` for pages with a link. Terms of
+   a hierarchical taxonomy below different parents written to the same file are an error
+   naming them (`taxonomy-term-collision`, at the first URL they share), as with
+   `[permalinks.term]` `:sections[last]` and `news/sport`, `blog/sport`; spellings of one
+   term below one parent (`Don't Panic`, `Dont Panic`) only collide, as in a flat taxonomy.
 9. **Bundle resources** (`resources.rs`): a file belongs to the page at the longest key above
    it in any language; the owner in the file's language names it (below the owner) and places
    it (the owner's resource directory in its primary format); publish with the owner when it
