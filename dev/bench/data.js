@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791172660129,
+  "lastUpdate": 1791176201295,
   "repoUrl": "https://github.com/getfugo/fugo",
   "entries": {
     "Benchmark": [
@@ -96684,6 +96684,90 @@ window.BENCHMARK_DATA = {
           {
             "name": "10,000 generated pages: peak memory (Go)",
             "value": 1750,
+            "unit": "MiB",
+            "extra": "median of 5 builds after a warm-up build"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "blackb1rd.mov@gmail.com",
+            "name": "Prachya Saechua",
+            "username": "blackb1rd"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "222efddeb9ff14f68d0000ceb51b429d903747ff",
+          "message": "Benchmarks: Rust versions of the Go micro-benchmarks, every chart, /benchmarks/ (#177)\n\nssg-microbench runs the Go implementation's benchmarks that fugo has a\nfunction for (same inputs, Go names) and adds the Go results of the same\nCI run; the docs draw each after its Go history, list every Go\nmicro-benchmark (drawn as it scrolls into view, with a filter), give\nfugo's speed-up against Go in each caption, and move to /benchmarks/\n(in the header menu; /about/benchmarks/ redirects).\n\nCo-authored-by: Claude Opus 5.5 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-10-05T11:40:26+07:00",
+          "tree_id": "523bc54f5b4843735f6a4819dab54eef09559db4",
+          "url": "https://github.com/getfugo/fugo/commit/222efddeb9ff14f68d0000ceb51b429d903747ff"
+        },
+        "date": 1791176197387,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "docs site: build time",
+            "value": 147.7,
+            "unit": "ms",
+            "extra": "331 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "docs site: peak memory",
+            "value": 77,
+            "unit": "MiB",
+            "extra": "331 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "1,000 generated pages: build time",
+            "value": 226.7,
+            "unit": "ms",
+            "extra": "1061 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "1,000 generated pages: peak memory",
+            "value": 86.6,
+            "unit": "MiB",
+            "extra": "1061 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "1,000 generated pages: build time (Go)",
+            "value": 705,
+            "unit": "ms",
+            "extra": "median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "1,000 generated pages: peak memory (Go)",
+            "value": 284.4,
+            "unit": "MiB",
+            "extra": "median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "10,000 generated pages: build time",
+            "value": 3246.5,
+            "unit": "ms",
+            "extra": "10061 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "10,000 generated pages: peak memory",
+            "value": 514.7,
+            "unit": "MiB",
+            "extra": "10061 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "10,000 generated pages: build time (Go)",
+            "value": 7450.7,
+            "unit": "ms",
+            "extra": "median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "10,000 generated pages: peak memory (Go)",
+            "value": 1743.5,
             "unit": "MiB",
             "extra": "median of 5 builds after a warm-up build"
           }
