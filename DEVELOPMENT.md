@@ -10,9 +10,21 @@ the move to the root and the drop-in names (HANDOFF §9): read `rust/<path>` as 
 this file or HANDOFF on paths and names, they win. The current state (crate map, commands,
 gates, deviations, open items) is [`docs/rust-port/HANDOFF.md`](docs/rust-port/HANDOFF.md).
 
+**The history before the Rust rewrite** is not in this repository: `main` starts at the commit
+that replaced the Go implementation (#140). Hugo's history, the Go implementation and the
+rewrite's own branch (`rust-port`) are kept, read-only, in
+[getfugo/fugo-go-history](https://github.com/getfugo/fugo-go-history), with every commit named
+below and in the code: `44529028` (tag `go-final`), `be02933a` (`go-parity-final`), `7e58cfce`
+(`workspace-move`) and `7d5686b1`. Fetch it once to read them:
+
+```sh
+git remote add go-history https://github.com/getfugo/fugo-go-history
+git fetch go-history --tags
+```
+
 **The old port** (the byte-identical tree in the root `crates/` of `be02933a`, not today's
 crates, and its byte-exact Go oracles) was deleted in T00. It is recoverable at that commit,
-tagged `go-parity-final` in the local repository (the tag is not on GitHub):
+tagged `go-parity-final` in getfugo/fugo-go-history:
 `git show go-parity-final:crates/<crate>/<path>`. Salvage rules, not code, from it (§6.2).
 
 **The Go implementation** (the Go tree, `tools/go-oracle`, `tools/dev/oracle.sh` and the
@@ -36,7 +48,7 @@ before the move keep the prefix (the sources of `testdata/golden/images/manifest
 `rust/testdata/site-assets/…`); `ssg_testkit::fixture::repo_file` and `ssg_dev::sites::repo_file`
 resolve them at the root. The move commit (`7e58cfce`) also rewrote nearly every
 line of `PROVENANCE.md`, so git does not see that rename: its history before the move is
-`git log -- rust/PROVENANCE.md`.
+`git log workspace-move -- rust/PROVENANCE.md`.
 
 ## Layout
 
@@ -324,7 +336,7 @@ as github-action-benchmark's custom JSON. With `--go`, the Go implementation's b
 the generated sites, from the same content with Go-template layouts (`bench/templates.rs`), and
 its results are named `… (Go)`. The Benchmark job runs it on every push to `main` with the Linux
 build's binary, fugo alone: the Go implementation (built from its last commit, `44529028`) was
-measured once, with `--go`, by the run of `222efdde` on 2026-10-05, and the charts keep those
+measured once, with `--go`, by the run of `72888d8e` on 2026-10-05, and the charts keep those
 results as its reference; CI runs no Go since. github-action-benchmark adds the results, as
 the suite `fugo`, to `dev/bench/data.js` on the `gh-pages` branch, the file that also holds
 the Go implementation's micro-benchmark history (the suite `Benchmark`, 2020 to 2025).
@@ -333,7 +345,7 @@ The crate `ssg-microbench` (`crates/microbench`) continues that history: each of
 benchmark that fugo has a function for, with the Go benchmark's input, under the Go name
 (`BenchmarkSanitize/Spaces`). The Benchmark job runs
 `cargo run --release -p ssg-microbench -- <results.json>`, which times the cases as Go's
-`testing.B` does: the suite `micro`. The same run of `222efdde` ran the Go benchmarks once in the
+`testing.B` does: the suite `micro`. The same run of `72888d8e` ran the Go benchmarks once in the
 Go tree (`ssg-microbench --go-test-args` gives the `go test` arguments) and added them with
 `--go <go-test-output>` as `… (Go)`, the reference the charts keep. To measure the Go
 implementation again (by hand, on a machine like CI's), build it from `44529028` and use the two

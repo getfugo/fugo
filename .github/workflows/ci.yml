@@ -276,7 +276,7 @@ jobs:
   # time and peak memory of the docs site and of generated sites, measured with the Linux build's
   # binary and added to the history on the gh-pages branch (dev/bench/data.js, kept by
   # github-action-benchmark), which the documentation's Benchmarks page draws.
-  # The Go implementation was measured once, by the run of 222efdde (2026-10-05): the charts keep
+  # The Go implementation was measured once, by the run of 72888d8e (2026-10-05): the charts keep
   # those results as its reference, and no Go runs here since (DEVELOPMENT.md, "Benchmarks").
   benchmark:
     name: Benchmark
