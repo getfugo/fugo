@@ -4,10 +4,10 @@
 // suite (bench-chart.js draws a chart):
 //
 // - the site builds (suite `fugo`): a chart per measurement; a result named `… (Go)` is the Go
-//   implementation's build of the same site in the same run, a second line on the chart of `…`.
+//   implementation's build of the same site (measured once), a second line on the chart of `…`.
 // - the Go implementation's micro-benchmarks (suite `Benchmark`, 2020 to 2025: time per call;
 //   its `… - B/op` style copies are left out), with `data-with` naming the suite that continues
-//   them: fugo's Rust version of a benchmark, and the Go benchmark run again in the same CI run.
+//   them: fugo's Rust version of a benchmark (and the Go benchmark, run again once next to it).
 //   Charts with a Rust version come first; all are drawn as they scroll into view, and a field
 //   filters them by name.
 

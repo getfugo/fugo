@@ -1487,6 +1487,10 @@ blockquote {
   color: var(--caution);
 }
 
+.bench__ratio--same {
+  color: var(--muted);
+}
+
 .bench__svg {
   display: block;
   width: 100%;

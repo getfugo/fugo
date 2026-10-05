@@ -3,7 +3,8 @@
 // by the suite), with the latest values and fugo's speed-up against Go in the caption.
 //
 // A chart: { name, lines: [{ label, kind, unit, points: [{ at, commit, date, value }] }] }, kind
-// "fugo", "go" (Go, measured in the same run) or "history" (Go, 2020 to 2025).
+// "fugo", "go" (the Go implementation next to fugo: measured once, on 2026-10-05, its last result
+// continues as a reference) or "history" (the Go micro-benchmarks, 2020 to 2025).
 
 const SVG = "http://www.w3.org/2000/svg";
 const W = 640;
@@ -43,23 +44,30 @@ function ratio(c) {
   const go = c.lines.find((l) => l.kind === "go") ?? c.lines.find((l) => l.kind === "history");
   if (!fugo || !go || !(last(fugo).value > 0) || !(last(go).value > 0)) return null;
   const r = last(go).value / last(fugo).value;
+  if (Math.abs(r - 1) < 0.05) return ["about the same", null];
   const memory = fugo.unit === "MiB";
   const better = memory ? "less memory" : "faster";
   const worse = memory ? "more memory" : "slower";
   return r >= 1 ? [`${r.toFixed(1)}× ${better}`, true] : [`${(1 / r).toFixed(1)}× ${worse}`, false];
 }
 
-function caption(c) {
+function caption(c, total) {
   const node = html("figcaption", "bench__caption");
   node.append(html("span", "bench__name", c.name));
   const values = html("span", "bench__values");
   const shown = c.lines.filter((l) => l.kind !== "history" || !c.lines.some((o) => o.kind === "go"));
   for (const line of shown) {
     const label = shown.length > 1 ? `${line.label} ` : "";
-    values.append(html("span", `bench__value bench__value--${line.kind}`, `${label}${number(last(line).value)} ${line.unit}`));
+    // Go measured once: its result is a reference, dated.
+    const when = line.kind === "go" && last(line).at < total - 1 ? ` (${day(last(line).date)})` : "";
+    const text = `${label}${number(last(line).value)} ${line.unit}${when}`;
+    values.append(html("span", `bench__value bench__value--${line.kind}`, text));
   }
   const r = ratio(c);
-  if (r) values.append(html("span", `bench__ratio${r[1] ? "" : " bench__ratio--worse"}`, r[0]));
+  if (r) {
+    const tone = r[1] === null ? " bench__ratio--same" : r[1] ? "" : " bench__ratio--worse";
+    values.append(html("span", `bench__ratio${tone}`, r[0]));
+  }
   node.append(values);
   return node;
 }
@@ -68,7 +76,7 @@ function caption(c) {
 // the suite starts after the Go history (a marked line), or null.
 export function chart(c, total, commits, split = null) {
   const figure = html("figure", "bench__chart");
-  figure.append(caption(c));
+  figure.append(caption(c, total));
   const box = svg("svg", { viewBox: `0 0 ${W} ${H}`, class: "bench__svg", role: "img" });
   const latest = c.lines.map((l) => `${l.label} ${number(last(l).value)} ${l.unit}`);
   box.setAttribute("aria-label", `${c.name}, the latest: ${latest.join(", ")}`);
@@ -105,6 +113,12 @@ export function chart(c, total, commits, split = null) {
     const kind = `bench__line--${line.kind}`;
     const points = line.points.map((p) => `${x(p.at).toFixed(1)},${y(p.value).toFixed(1)}`).join(" ");
     svg("polyline", { class: `bench__line ${kind}`, points }, box);
+    // The Go implementation was measured once: its last result runs on as a reference.
+    const end = last(line);
+    if (line.kind === "go" && end.at < total - 1) {
+      const ref = { class: `bench__line ${kind}`, x1: x(end.at), y1: y(end.value), x2: x(total - 1), y2: y(end.value) };
+      svg("line", ref, box);
+    }
     const r = line.points.length <= 3 ? 5 : line.points.length > 40 ? 2 : 3.5;
     for (const p of line.points) {
       const link = svg("a", { href: commits + p.commit }, box);

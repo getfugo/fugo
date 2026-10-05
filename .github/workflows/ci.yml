@@ -276,39 +276,22 @@ jobs:
   # time and peak memory of the docs site and of generated sites, measured with the Linux build's
   # binary and added to the history on the gh-pages branch (dev/bench/data.js, kept by
   # github-action-benchmark), which the documentation's Benchmarks page draws.
-  # The generated sites are also built by the Go implementation (`--go`), for the comparison.
+  # The Go implementation was measured once, by the run of 222efdde (2026-10-05): the charts keep
+  # those results as its reference, and no Go runs here since (DEVELOPMENT.md, "Benchmarks").
   benchmark:
     name: Benchmark
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: build
     runs-on: ubuntu-24.04
-    timeout-minutes: 45
+    timeout-minutes: 30
     # One push to gh-pages at a time; the results of a newer push wait instead of cancelling.
     concurrency:
       group: benchmark
       cancel-in-progress: false
-    env:
-      # The Go implementation: its last commit, frozen (cgo: it links a C++ Sass library).
-      GO_COMMIT: 4452902873d7da7232ff3a3fa552d0c903b19939
     permissions:
       contents: write # push the results to gh-pages
     steps:
       - uses: actions/checkout@v7
-
-      # Its tree, for the binary and for its benchmarks; setup-go caches the modules and the build.
-      - uses: actions/checkout@v7
-        with:
-          ref: ${{ env.GO_COMMIT }}
-          path: go-impl-src
-
-      - uses: actions/setup-go@v7
-        with:
-          go-version-file: go-impl-src/go.mod
-          cache-dependency-path: go-impl-src/go.sum
-
-      - name: Build the Go implementation
-        working-directory: go-impl-src
-        run: go build -o "$HOME/go-impl/go-impl" .
 
       - name: Install Rust ${{ env.RUST_TOOLCHAIN }}
         run: |
@@ -330,16 +313,13 @@ jobs:
           [ -x /usr/bin/time ] || sudo apt-get install -y --no-install-recommends time
           tar -xzf dist/"$APP_NAME"_*_linux-amd64.tar.gz -C dist "$APP_NAME"
           "dist/$APP_NAME" version
-          cargo dev bench "dist/$APP_NAME" "$RUNNER_TEMP/bench.json" --go "$HOME/go-impl/go-impl"
+          cargo dev bench "dist/$APP_NAME" "$RUNNER_TEMP/bench.json"
 
-      # The micro-benchmarks: the Go implementation's benchmarks that fugo has a version of
-      # (ssg-microbench lists them), run in its tree, then fugo's versions with the same inputs.
+      # The micro-benchmarks: fugo's versions of the Go implementation's benchmarks.
       - name: Micro-benchmarks
         run: |
           cargo build --release --locked -p ssg-microbench
-          args=$(target/release/ssg-microbench --go-test-args)
-          (cd go-impl-src && go test -run '^$' $args) | tee "$RUNNER_TEMP/go-bench.txt"
-          target/release/ssg-microbench "$RUNNER_TEMP/micro.json" --go "$RUNNER_TEMP/go-bench.txt"
+          target/release/ssg-microbench "$RUNNER_TEMP/micro.json"
 
       - uses: benchmark-action/github-action-benchmark@v1
         with:
