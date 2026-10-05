@@ -1412,6 +1412,8 @@ blockquote {
 }
 
 // ── Benchmarks (layouts/_shortcodes/benchmarks.html, assets/js/benchmarks.js) ──
+// fugo is orange, the Go implementation blue: solid for its 2020–2025 history, dashed when it
+// runs in the same job as fugo.
 .bench {
   margin: 1rem 0 2rem;
 }
@@ -1423,11 +1425,11 @@ blockquote {
 
 .bench__grid-charts {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 22rem), 1fr));
   gap: 1rem;
 }
 
-.bench__chart {
+.bench__chart,
+.bench__placeholder {
   margin: 0;
   padding: 0.75rem 0.75rem 0.25rem;
   border: 1px solid var(--border);
@@ -1435,10 +1437,18 @@ blockquote {
   background: var(--surface);
 }
 
+// As tall as a chart, so the page does not jump when charts are drawn.
+.bench__placeholder {
+  aspect-ratio: 640 / 250;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
 .bench__caption {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
-  gap: 1rem;
+  gap: 0.25rem 1rem;
   font-size: 0.9rem;
 }
 
@@ -1450,28 +1460,31 @@ blockquote {
 .bench__values {
   display: flex;
   flex-wrap: wrap;
-  justify-content: flex-end;
   gap: 0.25rem 0.75rem;
-}
-
-.bench__value {
-  color: var(--muted);
   font-family: var(--font-mono);
   white-space: nowrap;
 }
 
-// The Go implementation's line, value and points; fugo's are orange.
-.bench__value.bench__value--fugo {
+.bench__value {
+  color: var(--muted);
+}
+
+.bench__value--fugo {
   color: var(--orange);
 }
 
-.bench__value.bench__value--go {
+.bench__value--go,
+.bench__value--history {
   color: var(--link);
 }
 
-.bench__line.bench__line--go {
-  stroke: var(--link);
-  stroke-dasharray: 6 4;
+.bench__ratio {
+  color: var(--tip);
+  font-weight: 600;
+}
+
+.bench__ratio--worse {
+  color: var(--caution);
 }
 
 .bench__svg {
@@ -1485,6 +1498,12 @@ blockquote {
   stroke-width: 1;
 }
 
+.bench__split {
+  stroke: var(--muted);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+}
+
 .bench__label {
   fill: var(--muted);
   font-size: 12px;
@@ -1493,18 +1512,35 @@ blockquote {
 
 .bench__line {
   fill: none;
-  stroke: var(--orange);
   stroke-width: 2;
   stroke-linejoin: round;
 }
 
+.bench__line--fugo {
+  stroke: var(--orange);
+}
+
+.bench__line--go {
+  stroke: var(--link);
+  stroke-dasharray: 6 4;
+}
+
+.bench__line--history {
+  stroke: var(--link);
+  stroke-width: 1.5;
+}
+
 .bench__point {
-  fill: var(--orange);
   stroke: var(--bg);
   stroke-width: 1.5;
 }
 
-.bench__point.bench__point--go {
+.bench__point--fugo {
+  fill: var(--orange);
+}
+
+.bench__point--go,
+.bench__point--history {
   fill: var(--link);
 }
 
@@ -1513,7 +1549,7 @@ a:focus-visible > .bench__point {
   r: 6;
 }
 
-.bench__search {
+.bench__filter {
   width: 100%;
   max-width: 32rem;
   margin-bottom: 1rem;

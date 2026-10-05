@@ -60,6 +60,10 @@ notAlternative = true
     name = "Migrating"
     pageRef = "/migrating/"
     weight = 30
+  [[menus.main]]
+    name = "Benchmarks"
+    pageRef = "/benchmarks/"
+    weight = 40
 
 [sitemap]
   changeFreq = "weekly"

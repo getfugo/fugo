@@ -1,10 +1,10 @@
 {#- The charts of one suite of benchmark results (assets/js/benchmarks.js draws them).
-    `suite`: the suite's name in the results; `search`: a search field picks one benchmark
-    at a time, for suites with many. The results are benchmarks/data.json, which the workflow
-    that publishes the site adds (the history github-action-benchmark keeps on fugo's gh-pages
-    branch); a build without it says so. -#}
+    `suite`: the suite's name in the results; `with`: the suite that continues it (the Go
+    micro-benchmarks are continued by `micro`, fugo's Rust versions of them). The results are
+    benchmarks/data.json, which the workflow that publishes the site adds (the history
+    github-action-benchmark keeps on fugo's gh-pages branch); a build without it says so. -#}
 {%- set suite = shortcode | arg(name="suite") %}
-{%- set search = shortcode | arg(name="search", default=false) in [true, "true"] %}
-<div class="bench" data-benchmarks="{{ suite }}" data-src="{{ "benchmarks/data.json" | rel_url }}" data-commits="{{ site.params.repository }}/commit/"{% if search %} data-search{% endif %}>
+{%- set with = shortcode | arg(name="with", default="") %}
+<div class="bench" data-benchmarks="{{ suite }}" data-src="{{ "benchmarks/data.json" | rel_url }}" data-commits="{{ site.params.repository }}/commit/"{% if with %} data-with="{{ with }}"{% endif %}>
   <p class="bench__status" data-bench-status>The charts need JavaScript.</p>
 </div>
