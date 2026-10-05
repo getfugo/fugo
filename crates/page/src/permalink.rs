@@ -1,11 +1,12 @@
-//! `[permalinks]` patterns: `/:year/:month/:slug/`, `:sections[1:]`, Go date layouts.
+//! `[permalinks]` patterns: `/:year/:month/:slug/`, `:sections[1:]`, `:term[categories]`, Go
+//! date layouts.
 //!
 //! A pattern is parsed once into literal text and attributes. An attribute is `:` followed by
 //! ASCII word characters, optionally with one `[…]` suffix (`:sections[1:]`); `\:` is a
 //! literal colon. Attributes that are not tokens are Go time layouts (`:2006`, `:Jan`, `:02`),
 //! translated to `strftime` at parse time.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 use jiff::Zoned;
 use jiff::civil::Weekday;
@@ -45,6 +46,8 @@ enum Attr {
     Filename,
     ContentBaseName,
     SlugOrContentBaseName,
+    /// `:term[<plural>]`: the first term the page names in that taxonomy.
+    Term(String),
     /// A Go layout.
     Layout(GoLayout),
 }
@@ -93,6 +96,9 @@ pub struct PermalinkCtx<'a> {
     pub content_base_name: &'a str,
     /// Makes titles and names URL-safe (`urlize`).
     pub urls: &'a SiteUrls,
+    /// Per taxonomy (plural), the last segment of the first term the page names, in front
+    /// matter order: `("categories", "rust")` for `:term[categories]`.
+    pub terms: &'a [(&'a str, &'a str)],
 }
 
 impl PermalinkPattern {
@@ -191,7 +197,21 @@ impl PermalinkPattern {
             Attr::Filename => filename(c),
             Attr::ContentBaseName => urlize(c.content_base_name),
             Attr::SlugOrContentBaseName => slug_or(urlize(c.content_base_name)),
+            Attr::Term(plural) => c
+                .terms
+                .iter()
+                .find(|(p, _)| p == plural)
+                .map(|(_, term)| (*term).to_owned())
+                .unwrap_or_default(),
             Attr::Layout(layout) => layout.format(date),
+        })
+    }
+
+    /// The taxonomies its `:term[…]` attributes name.
+    pub fn taxonomies(&self) -> impl Iterator<Item = &str> {
+        self.pieces.iter().filter_map(|p| match p {
+            Piece::Attr(Attr::Term(plural)) => Some(plural.as_str()),
+            _ => None,
         })
     }
 
@@ -285,6 +305,14 @@ fn parse_attr(attr: &str) -> Option<Attr> {
                 && cut.starts_with('[')
             {
                 return Some(Attr::SectionsSlice(Slice::parse(cut)));
+            }
+            if let Some(plural) = attr
+                .strip_prefix("term[")
+                .and_then(|s| s.strip_suffix(']'))
+                .map(str::trim)
+                .filter(|s| !s.is_empty())
+            {
+                return Some(Attr::Term(plural.to_owned()));
             }
             return GoLayout::parse(attr).map(Attr::Layout);
         }
@@ -383,5 +411,15 @@ impl PermalinkPatterns {
     #[must_use]
     pub fn get(&self, kind: PageKind, section: &str) -> Option<&PermalinkPattern> {
         self.0.get(&kind)?.get(section)
+    }
+
+    /// The taxonomies that `:term[…]` attributes of the patterns name.
+    #[must_use]
+    pub fn taxonomies(&self) -> BTreeSet<&str> {
+        self.0
+            .values()
+            .flat_map(BTreeMap::values)
+            .flat_map(PermalinkPattern::taxonomies)
+            .collect()
     }
 }

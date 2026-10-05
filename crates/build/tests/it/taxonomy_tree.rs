@@ -325,3 +325,38 @@ fn the_table_form_is_checked() {
     let e = e.to_string();
     assert!(e.contains("taxonomies.tag.nested"), "{e}");
 }
+
+#[test]
+fn a_page_url_can_follow_its_first_term() {
+    let config = format!(
+        "{CONFIG}[permalinks.term]\nlocations = \"/:sections[last]/\"\n\
+         [permalinks.page]\nposts = \"/:term[locations]/:slugorfilename/\"\n"
+    );
+    let pages = [
+        page("a", "locations: [France/Aquitaine/Landiras, Denmark]"),
+        page("b", "locations: [Denmark]"),
+        page("c", "tags: [x]"),
+    ];
+    let mut f = vec![("config.toml", config.as_str())];
+    f.extend(pages.iter().map(|(p, c)| (p.as_str(), c.as_str())));
+    let r = build_ok(&f);
+    // The first term the page names, by its last segment: the term pages' own URLs.
+    assert_eq!(field(&r, "/landiras/", "pages"), "/landiras/a/");
+    assert_eq!(field(&r, "/denmark/", "pages"), "/landiras/a/ /denmark/b/");
+    // Without a term the attribute is empty.
+    assert_eq!(field(&r, "/tags/x/", "pages"), "/c/");
+}
+
+#[test]
+fn a_term_attribute_names_a_configured_taxonomy() {
+    let config = format!("{CONFIG}[permalinks.page]\nposts = \"/:term[place]/:slug/\"\n");
+    let (_tmp, r) = try_build(&[("config.toml", &config)]);
+    let Err(e) = r else {
+        panic!("the build succeeded");
+    };
+    let e = e.to_string();
+    assert!(
+        e.contains(":term[place]") && e.contains("no taxonomy"),
+        "{e}"
+    );
+}

@@ -118,3 +118,18 @@ slug). When a term's URL changes, keep the old one working with `aliases` in its
 With flat URLs, terms in different places of the tree may not end in the same segment:
 `news/sport` and `blog/sport` would both be `/categories/sport/`, and the build fails
 (`taxonomy-term-collision`). Rename one of them, or give it a `url` in its `_index.md`.
+
+Pages can follow their terms too: `:term[categories]` in a page's permalink is the first
+category the page names, by its last segment. With flat term URLs, each page then sits below
+its category's page:
+
+{{< code-toggle file=config >}}
+[permalinks.term]
+  categories = "/:sections[last]/"
+[permalinks.page]
+  posts = "/:term[categories]/:slugorfilename/"
+{{< /code-toggle >}}
+
+`content/posts/hello/index.md` with `categories = ["rust"]` is `/rust/hello/`, below
+`/rust/`, and its folder says nothing about its category. Its URL changes when its first
+category does: keep the old one working with `aliases`.

@@ -31,6 +31,9 @@ pub enum PageError {
     /// A `:sections[a:b]` slice whose start is after its end.
     #[error("permalink pattern {pattern:?}: the section slice {slice:?} ends before it starts")]
     SectionSlice { pattern: String, slice: String },
+    /// A `:term[…]` attribute that names no configured taxonomy.
+    #[error("permalink attribute :term[{taxonomy}]: no taxonomy {taxonomy:?} is configured")]
+    TermTaxonomy { taxonomy: String },
     /// A cascade entry that cannot be decoded.
     #[error("cascade: {0}")]
     Cascade(String),

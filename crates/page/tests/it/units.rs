@@ -413,6 +413,7 @@ fn go_layouts_become_strftime() {
         file: None,
         content_base_name: "A Title",
         urls: &urls,
+        terms: &[],
     };
     let expand = |p: &str| PermalinkPattern::parse(p).expect(p).expand(&ctx).expect(p);
     // `:15:04` is two attributes.
