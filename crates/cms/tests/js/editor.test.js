@@ -3,7 +3,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import { foldersOf, movedPath } from "../../assets/admin/cms.js";
+import { foldersOf, movedPath, shellUrl } from "../../assets/admin/cms.js";
 
 const ENTRIES = [
   { key: "docs/_index", kind: "section", title: "Documentation" },
@@ -35,4 +35,20 @@ test("a moved page's files: its folder, or its name, replaced", () => {
   assert.equal(movedPath("content/docs/guides/install.th.md", "docs/guides/install", "docs/reference/install"), "content/docs/reference/install.th.md");
   assert.equal(movedPath("content/th/docs/a/index.md", "docs/a", "docs/b/a"), "content/th/docs/b/a/index.md");
   assert.throws(() => movedPath("content/docs/other.md", "docs/a", "docs/b/a"));
+});
+
+test("the page whose layout a preview borrows: its own, else one in its folder, else its section", () => {
+  const page = (key, urls, kind = "page") => ({ key, kind, section: key.split("/")[0], files: Object.entries(urls).map(([lang, url]) => ({ lang, path: `content/${key}.md`, url })) });
+  const entries = [
+    page("docs/guides/install/linux", { en: "/docs/guides/install/linux/", th: "/th/docs/guides/install/linux/" }),
+    page("docs/guides/intro", { en: "/docs/guides/intro/" }),
+    page("docs/reference/api", { en: "/docs/reference/api/", th: "/th/docs/reference/api/" }),
+    page("docs/guides/_index", { en: "/docs/guides/" }, "section"),
+  ];
+  assert.equal(shellUrl(entries[0], "th", entries), "/th/docs/guides/install/linux/", "its own");
+  const fresh = page("docs/guides/new", {});
+  assert.equal(shellUrl(fresh, "en", entries), "/docs/guides/intro/", "a page of its folder");
+  assert.equal(shellUrl(fresh, "th", entries), "/th/docs/guides/install/linux/", "else a page of its section");
+  assert.equal(shellUrl(page("blog/x", {}), "en", entries), null, "none");
+  assert.equal(shellUrl(page("docs/guides/more/_index", {}, "section"), "en", entries), "/docs/guides/", "the same kind");
 });

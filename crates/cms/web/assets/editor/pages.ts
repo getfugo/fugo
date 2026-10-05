@@ -8,6 +8,7 @@ import { type Doc } from "./data";
 import { h, render, toast, valueOf } from "./dom";
 import { bodyEditor, filesPanel } from "./files";
 import { foldersOf } from "./folders";
+import { schedulePreview } from "./preview";
 import { fieldsForm } from "./form";
 import { canEdit, current, draftOf, langName, me, pending, setPage, site } from "./state";
 import { notFound } from "./views";
@@ -168,7 +169,7 @@ function docEditor(doc: Doc): HTMLElement {
       }),
     );
   }
-  return h("section", { class: "doc" }, head, fieldsForm(doc.data, readOnly), bodyEditor(doc, readOnly));
+  return h("section", { class: "doc", oninput: schedulePreview }, head, fieldsForm(doc.data, readOnly), bodyEditor(doc, readOnly));
 }
 
 function toggleRaw(doc: Doc, raw: boolean): void {

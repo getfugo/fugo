@@ -1,10 +1,10 @@
 // The body editor with its preview, and the files of a page bundle (uploads).
 
-import { marked } from "marked";
 import { bytesToBase64, extensionOf } from "../common";
 import { type Doc } from "./data";
 import { h, toast, valueOf } from "./dom";
 import { pageView } from "./pages";
+import { hidePreview, schedulePreview, showPreview } from "./preview";
 import { canEdit, current, site } from "./state";
 
 export function bodyEditor(doc: Doc, readOnly: boolean): HTMLElement {
@@ -15,21 +15,22 @@ export function bodyEditor(doc: Doc, readOnly: boolean): HTMLElement {
     value: doc.body,
     oninput: (ev: Event) => {
       doc.body = valueOf(ev);
+      schedulePreview();
     },
   });
-  const frame = h("iframe", { class: "preview", sandbox: "", title: "Preview", hidden: true });
+  // Sandboxed without scripts (the text may hold any HTML), on the editor's origin so that the
+  // preview updates in place as you type.
+  const frame = h("iframe", { class: "preview", sandbox: "allow-same-origin", title: "Preview", hidden: true });
   const button = h("button", { class: "small" }, "Preview");
   button.addEventListener("click", () => {
-    const show = frame.hidden;
+    const show = frame.hidden !== false;
     frame.hidden = !show;
-    area.hidden = show;
-    button.textContent = show ? "Edit" : "Preview";
-    if (show) {
-      // Sandboxed (no scripts, an origin of its own): the text may hold any HTML.
-      frame.srcdoc = `<!doctype html><meta charset="utf-8"><style>body{font:16px/1.6 system-ui,sans-serif;max-width:46rem;margin:1rem auto;padding:0 1rem;color:#222}img{max-width:100%}pre{overflow:auto;background:#f4f4f4;padding:.5rem}</style>${marked.parse(doc.body, { async: false })}`;
-    }
+    editor.classList.toggle("previewing", show);
+    button.textContent = show ? "Close preview" : "Preview";
+    if (show) void showPreview(frame, doc);
+    else hidePreview();
   });
-  return h(
+  const editor = h(
     "div",
     { class: "body-editor" },
     h(
@@ -37,12 +38,13 @@ export function bodyEditor(doc: Doc, readOnly: boolean): HTMLElement {
       { class: "doc-head" },
       h("strong", {}, "Text"),
       h("span", { class: "spacer" }),
-      h("small", { class: "muted" }, "Markdown; the preview leaves out shortcodes and the site's styles"),
+      h("small", { class: "muted" }, "Markdown; the preview shows it in the site's own page, without shortcodes"),
       button,
     ),
     area,
     frame,
   );
+  return editor;
 }
 
 // ── Bundle files and uploads ───────────────────────────────────────────────────────────────────

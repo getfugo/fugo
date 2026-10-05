@@ -486,6 +486,26 @@ legend {
   grid-column: 1 / -1;
 }
 
+// With the preview open: the text and the page side by side on wide screens.
+.body-editor.previewing {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+
+  > .doc-head {
+    grid-column: 1 / -1;
+  }
+
+  textarea.body,
+  iframe.preview {
+    height: 40rem;
+  }
+
+  @media (max-width: 60rem) {
+    grid-template-columns: 1fr;
+  }
+}
+
 iframe.preview {
   width: 100%;
   height: 32rem;
