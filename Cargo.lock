@@ -6535,6 +6535,7 @@ dependencies = [
  "serde_json",
  "ssg-base",
  "ssg-build",
+ "ssg-cms",
  "ssg-config",
  "ssg-funcs",
  "ssg-layouts",

@@ -121,6 +121,9 @@ one role is required.
 
 `[cms.fields.<key>]` changes how the editor shows a front matter key (matched ignoring case).
 Without it, a value's kind decides: text, number, yes/no, date, list, table.
+`fugo cms fields` prints a table for every front matter key the content uses, with the
+settings the configuration has, else a label and the widget its values suggest: a starting
+point to edit and keep.
 
 `label`
 : The field's label. Default: the key.

@@ -184,3 +184,47 @@ fn copy_dir(from: &std::path::Path, to: &std::path::Path) {
         }
     }
 }
+
+#[test]
+fn cms_fields_prints_the_settings_to_start_from() {
+    let dir = project();
+    let pages = [
+        (
+            "content/posts/b.md",
+            "---\ntitle: B\ndate: 2026-01-02\ndraft: false\nimage_preview: b.jpg\ndescription: About B\nrating:\n  taste: 4\nwhenSeen: Paris\n---\n",
+        ),
+        (
+            "config/production/cms.toml",
+            &format!(
+                "{CMS}[fields.description]\nlabel = \"Short text\"\nhelp = \"One \\\"line\\\"\"\n"
+            ),
+        ),
+    ];
+    for (path, text) in pages {
+        std::fs::write(dir.path().join(path), text).expect("write");
+    }
+    let o = binary(dir.path(), &["cms", "fields"], &[]);
+    assert!(o.status.success(), "{}{}", stderr(&o), stdout(&o));
+    let out = stdout(&o);
+    for want in [
+        "[cms.fields.date]\n# a date; in posts\nlabel = \"Date\"\nwidget = \"date\"\n",
+        "[cms.fields.draft]\n# yes or no; in posts\nlabel = \"Draft\"\nwidget = \"boolean\"\n",
+        "[cms.fields.image_preview]\n# text; in posts\nlabel = \"Image preview\"\nwidget = \"image\"\n",
+        "[cms.fields.rating]\n# a table; in posts\nlabel = \"Rating\"\n\n",
+        "[cms.fields.whenseen]\n# text; in posts\nlabel = \"When seen\"\nwidget = \"text\"\n",
+        // The configuration's settings come first.
+        "[cms.fields.description]\n# text; in posts\nlabel = \"Short text\"\nhelp = \"One \\\"line\\\"\"\n",
+    ] {
+        assert!(out.contains(want), "{want}\nnot in:\n{out}");
+    }
+
+    let none = tempfile::tempdir().expect("tempdir");
+    std::fs::write(
+        none.path().join("config.toml"),
+        "baseURL = \"https://example.org/\"\n",
+    )
+    .expect("config");
+    let o = binary(none.path(), &["cms", "fields"], &[]);
+    assert!(!o.status.success());
+    assert!(stderr(&o).contains("no [cms]"), "{}", stderr(&o));
+}

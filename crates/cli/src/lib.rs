@@ -10,6 +10,7 @@
 pub mod args;
 mod build;
 mod check;
+mod cms;
 mod config;
 #[cfg(feature = "npm")]
 mod npm;
@@ -23,7 +24,7 @@ use std::process::ExitCode;
 use ssg_config::{CliOverrides, LoadOptions};
 
 pub use args::Cli;
-use args::{Command, ProjectArgs, TemplatesCommand};
+use args::{CmsCommand, Command, ProjectArgs, TemplatesCommand};
 
 /// The version ([`ssg_base::VERSION`]: the release tag's, else the workspace's): the
 /// `v<version>` of [`version::line`].
@@ -59,6 +60,7 @@ pub fn run(cli: Cli) -> Exit {
         Some(Command::Server(s)) => server::run(&s),
         Some(Command::Templates(TemplatesCommand::Check(c))) => check::run(&c),
         Some(Command::Config(c)) => config::run(&c),
+        Some(Command::Cms(CmsCommand::Fields(c))) => cms::run(&c),
         Some(Command::Version) => {
             println!("{}", version::line());
             Ok(Exit::Success)

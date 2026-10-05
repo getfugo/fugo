@@ -25,6 +25,7 @@
 #![forbid(unsafe_code)]
 
 pub mod config;
+pub mod fields;
 pub mod index;
 pub mod paths;
 
