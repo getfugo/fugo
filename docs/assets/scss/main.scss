@@ -1410,3 +1410,93 @@ blockquote {
     display: none;
   }
 }
+
+// ── Benchmarks (layouts/_shortcodes/benchmarks.html, assets/js/benchmarks.js) ──
+.bench {
+  margin: 1rem 0 2rem;
+}
+
+.bench__status,
+.bench__range {
+  color: var(--muted);
+}
+
+.bench__grid-charts {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 22rem), 1fr));
+  gap: 1rem;
+}
+
+.bench__chart {
+  margin: 0;
+  padding: 0.75rem 0.75rem 0.25rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+}
+
+.bench__caption {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  font-size: 0.9rem;
+}
+
+.bench__name {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.bench__value {
+  color: var(--muted);
+  font-family: var(--font-mono);
+  white-space: nowrap;
+}
+
+.bench__svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.bench__grid {
+  stroke: var(--border);
+  stroke-width: 1;
+}
+
+.bench__label {
+  fill: var(--muted);
+  font-size: 12px;
+  font-family: var(--font-sans);
+}
+
+.bench__line {
+  fill: none;
+  stroke: var(--orange);
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+
+.bench__point {
+  fill: var(--orange);
+  stroke: var(--bg);
+  stroke-width: 1.5;
+}
+
+a:hover > .bench__point,
+a:focus-visible > .bench__point {
+  fill: var(--orange-strong);
+  r: 6;
+}
+
+.bench__search {
+  width: 100%;
+  max-width: 32rem;
+  margin-bottom: 1rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+}

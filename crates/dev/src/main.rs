@@ -5,7 +5,8 @@ use std::process::ExitCode;
 
 use clap::{Parser, Subcommand};
 use ssg_dev::{
-    Fail, file_length, licence, manifest, notices, package, ratchet, selftest, sites, structdiff,
+    Fail, bench, file_length, licence, manifest, notices, package, ratchet, selftest, sites,
+    structdiff,
 };
 
 #[derive(Parser)]
@@ -49,6 +50,16 @@ enum Command {
     },
     /// Fails when a file of code is longer than 500 lines (AGENTS.md)
     FileLength,
+    /// Measures a binary: build time and peak memory of the docs site and of generated sites
+    Bench {
+        /// The binary to measure
+        binary: PathBuf,
+        /// The results, as github-action-benchmark's custom JSON
+        out: PathBuf,
+        /// Measured builds per site (the median counts), after a warm-up build
+        #[arg(long, default_value_t = 5)]
+        runs: usize,
+    },
     /// Writes the licence notices of the packages linked into the binary for a target
     Notices {
         /// A Rust target triple
@@ -160,6 +171,7 @@ fn run(cli: Cli) -> Result<i32, Fail> {
         }
         Command::LicenceCheck { v } => licence::run(v),
         Command::FileLength => file_length::run(),
+        Command::Bench { binary, out, runs } => bench::run(&binary, &out, runs),
         Command::Notices {
             target,
             out,

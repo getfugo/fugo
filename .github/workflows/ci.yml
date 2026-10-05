@@ -272,6 +272,57 @@ jobs:
           overwrite: true
           compression-level: 0
 
+  # The benchmarks of each push to main (`cargo dev bench`; DEVELOPMENT.md, "Benchmarks"): the build
+  # time and peak memory of the docs site and of generated sites, measured with the Linux build's
+  # binary and added to the history on the gh-pages branch (dev/bench/data.js, kept by
+  # github-action-benchmark), which the documentation's Benchmarks page draws.
+  benchmark:
+    name: Benchmark
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    # One push to gh-pages at a time; the results of a newer push wait instead of cancelling.
+    concurrency:
+      group: benchmark
+      cancel-in-progress: false
+    permissions:
+      contents: write # push the results to gh-pages
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install Rust ${{ env.RUST_TOOLCHAIN }}
+        run: |
+          rustup toolchain install "$RUST_TOOLCHAIN" --profile minimal --no-self-update
+          rustup default "$RUST_TOOLCHAIN"
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          save-if: ${{ env.SAVE_CACHE }}
+
+      - uses: actions/download-artifact@v8
+        with:
+          name: ${{ env.APP_NAME }}-x86_64-unknown-linux-gnu
+          path: dist
+
+      # Peak memory comes from GNU time (/usr/bin/time).
+      - name: Benchmark
+        run: |
+          [ -x /usr/bin/time ] || sudo apt-get install -y --no-install-recommends time
+          tar -xzf dist/"$APP_NAME"_*_linux-amd64.tar.gz -C dist "$APP_NAME"
+          "dist/$APP_NAME" version
+          cargo dev bench "dist/$APP_NAME" "$RUNNER_TEMP/bench.json"
+
+      - uses: benchmark-action/github-action-benchmark@v1
+        with:
+          name: fugo
+          tool: customSmallerIsBetter
+          output-file-path: ${{ runner.temp }}/bench.json
+          gh-pages-branch: gh-pages
+          benchmark-data-dir-path: dev/bench
+          github-token: ${{ github.token }}
+          auto-push: true
+
   release:
     name: Release
     if: startsWith(github.ref, 'refs/tags/v')
