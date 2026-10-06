@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791273450476,
+  "lastUpdate": 1791289662192,
   "repoUrl": "https://github.com/getfugo/fugo",
   "entries": {
     "Benchmark": [
@@ -96888,6 +96888,66 @@ window.BENCHMARK_DATA = {
           {
             "name": "10,000 generated pages: peak memory",
             "value": 515.7,
+            "unit": "MiB",
+            "extra": "10061 pages; median of 5 builds after a warm-up build"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "blackb1rd.mov@gmail.com",
+            "name": "Prachya Saechua",
+            "username": "blackb1rd"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "acbeb73f1d329c8c58e5cd29fbe4678946075a5c",
+          "message": "CMS: fields inside tables, one value for every language, defaults and checks (#182)\n\nThe build works out the keys inside tables across every page (a table's\nAdd... offers the ones it lacks), the values that are one for every language\n(an edit goes to each language's file), and the values new pages of a\nsection start with. [cms.fields] reaches keys inside tables by their path\nand gains default, min, max, step, required (checked before saving), shared,\ncollapsed and summary. Number fields take any step unless set.\n\nCo-authored-by: Claude Opus 5.5 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-10-06T19:15:49+07:00",
+          "tree_id": "56d8a016b1f74da5a73019a3edaaa27fa811effb",
+          "url": "https://github.com/getfugo/fugo/commit/acbeb73f1d329c8c58e5cd29fbe4678946075a5c"
+        },
+        "date": 1791289659678,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "docs site: build time",
+            "value": 226.4,
+            "unit": "ms",
+            "extra": "333 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "docs site: peak memory",
+            "value": 77.2,
+            "unit": "MiB",
+            "extra": "333 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "1,000 generated pages: build time",
+            "value": 345.1,
+            "unit": "ms",
+            "extra": "1061 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "1,000 generated pages: peak memory",
+            "value": 86.3,
+            "unit": "MiB",
+            "extra": "1061 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "10,000 generated pages: build time",
+            "value": 4536.2,
+            "unit": "ms",
+            "extra": "10061 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "10,000 generated pages: peak memory",
+            "value": 514.7,
             "unit": "MiB",
             "extra": "10061 pages; median of 5 builds after a warm-up build"
           }
