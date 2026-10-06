@@ -1,6 +1,11 @@
-//! The field of every front matter key, as the build works it out from the content: a label from
-//! the key, a widget from the kind of its values and from its name, and the short values pages
-//! share, to suggest. The settings of `[cms.fields]` go over it, setting by setting.
+//! The field of every front matter key, and of every key inside its tables (`nutrition.fat`,
+//! below `nutrition`; the keys of a list's tables are below the list's key), as the build works
+//! it out from the content: a label from the key, a widget from the kind of its values and from
+//! its name, the short values pages share (to suggest), and whether a page's languages all give
+//! it the same value (to edit once for all of them). The settings of `[cms.fields]` go over it,
+//! setting by setting.
+
+use std::hash::{DefaultHasher, Hash, Hasher};
 
 use super::*;
 use crate::fields::{Hint, Widget};
@@ -11,8 +16,12 @@ const SHORT: usize = 80;
 const MAX_SUGGESTIONS: usize = 200;
 /// Past this many different values a key's values are not counted any more, nor suggested.
 const MAX_TRACKED: usize = 5000;
-/// Keys whose values name one page (translations share theirs): nothing to suggest.
-const OWN: [&str; 6] = [
+/// How deep into tables keys are followed, and how many keys inside tables are counted at most.
+const MAX_DEPTH: usize = 6;
+const MAX_NESTED: usize = 2000;
+/// Keys whose values name one page (translations share theirs): nothing to suggest, and no
+/// value for new pages.
+pub(super) const OWN: [&str; 6] = [
     "title",
     "linktitle",
     "slug",
@@ -20,10 +29,17 @@ const OWN: [&str; 6] = [
     "aliases",
     "translationkey",
 ];
+/// Keys whose value each language keeps its own of, even where they agree.
+const PER_LANGUAGE: [&str; 4] = ["description", "summary", "keywords", "draft"];
 
-/// What the content says about its keys (lower-cased), gathered file by file.
+/// What the content says about its keys, gathered file by file: by path, the key lower-cased
+/// after the keys of the tables it is in.
 #[derive(Default)]
-pub(super) struct Keys(BTreeMap<String, KeyStats>);
+pub(super) struct Keys {
+    stats: BTreeMap<String, KeyStats>,
+    /// Keys inside tables counted so far.
+    nested: usize,
+}
 
 #[derive(Default)]
 struct KeyStats {
@@ -35,29 +51,68 @@ struct KeyStats {
     values: BTreeMap<String, BTreeSet<String>>,
     /// More different values than are counted.
     many: bool,
+    /// For a key of the front matter (not inside a table), per page: how the page's language
+    /// files agree on its value.
+    pages: BTreeMap<String, Agreement>,
+}
+
+/// The values the language files of one page give a key.
+struct Agreement {
+    /// The hash of the first file's value.
+    hash: u64,
+    files: usize,
+    differ: bool,
 }
 
 impl Keys {
     /// Counts the front matter `fm` of a file of the page `entry`.
     pub(super) fn add(&mut self, entry: &str, fm: &Map) {
         for (k, v) in fm.iter() {
-            let s = self.0.entry(k.to_lowercase()).or_default();
-            if s.name.is_empty() {
-                k.clone_into(&mut s.name);
+            let path = k.to_lowercase();
+            self.value(entry, k, &path, v, 0);
+            if let Some(s) = self.stats.get_mut(&path) {
+                s.agree(entry, v);
             }
-            if !matches!(v, Value::Null) && v.as_str() != Some("") {
-                *s.kinds.entry(kind_of(v)).or_default() += 1;
+        }
+    }
+
+    /// Counts a value of the key `name` at `path`, and the keys of its tables below it.
+    fn value(&mut self, entry: &str, name: &str, path: &str, v: &Value, depth: usize) {
+        if depth > 0 && !self.stats.contains_key(path) {
+            if self.nested == MAX_NESTED {
+                return;
             }
-            match v {
-                Value::String(t) => s.value(entry, t),
-                Value::Array(items) => {
-                    for item in items.iter() {
-                        if let Value::String(t) = item {
-                            s.value(entry, t);
-                        }
+            self.nested += 1;
+        }
+        let s = self.stats.entry(path.to_owned()).or_default();
+        if s.name.is_empty() {
+            name.clone_into(&mut s.name);
+        }
+        if !matches!(v, Value::Null) && v.as_str() != Some("") {
+            *s.kinds.entry(kind_of(v)).or_default() += 1;
+        }
+        match v {
+            Value::String(t) => s.text(entry, t),
+            Value::Array(items) => {
+                for item in items.iter() {
+                    if let Value::String(t) = item {
+                        s.text(entry, t);
                     }
                 }
-                _ => {}
+            }
+            _ => {}
+        }
+        if depth == MAX_DEPTH {
+            return;
+        }
+        let tables: Vec<&Map> = match v {
+            Value::Array(items) => items.iter().filter_map(Value::as_map).collect(),
+            _ => v.as_map().into_iter().collect(),
+        };
+        for table in tables {
+            for (k, child) in table.iter() {
+                let below = format!("{path}.{}", k.to_lowercase());
+                self.value(entry, k, &below, child, depth + 1);
             }
         }
     }
@@ -70,21 +125,29 @@ impl Keys {
         taxonomies: &BTreeSet<String>,
     ) -> BTreeMap<String, Hint> {
         let mut out: BTreeMap<String, Hint> = BTreeMap::new();
-        for (key, s) in self.0 {
-            let taxonomy = taxonomies.contains(&key);
+        for (key, s) in self.stats {
+            let top = !key.contains('.');
+            let taxonomy = top && taxonomies.contains(&key);
             let kind = s.kind();
-            let field = with_settings(inferred(&s.name, kind, taxonomy), fields.get(&key), kind);
+            let mut field = inferred(&s.name, kind, taxonomy);
+            let own = OWN.contains(&key.as_str()) || PER_LANGUAGE.contains(&key.as_str());
+            if top && !own && s.same_in_every_language() {
+                field.shared = Some(true);
+            }
+            let field = with_settings(field, fields.get(&key), kind);
             // Fixed options, a taxonomy's terms and the values of one page leave nothing to suggest.
             let suggests = !taxonomy
                 && field.options.is_empty()
                 && !OWN.contains(&key.as_str())
                 && matches!(kind, "string" | "list" | "mixed");
             let suggestions = if suggests { s.shared() } else { Vec::new() };
+            let name = (s.name != s.name.to_lowercase()).then_some(s.name);
             let hint = Hint {
                 field,
                 kind,
                 suggestions,
                 unused: false,
+                name,
             };
             out.insert(key, hint);
         }
@@ -93,9 +156,12 @@ impl Keys {
             if out.contains_key(&key) {
                 continue;
             }
-            let kind = kind_by_settings(set);
+            // A key the settings name keys below is a table.
+            let below = format!("{key}.");
+            let table = fields.keys().any(|k| k.to_lowercase().starts_with(&below));
+            let kind = if table { "map" } else { kind_by_settings(set) };
             let named = Field {
-                label: Some(label_of(&key)),
+                label: Some(label_of(key.rsplit('.').next().unwrap_or(&key))),
                 ..Field::default()
             };
             let hint = Hint {
@@ -103,6 +169,7 @@ impl Keys {
                 kind,
                 suggestions: Vec::new(),
                 unused: true,
+                name: None,
             };
             out.insert(key, hint);
         }
@@ -111,7 +178,7 @@ impl Keys {
 }
 
 impl KeyStats {
-    fn value(&mut self, entry: &str, text: &str) {
+    fn text(&mut self, entry: &str, text: &str) {
         let t = text.trim();
         if self.many || t.is_empty() || t.contains('\n') || t.chars().count() > SHORT {
             return;
@@ -125,6 +192,32 @@ impl KeyStats {
             .entry(t.to_owned())
             .or_default()
             .insert(entry.to_owned());
+    }
+
+    /// Notes the value `v` one of the page's language files gives the key (an empty one says
+    /// nothing).
+    fn agree(&mut self, entry: &str, v: &Value) {
+        let Some(text) = canonical(v) else {
+            return;
+        };
+        let mut h = DefaultHasher::new();
+        text.hash(&mut h);
+        let hash = h.finish();
+        let a = self.pages.entry(entry.to_owned()).or_insert(Agreement {
+            hash,
+            files: 0,
+            differ: false,
+        });
+        a.files += 1;
+        a.differ |= a.hash != hash;
+    }
+
+    /// Whether the key's value is one for every language: two pages or more give it in several
+    /// languages, and nine in ten of them, at least, give it the same value in all.
+    fn same_in_every_language(&self) -> bool {
+        let several: Vec<&Agreement> = self.pages.values().filter(|a| a.files > 1).collect();
+        let agree = several.iter().filter(|a| !a.differ).count();
+        several.len() >= 2 && agree * 10 >= several.len() * 9
     }
 
     /// The kind of the key's values: `mixed` when they have more than one, `string` without any.
@@ -157,6 +250,30 @@ impl KeyStats {
             .collect();
         out.sort();
         out
+    }
+}
+
+/// The text of a value with the keys of its tables in order and its empty values left out
+/// (`None` for an empty value), so that files that write one value differently compare equal.
+fn canonical(v: &Value) -> Option<String> {
+    match v {
+        Value::Null => None,
+        Value::String(s) if s.is_empty() => None,
+        Value::Array(items) => {
+            let inner: Vec<String> = items.iter().filter_map(canonical).collect();
+            (!inner.is_empty()).then(|| format!("[{}]", inner.join(",")))
+        }
+        _ => match v.as_map() {
+            Some(m) => {
+                let mut inner: Vec<String> = m
+                    .iter()
+                    .filter_map(|(k, v)| Some(format!("{:?}:{}", k.to_lowercase(), canonical(v)?)))
+                    .collect();
+                inner.sort();
+                (!inner.is_empty()).then(|| format!("{{{}}}", inner.join(",")))
+            }
+            None => serde_json::to_string(v).ok(),
+        },
     }
 }
 
@@ -217,7 +334,8 @@ fn with_settings(inferred: Field, set: Option<&Field>, kind: &str) -> Field {
         multiple: set.multiple || (widget == Some(Widget::Select) && kind == "list"),
         widget,
         options: set.options.clone(),
-        help: set.help.clone().or(inferred.help),
+        shared: set.shared.or(inferred.shared),
+        ..set.clone()
     }
 }
 

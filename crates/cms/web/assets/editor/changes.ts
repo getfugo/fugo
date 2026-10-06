@@ -1,11 +1,12 @@
 // New pages, translations and deleting; saving, publishing and discarding drafts.
 
-import { create, type FrontMatter, join } from "../codec";
+import { clone, create, type FrontMatter, join } from "../codec";
 import { api, ApiError, messageOf } from "./api";
 import { type Change, type EntryFile, type Section } from "./data";
 import { toast } from "./dom";
 import { movedPath } from "./folders";
-import { emptyOf, taxonomies } from "./form";
+import { taxonomies } from "./form";
+import { emptyOf, hintOf, problems, startOf } from "./hints";
 import { docText, makeDoc, openPage, pageView } from "./pages";
 import { route } from "./route";
 import { canEdit, current, loadDrafts, pending, site } from "./state";
@@ -50,11 +51,18 @@ export function newPage(section: Section, title: string, folder = section.key): 
   }
   const data: FrontMatter = { title, date: new Date().toISOString() };
   const terms = taxonomies();
+  const has = (key: string) => Object.keys(data).some((x) => x.toLowerCase() === key.toLowerCase());
   for (const k of section.keys) {
-    if (Object.keys(data).some((x) => x.toLowerCase() === k.key.toLowerCase())) continue;
-    // Taxonomy keys start as empty lists (an empty string could name a term).
-    if (terms.has(k.key.toLowerCase())) data[k.key] = [];
+    if (has(k.key)) continue;
+    // A key's default, or the value every page of the section gives it; taxonomy keys start as
+    // empty lists (an empty string could name a term).
+    if (hintOf(k.key).default !== undefined || k.default !== undefined) data[k.key] = startOf(k.key, k.kind, k.default);
+    else if (terms.has(k.key.toLowerCase())) data[k.key] = [];
     else if (["string", "list", "boolean"].includes(k.kind)) data[k.key] = emptyOf(k.kind);
+  }
+  // Keys only the settings name, with a default.
+  for (const [key, h] of Object.entries(site.fields ?? {})) {
+    if (h.unused && h.default !== undefined && !key.includes(".") && !has(key)) data[h.name ?? key] = clone(h.default);
   }
   const doc = makeDoc(path, join(create(section.style.format, data, "")), null, true);
   pending.set(key, { key, section: section.key, kind: "page", bundle: section.style.bundle, title, resources: [], isNew: true, files: [{ lang, path, doc }] });
@@ -177,6 +185,11 @@ export async function deletePage(): Promise<void> {
 
 export async function save(): Promise<void> {
   const p = current();
+  const wrong = problems();
+  if (wrong.length) {
+    toast(`Not saved: ${wrong.join("; ")}`, "error");
+    return;
+  }
   const changes: Change[] = [];
   for (const doc of p.docs.values()) {
     if (!canEdit(doc.path)) continue;

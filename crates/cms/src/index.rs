@@ -25,7 +25,7 @@ use crate::paths::{self, MEDIA_EXT};
 mod content;
 use content::*;
 mod hints;
-use hints::Keys;
+use hints::{Keys, OWN};
 
 /// The schema version of the index.
 const VERSION: u32 = 1;
@@ -103,6 +103,9 @@ pub struct Style {
 pub struct KeyKind {
     pub key: String,
     pub kind: &'static str,
+    /// The value every page of the section that has the key gives it, for new pages.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub default: Option<Value>,
 }
 
 #[derive(Debug, Serialize)]
@@ -137,8 +140,9 @@ pub struct File {
     /// The name carries the language (`index.th.md`).
     #[serde(skip)]
     suffixed: bool,
+    /// Its front matter keys, the kind of their values, and the values that are not tables.
     #[serde(skip)]
-    keys: Vec<(String, &'static str)>,
+    keys: Vec<(String, &'static str, Option<Value>)>,
 }
 
 /// One content file before it is grouped into an entry.
@@ -269,7 +273,10 @@ pub fn read(
                 .unwrap_or_default()
                 .to_owned();
             let draft = get_ci(&fm, "draft").and_then(Value::as_bool) == Some(true);
-            let keys = fm.iter().map(|(k, v)| (k.to_owned(), kind_of(v))).collect();
+            let keys = fm
+                .iter()
+                .map(|(k, v)| (k.to_owned(), kind_of(v), small(v).then(|| v.clone())))
+                .collect();
             let url = urls.get(&path).cloned();
             found.push(Found {
                 order: lang_order
@@ -347,7 +354,7 @@ pub fn read(
         });
     }
 
-    let sections = sections(&entries);
+    let sections = sections(&entries, &default_lang);
     let base = cfg.default_site().base_url.base_path();
     let path = format!("{base}{}/", cms.path);
     Ok(Index {

@@ -129,6 +129,10 @@ fn errors_name_the_setting() {
             "cms.fields.flavours.multiple",
         ),
         (
+            &cms_toml("[cms.fields.rating]\nmin = 5\nmax = 1"),
+            "cms.fields.rating.min",
+        ),
+        (
             &cms_toml("")
                 .replace("main", "x")
                 .replace("[cms.git]\n", "[cms.git]\nbranch = \"a..b\"\n"),

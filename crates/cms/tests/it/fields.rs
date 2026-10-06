@@ -1,11 +1,36 @@
 //! The editor's fields in the index: what the build works out from the content, with the
-//! settings of `[cms.fields]` over it.
+//! settings of `[cms.fields]` over it. The keys inside tables are in `fields/tables.rs`, what
+//! the languages of a page and the pages of a section share in `fields/pages.rs`.
 
 use std::collections::BTreeMap;
 
 use serde_json::{Value, json};
 
 use crate::support::{cms_toml, load, write_files};
+
+mod pages;
+mod tables;
+
+/// The index of a site with `files` (and `config.toml` of `CONFIG` with `settings`).
+pub(crate) fn read(settings: &str, files: &[(&str, &str)]) -> ssg_cms::index::Index {
+    let dir = tempfile::tempdir().expect("tempdir");
+    std::fs::create_dir(dir.path().join(".git")).expect(".git");
+    let config = format!("{CONFIG}{}", cms_toml(settings));
+    write_files(dir.path(), &[("config.toml", config.as_str())]);
+    write_files(dir.path(), files);
+    let cfg = load(dir.path(), "production");
+    let cms = ssg_cms::settings(&cfg).expect("settings").expect("[cms]");
+    ssg_cms::index::read(&cfg, &cms, &BTreeMap::new()).expect("index")
+}
+
+/// The fields of an index, as the editor gets them.
+pub(crate) fn json_of(index: ssg_cms::index::Index) -> BTreeMap<String, Value> {
+    index
+        .fields
+        .into_iter()
+        .map(|(k, f)| (k, serde_json::to_value(f).expect("json")))
+        .collect()
+}
 
 const CONFIG: &str = r#"
 baseURL = "https://snack.example/"
@@ -33,12 +58,9 @@ widget = "hidden"
 
 /// The fields of the index of a site with four snacks (one with a translation of its own).
 fn fields() -> BTreeMap<String, Value> {
-    let dir = tempfile::tempdir().expect("tempdir");
-    std::fs::create_dir(dir.path().join(".git")).expect(".git");
-    write_files(
-        dir.path(),
+    json_of(read(
+        SETTINGS,
         &[
-            ("config.toml", &format!("{CONFIG}{}", cms_toml(SETTINGS))),
             (
                 "content/snacks/a.md",
                 "---\ntitle: A\nbrand: Tom\nimage_preview: a.jpg\nimage_alt: A bag\nsummary: Short\nrating: 4\nreleased: 2024-01-02\nprice: 25\nsizes: [S]\ntags: [crisp]\ntranslationKey: a\n---\n",
@@ -57,15 +79,7 @@ fn fields() -> BTreeMap<String, Value> {
             ),
             ("content/snacks/d.md", "---\ntitle: D\nbrand: Lee\n---\n"),
         ],
-    );
-    let cfg = load(dir.path(), "production");
-    let cms = ssg_cms::settings(&cfg).expect("settings").expect("[cms]");
-    let index = ssg_cms::index::read(&cfg, &cms, &BTreeMap::new()).expect("index");
-    index
-        .fields
-        .into_iter()
-        .map(|(k, f)| (k, serde_json::to_value(f).expect("json")))
-        .collect()
+    ))
 }
 
 #[test]
@@ -101,7 +115,7 @@ fn every_key_has_a_label_and_the_widget_its_values_and_name_suggest() {
     );
     assert_eq!(
         f["translationkey"],
-        json!({"label": "Translation key", "widget": "text", "kind": "string"}),
+        json!({"label": "Translation key", "widget": "text", "kind": "string", "name": "translationKey"}),
         "translations share it, yet it names one page"
     );
 }
