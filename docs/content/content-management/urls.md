@@ -37,6 +37,7 @@ Patterns per section and kind:
 | `:title`, `:slug` | the title, the slug (else the title) — made URL-safe |
 | `:slugorfilename`, `:filename`, `:contentbasename` | the slug or file name, the file name, the page's name |
 | `:slugorcontentbasename` | the slug, else the page's name |
+| `:term[categories]` | the first term the page names in that taxonomy, by its last segment (`rust`); empty when it names none |
 | `:2006-01-02` and other Go date layouts | the date formatted with that layout |
 
 ## Aliases

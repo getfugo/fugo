@@ -47,6 +47,7 @@ pub(crate) fn assemble(
     relations::lists(m);
     translations::assign(m);
     urls::assign(m)?;
+    taxonomy::check_urls(m);
     resources::assign(m);
     m.refs = RefIndex::build(m);
     Ok(())

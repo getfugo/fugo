@@ -17,7 +17,7 @@
 use std::collections::BTreeMap;
 
 use ssg_base::diag::Diagnostic;
-use ssg_base::paths::ContentKey;
+use ssg_base::paths::{ContentKey, OutputPath, UrlPath};
 use ssg_base::{IdVec, LangIdx, PageId, PageKind, TaxonomyIdx, TermIdx, Value};
 use ssg_config::SiteConfig;
 use ssg_config::sections::TaxonomyDef;
@@ -25,7 +25,7 @@ use ssg_vfs::PathInfo;
 
 use crate::nodes::Maker;
 use crate::relations::{self, Collators};
-use crate::{ListScope, Model, ModelError, Removed};
+use crate::{ListScope, Model, ModelError, Page, Removed};
 
 mod terms;
 pub(crate) use terms::*;
@@ -193,6 +193,60 @@ pub(crate) fn views(site: &SiteConfig) -> Vec<TaxonomyIdx> {
     v.sort_by(|a, b| site.taxonomies[*a].plural.cmp(&site.taxonomies[*b].plural));
     v.dedup_by(|a, b| site.taxonomies[*a].plural == site.taxonomies[*b].plural);
     v
+}
+
+/// Terms of a hierarchical taxonomy at different places in its tree that are written to the
+/// same file (`/categories/:sections[last]/` with `news/sport` and `blog/sport`): an error
+/// naming them, since only one of them would be written. Spellings of one term below the same
+/// parent (`Don't Panic`, `Dont Panic`) stay `target-collision` warnings, as in a flat taxonomy.
+pub(crate) fn check_urls(m: &mut Model) {
+    // The place of a rendered term page of a hierarchical taxonomy: its taxonomy and parent.
+    let place = |p: &Page| -> Option<(LangIdx, TaxonomyIdx, Option<TermIdx>)> {
+        if p.kind != PageKind::Term || !p.rendered() {
+            return None;
+        }
+        let (tx, term) = (p.taxonomy?, p.term?);
+        let t = &m.sites[p.lang].taxonomies[tx];
+        t.def
+            .hierarchical
+            .then(|| (p.lang, tx, t.terms[term].parent))
+    };
+    let terms = || m.pages.iter().filter(|p| place(p).is_some());
+    let mut owners: BTreeMap<&OutputPath, Vec<PageId>> = BTreeMap::new();
+    for p in terms() {
+        for u in &p.urls {
+            let ids = owners.entry(&u.paths.target).or_default();
+            if !ids.contains(&p.id) {
+                ids.push(p.id);
+            }
+        }
+    }
+    let apart = |ids: &[PageId]| {
+        let first = place(&m.pages[ids[0]]);
+        ids.iter().any(|&id| place(&m.pages[id]) != first)
+    };
+    // Each set of terms once, at the first URL they share (the first term's formats in order).
+    let mut shared: BTreeMap<&[PageId], &UrlPath> = BTreeMap::new();
+    for p in terms() {
+        for u in &p.urls {
+            if let Some(ids) = owners.get(&u.paths.target).filter(|ids| apart(ids)) {
+                shared.entry(ids.as_slice()).or_insert(&u.paths.link);
+            }
+        }
+    }
+    let errors: Vec<Diagnostic> = shared
+        .into_iter()
+        .map(|(ids, link)| {
+            let mut paths: Vec<String> = ids.iter().map(|&id| m.pages[id].path()).collect();
+            paths.sort();
+            Diagnostic::error(format!(
+                "terms {} have the same URL {link}; rename one or give it its own `url`",
+                paths.join(" and ")
+            ))
+            .with_id("taxonomy-term-collision")
+        })
+        .collect();
+    m.diagnostics.extend(errors);
 }
 
 /// The term values of a front matter value: `None` when it names no terms.

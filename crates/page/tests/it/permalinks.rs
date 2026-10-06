@@ -81,6 +81,7 @@ fn permalinks_match_go() {
                 file: file_ctx,
                 content_base_name: &path.unnormalized_name,
                 urls: &urls[idx(&c["ps"])],
+                terms: &[],
             };
             let kind = s(&c["kind"]);
             let kind = PageKind::parse(kind).unwrap_or_else(|| panic!("kind {kind}"));

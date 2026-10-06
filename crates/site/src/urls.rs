@@ -5,7 +5,7 @@
 //! each format, [`ssg_page::target_paths`] gets the page's path, current section, name
 //! (slug, else the standalone format's base name, else the path's name), language prefixes,
 //! front matter `url` (expanded when it holds a `:` attribute) and expanded `[permalinks]`
-//! pattern; [`ssg_page::links`] makes `.RelPermalink` and `.Permalink` of pages that have
+//! pattern (`:term[<plural>]` reads the terms the page names, so URLs come after taxonomies); [`ssg_page::links`] makes `.RelPermalink` and `.Permalink` of pages that have
 //! a link. [`Model::pager_paths`] gives the same for a pager (`/page/2`).
 
 use rayon::prelude::*;
@@ -21,17 +21,25 @@ use crate::nodes::standalone_base_name;
 use crate::tree::PageRole;
 use crate::{Model, ModelError, Page, PageUrl};
 
-/// Compiles every language's `[permalinks]`.
+/// Compiles every language's `[permalinks]`; a `:term[…]` must name a configured taxonomy.
 pub(crate) fn compile_permalinks(m: &mut Model) -> Result<(), ModelError> {
     let cfg = m.config.clone();
     for (lang, site) in cfg.sites.iter_enumerated() {
-        m.sites[lang].permalinks =
-            PermalinkPatterns::compile(&site.permalinks).map_err(|source| {
-                ModelError::Permalinks {
-                    lang: site.language.key.clone(),
-                    source,
-                }
-            })?;
+        let error = |source| ModelError::Permalinks {
+            lang: site.language.key.clone(),
+            source,
+        };
+        let patterns = PermalinkPatterns::compile(&site.permalinks).map_err(error)?;
+        if let Some(t) = patterns
+            .taxonomies()
+            .into_iter()
+            .find(|t| !site.taxonomies.iter().any(|d| d.plural == *t))
+        {
+            return Err(error(PageError::TermTaxonomy {
+                taxonomy: t.to_owned(),
+            }));
+        }
+        m.sites[lang].permalinks = patterns;
     }
     Ok(())
 }
@@ -154,6 +162,15 @@ impl PageInputs {
             .map(|s| format!("{}/", paths::dir(&s.file.rel)))
             .unwrap_or_default();
         let slug = p.meta.slug.as_deref().unwrap_or_default();
+        // `:term[<plural>]`: per taxonomy, the last segment of the first term the page names.
+        let mut terms: Vec<(&str, &str)> = Vec::new();
+        for &(tx, term) in &p.terms {
+            let t = &m.sites[p.lang].taxonomies[tx];
+            if !terms.iter().any(|(plural, _)| *plural == t.def.plural) {
+                let last = t.terms[term].key.segments().last().unwrap_or_default();
+                terms.push((&t.def.plural, last));
+            }
+        }
         let pctx = PermalinkCtx {
             date: p.meta.dates.date.as_ref(),
             title: &p.title,
@@ -166,6 +183,7 @@ impl PageInputs {
             }),
             content_base_name: &p.path_info.original.name,
             urls: &urls,
+            terms: &terms,
         };
         let url = match p.meta.url.as_deref().filter(|u| !u.is_empty()) {
             Some(u) if u.contains(':') => {

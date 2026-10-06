@@ -68,7 +68,8 @@ else `RAYON_NUM_THREADS`, else the CPUs); parallel work is started only from out
 (`Session::target`). A page (or pager) beats an alias; among jobs of one class the later
 `JobOrder` wins; a job whose target an earlier wave claimed is compared with that file's job
 (later languages win among equals). Each collision is a `target-collision` warning and a
-`Collision`. Losing jobs are still rendered and their outputs dropped: Go renders every page,
+`Collision`; terms of a hierarchical taxonomy below different parents that collide are also
+an error of the model (`taxonomy-term-collision`), which fails the build. Losing jobs are still rendered and their outputs dropped: Go renders every page,
 so a losing list page still records its pagination and its pagers exist (they compete for their
 own targets in wave 2).
 

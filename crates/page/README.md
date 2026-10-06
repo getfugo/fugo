@@ -13,7 +13,7 @@ crate holds no page store; `ssg-site` calls it while it assembles the model.
 | Dates | `DateResolver::{new, from_site, resolve(&mut Params, Option<&FileCtx>, &TimeZone)} -> DateOutcome { dates, slug, unparsable }` |
 | Build | `BuildPolicy { list: ListMode, render: RenderMode, publish_resources }`, `BuildPolicy::decode`, `.headless()` |
 | Markup | `Markup::{Markdown, Html}`, `Markup::detect(MarkupSource { media_type, markup, ext }, &MediaTypes)` |
-| Permalinks | `PermalinkPattern::{parse, expand(&PermalinkCtx)}`; `PermalinkPatterns::{compile(&config::Permalinks), get(kind, section)}`; Go layouts (`:2006`, `:Jan`, `:02`, `:MST`) become `strftime` at parse |
+| Permalinks | `PermalinkPattern::{parse, expand(&PermalinkCtx)}`; `PermalinkPatterns::{compile(&config::Permalinks), get(kind, section), taxonomies()}`; `:term[<plural>]` (fugo's own) reads `PermalinkCtx::terms`; Go layouts (`:2006`, `:Jan`, `:02`, `:MST`) become `strftime` at parse |
 | Target paths | `target_paths(&UrlInputs) -> TargetPaths { target: OutputPath, link: UrlPath, resources: Option<ResourceBase> }`; `links(&TargetPaths, &SiteUrls, &OutputFormat) -> Links { rel_permalink: UrlPath, permalink: Permalink }`; `SourcePath::{from_path_info, from_key}` |
 | Order | `default_order(&SortKey, &SortKey, &dyn Collate)` (ordinal, taxonomy weight, weight with 0 last, date desc to the second, collated link title, source path) |
 | Titles | `default_title(kind, raw, &TitleConfig)` |
@@ -45,6 +45,8 @@ Overall 190,534 checks, 99.80 % exact, no unexplained difference.
 - **Attribute expansion.** Go replaces permalink attributes one by one with
   `strings.Replace(…, 1)` in the partially expanded pattern; here each attribute is expanded in
   place. They differ only when a title or slug contains text such as `:slug` (no fixture case).
+- **`:term[<plural>]`** is fugo's own attribute: the last segment of the first term the page
+  names in that taxonomy (Go has no such attribute; there, it is a Go layout that fails).
 - **Unix-second dates** are UTC, not the process's local zone.
 - **Cascade globs that do not compile** are errors (Go ignores or panics).
 - **Only Markdown and HTML** content (also for content adapters' `content.mediaType`).
