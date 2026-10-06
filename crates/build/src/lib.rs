@@ -431,8 +431,13 @@ pub fn build(r: BuildRequest) -> Result<BuildReport, BuildError> {
     publish_resources(&session, &publisher, sink.as_ref(), &pool, &mut report)?;
     laps.lap(&mut report, "resources");
 
-    // E6b: after the site, so the editor replaces any output at its path.
-    let urls = cms::content_urls(&cfg, session.model());
+    // E6b: after the site, so the editor replaces any output at its path. The pages' URLs are
+    // only for a build with the editor.
+    let urls = if cfg.raw.get("cms").is_some() {
+        cms::content_urls(&cfg, session.model())
+    } else {
+        std::collections::BTreeMap::new()
+    };
     if let Some(cms) = ssg_cms::publish(&cfg, sink.as_ref(), &urls)? {
         for w in cms.warnings {
             session.diagnostics().push(w);

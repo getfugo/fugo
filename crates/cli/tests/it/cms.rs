@@ -62,6 +62,10 @@ fn production_builds_have_the_editor() {
         "the index is in the Worker"
     );
     assert!(
+        worker.contains("\\\"url\\\":\\\"/posts/a/\\\""),
+        "with the URLs of the pages"
+    );
+    assert!(
         !public.join("admin/site.json").exists(),
         "the index is not public"
     );
