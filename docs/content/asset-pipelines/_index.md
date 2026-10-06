@@ -25,6 +25,7 @@ then. Results are cached for the build and, for images and remote files, on disk
 | [Unused CSS](/asset-pipelines/purge-css/) | `purge_css` | in process |
 | [Bundling and generated files](/asset-pipelines/concat-and-templates/) | `concat_assets`, `asset_from_string`, `execute_as_template` | in process |
 | [Post-processing](/asset-pipelines/post-processing/) | `post_process`, `defer` | after every page |
+| [Font subsetting](/asset-pipelines/fonts/) | the `[fonts]` setting | after every page |
 
 fugo runs no Node.js tools. To use [Tailwind CSS](/asset-pipelines/tailwind-css/), run its CLI
 next to fugo. Images have their own page: [Image processing](/content-management/image-processing/).

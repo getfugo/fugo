@@ -44,7 +44,7 @@ configuration or `package.json` changes. A failure is `BuildError::Prepare`.
 `Vfs` and `Pool` are beyond §2.6 (the Vfs has its own error type; the render pool may fail to
 start).
 
-## Phases (`src/lib.rs`, `src/waves.rs`, `src/deferred.rs`)
+## Phases (`src/lib.rs`, `src/waves.rs`, `src/deferred.rs`, `src/fonts.rs`)
 
 | Phase | What |
 |---|---|
@@ -58,6 +58,7 @@ start).
 | E4 | — (the Go build wrote its stats file here; this port writes none) |
 | E5 | every `defer(...)` key rendered once (`Session::render_deferred`, in parallel over keys; `data`, `site`, `build`, `__nh` in phase `Deferred`); every post-process placeholder resolved (pending transforms run now, after every page; placeholders inside deferred output too) → `Publisher::patch_held` (read back from the sink, rewrite again, URL tokens again, minify, write) |
 | E6 | URL tokens of `execute_as_template` results added, then `ResourceStore::publish(tokens)`: eager bundle files, `publish`ed resources, every resource named by a token; processed images through the image queue (`[caches.images]`) |
+| E6a | `[fonts]` (`src/fonts.rs`, `ssg_fonts`): from E2 on the site is written through an `ssg_fonts::Recorder` wrapping the sink, which notes the characters of every HTML and CSS file and the paths of the fonts; E6a notes the static files' HTML and CSS (copied in E1, around it) and cuts the covered fonts down, in place |
 | E7 | sorted, de-duplicated diagnostics; errors fail the build (`BuildError::Diagnostics`) — after every file was written, as Go's build does |
 
 **Render pool.** Every parallel phase runs on one rayon pool (`stack_size(16 MiB)`, `threads`,

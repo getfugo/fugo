@@ -87,6 +87,18 @@ pub(crate) fn print_summary(r: &BuildReport) {
     if !r.collisions.is_empty() {
         println!("target collisions {}", r.collisions.len());
     }
+    if !r.fonts.is_empty() {
+        let (before, after) = r
+            .fonts
+            .iter()
+            .fold((0, 0), |(b, a), c| (b + c.before, a + c.after));
+        println!(
+            "fonts cut down {} ({} KB → {} KB)",
+            r.fonts.len(),
+            before.div_ceil(1024),
+            after.div_ceil(1024)
+        );
+    }
     if let Some(path) = &r.cms {
         println!("CMS editor at {path} (API Worker: _worker.js)");
     }
