@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791289665113,
+  "lastUpdate": 1791297894691,
   "repoUrl": "https://github.com/getfugo/fugo",
   "entries": {
     "Benchmark": [
@@ -96948,6 +96948,66 @@ window.BENCHMARK_DATA = {
           {
             "name": "10,000 generated pages: peak memory",
             "value": 514.7,
+            "unit": "MiB",
+            "extra": "10061 pages; median of 5 builds after a warm-up build"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "blackb1rd.mov@gmail.com",
+            "name": "Prachya Saechua",
+            "username": "blackb1rd"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "f57961079a0f3dad462c5c26a469cbf29bc7a044",
+          "message": "docs: Show the browser editor on the home page (#185)\n\nThe home page's lead and features now name the editor at /admin/, with a\nlink to Editing in the browser; Live reload and One binary share a card,\nso that the grid keeps two full rows. The deploy workflow of Editing in\nthe browser installs 1.4.0, which has the folders, preview and fields the\npage describes, instead of 1.1.0.\n\nCo-authored-by: Claude Opus 5.5 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-10-06T14:22:33Z",
+          "tree_id": "8aa61ae90a54b84e18f0184ac94f2c3910655ecb",
+          "url": "https://github.com/getfugo/fugo/commit/f57961079a0f3dad462c5c26a469cbf29bc7a044"
+        },
+        "date": 1791297892502,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "docs site: build time",
+            "value": 227.4,
+            "unit": "ms",
+            "extra": "334 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "docs site: peak memory",
+            "value": 77.8,
+            "unit": "MiB",
+            "extra": "334 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "1,000 generated pages: build time",
+            "value": 347.5,
+            "unit": "ms",
+            "extra": "1061 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "1,000 generated pages: peak memory",
+            "value": 86.8,
+            "unit": "MiB",
+            "extra": "1061 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "10,000 generated pages: build time",
+            "value": 4876.2,
+            "unit": "ms",
+            "extra": "10061 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "10,000 generated pages: peak memory",
+            "value": 514.2,
             "unit": "MiB",
             "extra": "10061 pages; median of 5 builds after a warm-up build"
           }
