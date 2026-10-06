@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791177526420,
+  "lastUpdate": 1791273447550,
   "repoUrl": "https://github.com/getfugo/fugo",
   "entries": {
     "Benchmark": [
@@ -96828,6 +96828,66 @@ window.BENCHMARK_DATA = {
           {
             "name": "10,000 generated pages: peak memory",
             "value": 514.3,
+            "unit": "MiB",
+            "extra": "10061 pages; median of 5 builds after a warm-up build"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "blackb1rd.mov@gmail.com",
+            "name": "Prachya Saechua",
+            "username": "blackb1rd"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "c1d3818d49c2c22c48b8dfb9d7462c6d8dcbd345",
+          "message": "CMS: folders and Move, a preview in the site's page, fields from the content (#181)\n\nNew page asks for the folder in a section with folders; New folder makes\none, and Move moves a page with its files, keeping its old URLs as aliases.\nThe preview shows a page inside the site's published page as you type. The\nviews are lit-html templates, tested in happy-dom. The build gives the\neditor a field for every front matter key (a label, a widget from its values\nand name, the values pages share to suggest), with the settings of\n[cms.fields] over it, which gain multiple; fugo cms fields prints them. A\nbuild without [cms] does nothing for the editor.\n\nCo-authored-by: Claude Opus 5.5 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-10-06T14:41:36+07:00",
+          "tree_id": "6782b54d0504e2bb7cba2500278d85aa2958cd82",
+          "url": "https://github.com/getfugo/fugo/commit/c1d3818d49c2c22c48b8dfb9d7462c6d8dcbd345"
+        },
+        "date": 1791273444895,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "docs site: build time",
+            "value": 227,
+            "unit": "ms",
+            "extra": "333 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "docs site: peak memory",
+            "value": 77.2,
+            "unit": "MiB",
+            "extra": "333 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "1,000 generated pages: build time",
+            "value": 351,
+            "unit": "ms",
+            "extra": "1061 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "1,000 generated pages: peak memory",
+            "value": 86.5,
+            "unit": "MiB",
+            "extra": "1061 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "10,000 generated pages: build time",
+            "value": 4463.9,
+            "unit": "ms",
+            "extra": "10061 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "10,000 generated pages: peak memory",
+            "value": 515.7,
             "unit": "MiB",
             "extra": "10061 pages; median of 5 builds after a warm-up build"
           }
