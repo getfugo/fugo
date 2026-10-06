@@ -179,7 +179,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: |
-          V=1.1.0
+          V=1.4.0
           curl -sL https://github.com/getfugo/fugo/releases/download/v$V/fugo_${V}_linux-amd64.tar.gz | tar -xz fugo
           ./fugo build --minify
       - uses: cloudflare/wrangler-action@v3
