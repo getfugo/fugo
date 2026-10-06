@@ -118,18 +118,32 @@ one role is required.
 
 ## Fields
 
-The build gives the editor a field for every front matter key the content uses, so most sites
-need no settings: a label from the key (`image_preview`: *Image preview*), a widget from the kind
-of its values (dates, numbers, yes/no, lists, tables) and from its name (an image picker for
-`image`, `cover`, `photo`…; a text box for `description`, `summary`…), and the values pages
-share, which the editor suggests as you type (a brand, a type, an author; not the values that
-name one page, like `title` or `slug`). A key whose pages hold values of different kinds shows
-each value as it is. Taxonomy keys suggest the terms the site uses.
+The build gives the editor a field for every front matter key the content uses, and for every
+key inside its tables, so most sites need no settings:
 
-`[cms.fields.<key>]` changes a field (the key matched ignoring case), setting by setting: what
-you leave out stays as the build works it out. A key that no page has yet, with settings, is
-offered under *Add a field* in every section. `fugo cms fields` prints every field as the build
-gives it to the editor, as these settings: copy the ones you want to change.
+- a label from the key (`image_preview`: *Image preview*);
+- a widget from the kind of its values (dates, numbers, yes/no, lists, tables) and from its name
+  (an image picker for `image`, `cover`, `photo`…; a text box for `description`, `summary`…). A
+  key whose pages hold values of different kinds shows each value as it is;
+- the values pages share, which the editor suggests as you type (a brand, a type, an author; not
+  the values that name one page, like `title` or `slug`). Taxonomy keys suggest the terms the
+  site uses;
+- the keys of a table across all pages: a page whose `nutrition` table lacks `fat` can add it
+  under the table's *Add…*;
+- whether a key's value is one for every language: when nine in ten of the pages that have the
+  key in several languages, at least, give it the same value in each (an image, a rating, a
+  date; the order of a table's keys and empty values do not count), an edit in one language
+  goes to the page's other language files too (marked *all languages*). `title`,
+  `description`, `summary`, `keywords` and `draft` stay each language's own;
+- the value new pages of a section start with: the one every page of the section gives the key
+  (three pages at least, half of the section's pages at least), such as a `type` or a `layout`.
+
+`[cms.fields.<key>]` changes a field (the key matched ignoring case; a key inside a table by its
+path, `"nutrition.fat.total"`, the keys of a list's tables below the list's key), setting by
+setting: what you leave out stays as the build works it out. A key that no page has yet, with
+settings, is offered under *Add a field* in every section (inside a table, under its *Add…*).
+`fugo cms fields` prints every field as the build gives it to the editor, as these settings:
+copy the ones you want to change.
 
 ```toml
 [cms.fields.summary]
@@ -139,6 +153,21 @@ help = "Shown in lists and in search results."   # the label and the text box st
 label = "Flavours"
 options = ["sweet", "salty", "spicy"]
 multiple = true                                  # a checkbox each; the value is a list
+
+[cms.fields.rating]
+min = 0
+max = 5
+required = true
+
+[cms.fields.nutrition]
+collapsed = true
+summary = "{calories} kcal, {fat.total} g fat"
+
+[cms.fields."nutrition.fat.total"]
+label = "Total fat (g)"
+
+[cms.fields.author]
+default = "The kitchen"
 
 [cms.fields.sku]
 widget = "hidden"
@@ -160,6 +189,30 @@ widget = "hidden"
 `multiple`
 : A select of any number of its `options`, a checkbox each; the value is a list. A select of a
   key whose pages hold lists is one already. Needs `options`.
+
+`default`
+: The key's value on a new page (and when it is added to a page), over the value its section's
+  pages share. With `widget = "hidden"`, a value new pages get without showing it.
+
+`min`, `max`, `step`
+: The bounds of a number and the step between numbers. The editor does not save a number out of
+  bounds.
+
+`required`
+: The key needs a value: the editor does not save a page without one, on the pages of a section
+  whose pages use the key (or that have it). A key inside a table needs one where the page has
+  the table it is in.
+
+`shared`
+: `true`: one value for every language, an edit goes to each language's file of the page;
+  `false`: each language keeps its own, where the build would share it.
+
+`collapsed`
+: A table, or each table of a list of tables, shown closed with a summary of its values.
+
+`summary`
+: The summary of a closed table: its values in place of `{key}` (`{fat.total}` for a key of a
+  table inside it). Default: its first three values.
 
 ## Secrets
 

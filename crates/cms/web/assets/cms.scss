@@ -417,6 +417,38 @@ textarea {
   }
 }
 
+// A closed table: its summary, and its fields when opened.
+details.group {
+  border: 1px solid var(--line);
+  border-radius: $radius-large;
+  padding: 0.4rem 0.8rem;
+
+  > summary {
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  &[open] > summary {
+    margin-bottom: 0.5rem;
+  }
+}
+
+.group-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
+  gap: 0.5rem 1rem;
+}
+
+.required {
+  color: var(--danger);
+  margin-left: 0.15rem;
+}
+
+.fields :invalid {
+  border-color: var(--danger);
+}
+
 fieldset.group {
   border: 1px solid var(--line);
   border-radius: $radius-large;
@@ -433,8 +465,10 @@ fieldset.group {
   gap: 0.5rem;
   align-items: flex-start;
 
-  > fieldset {
+  > fieldset,
+  > details {
     width: 100%;
+    box-sizing: border-box;
   }
 }
 

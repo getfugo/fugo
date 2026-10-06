@@ -1,16 +1,12 @@
-// The editor's views (assets/admin/cms.js), drawn in happy-dom against a fake API: what they
-// show, and what typing and clicking in them changes. happy-dom comes from the modules of
-// tools/dev/node.sh, whose directory tests/it/js.rs passes as CMS_NODE_MODULES.
+// The editor's views (assets/admin/cms.js), drawn in happy-dom against a fake API (ui.js): what
+// they show, and what typing and clicking in them changes. The fields of tables, languages and
+// new pages are in editor-fields.test.js.
 
 import { before, test } from "node:test";
 import assert from "node:assert/strict";
-import { join } from "node:path";
-import { pathToFileURL } from "node:url";
 
-const modules = process.env.CMS_NODE_MODULES;
-const skip = modules ? false : "CMS_NODE_MODULES is not set (tools/dev/node.sh installs happy-dom)";
+import { $, $$, go, sent, skip, startEditor, STYLE, text, type, until, window } from "./ui.js";
 
-const STYLE = { bundle: false, lang_suffix: false, format: "yaml", ext: "md" };
 const SITE = {
   title: "Snacks",
   site_url: "https://example.org/",
@@ -41,80 +37,15 @@ const SITE = {
     { key: "posts/wafers", section: "posts", kind: "page", bundle: false, title: "Wafers", files: [{ lang: "en", path: "content/posts/wafers.md" }], resources: [] },
   ],
 };
-const ME = {
-  email: "ann@example.org",
-  roles: ["owner"],
-  edit: ["**"],
-  publish: true,
-  workflow: "review",
-  areas: [{ kind: "content", glob: "content/**", ext: ["md"] }],
-  deny: [],
-};
 const FILES = {
   "content/posts/crisps.md":
     "---\ntitle: Crisps\nsummary: Thin and salty\nbrand: Tom\nflavours:\n  - sweet\ntags:\n  - crisp\nsizes:\n  - small\n---\nThey crunch.\n",
 };
 
-/** The API's answers by name, and the bodies of the requests that change something. */
-const api = {
-  site: () => SITE,
-  me: () => ME,
-  drafts: () => ({ drafts: [] }),
-  file: (q) => (q.get("path") in FILES ? { content: Buffer.from(FILES[q.get("path")]).toString("base64"), sha: "s1" } : null),
-  save: () => ({ draft: "ann-1" }),
-};
-const sent = [];
+before(() => skip || startEditor(SITE, FILES));
 
-async function fakeFetch(url, init = {}) {
-  const u = new URL(String(url), "https://example.org/admin/");
-  const name = u.pathname.replace(/^\/admin\/api\//, "");
-  if (init.body) sent.push({ name, body: JSON.parse(init.body) });
-  const data = api[name]?.(u.searchParams);
-  return new Response(JSON.stringify(data ?? { error: "not found" }), { status: data ? 200 : 404 });
-}
-
-let window, document;
-
-before(async () => {
-  if (skip) return;
-  const { Window } = await import(pathToFileURL(join(modules, "happy-dom/lib/index.js")).href);
-  window = new Window({ url: "https://example.org/admin/" });
-  document = window.document;
-  // The editor and lit-html use the browser's globals.
-  for (const k of ["document", "location", "Event", "KeyboardEvent", "FormData", "DOMParser", "Node", "HTMLElement"]) {
-    Object.defineProperty(globalThis, k, { value: window[k], configurable: true, writable: true });
-  }
-  Object.assign(globalThis, { window, fetch: fakeFetch, confirm: () => true });
-  document.body.innerHTML = `<div id="app" class="loading">Loading the editor…</div>`;
-  await import("../../assets/admin/cms.js");
-  await until(() => document.querySelector("header"));
-});
-
-/** Waits (a second at most) until `ready` is true, and returns what it returns. */
-async function until(ready) {
-  for (let i = 0; i < 100; i++) {
-    const v = ready();
-    if (v) return v;
-    await new Promise((r) => setTimeout(r, 10));
-  }
-  assert.fail(`not drawn: ${ready}`);
-}
-
-async function go(hash, ready) {
-  window.location.hash = hash;
-  return until(ready);
-}
-
-const $ = (s) => document.querySelector(s);
-const $$ = (s) => [...document.querySelectorAll(s)];
-const text = (el) => el.textContent.replace(/\s+/g, " ").trim();
 /** The terms of the open page's terms field. */
 const chips = () => $$(".terms .chip").map((c) => text(c).replace(/×$/, ""));
-
-function type(input, value) {
-  input.value = value;
-  input.dispatchEvent(new window.Event("input", { bubbles: true }));
-}
 
 test("the start page: the site, its sections and the signed-in person", { skip }, () => {
   assert.equal(text($("header .brand")), "Snacks");
@@ -157,7 +88,7 @@ test("a page: a field per key, as the settings label them", { skip }, async () =
   await go("#/e/posts%2Fcrisps", () => $(".crumbs")?.textContent.includes("posts/crisps") && $(".fields"));
   assert.equal($("#f-title").value, "Crisps");
   const summary = $("#f-summary").closest(".field");
-  assert.equal(text(summary.querySelector("label")), "Summary×");
+  assert.equal(text(summary.querySelector("label > span")), "Summary");
   assert.equal(text(summary.querySelector("small")), "One line for lists");
   assert.deepEqual(chips(), ["crisp"]);
   assert.deepEqual($$("datalist#terms-tags option").map((o) => o.value), ["crisp", "sweet"]);

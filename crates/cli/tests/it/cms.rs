@@ -215,6 +215,8 @@ fn cms_fields_prints_the_fields_the_build_gives_the_editor() {
         "[cms.fields.draft]\n# yes or no; in posts\nlabel = \"Draft\"\nwidget = \"boolean\"\n",
         "[cms.fields.image_preview]\n# text; in posts\nlabel = \"Image preview\"\nwidget = \"image\"\n",
         "[cms.fields.rating]\n# a table; in posts\nlabel = \"Rating\"\n\n",
+        // A key inside a table, by its path.
+        "[cms.fields.\"rating.taste\"]\n# a number; in posts\nlabel = \"Taste\"\nwidget = \"number\"\n",
         "[cms.fields.whenseen]\n# text; in posts\nlabel = \"When seen\"\nwidget = \"text\"\n",
         // The configuration's settings go over what the build works out, one by one.
         "[cms.fields.description]\n# text; in posts\nlabel = \"Short text\"\nwidget = \"textarea\"\nhelp = \"One \\\"line\\\"\"\n",

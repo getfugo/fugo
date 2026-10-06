@@ -255,8 +255,12 @@ page and redo your change.
   of tables, with the labels and inputs the build works out from the site's content, and the
   values pages share suggested as you type. Taxonomy fields (`tags`, `categories`, …) suggest
   the terms the site uses, which keeps spellings consistent. *Add a field* offers the keys other
-  pages of the section use. [Field settings](/configuration/cms/#fields) change labels, help
-  text and inputs, and add choice lists (one choice or several) and image pickers.
+  pages of the section use, and a table's *Add…* the keys other pages have in it. A value that
+  is the same in every language of the page (an image, a rating) is edited once for all of
+  them, and new pages start with the values the section's pages share.
+  [Field settings](/configuration/cms/#fields) change labels, help text and inputs, and add
+  choice lists (one choice or several), defaults, number bounds, required values and closed
+  tables with a summary.
 - **The text**, in Markdown, with a preview inside the site's own page: the published page of
   its language (for a new page, another page of its folder) with the edited text and front
   matter in place, updated as you type. The editor finds the element that holds a page's text
@@ -345,3 +349,18 @@ The editor reads and writes the same files Decap CMS does, so content needs no c
 3. Remove the editors' write access to the repository: they sign in through Access now.
 
 The build warns while `static/admin/index.html` still exists: the editor replaces it.
+
+Decap's `config.yml` mostly needs no counterpart: the build works out the fields from the
+content (see [fields](/configuration/cms/#fields)). Its settings map to `[cms.fields]` like this:
+
+| Decap | fugo |
+|---|---|
+| `collections` with `folder`, `create`, `nested` | the sections and their folders, found in the content |
+| `widget: string`, `text`, `markdown`, `datetime`, `number`, `boolean`, `image`, `list`, `object`, `hidden` | worked out from the values; `widget` for another |
+| `widget: select` with `options`, `multiple` | `options`, `multiple` |
+| `fields` of an `object` or a `list` | the keys inside the table, as `"<key>.<inner key>"` |
+| `label`, `hint`, `default`, `required` | `label`, `help`, `default`, `required` |
+| `value_type`, `min`, `max`, `step` | `min`, `max`, `step` (whole numbers or not, from the values) |
+| `collapsed`, `summary: "{{fields.name}}"` | `collapsed`, `summary = "{name}"` |
+| `i18n: duplicate` | `shared = true` (worked out where the languages agree) |
+| `i18n` structure, `media_folder`, `publish_mode` | the site's languages, `media`, `workflow` |

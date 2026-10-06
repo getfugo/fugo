@@ -32,6 +32,20 @@ export interface FieldHint {
   suggestions?: string[];
   /** No page has the key yet, only the settings. */
   unused?: boolean;
+  /** The key as pages write it, when that is not in lower case (the index's keys are). */
+  name?: string;
+  /** The key's value on a new page, and when it is added. */
+  default?: unknown;
+  min?: number;
+  max?: number;
+  step?: number;
+  required?: boolean;
+  /** One value for every language: an edit goes to each language's file. */
+  shared?: boolean;
+  /** A table, or each table of a list, shown closed with a summary of its values. */
+  collapsed?: boolean;
+  /** The summary of a closed table: its values in place of `{key}`. */
+  summary?: string;
 }
 
 export interface Section {
@@ -39,7 +53,8 @@ export interface Section {
   title: string;
   count: number;
   style: { bundle: boolean; lang_suffix: boolean; format: string; ext: string };
-  keys: { key: string; kind: string }[];
+  /** The keys its pages use, the kinds of their values, and the value every page gives one. */
+  keys: { key: string; kind: string; default?: unknown }[];
 }
 
 export interface EntryFile {

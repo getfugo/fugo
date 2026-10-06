@@ -121,7 +121,50 @@ pub(super) fn section_of(key: &str, kind: &str) -> String {
     }
 }
 
-pub(super) fn sections(entries: &BTreeMap<String, Entry>) -> Vec<Section> {
+/// A value small enough to keep for a section's defaults: not a table, nor a list of them.
+pub(super) fn small(v: &Value) -> bool {
+    match v {
+        Value::Map(_) => false,
+        Value::Array(items) => items
+            .iter()
+            .all(|i| !matches!(i, Value::Map(_) | Value::Array(_))),
+        _ => true,
+    }
+}
+
+/// The value new pages of a section start with for each key: the one every page of the section
+/// that has the key gives it in the default language `lang`, when three pages or more, and half
+/// of the section's pages at least, have it.
+fn defaults<'a>(pages: &[&'a Entry], lang: &str) -> BTreeMap<&'a str, &'a Value> {
+    let files: Vec<&File> = pages
+        .iter()
+        .filter_map(|e| e.files.iter().find(|f| f.lang == lang))
+        .collect();
+    let mut values: BTreeMap<&str, Vec<&Value>> = BTreeMap::new();
+    for f in &files {
+        for (k, _, v) in &f.keys {
+            if let Some(v) = v {
+                values.entry(k.as_str()).or_default().push(v);
+            }
+        }
+    }
+    values
+        .into_iter()
+        .filter(|(k, vs)| {
+            let empty = matches!(vs[0], Value::Null)
+                || vs[0].as_str() == Some("")
+                || matches!(vs[0], Value::Array(items) if items.is_empty());
+            !empty
+                && !OWN.contains(&k.to_lowercase().as_str())
+                && vs.len() >= 3
+                && vs.len() * 2 >= files.len()
+                && vs.iter().all(|v| *v == vs[0])
+        })
+        .map(|(k, vs)| (k, vs[0]))
+        .collect()
+}
+
+pub(super) fn sections(entries: &BTreeMap<String, Entry>, lang: &str) -> Vec<Section> {
     let mut keys: BTreeSet<&str> = entries.values().map(|e| e.section.as_str()).collect();
     keys.insert("");
     let mut out = Vec::new();
@@ -156,7 +199,7 @@ pub(super) fn sections(entries: &BTreeMap<String, Entry>) -> Vec<Section> {
             if let Some((_, ext)) = f.path.rsplit_once('.') {
                 *exts.entry(ext.to_owned()).or_default() += 1;
             }
-            for (k, kind) in &f.keys {
+            for (k, kind, _) in &f.keys {
                 if !seen.contains_key(k) {
                     order.push(k.clone());
                 }
@@ -166,6 +209,7 @@ pub(super) fn sections(entries: &BTreeMap<String, Entry>) -> Vec<Section> {
                 }
             }
         }
+        let defaults = defaults(&pages, lang);
         out.push(Section {
             title,
             count: pages.len(),
@@ -179,6 +223,7 @@ pub(super) fn sections(entries: &BTreeMap<String, Entry>) -> Vec<Section> {
                 .into_iter()
                 .map(|k| KeyKind {
                     kind: seen[&k],
+                    default: defaults.get(k.as_str()).map(|v| (*v).clone()),
                     key: k,
                 })
                 .collect(),
