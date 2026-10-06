@@ -95,6 +95,7 @@ ssg-testkit = { path = "crates/testkit" }
 ssg-migrate = { path = "crates/migrate" }
 ssg-npm = { path = "crates/npm" }
 ssg-cms = { path = "crates/cms" }
+ssg-fonts = { path = "crates/fonts" }
 ssg-microbench = { path = "crates/microbench" }
 
 # ── data formats ──
@@ -184,6 +185,12 @@ ab_glyph = "0.2.32" # images.Text (T72a)
 qrcode = { version = "0.14", default-features = false } # images.QR (T72a)
 color_quant = "2"
 kmeans_colors = "0.7.1"
+
+# ── fonts (`[fonts]`: fonts cut down to the characters a site uses) ──
+allsorts = { version = "0.17", default-features = false, features = ["flate2_rust"] } # reads WOFF and WOFF2
+fontcull-klippa = "0.1.2"     # the subsetter: Google's klippa (HarfBuzz's hb-subset in Rust), published by fontcull
+fontcull-read-fonts = "0.38"  # the font types klippa's API takes
+ttf2woff2 = { version = "0.13", default-features = false } # WOFF2 output
 
 # ── hashing ──
 sha2 = "0.11"

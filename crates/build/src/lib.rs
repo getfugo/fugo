@@ -14,6 +14,7 @@
 //! | E3 | wave 2: pagers 2..N, `page/1/` aliases, the language redirect | `waves` |
 //! | E5 | `defer(...)` templates once per key, post-process fields → `patch_held` | `deferred` (render pool) |
 //! | E6 | resources named by URL tokens (and eager bundle files), processed images | `publish_resources` |
+//! | E6a | the fonts of `[fonts]` cut down to the characters the site uses (its files are written through a recorder from E2 on) | `fonts`, `ssg_fonts` |
 //! | E6b | the CMS editor of `[cms]`: its page, content index and API Worker | `ssg_cms` |
 //! | E7 | sorted, de-duplicated diagnostics; errors fail the build | `build` |
 //!
@@ -33,6 +34,7 @@
 mod adapters;
 mod cms;
 mod deferred;
+mod fonts;
 mod structure;
 mod waves;
 
@@ -150,6 +152,8 @@ pub enum BuildError {
     Resource(#[from] ResourceError),
     #[error(transparent)]
     Cms(#[from] ssg_cms::CmsError),
+    #[error(transparent)]
+    Fonts(#[from] ssg_fonts::FontsError),
     /// The render pool could not be started.
     #[error("render pool: {0}")]
     Pool(String),
@@ -185,6 +189,8 @@ pub struct BuildReport {
     pub static_files: usize,
     /// The URL path of the CMS editor (`/admin/`), when the configuration has `[cms]`.
     pub cms: Option<String>,
+    /// The fonts `[fonts]` cut down, by path.
+    pub fonts: Vec<ssg_fonts::Cut>,
     /// Target collisions, by path then loser order.
     pub collisions: Vec<Collision>,
     /// Sorted, de-duplicated warnings.
@@ -380,6 +386,9 @@ pub fn build(r: BuildRequest) -> Result<BuildReport, BuildError> {
             Arc::new(DiskSink::new(root))
         }
     };
+    // E6a notes the characters of what is written from here on.
+    let fonts = fonts::Fonts::new(&cfg, &sink)?;
+    let sink = fonts.as_ref().map_or(sink, fonts::Fonts::sink);
     let mut settings = PublishSettings::from_config(&cfg)?;
     if let Some(lr) = r.live_reload {
         for (links, site) in settings.sites.iter_mut().zip(&cfg.sites) {
@@ -430,6 +439,12 @@ pub fn build(r: BuildRequest) -> Result<BuildReport, BuildError> {
     // E6.
     publish_resources(&session, &publisher, sink.as_ref(), &pool, &mut report)?;
     laps.lap(&mut report, "resources");
+
+    // E6a.
+    if let Some(f) = &fonts {
+        report.fonts = f.run(&vfs, &sync, &pool, session.diagnostics())?;
+        laps.lap(&mut report, "fonts");
+    }
 
     // E6b: after the site, so the editor replaces any output at its path. The pages' URLs are
     // only for a build with the editor.
