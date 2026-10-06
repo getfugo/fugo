@@ -395,7 +395,7 @@ Please report this to https://github.com/markedjs/marked.`,e){let e=`<p>An error
           <option value="">—</option>
           ${mc(e,String(n))}
         </select>
-      `}case`image`:return yc(typeof n==`string`?n:``,r,i,s);case`boolean`:return b`<input id=${s} type="checkbox" .checked=${R(!!n)} ?disabled=${i} @change=${e=>r(e.target.checked)} />`;case`number`:{let e=e=>{let t=Q(e),n=t===``?null:Number(t);(n===null||!Number.isNaN(n))&&r(n)},t=o.step===void 0?Number.isInteger(n)?`1`:`any`:String(o.step);return b`
+      `}case`image`:return yc(typeof n==`string`?n:``,r,i,s);case`boolean`:return b`<input id=${s} type="checkbox" .checked=${R(!!n)} ?disabled=${i} @change=${e=>r(e.target.checked)} />`;case`number`:{let e=e=>{let t=Q(e),n=t===``?null:Number(t);(n===null||!Number.isNaN(n))&&r(n)},t=o.step===void 0?`any`:String(o.step);return b`
         <input
           id=${s}
           type="number"

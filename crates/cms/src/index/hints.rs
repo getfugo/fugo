@@ -156,7 +156,10 @@ impl Keys {
             if out.contains_key(&key) {
                 continue;
             }
-            let kind = kind_by_settings(set);
+            // A key the settings name keys below is a table.
+            let below = format!("{key}.");
+            let table = fields.keys().any(|k| k.to_lowercase().starts_with(&below));
+            let kind = if table { "map" } else { kind_by_settings(set) };
             let named = Field {
                 label: Some(label_of(key.rsplit('.').next().unwrap_or(&key))),
                 ..Field::default()

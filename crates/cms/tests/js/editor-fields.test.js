@@ -91,6 +91,7 @@ test("a closed table shows a summary of its values, and its fields when opened",
 test("a table offers the keys other pages have in it, as their settings label them", { skip }, () => {
   assert.equal(text($("#f-nutrition-fat-total").closest(".field").querySelector("label > span")), "Total fat (g)");
   assert.equal($("#f-nutrition-fat-total").getAttribute("min"), "0");
+  assert.equal($("#f-nutrition-fat-total").getAttribute("step"), "any", "a whole number now may not stay so");
   const add = $("#f-nutrition-fat-total").closest("fieldset").querySelector(".add-field select");
   assert.deepEqual([...add.options].map(text), ["Add…", "Saturated"]);
   choose(add, "saturated");

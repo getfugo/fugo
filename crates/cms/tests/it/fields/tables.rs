@@ -16,6 +16,8 @@ label = "Total fat (g)"
 min = 0
 [cms.fields."nutrition.vitamins"]
 label = "Vitamins"
+[cms.fields."nutrition.vitamins.c"]
+label = "Vitamin C (mg)"
 "#;
 
 fn fields() -> BTreeMap<String, Value> {
@@ -68,7 +70,11 @@ fn settings_reach_a_key_inside_a_table_by_its_path() {
     );
     assert_eq!(
         f["nutrition.vitamins"],
-        json!({"label": "Vitamins", "kind": "string", "unused": true}),
-        "a key only the settings name, offered in the table"
+        json!({"label": "Vitamins", "kind": "map", "unused": true}),
+        "a key only the settings name, offered in the table: a table, since they name keys below it"
+    );
+    assert_eq!(
+        f["nutrition.vitamins.c"],
+        json!({"label": "Vitamin C (mg)", "kind": "string", "unused": true})
     );
 }

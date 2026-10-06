@@ -147,7 +147,8 @@ function inputFor(kind: Kind, key: string, value: unknown, set: Setter, readOnly
         const n = text === "" ? null : Number(text);
         if (n === null || !Number.isNaN(n)) set(n);
       };
-      const step = hint.step !== undefined ? String(hint.step) : Number.isInteger(value) ? "1" : "any";
+      // Any number unless the field says its step: a value that is whole now may not stay so.
+      const step = hint.step !== undefined ? String(hint.step) : "any";
       return html`
         <input
           id=${id}
