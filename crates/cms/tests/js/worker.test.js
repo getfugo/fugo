@@ -257,3 +257,38 @@ test("save: deleting files", async () => {
   assert.match(gh.commit(`cms/${r.body.draft}`).message, /^Delete blog\/post/);
 });
 
+
+test("save: moving a page moves its files, without copying them", async () => {
+  const { call, gh } = setup();
+  const [from, to] = ["content/almonds/honey", "content/nuts/honey"];
+  const en = await call("GET", "file", { query: { path: `${from}/index.en.md` } });
+  const r = await save(call, "boss@example.com", "almonds/honey", [
+    { path: `${from}/index.en.md`, delete: true, base: en.body.sha },
+    { path: `${to}/index.en.md`, content: "---\ntitle: Honey\naliases: [/almonds/honey/]\n---\nEnglish\n", base: null },
+    { path: `${from}/index.th.md`, delete: true },
+    { path: `${to}/index.th.md`, from: `${from}/index.th.md`, base: null },
+  ]);
+  assert.equal(r.status, 200, JSON.stringify(r.body));
+  const draft = `cms/${r.body.draft}`;
+  const tree = gh.trees.get(gh.commit(draft).tree);
+  const main = gh.trees.get(gh.commit("main").tree);
+  assert.equal(tree.get(`${to}/index.th.md`), main.get(`${from}/index.th.md`), "the moved file keeps its blob");
+  assert.equal(tree.get(`${from}/index.th.md`), undefined);
+  assert.equal(gh.text(draft, `${to}/index.en.md`), "---\ntitle: Honey\naliases: [/almonds/honey/]\n---\nEnglish\n");
+  assert.match(gh.commit(draft).message, /^Move almonds\/honey/);
+
+  // A move deletes its source (no copies), needs the right to change it, and fails when it is gone.
+  const copy = await save(call, "boss@example.com", "x", [{ path: "content/blog/copy.md", from: "content/blog/post.md" }]);
+  assert.equal(copy.status, 400, JSON.stringify(copy.body));
+  const writer = await save(call, "writer@example.com", "x", [
+    { path: "content/blog/moved.md", from: "content/almonds/honey/index.th.md" },
+    { path: "content/almonds/honey/index.th.md", delete: true },
+  ]);
+  assert.equal(writer.status, 403, JSON.stringify(writer.body));
+  const gone = await save(call, "boss@example.com", "x", [
+    { path: "content/blog/gone.md", from: "content/blog/nope.md" },
+    { path: "content/blog/nope.md", delete: true },
+  ]);
+  assert.equal(gone.status, 409, JSON.stringify(gone.body));
+  assert.deepEqual(gone.body.stale, ["content/blog/nope.md"]);
+});

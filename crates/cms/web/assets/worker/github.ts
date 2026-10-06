@@ -144,7 +144,7 @@ export class GitHub {
 
   /** Commits `changes` to `branch`, made from branch `from` when it does not exist yet. A change
    * whose `base` (the blob id the editor started from; null: a new file) is no longer the
-   * file's fails with 409. */
+   * file's fails with 409, as does a move whose source is gone; a moved file keeps its blob. */
   async commitFiles(
     branch: string,
     from: string | null,
@@ -160,7 +160,8 @@ export class GitHub {
         blobs.set(c.path, r.sha);
       }
     }
-    const entries = changes.map((c): TreeEntry => {
+    const moves = changes.filter((c) => c.from !== undefined);
+    const entries = changes.filter((c) => c.from === undefined).map((c): TreeEntry => {
       if (c.delete) return { path: c.path, sha: null };
       const blob = blobs.get(c.path);
       return blob ? { path: c.path, sha: blob } : { path: c.path, content: c.content };
@@ -182,8 +183,14 @@ export class GitHub {
       if (stale.length > 0) {
         throw new HttpError(409, "someone changed these files since you opened them; reload them first", { stale });
       }
+      const sources = moves.length > 0 ? await this.blobIds(parent, moves.map((c) => c.from as string)) : {};
+      const gone = moves.map((c) => c.from as string).filter((f) => !sources[f]);
+      if (gone.length > 0) {
+        throw new HttpError(409, "these files are gone since you opened the page; reload it first", { stale: gone });
+      }
+      const moved = moves.map((c): TreeEntry => ({ path: c.path, sha: sources[c.from as string] as string }));
       try {
-        return await this.commitOnto(branch, parent, creating, entries, message, author, now);
+        return await this.commitOnto(branch, parent, creating, entries.concat(moved), message, author, now);
       } catch (e) {
         if (e instanceof Race && attempt < 2) continue;
         if (e instanceof Race) throw new HttpError(409, `branch ${branch} keeps changing; try again`);

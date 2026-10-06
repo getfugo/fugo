@@ -3,6 +3,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
+import "./no-dom.js";
 import { split, join, decode, encode, create, clone, equal, isTomlDate, tomlDate } from "../../assets/admin/cms.js";
 
 const YAML_PAGE = `---

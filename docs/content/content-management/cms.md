@@ -252,16 +252,30 @@ page and redo your change.
 
 - **Pages by section**, with their languages and drafts, and a filter.
 - **A form for the front matter**: text, numbers, yes/no, dates, lists, nested tables and lists
-  of tables, from the values the page has. Taxonomy fields (`tags`, `categories`, …) suggest the
-  terms the site uses, which keeps spellings consistent. *Add a field* offers the keys other
-  pages of the section use. [Field settings](/configuration/cms/#fields) choose labels, help
-  text, choice lists and image pickers.
-- **The text**, in Markdown, with a preview (without shortcodes or the site's styles).
+  of tables, with the labels and inputs the build works out from the site's content, and the
+  values pages share suggested as you type. Taxonomy fields (`tags`, `categories`, …) suggest
+  the terms the site uses, which keeps spellings consistent. *Add a field* offers the keys other
+  pages of the section use. [Field settings](/configuration/cms/#fields) change labels, help
+  text and inputs, and add choice lists (one choice or several) and image pickers.
+- **The text**, in Markdown, with a preview inside the site's own page: the published page of
+  its language (for a new page, another page of its folder) with the edited text and front
+  matter in place, updated as you type. The editor finds the element that holds a page's text
+  and the elements that show a front matter value as published; where it cannot, mark them in
+  the site's templates with `data-cms-body` and `data-cms-field="<key>"`. Shortcodes, scripts and
+  files from other sites (fonts or styles from a CDN) are left out.
 - **Edit as text**: the whole file, front matter included, for anything the form does not show.
 - **Translations**: a tab per language, and *+ language* to add one (it starts as a copy).
 - **Files of the page**: a bundle's images and other files, uploads and deletions.
 - **New pages**, written the way the section's pages are: as bundles or single files, with the
   section's front matter format and language suffixes.
+  In a section with folders of its own (a folder with an `_index` page, such as
+  `docs/guides/install/`), *New page* asks which folder the page goes in.
+- **New folders**: *New folder* makes a folder in the section, or in one of its folders, with
+  an `_index` page that holds the folder's title and text.
+- **Moving a page** to another folder of its section, with all its files (translations,
+  images, everything in its bundle). Each language's file keeps the URL its page had in
+  `aliases`, so that old links still work. A move saves the page like an edit: in a draft, with
+  `workflow = "review"`.
 
 Saving changes only what was edited. A file nobody changed is not written; in YAML front matter,
 the keys that did not change keep their text, comments and formatting. TOML and JSON front
@@ -293,10 +307,13 @@ try it (in a `config/staging/cms.toml` built with `-e staging`, for example).
 
 - At most 30 files per save, and uploads up to `maxUpload` (10 MB by default, 25 MB at most:
   the largest static file Cloudflare serves).
+- Moving a page counts each of its files twice (its old and its new path), so a page with more
+  than 15 files cannot be moved in the editor (move it in git).
 - On the Workers free plan, a request may use 10 ms of CPU time: large uploads may exceed it.
   The paid plan raises the limit.
 - Pages the build makes from content adapters are not files, so the editor does not list them.
-- The draft's preview is the Markdown text alone. For the whole page, build the draft branch in
+- The preview renders the text with the editor's Markdown, not the site's render hooks. For the
+  page exactly as the site builds it, build the draft branch in
   CI and upload it as a preview version (`npx wrangler versions upload --preview-alias <draft>`):
   that needs `preview_urls`, and Cloudflare Access on the preview URLs (the Worker's settings),
   or anyone can read the drafts there.

@@ -17,11 +17,21 @@ export interface Taxonomy {
   terms: string[];
 }
 
+/** A key's field (`crates/cms/src/fields.rs`): as the build works it out from the content, with
+ * the settings of `[cms.fields]` over it. */
 export interface FieldHint {
   label?: string;
   widget?: string;
   options?: string[];
+  /** A select of any number of the options (the value is a list). */
+  multiple?: boolean;
   help?: string;
+  /** The kind of the key's values (`string`, `number`, `list`, …, `mixed`). */
+  kind?: string;
+  /** Short values that pages share, to suggest as you type. */
+  suggestions?: string[];
+  /** No page has the key yet, only the settings. */
+  unused?: boolean;
 }
 
 export interface Section {
@@ -37,6 +47,8 @@ export interface EntryFile {
   path: string;
   format?: string;
   title?: string;
+  /** The URL of its page as the site was last built (none for pages not built yet). */
+  url?: string;
   draft?: boolean;
   /** A file of a page the editor is making (not saved yet). */
   doc?: Doc;
@@ -142,4 +154,6 @@ export interface Change {
   encoding?: "utf-8" | "base64";
   delete?: true;
   base?: string | null;
+  /** A move: the file is the one at `from`, which the same save deletes. */
+  from?: string;
 }

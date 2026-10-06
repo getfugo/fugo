@@ -99,6 +99,12 @@ export class Api {
       if (!mayEdit(this.s, this.user.edit, path)) throw new HttpError(403, `you may not change ${path}`);
       const base = c.base === undefined ? undefined : c.base === null ? null : String(c.base);
       if (c.delete === true) return { path, base, delete: true };
+      if (c.from !== undefined) {
+        const from = cleanPath(c.from);
+        if (from === null || from === path) throw new HttpError(400, `bad move to ${path}`);
+        if (!mayEdit(this.s, this.user.edit, from)) throw new HttpError(403, `you may not change ${from}`);
+        return { path, base, from };
+      }
       if (typeof c.content !== "string") throw new HttpError(400, `no content for ${path}`);
       const encoding = c.encoding === "base64" ? "base64" : "utf-8";
       const size = encoding === "base64" ? base64Size(c.content) : new TextEncoder().encode(c.content).length;
@@ -108,8 +114,13 @@ export class Api {
       }
       return { path, base, content: c.content, encoding };
     });
+    // A move deletes its source in the same save: files are moved, never copied.
+    const deleted = new Set(checked.filter((c) => c.delete).map((c) => c.path));
+    for (const c of checked) {
+      if (c.from !== undefined && !deleted.has(c.from)) throw new HttpError(400, `moving ${c.from} to ${c.path} must delete ${c.from}`);
+    }
     const title = typeof body.title === "string" ? body.title : "";
-    const verb = checked.every((c) => c.delete) ? "Delete" : "Edit";
+    const verb = checked.every((c) => c.delete) ? "Delete" : checked.some((c) => c.from !== undefined) ? "Move" : "Edit";
     const message = commitMessage(`${verb} ${entry}${title ? `: ${title}` : ""}`, [
       ["CMS-Entry", entry],
       ["CMS-Title", title],

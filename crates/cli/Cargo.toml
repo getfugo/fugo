@@ -41,6 +41,7 @@ npm = ["dep:ssg-npm"]
 ssg-workspace-hack.workspace = true
 ssg-base.workspace = true
 ssg-config.workspace = true
+ssg-cms.workspace = true
 ssg-vfs.workspace = true
 ssg-site.workspace = true
 ssg-pageparser.workspace = true

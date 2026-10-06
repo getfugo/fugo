@@ -56,6 +56,9 @@ pub enum Command {
     Templates(TemplatesCommand),
     /// Prints the resolved configuration.
     Config(ConfigArgs),
+    /// Content editor (`[cms]`) tooling.
+    #[command(subcommand)]
+    Cms(CmsCommand),
     /// Prints the version.
     Version,
 }
@@ -65,6 +68,21 @@ pub enum TemplatesCommand {
     /// Checks the layouts: Tera parse and name errors, context names, lookup coverage and the
     /// conversion lints (REWRITE_PLAN.md §4.8).
     Check(CheckArgs),
+}
+
+#[derive(Debug, Subcommand)]
+pub enum CmsCommand {
+    /// Prints the editor's fields as `[cms.fields]` settings: every front matter key of the
+    /// content with the label and widget the build gives it (from the key and its values), the
+    /// settings of the configuration over them, to copy and change.
+    Fields(CmsFieldsArgs),
+}
+
+/// `cms fields`.
+#[derive(Clone, Debug, Default, Args)]
+pub struct CmsFieldsArgs {
+    #[command(flatten)]
+    pub project: ProjectArgs,
 }
 
 /// What every command that loads the project takes.

@@ -19,10 +19,13 @@ use ssg_config::Config;
 use ssg_pageparser::{FrontMatterFormat, decode_front_matter_map, split_front_matter};
 
 use crate::config::{CmsConfig, Field, Workflow};
+use crate::fields::Hint;
 use crate::paths::{self, MEDIA_EXT};
 
 mod content;
 use content::*;
+mod hints;
+use hints::Keys;
 
 /// The schema version of the index.
 const VERSION: u32 = 1;
@@ -40,7 +43,8 @@ pub struct Index {
     pub languages: Vec<Lang>,
     pub default_language: String,
     pub taxonomies: Vec<Taxonomy>,
-    pub fields: BTreeMap<String, Field>,
+    /// The field of every front matter key (lower-cased) the content or the settings have.
+    pub fields: BTreeMap<String, Hint>,
     /// The content directory (project-relative).
     pub content_dir: Option<String>,
     /// The media directory (project-relative).
@@ -126,6 +130,10 @@ pub struct File {
     pub title: String,
     #[serde(skip_serializing_if = "std::ops::Not::not")]
     pub draft: bool,
+    /// The URL path of its page as the build made it (`/posts/hello/`), for pages the build
+    /// rendered: a page the editor moves keeps it as an alias.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub url: Option<String>,
     /// The name carries the language (`index.th.md`).
     #[serde(skip)]
     suffixed: bool,
@@ -142,11 +150,16 @@ struct Found {
     order: usize,
 }
 
-/// Reads the index of a site.
+/// Reads the index of a site; `urls` are the URLs of the pages of the content files the build
+/// rendered, by the files' paths in the project.
 ///
 /// # Errors
 /// Unreadable content directories.
-pub fn read(cfg: &Config, cms: &CmsConfig) -> std::io::Result<Index> {
+pub fn read(
+    cfg: &Config,
+    cms: &CmsConfig,
+    urls: &BTreeMap<String, String>,
+) -> std::io::Result<Index> {
     let default_lang = cfg.default_site().language.key.clone();
     let lang_order: BTreeMap<&str, usize> = cfg
         .sites
@@ -162,6 +175,7 @@ pub fn read(cfg: &Config, cms: &CmsConfig) -> std::io::Result<Index> {
         .collect();
     let taxonomies = &cfg.default_site().taxonomies;
     let mut terms: Vec<BTreeSet<String>> = taxonomies.iter().map(|_| BTreeSet::new()).collect();
+    let mut keys = Keys::default();
 
     // Content directories with the language their files default to.
     let root = paths::project_rel(cfg, &cfg.dirs.content);
@@ -230,6 +244,7 @@ pub fn read(cfg: &Config, cms: &CmsConfig) -> std::io::Result<Index> {
             };
             let src = std::fs::read_to_string(cfg.project_dir.join(&path)).unwrap_or_default();
             let (format, fm) = front_matter(&src);
+            keys.add(&key, &fm);
             for (i, t) in taxonomies.iter().enumerate() {
                 if let Some(v) = get_ci(&fm, &t.plural) {
                     match v {
@@ -255,6 +270,7 @@ pub fn read(cfg: &Config, cms: &CmsConfig) -> std::io::Result<Index> {
                 .to_owned();
             let draft = get_ci(&fm, "draft").and_then(Value::as_bool) == Some(true);
             let keys = fm.iter().map(|(k, v)| (k.to_owned(), kind_of(v))).collect();
+            let url = urls.get(&path).cloned();
             found.push(Found {
                 order: lang_order
                     .get(file_lang.as_str())
@@ -269,6 +285,7 @@ pub fn read(cfg: &Config, cms: &CmsConfig) -> std::io::Result<Index> {
                     format,
                     title,
                     draft,
+                    url,
                     suffixed,
                     keys,
                 },
@@ -371,7 +388,10 @@ pub fn read(cfg: &Config, cms: &CmsConfig) -> std::io::Result<Index> {
                 terms: terms.into_iter().collect(),
             })
             .collect(),
-        fields: cms.fields.clone(),
+        fields: keys.hints(
+            &cms.fields,
+            &taxonomies.iter().map(|t| t.plural.to_lowercase()).collect(),
+        ),
         content_dir: root.clone(),
         media_ref: cms.media.as_deref().and_then(|m| media_ref(cfg, m)),
         media: cms.media.clone(),

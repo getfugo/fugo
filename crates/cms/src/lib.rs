@@ -25,6 +25,7 @@
 #![forbid(unsafe_code)]
 
 pub mod config;
+pub mod fields;
 pub mod index;
 pub mod paths;
 
@@ -88,10 +89,16 @@ pub fn settings(cfg: &Config) -> Result<Option<CmsConfig>, CmsError> {
 }
 
 /// Writes the editor, its index and the Worker into `sink`, when the configuration has `[cms]`.
+/// `urls` are the URLs of the pages of the content files the build rendered, by the files'
+/// paths in the project (the editor keeps a moved page's old URL as an alias).
 ///
 /// # Errors
 /// A wrong `[cms]` setting, or unreadable content directories or unwritable files.
-pub fn publish(cfg: &Config, sink: &dyn Sink) -> Result<Option<Published>, CmsError> {
+pub fn publish(
+    cfg: &Config,
+    sink: &dyn Sink,
+    urls: &std::collections::BTreeMap<String, String>,
+) -> Result<Option<Published>, CmsError> {
     let Some(cms) = settings(cfg)? else {
         return Ok(None);
     };
@@ -118,7 +125,7 @@ pub fn publish(cfg: &Config, sink: &dyn Sink) -> Result<Option<Published>, CmsEr
             "cms: no .git directory above the project; the editor assumes the project is at the repository's root (set cms.git.dir to say where it is)",
         ));
     }
-    let index = index::read(cfg, &cms)?;
+    let index = index::read(cfg, &cms, urls)?;
     let entries = index.entries.len();
 
     let base = &cms.path;

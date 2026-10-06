@@ -28,4 +28,5 @@ serde_json.workspace = true
 thiserror.workspace = true
 
 [dev-dependencies]
+ssg-testkit.workspace = true
 tempfile.workspace = true

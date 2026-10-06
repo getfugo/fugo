@@ -3,8 +3,8 @@
 # crates/cms embeds: assets/admin/cms.js (and the licence notices of the libraries it bundles,
 # assets/admin/cms.js.LEGAL.txt), assets/admin/cms.css and assets/worker.js. The
 # TypeScript is type-checked first (tsc, strict); then the site generator itself bundles and
-# compiles it (js_build, to_css). The libraries (yaml, smol-toml, marked) and tsc come from the
-# pinned node modules of tools/dev/node.sh; their licences are in THIRD_PARTY/cms-editor/.
+# compiles it (js_build, to_css). The libraries (yaml, smol-toml, marked, lit-html) and tsc come
+# from the pinned node modules of tools/dev/node.sh; their licences are in THIRD_PARTY/cms-editor/.
 #
 #   tools/cms/build.sh [--check] [binary]
 #

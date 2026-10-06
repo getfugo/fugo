@@ -201,6 +201,20 @@ h2 {
   margin: 0.3rem 0 0.8rem;
 }
 
+// Moving a page: the folder it goes to, Move.
+.move {
+  display: inline-flex;
+  gap: 0.4rem;
+}
+
+// A new page or folder in a section: the folder it goes in, the title, Create.
+.new-page {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0.3rem 0 0.8rem;
+}
+
 table.entries {
   width: 100%;
   border-collapse: collapse;
@@ -440,6 +454,19 @@ legend {
   }
 }
 
+// A select of several options: a checkbox each.
+.choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem 1rem;
+
+  label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+  }
+}
+
 .terms {
   display: flex;
   flex-wrap: wrap;
@@ -466,6 +493,26 @@ legend {
 
 .add-field {
   grid-column: 1 / -1;
+}
+
+// With the preview open: the text and the page side by side on wide screens.
+.body-editor.previewing {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+
+  > .doc-head {
+    grid-column: 1 / -1;
+  }
+
+  textarea.body,
+  iframe.preview {
+    height: 40rem;
+  }
+
+  @media (max-width: 60rem) {
+    grid-template-columns: 1fr;
+  }
 }
 
 iframe.preview {
