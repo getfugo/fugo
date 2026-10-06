@@ -19,10 +19,13 @@ use ssg_config::Config;
 use ssg_pageparser::{FrontMatterFormat, decode_front_matter_map, split_front_matter};
 
 use crate::config::{CmsConfig, Field, Workflow};
+use crate::fields::Hint;
 use crate::paths::{self, MEDIA_EXT};
 
 mod content;
 use content::*;
+mod hints;
+use hints::Keys;
 
 /// The schema version of the index.
 const VERSION: u32 = 1;
@@ -40,7 +43,8 @@ pub struct Index {
     pub languages: Vec<Lang>,
     pub default_language: String,
     pub taxonomies: Vec<Taxonomy>,
-    pub fields: BTreeMap<String, Field>,
+    /// The field of every front matter key (lower-cased) the content or the settings have.
+    pub fields: BTreeMap<String, Hint>,
     /// The content directory (project-relative).
     pub content_dir: Option<String>,
     /// The media directory (project-relative).
@@ -171,6 +175,7 @@ pub fn read(
         .collect();
     let taxonomies = &cfg.default_site().taxonomies;
     let mut terms: Vec<BTreeSet<String>> = taxonomies.iter().map(|_| BTreeSet::new()).collect();
+    let mut keys = Keys::default();
 
     // Content directories with the language their files default to.
     let root = paths::project_rel(cfg, &cfg.dirs.content);
@@ -239,6 +244,7 @@ pub fn read(
             };
             let src = std::fs::read_to_string(cfg.project_dir.join(&path)).unwrap_or_default();
             let (format, fm) = front_matter(&src);
+            keys.add(&key, &fm);
             for (i, t) in taxonomies.iter().enumerate() {
                 if let Some(v) = get_ci(&fm, &t.plural) {
                     match v {
@@ -382,7 +388,10 @@ pub fn read(
                 terms: terms.into_iter().collect(),
             })
             .collect(),
-        fields: cms.fields.clone(),
+        fields: keys.hints(
+            &cms.fields,
+            &taxonomies.iter().map(|t| t.plural.to_lowercase()).collect(),
+        ),
         content_dir: root.clone(),
         media_ref: cms.media.as_deref().and_then(|m| media_ref(cfg, m)),
         media: cms.media.clone(),

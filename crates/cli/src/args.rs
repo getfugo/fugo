@@ -72,9 +72,9 @@ pub enum TemplatesCommand {
 
 #[derive(Debug, Subcommand)]
 pub enum CmsCommand {
-    /// Prints the editor's fields as `[cms.fields]` settings to start from: every front matter
-    /// key of the content, with the settings it has, else a label and the widget its values
-    /// suggest.
+    /// Prints the editor's fields as `[cms.fields]` settings: every front matter key of the
+    /// content with the label and widget the build gives it (from the key and its values), the
+    /// settings of the configuration over them, to copy and change.
     Fields(CmsFieldsArgs),
 }
 

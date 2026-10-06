@@ -252,10 +252,11 @@ page and redo your change.
 
 - **Pages by section**, with their languages and drafts, and a filter.
 - **A form for the front matter**: text, numbers, yes/no, dates, lists, nested tables and lists
-  of tables, from the values the page has. Taxonomy fields (`tags`, `categories`, …) suggest the
-  terms the site uses, which keeps spellings consistent. *Add a field* offers the keys other
-  pages of the section use. [Field settings](/configuration/cms/#fields) choose labels, help
-  text, choice lists and image pickers.
+  of tables, with the labels and inputs the build works out from the site's content, and the
+  values pages share suggested as you type. Taxonomy fields (`tags`, `categories`, …) suggest
+  the terms the site uses, which keeps spellings consistent. *Add a field* offers the keys other
+  pages of the section use. [Field settings](/configuration/cms/#fields) change labels, help
+  text and inputs, and add choice lists (one choice or several) and image pickers.
 - **The text**, in Markdown, with a preview inside the site's own page: the published page of
   its language (for a new page, another page of its folder) with the edited text and front
   matter in place, updated as you type. The editor finds the element that holds a page's text

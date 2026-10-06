@@ -125,6 +125,10 @@ fn errors_name_the_setting() {
             "may do nothing",
         ),
         (
+            &cms_toml("[cms.fields.flavours]\nmultiple = true"),
+            "cms.fields.flavours.multiple",
+        ),
+        (
             &cms_toml("")
                 .replace("main", "x")
                 .replace("[cms.git]\n", "[cms.git]\nbranch = \"a..b\"\n"),

@@ -18,7 +18,14 @@ const SITE = {
   languages: [{ key: "en", name: "English" }],
   default_language: "en",
   taxonomies: [{ plural: "tags", singular: "tag", hierarchical: false, terms: ["crisp", "sweet"] }],
-  fields: { summary: { label: "Summary", help: "One line for lists" } },
+  // As the build gives them: a key with values pages share, a select of several options, a key
+  // only the settings name.
+  fields: {
+    summary: { label: "Summary", help: "One line for lists", kind: "string" },
+    brand: { label: "Brand", widget: "text", kind: "string", suggestions: ["Lee", "Tom"] },
+    flavours: { label: "Flavours", widget: "select", options: ["sweet", "salty"], multiple: true, kind: "list" },
+    rating: { label: "Rating", widget: "number", kind: "number", unused: true },
+  },
   content_dir: "content",
   media: null,
   media_ref: null,
@@ -44,7 +51,8 @@ const ME = {
   deny: [],
 };
 const FILES = {
-  "content/posts/crisps.md": "---\ntitle: Crisps\nsummary: Thin and salty\ntags:\n  - crisp\nsizes:\n  - small\n---\nThey crunch.\n",
+  "content/posts/crisps.md":
+    "---\ntitle: Crisps\nsummary: Thin and salty\nbrand: Tom\nflavours:\n  - sweet\ntags:\n  - crisp\nsizes:\n  - small\n---\nThey crunch.\n",
 };
 
 /** The API's answers by name, and the bodies of the requests that change something. */
@@ -154,7 +162,7 @@ test("a page: a field per key, as the settings label them", { skip }, async () =
   assert.deepEqual(chips(), ["crisp"]);
   assert.deepEqual($$("datalist#terms-tags option").map((o) => o.value), ["crisp", "sweet"]);
   assert.equal($("textarea.body").value, "They crunch.\n");
-  assert.deepEqual($$(".add-field option").map(text), ["Add a field…", "weight"]);
+  assert.deepEqual($$(".add-field option").map(text), ["Add a field…", "weight", "Rating"], "and the keys only the settings name");
 });
 
 test("terms: Enter adds one and keeps the input, × removes one", { skip }, () => {
@@ -177,12 +185,29 @@ test("a list: Add makes a row, and what is typed stays across redraws", { skip }
   assert.deepEqual(rows().map((i) => i.value), [""], "the second row is now the first");
 });
 
+test("the values pages share are suggested as you type", { skip }, () => {
+  assert.equal($("#f-brand").getAttribute("list"), "f-brand-values");
+  assert.deepEqual($$("datalist#f-brand-values option").map((o) => o.value), ["Lee", "Tom"]);
+});
+
+test("a select of several options: a checkbox each, the value a list", { skip }, () => {
+  const boxes = () => $$(".choices input[type=checkbox]");
+  assert.deepEqual(boxes().map((b) => b.checked), [true, false]);
+  assert.deepEqual($$(".choices label").map(text), ["sweet", "salty"]);
+  for (const box of [boxes()[1], boxes()[0]]) {
+    box.checked = !box.checked;
+    box.dispatchEvent(new window.Event("change", { bubbles: true }));
+  }
+  assert.deepEqual(boxes().map((b) => b.checked), [false, true]);
+});
+
 test("Add a field adds the key, and the list starts over", { skip }, () => {
   const select = $(".add-field select");
   select.value = "weight";
   select.dispatchEvent(new window.Event("change", { bubbles: true }));
   assert.equal($("#f-weight").type, "number");
-  assert.equal($(".add-field"), null, "no key is left to add");
+  assert.equal(select.value, "");
+  assert.deepEqual($$(".add-field option").map(text), ["Add a field…", "Rating"]);
 });
 
 test("Save sends the page's file as typed", { skip }, async () => {
@@ -198,7 +223,7 @@ test("Save sends the page's file as typed", { skip }, async () => {
   assert.deepEqual(body.changes.map((c) => c.path), ["content/posts/crisps.md"]);
   assert.equal(
     body.changes[0].content,
-    "---\ntitle: Crispy\nsummary: Thin and salty\ntags:\n  - sweet\nsizes:\n  - \"\"\nweight: 0\n---\nThey crunch loudly.\n",
+    "---\ntitle: Crispy\nsummary: Thin and salty\nbrand: Tom\nflavours:\n  - salty\ntags:\n  - sweet\nsizes:\n  - \"\"\nweight: 0\n---\nThey crunch loudly.\n",
   );
 });
 

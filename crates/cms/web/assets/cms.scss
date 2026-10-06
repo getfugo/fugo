@@ -454,6 +454,19 @@ legend {
   }
 }
 
+// A select of several options: a checkbox each.
+.choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem 1rem;
+
+  label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+  }
+}
+
 .terms {
   display: flex;
   flex-wrap: wrap;

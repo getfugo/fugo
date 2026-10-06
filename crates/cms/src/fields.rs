@@ -1,63 +1,116 @@
-//! `fugo cms fields`: a starting point for `[cms.fields]`, from the front matter of the site's
-//! content. One table per key the content uses: the settings the configuration has for it, else
-//! a label and the widget its values suggest.
+//! The editor's fields: the settings of `[cms.fields.<key>]`, the field of every key as the index
+//! gives it to the editor (what the build works out from the content, `index::hints`, with the
+//! settings over it), and `fugo cms fields`, which prints those fields as settings to change.
 
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeMap;
 use std::fmt::Write as _;
 
+use serde::{Deserialize, Serialize};
 use ssg_config::Config;
 
-use crate::config::{CmsConfig, Field, Widget};
+use crate::CmsError;
+use crate::config::CmsConfig;
 use crate::index;
 
+/// How the editor shows a front matter key (`[cms.fields.<key>]`).
+#[derive(Clone, Debug, Default, PartialEq, Eq, Deserialize, Serialize)]
+#[serde(default, deny_unknown_fields, rename_all = "camelCase")]
+pub struct Field {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub label: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub widget: Option<Widget>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub options: Vec<String>,
+    /// A select of any number of its options (the value is a list).
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    pub multiple: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub help: Option<String>,
+}
+
+/// How the editor shows a front matter value.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize, Serialize)]
+#[serde(rename_all = "lowercase")]
+pub enum Widget {
+    Text,
+    Textarea,
+    Number,
+    Boolean,
+    Date,
+    Select,
+    List,
+    Image,
+    Hidden,
+}
+
+/// A key's field as the index gives it to the editor.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+pub struct Hint {
+    #[serde(flatten)]
+    pub field: Field,
+    /// The kind of the key's values: `string`, `number`, `boolean`, `date`, `list`, `objects`,
+    /// `map`, or `mixed` when pages give it values of different kinds.
+    pub kind: &'static str,
+    /// Short values that pages share, for the editor to suggest as you type.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub suggestions: Vec<String>,
+    /// No page has the key yet, only the settings: the editor offers it to add to any page.
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    pub unused: bool,
+}
+
+/// The `[cms.fields]` settings, checked: a multiple select needs options to choose from.
+pub(crate) fn check(fields: BTreeMap<String, Field>) -> Result<BTreeMap<String, Field>, CmsError> {
+    if let Some((key, _)) = fields
+        .iter()
+        .find(|(_, f)| f.multiple && f.options.is_empty())
+    {
+        return Err(CmsError::config(
+            format!("cms.fields.{key}.multiple"),
+            "a select of several options needs `options`",
+        ));
+    }
+    Ok(fields)
+}
+
 const HEADER: &str = "\
-# The editor's fields (fugo cms fields): every front matter key of the site's content, with the
-# settings [cms.fields] has for it, else a label and the widget its values suggest. Change them,
-# and keep the ones you change in the configuration: as [cms.fields.<key>] in a configuration
-# file, as [fields.<key>] in the cms.toml of a configuration directory.
+# The editor's fields (fugo cms fields): every front matter key of the site's content, as the
+# build gives it to the editor: a label from the key, a widget from its values and its name,
+# with the settings of [cms.fields] over them. Copy the ones you want to change into the
+# configuration (as [cms.fields.<key>] in a configuration file, as [fields.<key>] in the cms.toml
+# of a configuration directory); a setting you leave out stays as the build works it out.
 #
-# widget: text, textarea, number, boolean, date, select (with options), list, image (a file of
-# the page or an upload) or hidden (not shown, kept). A table (a key holding keys) has none: the
-# form shows the keys inside it.
+# widget: text, textarea, number, boolean, date, select (with options; multiple = true for a list
+# of them), list, image (a file of the page or an upload) or hidden (not shown, kept). A table (a
+# key holding keys) has none: the form shows the keys inside it.
 ";
 
-/// The `[cms.fields]` tables of a site, as TOML.
+/// The fields of a site as `[cms.fields]` settings (TOML).
 ///
 /// # Errors
 /// Unreadable content directories.
 pub fn toml(cfg: &Config, cms: &CmsConfig) -> std::io::Result<String> {
     let index = index::read(cfg, cms, &BTreeMap::new())?;
-    let taxonomies: BTreeSet<String> = index
-        .taxonomies
-        .iter()
-        .map(|t| t.plural.to_lowercase())
-        .collect();
-    // Lower-cased key → the key as first written, the kind of its values, the sections using it.
-    let mut keys: BTreeMap<String, (String, &str, Vec<&str>)> = BTreeMap::new();
-    for s in &index.sections {
-        for k in &s.keys {
-            let entry = keys
-                .entry(k.key.to_lowercase())
-                .or_insert_with(|| (k.key.clone(), k.kind, Vec::new()));
-            let section = if s.key.is_empty() {
-                "/"
-            } else {
-                s.key.as_str()
-            };
-            if !entry.2.contains(&section) {
-                entry.2.push(section);
-            }
-        }
-    }
     let mut out = String::from(HEADER);
-    for (lower, (key, kind, sections)) in &keys {
-        let taxonomy = taxonomies.contains(lower);
-        let field = cms
-            .fields
+    for (key, hint) in &index.fields {
+        let sections: Vec<&str> = index
+            .sections
             .iter()
-            .find(|(k, _)| k.eq_ignore_ascii_case(lower))
-            .map_or_else(|| inferred(key, kind, taxonomy), |(_, f)| f.clone());
-        let what = match *kind {
+            .filter(|s| s.keys.iter().any(|k| k.key.eq_ignore_ascii_case(key)))
+            .map(|s| {
+                if s.key.is_empty() {
+                    "/"
+                } else {
+                    s.key.as_str()
+                }
+            })
+            .collect();
+        let taxonomy = index
+            .taxonomies
+            .iter()
+            .any(|t| t.plural.eq_ignore_ascii_case(key));
+        let what = match hint.kind {
             _ if taxonomy => "a taxonomy (the editor suggests its terms)",
             "objects" => "a list of tables",
             "map" => "a table",
@@ -65,14 +118,25 @@ pub fn toml(cfg: &Config, cms: &CmsConfig) -> std::io::Result<String> {
             "date" => "a date",
             "number" => "a number",
             "boolean" => "yes or no",
+            "mixed" => "values of different kinds",
             _ => "text",
         };
-        let _ = write!(
-            out,
-            "\n[cms.fields.{}]\n# {what}; in {}\n",
-            toml_key(lower),
-            sections.join(", ")
-        );
+        let place = if hint.unused {
+            "; no page has it yet".to_owned()
+        } else if sections.is_empty() {
+            "; on section pages".to_owned()
+        } else {
+            format!("; in {}", sections.join(", "))
+        };
+        let _ = write!(out, "\n[cms.fields.{}]\n# {what}{place}\n", toml_key(key));
+        match hint.suggestions.len() {
+            0 => {}
+            1 => out.push_str("# 1 value that pages share, suggested as you type\n"),
+            n => {
+                let _ = writeln!(out, "# {n} values that pages share, suggested as you type");
+            }
+        }
+        let field = &hint.field;
         if let Some(label) = &field.label {
             let _ = writeln!(out, "label = {}", toml_string(label));
         }
@@ -83,59 +147,14 @@ pub fn toml(cfg: &Config, cms: &CmsConfig) -> std::io::Result<String> {
             let options: Vec<String> = field.options.iter().map(|o| toml_string(o)).collect();
             let _ = writeln!(out, "options = [{}]", options.join(", "));
         }
+        if field.multiple {
+            out.push_str("multiple = true\n");
+        }
         if let Some(help) = &field.help {
             let _ = writeln!(out, "help = {}", toml_string(help));
         }
     }
     Ok(out)
-}
-
-/// The settings a key's name and values suggest.
-fn inferred(key: &str, kind: &str, taxonomy: bool) -> Field {
-    let lower = key.to_lowercase();
-    let named = |words: &[&str]| words.iter().any(|w| lower.contains(w));
-    let widget = match kind {
-        // The editor suggests a taxonomy's terms, for one value or a list of them.
-        _ if taxonomy => None,
-        "boolean" => Some(Widget::Boolean),
-        "number" => Some(Widget::Number),
-        "date" => Some(Widget::Date),
-        "list" => Some(Widget::List),
-        "objects" | "map" => None,
-        _ if named(&["image", "cover", "thumbnail", "photo", "picture"]) => Some(Widget::Image),
-        _ if named(&["description", "summary", "excerpt", "abstract"]) => Some(Widget::Textarea),
-        _ => Some(Widget::Text),
-    };
-    Field {
-        label: Some(label_of(key)),
-        widget,
-        options: Vec::new(),
-        help: None,
-    }
-}
-
-/// `image_preview` → `Image preview`, `whenSeen` → `When seen`.
-fn label_of(key: &str) -> String {
-    let mut words = String::new();
-    let mut prev_lower = false;
-    for c in key.chars() {
-        if c == '_' || c == '-' || c == ' ' {
-            words.push(' ');
-            prev_lower = false;
-        } else if c.is_uppercase() && prev_lower {
-            words.push(' ');
-            words.extend(c.to_lowercase());
-            prev_lower = false;
-        } else {
-            words.push(c);
-            prev_lower = c.is_lowercase();
-        }
-    }
-    let words = words.split_whitespace().collect::<Vec<_>>().join(" ");
-    let mut chars = words.chars();
-    chars
-        .next()
-        .map_or_else(String::new, |c| c.to_uppercase().chain(chars).collect())
 }
 
 fn widget_name(w: Widget) -> &'static str {

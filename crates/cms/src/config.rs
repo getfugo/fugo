@@ -10,6 +10,7 @@ use ssg_base::Value;
 use ssg_base::glob::{self, Case, GlobOpts, Separator};
 
 use crate::CmsError;
+pub use crate::fields::{Field, Widget};
 
 /// The largest upload Cloudflare serves as a static asset (25 MiB), in MiB.
 const MAX_UPLOAD_CEILING: u64 = 25;
@@ -104,35 +105,6 @@ impl Provider {
             _ => None,
         }
     }
-}
-
-/// An editor hint for a front matter key (`[cms.fields.<key>]`).
-#[derive(Clone, Debug, Default, PartialEq, Eq, Deserialize, Serialize)]
-#[serde(default, deny_unknown_fields, rename_all = "camelCase")]
-pub struct Field {
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub label: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub widget: Option<Widget>,
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub options: Vec<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub help: Option<String>,
-}
-
-/// How the editor shows a front matter value.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize, Serialize)]
-#[serde(rename_all = "lowercase")]
-pub enum Widget {
-    Text,
-    Textarea,
-    Number,
-    Boolean,
-    Date,
-    Select,
-    List,
-    Image,
-    Hidden,
 }
 
 /// The git repository the API commits to.
@@ -256,7 +228,7 @@ impl Raw {
             git: self.git.check()?,
             login: self.login.check()?,
             roles: check_roles(self.roles)?,
-            fields: self.fields,
+            fields: crate::fields::check(self.fields)?,
         })
     }
 }

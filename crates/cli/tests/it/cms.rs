@@ -186,7 +186,7 @@ fn copy_dir(from: &std::path::Path, to: &std::path::Path) {
 }
 
 #[test]
-fn cms_fields_prints_the_settings_to_start_from() {
+fn cms_fields_prints_the_fields_the_build_gives_the_editor() {
     let dir = project();
     let pages = [
         (
@@ -196,7 +196,7 @@ fn cms_fields_prints_the_settings_to_start_from() {
         (
             "config/production/cms.toml",
             &format!(
-                "{CMS}[fields.description]\nlabel = \"Short text\"\nhelp = \"One \\\"line\\\"\"\n"
+                "{CMS}[fields.description]\nlabel = \"Short text\"\nhelp = \"One \\\"line\\\"\"\n[fields.flavours]\noptions = [\"sweet\", \"salty\"]\nmultiple = true\n"
             ),
         ),
     ];
@@ -212,8 +212,10 @@ fn cms_fields_prints_the_settings_to_start_from() {
         "[cms.fields.image_preview]\n# text; in posts\nlabel = \"Image preview\"\nwidget = \"image\"\n",
         "[cms.fields.rating]\n# a table; in posts\nlabel = \"Rating\"\n\n",
         "[cms.fields.whenseen]\n# text; in posts\nlabel = \"When seen\"\nwidget = \"text\"\n",
-        // The configuration's settings come first.
-        "[cms.fields.description]\n# text; in posts\nlabel = \"Short text\"\nhelp = \"One \\\"line\\\"\"\n",
+        // The configuration's settings go over what the build works out, one by one.
+        "[cms.fields.description]\n# text; in posts\nlabel = \"Short text\"\nwidget = \"textarea\"\nhelp = \"One \\\"line\\\"\"\n",
+        // A key only the configuration names.
+        "[cms.fields.flavours]\n# a list; no page has it yet\nlabel = \"Flavours\"\nwidget = \"select\"\noptions = [\"sweet\", \"salty\"]\nmultiple = true\n",
     ] {
         assert!(out.contains(want), "{want}\nnot in:\n{out}");
     }

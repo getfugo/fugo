@@ -1,4 +1,4 @@
-//! `cms fields`: the editor's fields as `[cms.fields]` settings to start from.
+//! `cms fields`: the editor's fields, as the build gives them to it, as `[cms.fields]` settings.
 
 use crate::Exit;
 use crate::args::CmsFieldsArgs;

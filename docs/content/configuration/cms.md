@@ -35,7 +35,6 @@ publish = true
 
 [cms.fields.summary]
 label = "Short summary"
-widget = "textarea"
 help = "Shown in lists and in search results."
 ```
 
@@ -119,14 +118,34 @@ one role is required.
 
 ## Fields
 
-`[cms.fields.<key>]` changes how the editor shows a front matter key (matched ignoring case).
-Without it, a value's kind decides: text, number, yes/no, date, list, table.
-`fugo cms fields` prints a table for every front matter key the content uses, with the
-settings the configuration has, else a label and the widget its values suggest: a starting
-point to edit and keep.
+The build gives the editor a field for every front matter key the content uses, so most sites
+need no settings: a label from the key (`image_preview`: *Image preview*), a widget from the kind
+of its values (dates, numbers, yes/no, lists, tables) and from its name (an image picker for
+`image`, `cover`, `photo`…; a text box for `description`, `summary`…), and the values pages
+share, which the editor suggests as you type (a brand, a type, an author; not the values that
+name one page, like `title` or `slug`). A key whose pages hold values of different kinds shows
+each value as it is. Taxonomy keys suggest the terms the site uses.
+
+`[cms.fields.<key>]` changes a field (the key matched ignoring case), setting by setting: what
+you leave out stays as the build works it out. A key that no page has yet, with settings, is
+offered under *Add a field* in every section. `fugo cms fields` prints every field as the build
+gives it to the editor, as these settings: copy the ones you want to change.
+
+```toml
+[cms.fields.summary]
+help = "Shown in lists and in search results."   # the label and the text box stay
+
+[cms.fields.flavours]
+label = "Flavours"
+options = ["sweet", "salty", "spicy"]
+multiple = true                                  # a checkbox each; the value is a list
+
+[cms.fields.sku]
+widget = "hidden"
+```
 
 `label`
-: The field's label. Default: the key.
+: The field's label. Default: the key, in words.
 
 `help`
 : A line of help under the field.
@@ -136,7 +155,11 @@ point to edit and keep.
   (a choice of the page's files and the uploads), or `hidden` (not shown; the value is kept).
 
 `options`
-: The choices of a `select`.
+: The choices of a `select` (a dropdown). Options without a `widget` make a select.
+
+`multiple`
+: A select of any number of its `options`, a checkbox each; the value is a list. A select of a
+  key whose pages hold lists is one already. Needs `options`.
 
 ## Secrets
 
