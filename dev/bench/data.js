@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791340357862,
+  "lastUpdate": 1791341892969,
   "repoUrl": "https://github.com/getfugo/fugo",
   "entries": {
     "Benchmark": [
@@ -97068,6 +97068,66 @@ window.BENCHMARK_DATA = {
           {
             "name": "10,000 generated pages: peak memory",
             "value": 616.1,
+            "unit": "MiB",
+            "extra": "10061 pages; median of 5 builds after a warm-up build"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "blackb1rd.mov@gmail.com",
+            "name": "Prachya Saechua",
+            "username": "blackb1rd"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "6d7e72df9b6edb6b241df6ac43675edbadb6dcbf",
+          "message": "deps: fugo-sass 0.15.1 (#187)\n\nfugo-sass 0.15.1 ships the crates of 0.15.0 under a new version: the\nrelease only fixes the build of its WebAssembly, which fugo does not use.\nIt still needs Rust 1.99, so rust-version and the docs stay as they are.\nCargo.lock moves fugo-sass and fugo-sass-compiler to 0.15.1.\n\nCo-Authored-By: Claude Opus 5.5 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-10-07T09:43:16+07:00",
+          "tree_id": "4ac683d92eb03da184d7b612de45c7e99ee14bd8",
+          "url": "https://github.com/getfugo/fugo/commit/6d7e72df9b6edb6b241df6ac43675edbadb6dcbf"
+        },
+        "date": 1791341889720,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "docs site: build time",
+            "value": 145.2,
+            "unit": "ms",
+            "extra": "334 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "docs site: peak memory",
+            "value": 169.8,
+            "unit": "MiB",
+            "extra": "334 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "1,000 generated pages: build time",
+            "value": 169.9,
+            "unit": "ms",
+            "extra": "1061 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "1,000 generated pages: peak memory",
+            "value": 151,
+            "unit": "MiB",
+            "extra": "1061 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "10,000 generated pages: build time",
+            "value": 1799.6,
+            "unit": "ms",
+            "extra": "10061 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "10,000 generated pages: peak memory",
+            "value": 607.2,
             "unit": "MiB",
             "extra": "10061 pages; median of 5 builds after a warm-up build"
           }
