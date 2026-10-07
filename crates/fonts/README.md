@@ -23,6 +23,7 @@ pub enum Outcome { Cut(Vec<u8>), Unused, Whole(Option<String>) }
 pub struct CssStrings;                                   // add(css), merge(other), chars()
 pub fn add_html_text(html: &str, out: &mut BTreeSet<char>);
 pub fn encode_woff(sfnt: &[u8]) -> Result<Vec<u8>, SubsetError>;
+pub fn encode_woff2(sfnt: &[u8]) -> Result<Vec<u8>, SubsetError>; // TrueType or CFF outlines
 ```
 
 ## Behaviour
@@ -50,15 +51,28 @@ entry that matches a font decides its characters. An entry that matches no font 
 fontations' klippa that crates.io carries) with HarfBuzz's defaults but for the layout
 features: every feature is kept (a page may turn any on), every script, names 0–6 in English,
 hinting, and HarfBuzz's default dropped tables (AAT, `kern`, Graphite, `DSIG`, `SVG `, …). The
-result is written in the input's format: OpenType as is, WOFF2 by ttf2woff2 (the `glyf`/`loca`
-transform, Brotli 11), WOFF by `src/woff.rs` (zlib per table, when smaller).
+result is written in the input's format: OpenType as is, WOFF2 by `src/woff2.rs` (ttf2woff2:
+the `glyf`/`loca` transform, Brotli 11), WOFF by `src/woff.rs` (zlib per table, when smaller).
+
+**CFF outlines** (`src/cff.rs`). klippa 0.1 copies a `CFF ` table whole while it renumbers the
+glyphs, so each character would draw another glyph: a font with CFF outlines, such as Font
+Awesome 7's, is cut down by allsorts instead (`subset`, `SubsetProfile::Minimal`, a Unicode
+`cmap`), to `.notdef` and the glyphs of the characters. allsorts writes `cmap`, `head`, `hhea`,
+`hmtx`, `maxp`, `name`, `OS/2`, `post` and `CFF ` and cuts no layout table down, so a font with
+any other table that matters is left whole (HarfBuzz's dropped tables, TrueType's instructions
+and `gasp`, `hdmx`, `VDMX`, `FFTM` and `meta` may go). allsorts keeps the CFF String INDEX
+whole, every glyph's name: Font Awesome 7 Solid cut down to 26 glyphs is 15 KB as allsorts
+writes it. The strings no kept glyph or Top DICT entry names are emptied in their places, so
+no string id changes (8 KB), unless the glyphs have CIDs and no names. ttf2woff2 refuses an `OTTO` flavour but stores the
+tables of a font without `glyf` as they are, as WOFF2 has it for CFF: `src/woff2.rs` gives it
+the font as TrueType and sets the flavour back in the header.
 
 **Left as they are.** A font that maps none of the characters (`Outcome::Unused`); a result
 that is not smaller (`Whole(None)`); and, with a warning (`fonts-left-whole`), a variable font
 that would lose `GSUB` or `GPOS` (klippa 0.1 drops the layout tables of a font with variation
-data, which it cannot cut down yet) and a font with CFF outlines (`CFF ` or `CFF2`), in any
-format: klippa 0.1 copies those tables whole while it renumbers the glyphs, so each character
-would draw another glyph (and ttf2woff2 writes TrueType outlines only).
+data, which it cannot cut down yet), a font with CFF outlines and layout tables (above) or
+that allsorts refuses (several fonts in one `CFF ` table, …), and a font with `CFF2` outlines
+(klippa copies the table whole; allsorts would turn it into CFF without its variations).
 
 ## Gotchas
 

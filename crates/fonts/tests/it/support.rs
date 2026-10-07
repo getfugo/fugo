@@ -31,10 +31,17 @@ pub fn mulish_variable() -> Vec<u8> {
 /// points).
 const TRUETYPE: [&[u8; 4]; 6] = [b"glyf", b"loca", b"cvt ", b"fpgm", b"prep", b"maxp"];
 
-/// Mulish Black with CFF outlines, like Font Awesome 7's fonts: its tables but `glyf`, `loca`
-/// and the TrueType instructions, a version 0.5 `maxp`, and a `CFF ` table of as many glyphs,
-/// each empty (`endchar`).
-pub fn mulish_cff() -> Vec<u8> {
+/// The tables, besides the outlines, that draw the glyphs of Font Awesome 7's fonts, which have
+/// no others.
+const DRAWING: [&[u8; 4]; 7] = [
+    b"OS/2", b"cmap", b"head", b"hhea", b"hmtx", b"name", b"post",
+];
+
+/// Mulish Black with CFF outlines: its tables but `glyf`, `loca` and the TrueType instructions
+/// (without `layout`, only those that draw glyphs, as Font Awesome 7's fonts have), a version
+/// 0.5 `maxp`, and a `CFF ` table of as many glyphs, each a move by its glyph id (no contour,
+/// but an outline of its own).
+pub fn mulish_cff(layout: bool) -> Vec<u8> {
     let ttf = mulish();
     let font = FontRef::new(&ttf).expect("font");
     let glyphs = font.maxp().expect("maxp").num_glyphs();
@@ -43,7 +50,7 @@ pub fn mulish_cff() -> Vec<u8> {
         .table_records()
         .iter()
         .map(|r| r.tag().to_be_bytes())
-        .filter(|tag| !TRUETYPE.contains(&tag))
+        .filter(|tag| !TRUETYPE.contains(&tag) && (layout || DRAWING.contains(&tag)))
         .map(|tag| {
             let data = font.table_data(Tag::new(&tag)).expect("table");
             (tag, data.as_bytes().to_vec())
@@ -78,7 +85,8 @@ pub fn mulish_cff() -> Vec<u8> {
     out
 }
 
-/// A `CFF ` table of `glyphs` empty glyphs: `.notdef`, then `g1`, `g2`, …
+/// A `CFF ` table of `glyphs` glyphs: `.notdef`, then `g1`, `g2`, …, each `<its id> hmoveto
+/// endchar`.
 fn cff(glyphs: u16) -> Vec<u8> {
     let names: Vec<Vec<u8>> = (1..glyphs).map(|g| format!("g{g}").into_bytes()).collect();
     let header = [1, 0, 4, 4]; // version 1.0, offsets of 4 bytes
@@ -90,7 +98,11 @@ fn cff(glyphs: u16) -> Vec<u8> {
     let mut charset = vec![2];
     charset.extend(391_u16.to_be_bytes());
     charset.extend((glyphs - 2).to_be_bytes());
-    let charstrings = cff_index(&vec![vec![14]; usize::from(glyphs)]); // endchar
+    // 28: a 16-bit number; 22: hmoveto; 14: endchar.
+    let charstrings: Vec<Vec<u8>> = (0..glyphs)
+        .map(|g| [&[28][..], &g.to_be_bytes(), &[22, 14]].concat())
+        .collect();
+    let charstrings = cff_index(&charstrings);
     let private = [139, 20]; // defaultWidthX 0
     // The offsets in the Top DICT are 5-byte integers: its length does not depend on them.
     let top_len = cff_index(&[top_dict(0, 0, 0)]).len();
@@ -183,6 +195,44 @@ pub fn glyph_count(bytes: &[u8]) -> u16 {
         .maxp()
         .expect("maxp")
         .num_glyphs()
+}
+
+/// The id of the glyph the font `bytes` draws for `c`.
+pub fn glyph_id(bytes: &[u8], c: char) -> usize {
+    let sfnt = sfnt(bytes);
+    let font = FontRef::new(&sfnt).expect("font");
+    let glyph = font
+        .cmap()
+        .expect("cmap")
+        .map_codepoint(c)
+        .expect("a glyph");
+    usize::try_from(glyph.to_u32()).expect("glyph id")
+}
+
+/// The CFF table of the font `bytes`, as allsorts reads it, given to `f`.
+fn with_cff<T>(bytes: &[u8], f: impl FnOnce(&CFF<'_>) -> T) -> T {
+    let sfnt = sfnt(bytes);
+    let font = FontRef::new(&sfnt).expect("font");
+    let data = font.table_data(Tag::new(b"CFF ")).expect("a CFF table");
+    f(&ReadScope::new(data.as_bytes())
+        .read::<CFF<'_>>()
+        .expect("CFF"))
+}
+
+/// The outline (CFF charstring) the font `bytes` draws for `c`.
+pub fn outline(bytes: &[u8], c: char) -> Vec<u8> {
+    let glyph = glyph_id(bytes, c);
+    with_cff(bytes, |cff| {
+        let charstrings = &cff.fonts[0].char_strings_index;
+        charstrings.read_object(glyph).expect("charstring").to_vec()
+    })
+}
+
+/// The strings of the CFF table of the font `bytes` (the String INDEX), each at its place.
+pub fn cff_strings(bytes: &[u8]) -> Vec<Vec<u8>> {
+    with_cff(bytes, |cff| {
+        cff.string_index.iter().map(<[u8]>::to_vec).collect()
+    })
 }
 
 /// Whether the font `bytes` has the table `tag`.
