@@ -1,4 +1,5 @@
-// The body editor with its preview, and the files of a page bundle (uploads).
+// The body editor (rich text, or Markdown) with its preview, and the files of a page bundle
+// (uploads).
 
 import { html, nothing, type TemplateResult } from "lit-html";
 import { live } from "lit-html/directives/live.js";
@@ -8,10 +9,22 @@ import { type Doc } from "./data";
 import { toast, valueOf } from "./dom";
 import { pageView } from "./pages";
 import { hidePreview, schedulePreview, showPreview } from "./preview";
+import { richEditor } from "./richtext";
 import { canEdit, current, site } from "./state";
 
 /** The document whose preview is open, if any. */
 let previewed: Doc | null = null;
+
+/** How the text is edited: as it reads, or as Markdown; the browser remembers the choice. */
+type Mode = "rich" | "markdown";
+const MODE = "cms-text-mode";
+let mode: Mode = (() => {
+  try {
+    return window.localStorage.getItem(MODE) === "markdown" ? "markdown" : "rich";
+  } catch {
+    return "rich";
+  }
+})();
 
 export function bodyEditor(doc: Doc, readOnly: boolean): TemplateResult {
   const open = previewed === doc;
@@ -20,6 +33,16 @@ export function bodyEditor(doc: Doc, readOnly: boolean): TemplateResult {
     if (!previewed) hidePreview();
     pageView();
   };
+  const choose = (next: Mode) => () => {
+    mode = next;
+    try {
+      window.localStorage.setItem(MODE, next);
+    } catch {
+      // Remembered for this page only.
+    }
+    pageView();
+  };
+  const rich = mode === "rich";
   // Fills the frame when the preview opens, and a frame drawn anew while it is open.
   const fill = (frame?: Element) => {
     if (frame && previewed === doc) void showPreview(frame as HTMLIFrameElement, doc);
@@ -34,11 +57,17 @@ export function bodyEditor(doc: Doc, readOnly: boolean): TemplateResult {
     <div class=${open ? "body-editor previewing" : "body-editor"}>
       <div class="doc-head">
         <strong>Text</strong>
+        <span class="modes" role="group" aria-label="Edit the text">
+          <button class=${rich ? "small active" : "small"} aria-pressed=${rich} @click=${choose("rich")}>Rich text</button>
+          <button class=${rich ? "small" : "small active"} aria-pressed=${!rich} @click=${choose("markdown")}>Markdown</button>
+        </span>
         <span class="spacer"></span>
-        <small class="muted">Markdown; the preview shows it in the site's own page, without shortcodes</small>
+        <small class="muted">${rich ? "HTML and shortcodes show as their source" : "The preview shows it in the site's own page, without shortcodes"}</small>
         <button class="small" @click=${toggle}>${open ? "Close preview" : "Preview"}</button>
       </div>
-      <textarea class="body" rows="18" ?readonly=${readOnly} .value=${live(doc.body)} @input=${input}></textarea>
+      ${rich
+        ? richEditor(doc, readOnly)
+        : html`<textarea class="body" rows="18" ?readonly=${readOnly} .value=${live(doc.body)} @input=${input}></textarea>`}
       <iframe ${ref(fill)} class="preview" sandbox="allow-same-origin" title="Preview" ?hidden=${!open}></iframe>
     </div>
   `;

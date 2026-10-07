@@ -95,7 +95,7 @@ test("a page: a field per key, as the settings label them", { skip }, async () =
   assert.equal(text(summary.querySelector("small")), "One line for lists");
   assert.deepEqual(chips(), ["crisp"]);
   assert.deepEqual($$("datalist#terms-tags option").map((o) => o.value), ["crisp", "sweet"]);
-  assert.equal($("textarea.body").value, "They crunch.\n");
+  assert.equal(text($(".rich-box")), "They crunch.", "the text, as rich text");
   assert.deepEqual($$(".add-field option").map(text), ["Add a field…", "weight", "Rating"], "and the keys only the settings name");
 });
 
@@ -146,6 +146,8 @@ test("Add a field adds the key, and the list starts over", { skip }, () => {
 
 test("Save sends the page's file as typed", { skip }, async () => {
   type($("#f-title"), "Crispy");
+  // The text as Markdown, from now on (the rich text editor has tests of its own).
+  $$(".modes button").find((b) => text(b) === "Markdown").click();
   type($("textarea.body"), "They crunch loudly.\n");
   sent.length = 0;
   $(".actions .primary").click();

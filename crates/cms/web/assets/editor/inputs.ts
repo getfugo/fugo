@@ -141,7 +141,7 @@ export function imageInput(value: string, set: Setter, readOnly: boolean, id: st
 
 /** What an image field may name: the bundle's files (relative to the bundle), and files of the
  * media directory (as `media_ref` names them). */
-function imageChoices(): string[] {
+export function imageChoices(): string[] {
   const p = current();
   const out: string[] = [];
   if (p.entry.bundle) {

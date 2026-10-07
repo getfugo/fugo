@@ -28,7 +28,7 @@ The editor works with sites whose repository is on GitHub; other git hosts may f
 1. Someone opens `example.org/admin/`. Cloudflare Access asks them to sign in (with Google, for
    example) before anything is served, and lets in only the people its policy names.
 2. The editor lists the site's pages by section. They open one, and edit its front matter in a
-   form and its text with a preview.
+   form and its text as rich text (or as Markdown), with a preview.
 3. *Save draft* sends the changes to the API. The Worker checks the sign-in token Cloudflare
    Access added, finds the person's roles, checks every changed file against them, and commits
    to the page's draft branch as the bot, with the person as author.
@@ -276,12 +276,21 @@ page and redo your change.
   [Field settings](/configuration/cms/#fields) change labels, help text and inputs, and add
   choice lists (one choice or several), defaults, number bounds, required values and closed
   tables with a summary.
-- **The text**, in Markdown, with a preview inside the site's own page: the published page of
-  its language (for a new page, another page of its folder) with the edited text and front
-  matter in place, updated as you type. The editor finds the element that holds a page's text
-  and the elements that show a front matter value as published; where it cannot, mark them in
-  the site's templates with `data-cms-body` and `data-cms-field="<key>"`. Shortcodes, scripts and
-  files from other sites (fonts or styles from a CDN) are left out.
+- **The text**, as rich text or as Markdown: *Rich text* and *Markdown* above it switch between
+  them, and the browser remembers the choice. Rich text shows the text as it reads, with a
+  toolbar for paragraph styles (headings, quotes, code blocks), bold, italic, strikethrough,
+  code, links, lists, images from the page's files and rules; Ctrl+B, Ctrl+I and Ctrl+K (a link;
+  ⌘ on a Mac) work too, and Tab indents a list item. Pasted text keeps what Markdown can hold of it
+  (headings, lists, bold, italic, links), not its fonts or colours. Raw HTML, shortcodes on lines
+  of their own and link definitions show as their source, in a box where they are edited as
+  text; the editor never runs them. A save writes only the blocks (paragraphs, lists, tables…)
+  that were edited: the others keep their text exactly, with the blank lines between them.
+- **A preview** of the text inside the site's own page: the published page of its language (for
+  a new page, another page of its folder) with the edited text and front matter in place,
+  updated as you type. The editor finds the element that holds a page's text and the elements
+  that show a front matter value as published; where it cannot, mark them in the site's
+  templates with `data-cms-body` and `data-cms-field="<key>"`. Shortcodes, scripts and files from
+  other sites (fonts or styles from a CDN) are left out.
 - **Edit as text**: the whole file, front matter included, for anything the form does not show.
 - **Translations**: a tab per language, and *+ language* to add one (it starts as a copy).
 - **Files of the page**: a bundle's images and other files, uploads and deletions.
@@ -333,6 +342,11 @@ try it (in a `config/staging/cms.toml` built with `-e staging`, for example).
 - On the Workers free plan, a request may use 10 ms of CPU time: large uploads may exceed it.
   The paid plan raises the limit.
 - Pages the build makes from content adapters are not files, so the editor does not list them.
+- Rich text writes the blocks it changes in Markdown of its own: an edited paragraph keeps the
+  emphasis, links and images that did not change as they were written, but its other text may
+  gain backslashes (`\*`) where a character would otherwise start Markdown, and a list it
+  rewrites uses the text's first bullet. Markdown it cannot show (footnotes, attributes such as
+  `{#id}`, definition lists) stays as text, as written; edit it in Markdown if you prefer.
 - The preview renders the text with the editor's Markdown, not the site's render hooks. For the
   page exactly as the site builds it, build the draft branch in
   CI and upload it as a preview version (`npx wrangler versions upload --preview-alias <draft>`):

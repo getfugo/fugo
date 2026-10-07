@@ -73,6 +73,16 @@ test("Access keys are fetched once, and again only for an unknown key after a mi
   assert.equal(certFetches(), 1, "refetched within a minute");
 });
 
+test("requests that come while the Access keys are fetched wait for them", async () => {
+  // A fresh Worker gets the files of a page at once: the editor opens all its languages.
+  const { call, certFetches } = setup();
+  const jwt = await token();
+  const paths = ["content/almonds/honey/index.en.md", "content/almonds/honey/index.th.md"];
+  const rs = await Promise.all(paths.map((path) => call("GET", "file", { jwt, query: { path } })));
+  assert.deepEqual(rs.map((r) => r.status), [200, 200], JSON.stringify(rs.map((r) => r.body)));
+  assert.equal(certFetches(), 1);
+});
+
 test("missing secrets are reported", async () => {
   const { call } = setup({ env: { CMS_USERS: "", CMS_GITHUB_TOKEN: "" } });
   const r = await call("GET", "me");
