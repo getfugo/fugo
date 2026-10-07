@@ -42,9 +42,13 @@ export async function appToken(
     return res.json();
   };
   const installation = await call("GET", `/repos/${repo}/installation`);
+  // The drafts' pull requests, when the app may write them (a token asking for more than the
+  // installation has is refused).
+  const permissions: Record<string, string> = { contents: "write" };
+  if (installation.permissions?.pull_requests === "write") permissions.pull_requests = "write";
   const token = await call("POST", `/app/installations/${installation.id}/access_tokens`, {
     repositories: [repo.split("/")[1]],
-    permissions: { contents: "write" },
+    permissions,
   });
   cache.set(repo, { token: token.token, expires: Date.parse(token.expires_at) });
   return token.token;

@@ -154,6 +154,7 @@ test("Save sends the page's file as typed", { skip }, async () => {
   assert.equal(name, "save");
   assert.equal(body.entry, "posts/crisps");
   assert.equal(body.title, "Crispy");
+  assert.equal(body.draft, undefined, "the page has no draft");
   assert.deepEqual(body.changes.map((c) => c.path), ["content/posts/crisps.md"]);
   assert.equal(
     body.changes[0].content,

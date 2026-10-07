@@ -1,9 +1,10 @@
 // The API: one class per request, with the signed-in user, their roles and the git host; and draft
-// ids.
+// ids. A draft is a branch under `cms/`: this editor's, or Decap CMS's (`cms/<collection>/<slug>`,
+// which the editor shows, publishes and discards like its own).
 
 import { areaOf, base64Size, cleanPath, commitMessage, mayEdit, parseTrailers } from "../common";
 import { GitHub } from "./github";
-import { type Author, type Body, type Change, type CompareFile, type Comparison, DRAFTS, HttpError, MAX_CHANGES, MAX_PATCH, Race, type Settings, type TreeEntry, type User } from "./shared";
+import { type Author, type Body, type Change, type CompareFile, type Comparison, DRAFTS, GitError, HttpError, LABEL, MAX_CHANGES, MAX_PATCH, type Pull, Race, type Settings, type TreeEntry, type User } from "./shared";
 
 export class Api {
   constructor(
@@ -38,42 +39,50 @@ export class Api {
     return { path, ...file };
   }
 
-  /** The open drafts, newest first. */
+  /** The open drafts, newest first, with their pull requests. */
   async drafts() {
-    const refs = await this.git.branchesWithHeads(DRAFTS);
+    const [refs, pulls] = await Promise.all([this.git.branchesWithHeads(DRAFTS), this.pulls()]);
     return {
       drafts: refs
         .filter((r) => isDraftId(r.name))
         .map((r) => {
           const t = parseTrailers(r.message);
+          const pr = pulls.get(DRAFTS + r.name) ?? null;
           return {
             id: r.name,
             entry: t["cms-entry"] ?? "",
-            title: t["cms-title"] ?? "",
+            title: titleOf(t, pr, r.message),
             author: r.author,
             updated: r.date,
+            pr,
           };
         }),
     };
   }
 
-  /** A draft: its files (with their diff), its commits, and what conflicts with the branch. */
+  /** A draft: its files (with their diff), its saves, and its files the branch changed since
+   * (`conflicts`, which publishing merges). */
   async draft(id: unknown) {
     const head = await this.draftHead(id);
     const main = await this.mainHead();
-    const cmp = await this.git.compare(main, head);
-    const t = parseTrailers(cmp.commits.at(-1)?.message);
+    const branch = DRAFTS + String(id);
+    const [cmp, pulls] = await Promise.all([this.git.compare(main, head), this.pulls(branch)]);
+    const saves = savesOf(cmp);
+    const last = saves.at(-1)?.message ?? "";
+    const t = parseTrailers(last);
+    const pr = pulls.get(branch) ?? null;
     return {
       id,
       entry: t["cms-entry"] ?? "",
-      title: t["cms-title"] ?? "",
+      title: titleOf(t, pr, last),
+      pr,
       files: cmp.files.map((f) => ({
         path: f.path,
         status: f.status,
         previous: f.previous,
         patch: f.patch && f.patch.length > MAX_PATCH ? `${f.patch.slice(0, MAX_PATCH)}\n…` : f.patch,
       })),
-      commits: cmp.commits.map((c) => ({
+      commits: saves.map((c) => ({
         author: c.author,
         subject: c.message.split("\n")[0],
       })),
@@ -81,7 +90,8 @@ export class Api {
     };
   }
 
-  /** Commits changes to the draft of `entry` (or the branch, workflow `direct`). */
+  /** Commits changes to the draft of `entry` (or the branch, workflow `direct`): the draft the
+   * page was opened from (`draft`), while it exists, else the page's own. */
   async save(body: Body) {
     const entry = typeof body.entry === "string" ? body.entry.trim() : "";
     if (!entry || entry.length > 512 || /[\u0000-\u001f]/.test(entry)) {
@@ -130,17 +140,22 @@ export class Api {
       const commit = await this.git.commitFiles(this.s.git.branch, null, checked, message, author, this.now);
       return { commit, draft: null };
     }
-    const id = await draftId(entry);
-    const commit = await this.git.commitFiles(DRAFTS + id, this.s.git.branch, checked, message, author, this.now);
+    const id = (await this.openDraft(body.draft)) ?? (await draftId(entry));
+    const { commit, created } = await this.git.commitFiles(DRAFTS + id, this.s.git.branch, checked, message, author, this.now);
+    if (created) await this.openPull(id, message);
     return { commit, draft: id };
   }
 
-  /** Copies a draft's files onto the branch in one commit, then deletes the draft. */
+  /** Copies a draft's files onto the branch in one commit, then deletes the draft. When the branch
+   * changed some of them since the draft was made, it is merged into the draft first (git's
+   * merge: moved files and changes to different lines of a file merge). */
   async publish(body: Body) {
     if (this.s.workflow !== "review") throw new HttpError(400, "there are no drafts: workflow is direct");
     if (!this.user.publish) throw new HttpError(403, "you may not publish");
     const id = body.id;
-    for (let attempt = 0; ; attempt++) {
+    let merged = false;
+    let attempt = 0;
+    for (;;) {
       const head = await this.draftHead(id);
       const main = await this.mainHead();
       const cmp = await this.git.compare(main, head);
@@ -152,9 +167,22 @@ export class Api {
           }
         }
       }
+      const saves = savesOf(cmp);
+      const last = saves.at(-1)?.message ?? "";
+      const t = parseTrailers(last);
       const conflicts = await this.conflicts(cmp, main);
       if (conflicts.length > 0) {
-        throw new HttpError(409, "the branch changed these files since the draft was made", { conflicts });
+        if (merged) throw new HttpError(409, "the branch keeps changing these files; try again", { conflicts });
+        // The merge commit carries the draft's trailers: the drafts list reads its last commit's.
+        const message = commitMessage(`Bring in ${this.s.git.branch}`, [
+          ["CMS-Entry", t["cms-entry"]],
+          ["CMS-Title", titleOf(t, null, last)],
+        ]);
+        if (!(await this.git.mergeInto(DRAFTS + id, this.s.git.branch, message))) {
+          throw new HttpError(409, "the branch and the draft changed the same lines of these files", { conflicts });
+        }
+        merged = true;
+        continue;
       }
       if (cmp.files.length === 0) {
         await this.git.deleteBranch(DRAFTS + id);
@@ -165,9 +193,8 @@ export class Api {
         if (f.previous && f.previous !== f.path) entries.push({ path: f.previous, sha: null });
         entries.push({ path: f.path, sha: f.status === "removed" ? null : f.sha });
       }
-      const t = parseTrailers(cmp.commits.at(-1)?.message);
       const authors: Author[] = [];
-      for (const c of cmp.commits) {
+      for (const c of saves) {
         const a = c.author;
         if (a?.email && !authors.some((x) => x.email === a.email)) authors.push(a);
       }
@@ -183,28 +210,64 @@ export class Api {
         const commit = await this.git.commitTree(this.s.git.branch, main, entries, message, author, this.now);
         // A save that reached the draft after it was compared stays a draft.
         if ((await this.git.head(DRAFTS + id)) !== head) return { commit, published: true, kept: true };
+        // Deleting the branch closes its pull request, which then says where the draft went.
+        const pr = (await this.pulls(DRAFTS + id)).get(DRAFTS + id);
+        if (pr) await this.hostMay(() => this.git.comment(pr.number, `Published with the site's editor in ${commit}.`));
         await this.git.deleteBranch(DRAFTS + id);
         return { commit, published: true };
       } catch (e) {
-        if (e instanceof Race && attempt < 2) continue;
+        if (e instanceof Race && attempt++ < 2) continue;
         if (e instanceof Race) throw new HttpError(409, "the branch keeps changing; try again");
         throw e;
       }
     }
   }
 
-  /** Deletes a draft: a publisher's, or one whose commits are all the user's. */
+  /** Deletes a draft: a publisher's, or one whose saves are all the user's. */
   async discard(body: Body) {
     const id = body.id;
     const head = await this.draftHead(id);
     if (!this.user.publish) {
       const cmp = await this.git.compare(await this.mainHead(), head);
-      if (cmp.commits.some((c) => (c.author?.email ?? "").toLowerCase() !== this.user.email)) {
+      if (savesOf(cmp).some((c) => (c.author?.email ?? "").toLowerCase() !== this.user.email)) {
         throw new HttpError(403, "others edited this draft: ask someone who may publish to discard it");
       }
     }
     await this.git.deleteBranch(DRAFTS + id);
     return { discarded: id };
+  }
+
+  /** The open pull requests of drafts, by branch (`branch`'s, or all), or none when the git host
+   * refuses them (a token without the permission). */
+  private async pulls(branch?: string): Promise<Map<string, Pull>> {
+    return (await this.hostMay(() => this.git.openPulls(branch))) ?? new Map();
+  }
+
+  /** Opens the pull request of a new draft, labelled `fugo-cms`, so that the draft shows on the
+   * git host too. Without the permission there is none, and the draft stays as it is. */
+  private async openPull(id: string, message: string): Promise<void> {
+    const link = new URL(`${this.s.path}#/d/${id}`, this.s.site).href;
+    const body = `A draft of the site's editor. Review it, and publish or discard it there: ${link}`;
+    await this.hostMay(() => this.git.openPull(DRAFTS + id, this.s.git.branch, message.split("\n")[0], body, [LABEL]));
+  }
+
+  /** A call to the git host that may fail (pull requests: an extra the token may not allow);
+   * undefined when it does. */
+  private async hostMay<T>(call: () => Promise<T>): Promise<T | undefined> {
+    try {
+      return await call();
+    } catch (e) {
+      if (e instanceof GitError) return undefined;
+      throw e;
+    }
+  }
+
+  /** `id` when it names a draft that exists (a page opened from a draft that was published or
+   * discarded since saves to a draft of its own). */
+  private async openDraft(id: unknown): Promise<string | null> {
+    if (id === undefined || id === null) return null;
+    if (!isDraftId(id)) throw new HttpError(400, "bad draft id");
+    return (await this.git.head(DRAFTS + id)) ? id : null;
   }
 
   private async draftHead(id: unknown): Promise<string> {
@@ -220,8 +283,9 @@ export class Api {
     return head;
   }
 
-  /** The draft's paths the branch changed since the draft was made from it: their blob at the
-   * merge base and on the branch differ (exact, however many files the branch changed). */
+  /** The draft's paths the branch changed since the draft was made from it (or last merged it):
+   * their blob at the merge base and on the branch differ (exact, however many files the branch
+   * changed). */
   private async conflicts(cmp: Comparison, main: string): Promise<string[]> {
     if (cmp.mergeBase === main) return [];
     const paths = [...new Set(cmp.files.flatMap(pathsOf))];
@@ -233,7 +297,20 @@ export class Api {
 /** A changed file's path, and its previous path when it moved. */
 const pathsOf = (f: CompareFile): string[] => (f.previous ? [f.path, f.previous] : [f.path]);
 
-const isDraftId = (id: unknown): id is string => typeof id === "string" && /^[a-z0-9][a-z0-9-]{0,79}$/.test(id);
+/** A draft's saves: its commits but the merges that brought the branch in (the bot's). */
+const savesOf = (cmp: Comparison) => cmp.commits.filter((c) => !c.merge);
+
+/** A draft id: this editor's (`draftId`), or Decap CMS's (`<collection>/<slug>`). Its segments
+ * start with a letter, digit, `_` or `-` (no `.` or `..`: ids go into the git host's URLs). */
+const isDraftId = (id: unknown): id is string =>
+  typeof id === "string" && id.length <= 200 && /^[\p{L}\p{M}\p{N}_-][\p{L}\p{M}\p{N}_.-]*(?:\/[\p{L}\p{M}\p{N}_-][\p{L}\p{M}\p{N}_.-]*)*$/u.test(id);
+
+/** A draft's title: the page's, from its last commit; for a draft of Decap CMS, its pull
+ * request's, or the commit's subject (a merge's `CMS-Title`, which keeps its last save's). */
+function titleOf(trailers: Record<string, string>, pr: Pull | null, message: string): string {
+  if (trailers["cms-entry"] !== undefined) return trailers["cms-title"] ?? "";
+  return pr?.title ?? trailers["cms-title"] ?? message.split("\n")[0];
+}
 
 /** The draft id of a page: its key as a slug, and 8 hex digits of its SHA-256 (keys that slug
  * alike stay apart). */

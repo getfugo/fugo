@@ -54,8 +54,8 @@ export async function movePage(folder: string): Promise<void> {
   if (!confirm(`Move ${entry.title} to ${folder || "the top"}? Its URL changes; the old one keeps working.`)) return;
   try {
     const title = p.docs.get(site.default_language)?.data?.title ?? entry.title;
-    // The save is the page's at its new key: in review, the draft is the moved page's.
-    const res = await api<{ draft: string | null }>("POST", "save", null, { entry: key, title: String(title ?? ""), changes });
+    // The save is the page's at its new key, in the draft it was opened from (in review).
+    const res = await api<{ draft: string | null }>("POST", "save", null, { entry: key, title: String(title ?? ""), changes, draft: p.draft?.id });
     toast(res.draft ? "Moved, as a draft" : "Moved: the site updates after its next build", "ok");
     const old = site.entries.indexOf(entry);
     if (!res.draft && old >= 0) site.entries.splice(old, 1);
@@ -143,9 +143,10 @@ async function send(changes: Change[]): Promise<void> {
   const p = current();
   const title = p.docs.get(site.default_language)?.data?.title ?? p.entry.title;
   // A new folder's page saved with a page is in that page's draft: its changes go there too.
-  const entry = p.draft?.entry ?? p.entry.key;
+  const entry = p.draft?.entry || p.entry.key;
   try {
-    const res = await api<{ draft: string | null }>("POST", "save", null, { entry, title: String(title ?? ""), changes });
+    // The files were read from the page's draft, if it has one: the save goes there too.
+    const res = await api<{ draft: string | null }>("POST", "save", null, { entry, title: String(title ?? ""), changes, draft: p.draft?.id });
     toast(res.draft ? "Saved as a draft" : "Saved: the site updates after its next build", "ok");
     pending.delete(p.entry.key);
     keepNewFolders(p.entry, res.draft ? entry : null);

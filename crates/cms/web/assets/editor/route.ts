@@ -11,6 +11,6 @@ export function route(): void {
   if ((m = /^#\/s\/(.*)$/.exec(hash))) return folderView(decodeURIComponent(m[1]).replace(/^\/+|\/+$/g, ""));
   if ((m = /^#\/e\/(.+)$/.exec(hash))) return void openPage(decodeURIComponent(m[1]));
   if (hash === "#/drafts") return draftsView();
-  if ((m = /^#\/d\/([a-z0-9-]+)$/.exec(hash))) return void draftView(m[1]);
+  if ((m = /^#\/d\/(.+)$/.exec(hash))) return void draftView(decodeURIComponent(m[1]));
   return home();
 }

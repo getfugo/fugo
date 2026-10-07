@@ -1,8 +1,8 @@
 // Git hosts. A host has the methods of `GitHub`: head, branchesWithHeads, read, blobIds,
-// commitFiles, commitTree, compare, deleteBranch. Paths are project-relative; the host adds
-// `git.dir`.
+// commitFiles, commitTree, compare, mergeInto, deleteBranch, openPulls, openPull, comment. Paths
+// are project-relative; the host adds `git.dir`.
 
-import { type Author, type Change, type Comparison, type Fetch, GitError, HttpError, type Json, Race, type Settings, type TreeEntry, USER_AGENT } from "./shared";
+import { type Author, type Change, type Comparison, type Fetch, GitError, HttpError, type Json, type Pull, Race, type Settings, type TreeEntry, USER_AGENT } from "./shared";
 
 const encodeSegments = (p: string) => p.split("/").map(encodeURIComponent).join("/");
 
@@ -142,9 +142,10 @@ export class GitHub {
     return out;
   }
 
-  /** Commits `changes` to `branch`, made from branch `from` when it does not exist yet. A change
-   * whose `base` (the blob id the editor started from; null: a new file) is no longer the
-   * file's fails with 409, as does a move whose source is gone; a moved file keeps its blob. */
+  /** Commits `changes` to `branch`, made from branch `from` when it does not exist yet
+   * (`created`). A change whose `base` (the blob id the editor started from; null: a new file)
+   * is no longer the file's fails with 409, as does a move whose source is gone; a moved file
+   * keeps its blob. */
   async commitFiles(
     branch: string,
     from: string | null,
@@ -152,7 +153,7 @@ export class GitHub {
     message: string,
     author: Author,
     now: () => number,
-  ): Promise<string> {
+  ): Promise<{ commit: string; created: boolean }> {
     const blobs = new Map<string, string>();
     for (const c of changes) {
       if (!c.delete && c.encoding === "base64") {
@@ -190,7 +191,8 @@ export class GitHub {
       }
       const moved = moves.map((c): TreeEntry => ({ path: c.path, sha: sources[c.from as string] as string }));
       try {
-        return await this.commitOnto(branch, parent, creating, entries.concat(moved), message, author, now);
+        const commit = await this.commitOnto(branch, parent, creating, entries.concat(moved), message, author, now);
+        return { commit, created: creating };
       } catch (e) {
         if (e instanceof Race && attempt < 2) continue;
         if (e instanceof Race) throw new HttpError(409, `branch ${branch} keeps changing; try again`);
@@ -268,11 +270,51 @@ export class GitHub {
         sha: c.sha,
         author: c.commit?.author ? { name: c.commit.author.name, email: c.commit.author.email } : null,
         message: c.commit?.message ?? "",
+        merge: (c.parents?.length ?? 0) > 1,
       })),
     };
   }
 
+  /** Merges branch `from` into `branch` with GitHub's merge (git's: it follows moved files and
+   * merges changes to different lines of a file): false when they conflict. */
+  async mergeInto(branch: string, from: string, message: string): Promise<boolean> {
+    const res = await this.request("POST", `https://api.github.com/repos/${this.repo}/merges`, {
+      base: branch,
+      head: from,
+      commit_message: message,
+    });
+    // 201: a merge commit; 204: nothing to merge; 409: a conflict.
+    if (res.status === 409) return false;
+    if (!res.ok) throw await this.error(res);
+    return true;
+  }
+
+  /** Deletes `branch`; GitHub closes its open pull request. */
   async deleteBranch(branch: string): Promise<void> {
     await this.api("DELETE", `/git/refs/heads/${encodeSegments(branch)}`, undefined, { missing: null });
+  }
+
+  /** The open pull requests from branches of the repository, by branch: those of `branch`, or
+   * all of them (the newest 100). */
+  async openPulls(branch?: string): Promise<Map<string, Pull>> {
+    const head = branch === undefined ? "" : `&head=${encodeURIComponent(`${this.owner}:${branch}`)}`;
+    const pulls: Json[] = await this.api("GET", `/pulls?state=open&per_page=100${head}`);
+    const out = new Map<string, Pull>();
+    for (const p of pulls) {
+      if (String(p.head?.repo?.full_name).toLowerCase() !== this.repo.toLowerCase()) continue;
+      out.set(String(p.head.ref), { number: p.number, url: String(p.html_url), title: String(p.title ?? "") });
+    }
+    return out;
+  }
+
+  /** Opens a pull request from `branch` onto `base` and labels it (GitHub makes a label it does
+   * not have yet). */
+  async openPull(branch: string, base: string, title: string, body: string, labels: string[]): Promise<void> {
+    const pr = await this.api("POST", "/pulls", { title, head: branch, base, body });
+    if (labels.length > 0) await this.api("POST", `/issues/${pr.number}/labels`, { labels });
+  }
+
+  async comment(pull: number, body: string): Promise<void> {
+    await this.api("POST", `/issues/${pull}/comments`, { body });
   }
 }
