@@ -83,9 +83,13 @@ pub struct Section {
     pub title: String,
     /// Regular pages in the section.
     pub count: usize,
-    /// How the section's pages are written, for new pages.
+    /// Its folders: the section pages below it (`<key>/…/_index`), such as the terms of a
+    /// taxonomy (`brands/lays/_index`).
+    pub folders: usize,
+    /// How the section's pages (its folders', when it has no pages) are written, for new pages.
     pub style: Style,
-    /// Front matter keys its pages use, with the kind of their values.
+    /// Front matter keys its pages (its folders', when it has no pages) use, with the kind of
+    /// their values.
     pub keys: Vec<KeyKind>,
 }
 

@@ -52,6 +52,8 @@ export interface Section {
   key: string;
   title: string;
   count: number;
+  /** Its folders: the section pages below it, such as the terms of a taxonomy. */
+  folders: number;
   style: { bundle: boolean; lang_suffix: boolean; format: string; ext: string };
   /** The keys its pages use, the kinds of their values, and the value every page gives one. */
   keys: { key: string; kind: string; default?: unknown }[];

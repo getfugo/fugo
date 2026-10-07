@@ -169,23 +169,30 @@ pub(super) fn sections(entries: &BTreeMap<String, Entry>, lang: &str) -> Vec<Sec
     keys.insert("");
     let mut out = Vec::new();
     for key in keys {
-        let pages: Vec<&Entry> = entries
-            .values()
-            .filter(|e| e.section == key && e.kind == "page")
-            .collect();
         let index_key = if key.is_empty() {
             "_index".to_owned()
         } else {
             format!("{key}/_index")
         };
-        if pages.is_empty() && !entries.contains_key(&index_key) {
+        let of_kind = |kind: &str| -> Vec<&Entry> {
+            entries
+                .values()
+                .filter(|e| e.section == key && e.kind == kind && e.key != index_key)
+                .collect()
+        };
+        let pages = of_kind("page");
+        let folders = of_kind("section");
+        if pages.is_empty() && folders.is_empty() && !entries.contains_key(&index_key) {
             continue;
         }
         let title = entries
             .get(&index_key)
             .filter(|e| !key.is_empty() && !e.title.is_empty() && e.title != "_index")
             .map_or_else(|| default_section_title(key), |e| e.title.clone());
-        let files: Vec<&File> = pages.iter().flat_map(|e| e.files.iter()).collect();
+        // New pages are written like the section's pages; in a section of folders only (the
+        // terms of a taxonomy), like the folders' index pages.
+        let models = if pages.is_empty() { &folders } else { &pages };
+        let files: Vec<&File> = models.iter().flat_map(|e| e.files.iter()).collect();
         let bundles = pages.iter().filter(|e| e.bundle).count();
         let suffixed = files.iter().filter(|f| f.suffixed).count();
         let mut formats: BTreeMap<&'static str, usize> = BTreeMap::new();
@@ -213,6 +220,7 @@ pub(super) fn sections(entries: &BTreeMap<String, Entry>, lang: &str) -> Vec<Sec
         out.push(Section {
             title,
             count: pages.len(),
+            folders: folders.len(),
             style: Style {
                 bundle: bundles * 2 > pages.len(),
                 lang_suffix: suffixed * 2 > files.len(),
