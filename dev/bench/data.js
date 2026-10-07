@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791393857148,
+  "lastUpdate": 1791394668277,
   "repoUrl": "https://github.com/getfugo/fugo",
   "entries": {
     "Benchmark": [
@@ -97308,6 +97308,66 @@ window.BENCHMARK_DATA = {
           {
             "name": "10,000 generated pages: peak memory",
             "value": 609.9,
+            "unit": "MiB",
+            "extra": "10061 pages; median of 5 builds after a warm-up build"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "blackb1rd.mov@gmail.com",
+            "name": "Prachya Saechua",
+            "username": "blackb1rd"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "2fbfe1f2565896e48afd8d93586eff178aa0b9b1",
+          "message": "cms: Edit a page's text as rich text (#191)\n\nA page's text opens as rich text: an editable box that shows the Markdown\nas it reads, with a toolbar for paragraph styles (headings, quotes, code\nblocks), bold, italic, strikethrough, code, links, lists, images from the\npage's files, and rules; Ctrl+B, I and K (⌘ on a Mac) work too, and Tab\nindents a list item. Markdown, next to Rich text above the box, switches\nto the textarea, and the browser remembers the choice.\n\nEach block of the text (a paragraph, a list, a table…) is drawn as an\nelement that knows its source, and so is each inline mark (markdown.ts).\nA save writes anew only the blocks that were edited (tomarkdown.ts); the\nothers keep their text exactly, with the blank lines between them. Text\ngets a backslash only where a character would otherwise start Markdown.\nRaw HTML, shortcodes on lines of their own and link definitions show as\ntheir source and are edited as text, so no HTML of the text runs. Pasted\nHTML keeps what Markdown can hold of it. A saved file keeps its page's\naddress, which the preview and the text's images use.\n\nThe Worker: requests that come while the Cloudflare Access keys are being\nfetched wait for that fetch, instead of failing with \"unknown key\" (a\nfresh Worker gets the files of every language of a page at once).\n\nCo-Authored-By: Claude Opus 5.5 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-10-08T00:24:40+07:00",
+          "tree_id": "6c77cd1bc49647575cf83fee77494cc7e1d77944",
+          "url": "https://github.com/getfugo/fugo/commit/2fbfe1f2565896e48afd8d93586eff178aa0b9b1"
+        },
+        "date": 1791394664211,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "docs site: build time",
+            "value": 200.3,
+            "unit": "ms",
+            "extra": "334 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "docs site: peak memory",
+            "value": 181.5,
+            "unit": "MiB",
+            "extra": "334 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "1,000 generated pages: build time",
+            "value": 231.4,
+            "unit": "ms",
+            "extra": "1061 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "1,000 generated pages: peak memory",
+            "value": 151.2,
+            "unit": "MiB",
+            "extra": "1061 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "10,000 generated pages: build time",
+            "value": 2381.7,
+            "unit": "ms",
+            "extra": "10061 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "10,000 generated pages: peak memory",
+            "value": 571,
             "unit": "MiB",
             "extra": "10061 pages; median of 5 builds after a warm-up build"
           }
