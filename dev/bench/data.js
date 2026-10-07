@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791341895674,
+  "lastUpdate": 1791345120144,
   "repoUrl": "https://github.com/getfugo/fugo",
   "entries": {
     "Benchmark": [
@@ -97128,6 +97128,66 @@ window.BENCHMARK_DATA = {
           {
             "name": "10,000 generated pages: peak memory",
             "value": 607.2,
+            "unit": "MiB",
+            "extra": "10061 pages; median of 5 builds after a warm-up build"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "blackb1rd.mov@gmail.com",
+            "name": "Prachya Saechua",
+            "username": "blackb1rd"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "71e43b6cb1ea32e36ff9919cf454be732dd614e8",
+          "message": "Docs: the history before the Rust rewrite is in getfugo/fugo-go-history (#179)\n\nmain now starts at #140, the commit that replaced the Go implementation;\nHugo's history, the Go implementation and the rewrite's rust-port branch\nmoved to getfugo/fugo-go-history, which keeps every commit the docs and\nthe code name (44529028, be02933a, 7e58cfce, 7d5686b1) under a ref.\nDEVELOPMENT.md and PROVENANCE.md say where they are and how to fetch\nthem, and the benchmark run of 222efdde is 72888d8e after the rewrite.\n\nCo-authored-by: Claude Opus 5.5 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-10-07T10:41:23+07:00",
+          "tree_id": "452d34a959281d367a83f0cd0079373ffbdc234e",
+          "url": "https://github.com/getfugo/fugo/commit/71e43b6cb1ea32e36ff9919cf454be732dd614e8"
+        },
+        "date": 1791345116538,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "docs site: build time",
+            "value": 141.7,
+            "unit": "ms",
+            "extra": "334 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "docs site: peak memory",
+            "value": 173.8,
+            "unit": "MiB",
+            "extra": "334 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "1,000 generated pages: build time",
+            "value": 168.2,
+            "unit": "ms",
+            "extra": "1061 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "1,000 generated pages: peak memory",
+            "value": 155,
+            "unit": "MiB",
+            "extra": "1061 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "10,000 generated pages: build time",
+            "value": 2030.3,
+            "unit": "ms",
+            "extra": "10061 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "10,000 generated pages: peak memory",
+            "value": 594.8,
             "unit": "MiB",
             "extra": "10061 pages; median of 5 builds after a warm-up build"
           }
