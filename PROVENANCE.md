@@ -34,6 +34,9 @@ Rules:
 - Paths of this repository's Go tree (Hugo's packages, `go.mod`, `tools/go-oracle`,
   `tools/dev/oracle.sh`) were removed after commit `44529028`; a row names the commit to read
   them at (`git show <commit>:<path>`).
+- The commits named here (`44529028`, `be02933a`, `7d5686b1`) predate the Rust rewrite (#140),
+  where this repository's history starts; they are in
+  [getfugo/fugo-go-history](https://github.com/getfugo/fugo-go-history) (DEVELOPMENT.md).
 
 | Path | Source | Commit / version | Licence | Use |
 |---|---|---|---|---|
