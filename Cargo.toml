@@ -152,7 +152,7 @@ filetime = "0.2"
 
 # ── css / js / html output ──
 # fugo-sass: grass, forked by the fugo project (github.com/getfugo/fugo-sass); its API is grass's.
-grass = { package = "fugo-sass", version = "0.15.0", default-features = false, features = ["random"] }
+grass = { package = "fugo-sass", version = "0.15.1", default-features = false, features = ["random"] }
 minify-html = "0.18.1"
 lightningcss = { version = "1.0.0-alpha.72", default-features = false, features = ["browserslist"] }
 browserslist-rs = "0.19" # the project's browserslist configuration → lightningcss targets

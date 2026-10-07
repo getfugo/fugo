@@ -2224,9 +2224,9 @@ dependencies = [
 
 [[package]]
 name = "fugo-sass"
-version = "0.15.0"
+version = "0.15.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "34d0dc8f8a83e4ae4c780a6e2dc3072383900c50d2ea7b98adc5767cd10edf74"
+checksum = "132965cee80c5a27ca695b997132bec4ca25c05114d1e99113f605cb911b1853"
 dependencies = [
  "fugo-sass-compiler",
  "getrandom 0.4.3",
@@ -2234,9 +2234,9 @@ dependencies = [
 
 [[package]]
 name = "fugo-sass-compiler"
-version = "0.15.0"
+version = "0.15.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c72c51d5d2d0d38779df500afff127f26551cf69dfd04aa237b85116690307f8"
+checksum = "13ec98ba9e62276aa062e3596e8be71933397057d9bcb942a1248f2a64a94c2e"
 dependencies = [
  "codemap",
  "indexmap",
