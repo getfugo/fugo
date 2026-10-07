@@ -79,6 +79,8 @@ pub const LEGACY_KEYS: &[(&str, &str)] = &[
     ("pygmentsUseClassic", ""),
     ("privacy.twitter.*", "privacy.x.*"),
     ("services.twitter.*", "services.x.*"),
+    // The Go implementation names the minifier options after its minifier (tdewolff/minify).
+    ("minify.tdewolff.*", "minify.*"),
 ];
 
 /// Rewrites legacy keys of one tree (the root or a language; keys lower case) to their

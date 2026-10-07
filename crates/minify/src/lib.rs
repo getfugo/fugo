@@ -2,8 +2,8 @@
 //!
 //! [`Minifier`] is built once from the `[minify]` configuration and shared (it is `Send + Sync`).
 //! It is used by the publisher (`minifyOutput`, `--minify`) and by the `minify` resource
-//! function. The options and their mapping from the Go implementation's `[minify.tdewolff]`
-//! table are documented in [`options`].
+//! function. The options (`[minify.html]`, `[minify.css]`, …) and their mapping from the Go
+//! implementation's are documented in [`options`].
 //!
 //! Output bytes do not match the Go implementation's minifier; the contract is that
 //! minification never panics, is idempotent, and yields output that parses as the same type
@@ -41,7 +41,7 @@ pub use targets::project_browsers;
 #[derive(Debug, thiserror::Error)]
 #[non_exhaustive]
 pub enum MinifyError {
-    #[error("[minify.tdewolff] {key}: expected {expected}")]
+    #[error("minify.{key}: expected {expected}")]
     Option { key: String, expected: &'static str },
     #[error("JavaScript: {0}")]
     Js(String),
@@ -94,9 +94,9 @@ impl Minifier {
     /// The minifier of a `[minify]` configuration.
     ///
     /// # Errors
-    /// [`MinifyError::Option`] for an invalid `[minify.tdewolff]` value.
+    /// [`MinifyError::Option`] for an invalid option value.
     pub fn new(config: &MinifyConfig) -> Result<Self, MinifyError> {
-        let decoded = Options::from_tdewolff(&config.options)?;
+        let decoded = Options::decode(&config.options)?;
         Ok(Self {
             ignored: decoded.ignored,
             ..Self::with_options(decoded.options, &config.disabled)
@@ -134,7 +134,7 @@ impl Minifier {
         &self.options
     }
 
-    /// The configured `[minify.tdewolff]` keys that have no effect (for warnings).
+    /// The configured options that have no effect (for warnings).
     #[must_use]
     pub fn ignored_options(&self) -> &[IgnoredOption] {
         &self.ignored

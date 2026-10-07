@@ -1,4 +1,4 @@
-//! `[minify.tdewolff]` decoding.
+//! `[minify]` option decoding.
 
 use std::sync::Arc;
 
@@ -35,7 +35,7 @@ fn defaults_are_gos() {
     assert!(!o.js.keep_var_names);
     assert_eq!(o.svg.comments, XmlComments::Remove);
     assert_eq!(o.xml.whitespace, XmlWhitespace::Collapse);
-    let decoded = Options::from_tdewolff(&Map::new()).unwrap();
+    let decoded = Options::decode(&Map::new()).unwrap();
     assert_eq!(decoded.options, o);
     assert!(decoded.ignored.is_empty());
 }
@@ -58,7 +58,7 @@ fn honoured_keys_any_case() {
         ("svg", &[("keepComments", Value::Bool(true))]),
         ("XML", &[("keepWhitespace", Value::Bool(true))]),
     ]);
-    let d = Options::from_tdewolff(&t).unwrap();
+    let d = Options::decode(&t).unwrap();
     let o = d.options;
     assert_eq!(o.html.comments, HtmlComments::KeepAll);
     assert!(!o.html.keep_end_tags && !o.html.keep_document_tags && !o.html.keep_default_attr_vals);
@@ -73,7 +73,7 @@ fn honoured_keys_any_case() {
 #[test]
 fn special_comments_and_legacy_alias() {
     let comments = |keys: &[(&str, Value)]| {
-        Options::from_tdewolff(&table(&[("html", keys)]))
+        Options::decode(&table(&[("html", keys)]))
             .unwrap()
             .options
             .html
@@ -96,7 +96,7 @@ fn special_comments_and_legacy_alias() {
         HtmlComments::KeepSpecial
     );
     assert_eq!(
-        Options::from_tdewolff(&table(&[(
+        Options::decode(&table(&[(
             "html",
             &[("templateDelims", strings(&["<%", "%>"]))]
         )]))
@@ -138,7 +138,7 @@ fn ignored_keys_are_reported() {
         ("svg", &[("precision", Value::Int(2))]),
         ("yaml", &[]),
     ]);
-    let d = Options::from_tdewolff(&t).unwrap();
+    let d = Options::decode(&t).unwrap();
     assert_eq!(d.options, Options::default());
     let got: Vec<(&str, IgnoreReason)> = d
         .ignored
@@ -173,13 +173,13 @@ fn wrong_types_are_errors() {
         ("xml", &[("keepWhitespace", Value::Int(1))]),
     ];
     for (section, keys) in cases {
-        let err = Options::from_tdewolff(&table(&[(section, keys)])).unwrap_err();
+        let err = Options::decode(&table(&[(section, keys)])).unwrap_err();
         assert!(matches!(err, MinifyError::Option { .. }), "{err}");
     }
     let mut m = Map::new();
     m.insert("html", Value::Bool(true));
-    let err = Options::from_tdewolff(&m).unwrap_err();
-    assert_eq!(err.to_string(), "[minify.tdewolff] html: expected a table");
+    let err = Options::decode(&m).unwrap_err();
+    assert_eq!(err.to_string(), "minify.html: expected a table");
 }
 
 #[test]

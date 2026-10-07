@@ -220,9 +220,13 @@ pub struct MinifyConfig {
     pub minify_output: bool,
     /// Output types excluded (`disableHTML`, …).
     pub disabled: Vec<MinifyTarget>,
-    /// Minifier options as configured (`[minify.tdewolff]`); the minify crate maps them.
+    /// The minifier options as configured, a table per type (`[minify.html]`, `[minify.css]`,
+    /// …; `[minify.tdewolff]` is migrated to them); the minify crate maps them.
     pub options: Map,
 }
+
+/// The keys of `[minify]` that hold a type's minifier options.
+const OPTION_TABLES: [&str; 6] = ["css", "html", "js", "json", "svg", "xml"];
 
 impl MinifyConfig {
     pub(crate) fn decode(m: &Map) -> Result<Self, crate::de::DeError> {
@@ -246,8 +250,6 @@ impl MinifyConfig {
             disable_svg: bool,
             #[serde(rename = "disableXML")]
             disable_xml: bool,
-            #[serde(deserialize_with = "crate::de_map")]
-            tdewolff: Map,
         }
         let r: Raw = crate::de::from_map(m)?;
         let disabled = [
@@ -261,10 +263,16 @@ impl MinifyConfig {
         .into_iter()
         .filter_map(|(on, t)| on.then_some(t))
         .collect();
+        // Checked by the minify crate, which names a value that is not a table.
+        let options = m
+            .iter()
+            .filter(|(k, _)| OPTION_TABLES.iter().any(|t| t.eq_ignore_ascii_case(k)))
+            .map(|(k, v)| (k, v.clone()))
+            .collect();
         Ok(Self {
             minify_output: r.minify_output,
             disabled,
-            options: r.tdewolff,
+            options,
         })
     }
 }

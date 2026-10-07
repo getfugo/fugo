@@ -1,11 +1,14 @@
-//! The minifier options and their mapping from the Go implementation's `[minify.tdewolff]` table.
+//! The minifier options, a table per output type (`[minify.html]`, `[minify.css]`, `[minify.js]`,
+//! `[minify.json]`, `[minify.svg]`, `[minify.xml]`), and their mapping from the Go
+//! implementation's.
 //!
-//! The Go implementation configures its minifier (tdewolff/minify) per output type. This port
-//! minifies with minify-html, lightningcss, oxc and its own JSON and XML minifiers, so only the
-//! options with an equivalent are honoured. Keys are matched case-insensitively, as Go's config
-//! loader does.
+//! The Go implementation configures its minifier (tdewolff/minify) per output type, in
+//! `[minify.tdewolff]`; `ssg-config` migrates that table to these, which keep its keys. This
+//! port minifies with minify-html, lightningcss, oxc and its own JSON and XML minifiers, so only
+//! the options with an equivalent are honoured. Keys are matched case-insensitively, as Go's
+//! config loader does.
 //!
-//! | `[minify.tdewolff]` key | default | this port |
+//! | `[minify]` key | default | this port |
 //! |---|---|---|
 //! | `html.keepComments` | `false` | honoured: keep every comment |
 //! | `html.keepSpecialComments` | `true` | honoured: keep SSI comments (`<!--#…-->`); minify-html does not keep conditional comments |
@@ -147,7 +150,7 @@ pub struct Options {
     pub xml: XmlOptions,
 }
 
-/// Why a configured `[minify.tdewolff]` key has no effect.
+/// Why a configured option has no effect.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum IgnoreReason {
     /// A tdewolff option with no equivalent here's minifiers.
@@ -164,7 +167,7 @@ pub struct IgnoredOption {
     pub reason: IgnoreReason,
 }
 
-/// Options decoded from `[minify.tdewolff]`, with the keys that have no effect.
+/// Options decoded from the option tables, with the keys that have no effect.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct DecodedOptions {
     pub options: Options,
@@ -172,13 +175,14 @@ pub struct DecodedOptions {
 }
 
 impl Options {
-    /// Decodes the `[minify.tdewolff]` table (see the module docs for the mapping).
+    /// Decodes the option tables, keyed by type (`html`, `css`, …; see the module docs for the
+    /// mapping).
     ///
     /// # Errors
     /// [`MinifyError::Option`] for a section that is not a table or a value of the wrong type.
-    pub fn from_tdewolff(table: &Map) -> Result<DecodedOptions, MinifyError> {
+    pub fn decode(tables: &Map) -> Result<DecodedOptions, MinifyError> {
         let mut d = Decoder::default();
-        for (section, value) in table.iter() {
+        for (section, value) in tables.iter() {
             let Value::Map(entries) = value else {
                 return Err(option_error(section, "a table"));
             };

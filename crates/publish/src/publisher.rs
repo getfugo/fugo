@@ -100,7 +100,7 @@ impl PublishSettings {
     /// The settings of a configuration (no LiveReload).
     ///
     /// # Errors
-    /// An invalid `[minify.tdewolff]` option or browserslist configuration.
+    /// An invalid `[minify]` option or browserslist configuration.
     pub fn from_config(cfg: &Config) -> Result<Self, PublishError> {
         let mut sites = IdVec::with_capacity(cfg.sites.len());
         for s in &cfg.sites {

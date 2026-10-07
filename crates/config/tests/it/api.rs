@@ -1,6 +1,6 @@
 //! Behaviour tests of the pipeline: the legacy-key table on a synthetic real-site-style
-//! configuration, environment variables (never settings), `CliOverrides`, `[caches]`
-//! placeholders, `[privacy]`, and error positions.
+//! configuration, the `[minify]` option tables, environment variables (never settings),
+//! `CliOverrides`, `[caches]` placeholders, `[privacy]`, and error positions.
 
 use std::path::{Path, PathBuf};
 use std::time::Duration;
@@ -156,4 +156,43 @@ fn legacy_keys() {
 fn legacy_keys_lose_to_current_keys() {
     let p = Project::new(&[("config.toml", "paginate = 3\n[pagination]\npagerSize = 7\n")]);
     assert_eq!(p.ok().default_site().pagination.pager_size, 7);
+}
+
+/// The minifier options are a table per type; the Go implementation's `[minify.tdewolff]`
+/// is migrated to them, and a current table wins over its legacy one.
+#[test]
+fn minify_option_tables() {
+    let p = Project::new(&[(
+        "config.toml",
+        r#"
+[minify]
+minifyOutput = true
+[minify.html]
+keepComments = true
+[minify.tdewolff.html]
+keepEndTags = false
+[minify.tdewolff.js]
+keepVarNames = true
+"#,
+    )]);
+    let c = p.ok();
+    let option = |path: &str| ssg_config::tree::get_path(&c.minify.options, path).cloned();
+    assert_eq!(option("html.keepcomments"), Some(Value::Bool(true)));
+    assert_eq!(option("html.keependtags"), None);
+    assert_eq!(option("js.keepvarnames"), Some(Value::Bool(true)));
+    assert_eq!(
+        c.minify.options.keys().collect::<Vec<_>>(),
+        ["html", "js"],
+        "only the option tables"
+    );
+    let mut notices: Vec<&str> = c.diagnostics.iter().map(|d| d.message.as_str()).collect();
+    notices.sort_unstable();
+    notices.dedup();
+    assert_eq!(
+        notices,
+        [
+            "config: minify.tdewolff.html is deprecated; use minify.html",
+            "config: minify.tdewolff.js is deprecated; use minify.js",
+        ]
+    );
 }

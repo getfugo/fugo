@@ -160,8 +160,8 @@ one.
    output formats per language; fugo has one of each per project (the default language's).
    Per-language `contentDir` and `staticDir` are kept (`SiteConfig::content_dir`, `static_dirs`).
 3. **Untyped sections**: `deployment` (Go's `deploy` is not ported), `segments`, `httpCache`,
-   `server`, the `module` workspace and version range and `[minify.tdewolff]` stay in
-   `Config::raw`; their validation errors are not reported here (`module.imports`, `module.mounts` and
+   `server`, the `module` workspace and version range stay in `Config::raw`, and the
+   minifier options (`[minify.html]`, `[minify.css]`, …) in `MinifyConfig::options`; their validation errors are not reported here (`module.imports`, `module.mounts` and
    `module.replacements` are read and checked by the theme step). Resample filter names are
    the images crate's (T41).
 4. **Errors instead of silently ignored values**: a `[caches]` entry that is not a table,
