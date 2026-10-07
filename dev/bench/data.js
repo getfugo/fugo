@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791394668277,
+  "lastUpdate": 1791394670837,
   "repoUrl": "https://github.com/getfugo/fugo",
   "entries": {
     "Benchmark": [
@@ -98431,6 +98431,105 @@ window.BENCHMARK_DATA = {
           {
             "name": "BenchmarkSummaryFromHTMLWithDivider",
             "value": 51.93,
+            "unit": "ns/op"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "blackb1rd.mov@gmail.com",
+            "name": "Prachya Saechua",
+            "username": "blackb1rd"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "2fbfe1f2565896e48afd8d93586eff178aa0b9b1",
+          "message": "cms: Edit a page's text as rich text (#191)\n\nA page's text opens as rich text: an editable box that shows the Markdown\nas it reads, with a toolbar for paragraph styles (headings, quotes, code\nblocks), bold, italic, strikethrough, code, links, lists, images from the\npage's files, and rules; Ctrl+B, I and K (⌘ on a Mac) work too, and Tab\nindents a list item. Markdown, next to Rich text above the box, switches\nto the textarea, and the browser remembers the choice.\n\nEach block of the text (a paragraph, a list, a table…) is drawn as an\nelement that knows its source, and so is each inline mark (markdown.ts).\nA save writes anew only the blocks that were edited (tomarkdown.ts); the\nothers keep their text exactly, with the blank lines between them. Text\ngets a backslash only where a character would otherwise start Markdown.\nRaw HTML, shortcodes on lines of their own and link definitions show as\ntheir source and are edited as text, so no HTML of the text runs. Pasted\nHTML keeps what Markdown can hold of it. A saved file keeps its page's\naddress, which the preview and the text's images use.\n\nThe Worker: requests that come while the Cloudflare Access keys are being\nfetched wait for that fetch, instead of failing with \"unknown key\" (a\nfresh Worker gets the files of every language of a page at once).\n\nCo-Authored-By: Claude Opus 5.5 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-10-08T00:24:40+07:00",
+          "tree_id": "6c77cd1bc49647575cf83fee77494cc7e1d77944",
+          "url": "https://github.com/getfugo/fugo/commit/2fbfe1f2565896e48afd8d93586eff178aa0b9b1"
+        },
+        "date": 1791394670254,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "BenchmarkSanitizeAnchorName",
+            "value": 484.9,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSanitizeAnchorNameAsciiOnly",
+            "value": 1333.9,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSanitizeAnchorNameBlackfriday",
+            "value": 595.21,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSanitizeAnchorNameString",
+            "value": 485.04,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSanitize/All_allowed",
+            "value": 224.46,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSanitize/Spaces",
+            "value": 239.95,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkRelURL",
+            "value": 357.27,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkAbsURL/relurl",
+            "value": 670.54,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkAbsURL/absurl",
+            "value": 21.82,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkTotalWords",
+            "value": 4507.31,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkStripHTML",
+            "value": 1160.62,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkParse",
+            "value": 9494.11,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkDecodeYAMLToMap",
+            "value": 15117.42,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSummaryFromHTML",
+            "value": 77.24,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSummaryFromHTMLWithDivider",
+            "value": 83.5,
             "unit": "ns/op"
           }
         ]
