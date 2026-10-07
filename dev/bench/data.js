@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791340355123,
+  "lastUpdate": 1791340357862,
   "repoUrl": "https://github.com/getfugo/fugo",
   "entries": {
     "Benchmark": [
@@ -97636,6 +97636,105 @@ window.BENCHMARK_DATA = {
           {
             "name": "BenchmarkSummaryFromHTMLWithDivider",
             "value": 74.65,
+            "unit": "ns/op"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "blackb1rd.mov@gmail.com",
+            "name": "Prachya Saechua",
+            "username": "blackb1rd"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "36e653ff87e2cf04d3220f2c207170e84acca657",
+          "message": "speed: Build a 10,000-page site 2.5× faster (#186)\n\nA profile of the 10,000-page benchmark site showed most of the time going\nto work that grows faster than the site, and to threads waiting for each\nother in the file system:\n\n- Pagers: each pager built the links to every other pager, N² URLs for a\n  page of N pagers (250,000 for the home page). A pagination now makes\n  its links once, and its pagers share them.\n- List pages: the home page, sections and terms rebuilt their page lists\n  for every pager; their values are now kept.\n- Highlighting: the inline styles of a Chroma style are made once, not\n  for every code block.\n- Tables: the second parse of a page with a table includes the page only\n  when it can hold link or footnote definitions (`]:`).\n- URL tokens and linkify: no copies of each output, the words with a `/`\n  found from the slashes, and the URL patterns tried only after their\n  literal start.\n- Files: a new directory no longer costs a failed open, and at most 3\n  files are written and 6 content files read at once (ssg_base::gate):\n  more threads only wait for each other in the file system.\n- The fugo binary allocates with mimalloc, without transparent huge\n  pages.\n- The session is freed on a thread of its own, and not at all when the\n  CLI exits.\n\ncargo dev bench on Linux (12 threads), main then this commit:\n\n  docs site        113 ms ->  84 ms   79.5 -> 100.4 MiB\n  1,000 pages      195 ms -> 103 ms   87.4 -> 104.8 MiB\n  10,000 pages    2255 ms -> 849 ms    534 ->   580 MiB\n\nOn macOS the 10,000-page site builds in 1.41 s instead of 2.69 s.\n\nCo-Authored-By: Claude Opus 5.5 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-10-07T09:20:21+07:00",
+          "tree_id": "19008718a84aaa97b555ea070ce2d11ab8a6dfd7",
+          "url": "https://github.com/getfugo/fugo/commit/36e653ff87e2cf04d3220f2c207170e84acca657"
+        },
+        "date": 1791340356999,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "BenchmarkSanitizeAnchorName",
+            "value": 482.33,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSanitizeAnchorNameAsciiOnly",
+            "value": 1332.79,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSanitizeAnchorNameBlackfriday",
+            "value": 591.53,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSanitizeAnchorNameString",
+            "value": 482.19,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSanitize/All_allowed",
+            "value": 224.13,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSanitize/Spaces",
+            "value": 233.27,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkRelURL",
+            "value": 374.97,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkAbsURL/relurl",
+            "value": 686.58,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkAbsURL/absurl",
+            "value": 20.87,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkTotalWords",
+            "value": 4510.51,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkStripHTML",
+            "value": 1178.56,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkParse",
+            "value": 9656.45,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkDecodeYAMLToMap",
+            "value": 15005.39,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSummaryFromHTML",
+            "value": 77.63,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSummaryFromHTMLWithDivider",
+            "value": 74.33,
             "unit": "ns/op"
           }
         ]
