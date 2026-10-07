@@ -250,7 +250,9 @@ page and redo your change.
 
 ## The editor
 
-- **Pages by section**, with their languages and drafts, and a filter.
+- **Pages by section**, with their languages and drafts, and a filter. A section lists its
+  folders' `_index` pages too: the pages of a taxonomy's terms (`content/brands/lays/_index.md`)
+  are in its section (*Brands*, "52 brands"), even when it has no `_index` page of its own.
 - **A form for the front matter**: text, numbers, yes/no, dates, lists, nested tables and lists
   of tables, with the labels and inputs the build works out from the site's content, and the
   values pages share suggested as you type. Taxonomy fields (`tags`, `categories`, …) suggest

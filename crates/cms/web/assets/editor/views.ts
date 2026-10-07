@@ -30,7 +30,7 @@ export function sidebar(): TemplateResult {
         ${site.sections.map(
           (s) => html`
             <li>
-              <a href="#/s/${encodeURIComponent(s.key)}" class=${s.key === selected ? "active" : nothing}>${s.title}<span class="count">${s.count}</span></a>
+              <a href="#/s/${encodeURIComponent(s.key)}" class=${s.key === selected ? "active" : nothing} title=${sizeOf(s)}>${s.title}<span class="count">${s.count || s.folders}</span></a>
             </li>
           `,
         )}
@@ -57,11 +57,21 @@ export function home(): void {
     <div class="cards">
       ${site.sections.map(
         (s) => html`
-          <a class="card" href="#/s/${encodeURIComponent(s.key)}"><strong>${s.title}</strong><span class="muted">${s.count} pages</span></a>
+          <a class="card" href="#/s/${encodeURIComponent(s.key)}"><strong>${s.title}</strong><span class="muted">${sizeOf(s)}</span></a>
         `,
       )}
     </div>
   `);
+}
+
+/** What a section holds: its pages and its folders, which in a taxonomy's section are its terms
+ * (`52 brands`). The sidebar shows the pages, or the folders of a section without pages. */
+function sizeOf(s: Section): string {
+  const taxonomy = site.taxonomies.find((t) => t.plural === s.key);
+  const count = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
+  const parts = s.count || !s.folders ? [count(s.count, "page", "pages")] : [];
+  if (s.folders) parts.push(taxonomy ? count(s.folders, taxonomy.singular, taxonomy.plural) : count(s.folders, "folder", "folders"));
+  return parts.join(" · ");
 }
 
 /** What the section view shows besides its pages: the form for a new page or folder, and the

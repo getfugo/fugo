@@ -28,13 +28,17 @@ const SITE = {
   upload_types: ["jpg", "png"],
   max_upload: 1048576,
   sections: [
-    { key: "posts", title: "Posts", count: 3, style: STYLE, keys: [{ key: "title", kind: "string" }, { key: "weight", kind: "number" }] },
+    { key: "posts", title: "Posts", count: 2, folders: 1, style: STYLE, keys: [{ key: "title", kind: "string" }, { key: "weight", kind: "number" }] },
+    { key: "tags", title: "Tags", count: 0, folders: 2, style: STYLE, keys: [{ key: "title", kind: "string" }] },
   ],
   entries: [
     { key: "posts/_index", section: "posts", kind: "section", bundle: false, title: "Posts", files: [{ lang: "en", path: "content/posts/_index.md" }], resources: [] },
     { key: "posts/sweet/_index", section: "posts", kind: "section", bundle: false, title: "Sweet", files: [{ lang: "en", path: "content/posts/sweet/_index.md" }], resources: [] },
     { key: "posts/crisps", section: "posts", kind: "page", bundle: false, title: "Crisps", files: [{ lang: "en", path: "content/posts/crisps.md" }], resources: [] },
     { key: "posts/wafers", section: "posts", kind: "page", bundle: false, title: "Wafers", files: [{ lang: "en", path: "content/posts/wafers.md" }], resources: [] },
+    // The terms' pages of a taxonomy, in a section without an index page.
+    { key: "tags/crisp/_index", section: "tags", kind: "section", bundle: false, title: "Crisp", files: [{ lang: "en", path: "content/tags/crisp/_index.md" }], resources: [] },
+    { key: "tags/sweet/_index", section: "tags", kind: "section", bundle: false, title: "Sweet", files: [{ lang: "en", path: "content/tags/sweet/_index.md" }], resources: [] },
   ],
 };
 const FILES = {
@@ -51,7 +55,10 @@ test("the start page: the site, its sections and the signed-in person", { skip }
   assert.equal(text($("header .brand")), "Snacks");
   assert.equal(text($("header .user")), "ann@example.org");
   assert.ok($("header .drafts-link"), "the review workflow has drafts");
-  assert.deepEqual($$(".cards .card strong").map(text), ["Posts"]);
+  assert.deepEqual($$(".cards .card strong").map(text), ["Posts", "Tags"]);
+  // A taxonomy's section holds the pages of its terms: folders, named after the taxonomy.
+  assert.deepEqual($$(".cards .card .muted").map(text), ["2 pages · 1 folder", "2 tags"]);
+  assert.deepEqual($$(".sidebar .count").map(text), ["2", "2"], "the pages, else the folders");
   assert.equal($("#app").className, "", "the placeholder is gone");
   assert.ok(!$("#app").textContent.includes("Loading the editor"));
 });
