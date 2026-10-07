@@ -311,7 +311,8 @@ pub struct PagerView {
     pub next: Option<PagerLink>,
     pub first: PagerLink,
     pub last: PagerLink,
-    pub pagers: Vec<PagerLink>,
+    /// `[PagerLink]`, one value shared by every pager of the pagination.
+    pub pagers: tera::Value,
 }
 
 #[derive(Clone, Debug, Serialize)]

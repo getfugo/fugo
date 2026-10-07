@@ -4,7 +4,7 @@
 use super::*;
 
 /// The formatter settings that change the CSS Chroma derives from a style.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
 pub(crate) struct CssSettings {
     /// Every class, including those with no declarations (`WithAllClasses`).
     pub all_classes: bool,

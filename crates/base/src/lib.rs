@@ -8,6 +8,7 @@
 
 pub mod anchor;
 pub mod diag;
+pub mod gate;
 pub mod glob;
 pub mod id;
 pub mod inflect;

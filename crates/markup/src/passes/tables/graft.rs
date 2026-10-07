@@ -86,8 +86,11 @@ pub(super) fn synthesize(doc: &Doc<'_>, planned: &[Planned<'_>]) -> Synth {
     }
     synth.push('\n');
     let len = synth.len();
-    // The page follows for its link reference and footnote definitions.
-    synth.push_str(&without_delimiter_rows(&doc.src.text));
+    // The page follows for its link reference and footnote definitions, when it can have any:
+    // a definition's label is followed by `]:`.
+    if doc.src.text.contains("]:") {
+        synth.push_str(&without_delimiter_rows(&doc.src.text));
+    }
     Synth {
         text: synth,
         pieces,

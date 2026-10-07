@@ -12,6 +12,7 @@ use std::sync::Arc;
 use jiff::Timestamp;
 use rayon::prelude::*;
 use ssg_base::diag::Diagnostic;
+use ssg_base::gate::Gate;
 use ssg_base::{LangIdx, PageKind, Params, Value};
 use ssg_config::Config;
 use ssg_page::{AdapterPage, Cascade, capture_overrides};
@@ -152,9 +153,18 @@ pub(crate) fn capture(cfg: &Config, vfs: &Vfs) -> Result<Capture, ModelError> {
     Ok(out)
 }
 
+/// The content files read at once: on macOS more threads opening files mostly wait for each
+/// other in the kernel (reading 10,000 pages takes half the time with 6 than with 12); on
+/// Linux 6 are as fast as more.
+static READERS: Gate = Gate::new(6);
+
 fn read_page(f: ContentFile, parser: &PathParser) -> Result<CapturedPage, ModelError> {
     let abs = f.file.abs.clone();
-    let text: Arc<str> = std::fs::read_to_string(&abs)
+    let text = {
+        let _pass = READERS.enter();
+        std::fs::read_to_string(&abs)
+    };
+    let text: Arc<str> = text
         .map_err(|source| ModelError::Read {
             path: abs.clone(),
             source,

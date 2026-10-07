@@ -2,7 +2,8 @@
 
 The command line (REWRITE_PLAN.md §2.1, §4.8, §7.5). **State: T37; T60's A-T gate and
 embedded-template snapshots run through it; `server` (T71).** clap derive; `anyhow` only
-here.
+here. The binary allocates with mimalloc (`no_thp`), which makes builds 5–15% faster than the
+system allocator for a few MB more memory; the libraries and their tests use the system's.
 
 ```
 fugo [build flags]                 # no command: build (as in the Go build)

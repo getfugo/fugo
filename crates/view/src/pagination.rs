@@ -10,21 +10,56 @@
 
 use std::collections::BTreeMap;
 use std::fmt;
-use std::sync::{Arc, Mutex, PoisonError};
+use std::sync::{Arc, Mutex, OnceLock, PoisonError};
 
 use ssg_base::diag::Position;
 use ssg_base::{FormatId, PageId};
 use ssg_nav::{Pagination, PaginationItems};
 
+use crate::pager::PagerLinks;
+
 /// A recorded pagination and where it was first asked for.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug)]
 pub struct Recorded {
     pub pagination: Arc<Pagination>,
     /// The template position of the first call (`None`: unknown).
     pub first_call: Option<Position>,
+    /// The links of its pagers, made by the first [`crate::pager_view`] (every pager links to
+    /// all of them).
+    links: OnceLock<PagerLinks>,
+}
+
+impl PartialEq for Recorded {
+    fn eq(&self, other: &Self) -> bool {
+        self.pagination == other.pagination && self.first_call == other.first_call
+    }
 }
 
 impl Recorded {
+    fn new(pagination: Pagination, first_call: Option<Position>) -> Self {
+        Self {
+            pagination: Arc::new(pagination),
+            first_call,
+            links: OnceLock::new(),
+        }
+    }
+
+    /// The links of its pagers: made by `make` (the URL of each pager, in order) on the first
+    /// call, then kept.
+    ///
+    /// # Errors
+    /// What `make` returns.
+    pub(crate) fn links<E>(
+        &self,
+        make: impl FnOnce() -> Result<Vec<String>, E>,
+    ) -> Result<&PagerLinks, E> {
+        if let Some(links) = self.links.get() {
+            return Ok(links);
+        }
+        let links = PagerLinks::new(make()?);
+        Ok(self.links.get_or_init(|| links))
+    }
+
     /// The number of pagers (at least 1, also for an empty list).
     #[must_use]
     pub fn total_pages(&self) -> u32 {
@@ -97,12 +132,10 @@ impl PaginationRecorder {
         make: impl FnOnce() -> Pagination,
     ) -> Arc<Recorded> {
         let mut m = self.recorded.lock().unwrap_or_else(PoisonError::into_inner);
-        Arc::clone(m.entry((page, format)).or_insert_with(|| {
-            Arc::new(Recorded {
-                pagination: Arc::new(make()),
-                first_call: at,
-            })
-        }))
+        Arc::clone(
+            m.entry((page, format))
+                .or_insert_with(|| Arc::new(Recorded::new(make(), at))),
+        )
     }
 
     /// `paginate(pages=, size=)`: records `p` on the first call; a later call must paginate
@@ -127,10 +160,7 @@ impl PaginationRecorder {
                 second: at,
             });
         }
-        let r = Arc::new(Recorded {
-            pagination: Arc::new(p),
-            first_call: at,
-        });
+        let r = Arc::new(Recorded::new(p, at));
         m.insert((page, format), Arc::clone(&r));
         Ok(r)
     }

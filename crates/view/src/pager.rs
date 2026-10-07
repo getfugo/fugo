@@ -76,9 +76,34 @@ pub fn pager_url(
     Ok(l.rel_permalink.escaped())
 }
 
+/// The links of every pager of a pagination, kept by its [`Recorded`]: each pager's view
+/// links to all of them, so a pagination of N pagers makes N links, not N².
+#[derive(Clone, Debug)]
+pub(crate) struct PagerLinks {
+    /// The URL of pager `n` at `n - 1`.
+    urls: Vec<String>,
+    /// `pagers`: `[{page_number, url}]`.
+    pagers: tera::Value,
+}
+
+impl PagerLinks {
+    pub(crate) fn new(urls: Vec<String>) -> Self {
+        let pagers = tera::Value::from_serializable(
+            &(1..)
+                .zip(&urls)
+                .map(|(n, url)| PagerLink {
+                    page_number: n,
+                    url: url.clone(),
+                })
+                .collect::<Vec<_>>(),
+        );
+        Self { urls, pagers }
+    }
+}
+
 /// Pager `number` of a recorded pagination as a value of generation `g` (its pages are that
 /// generation's summaries; grouped paginations give `[{key, pages}]`); `url` makes the pager
-/// links.
+/// links, once per pagination.
 ///
 /// # Errors
 /// What `url` returns.
@@ -90,10 +115,16 @@ pub fn pager_view<E>(
 ) -> Result<PagerView, E> {
     let p = &rec.pagination;
     let total = rec.total_pages();
+    let links = rec.links(|| (1..=total).map(&url).collect())?;
     let link = |n: u32| -> Result<PagerLink, E> {
+        let at = usize::try_from(n).ok().and_then(|n| n.checked_sub(1));
+        let url = match at.and_then(|i| links.urls.get(i)) {
+            Some(u) => u.clone(),
+            None => url(n)?,
+        };
         Ok(PagerLink {
             page_number: n,
-            url: url(n)?,
+            url,
         })
     };
     let pages = match (
@@ -123,7 +154,7 @@ pub fn pager_view<E>(
     };
     Ok(PagerView {
         page_number: number,
-        url: url(number)?,
+        url: link(number)?.url,
         pages,
         pager_size: p.size(),
         total_pages: total,
@@ -142,6 +173,6 @@ pub fn pager_view<E>(
         },
         first: link(1)?,
         last: link(total)?,
-        pagers: (1..=total).map(link).collect::<Result<_, _>>()?,
+        pagers: links.pagers.clone(),
     })
 }

@@ -54,6 +54,7 @@ ssg-npm = { workspace = true, optional = true }
 tera.workspace = true
 clap.workspace = true
 anyhow.workspace = true
+mimalloc.workspace = true
 jiff.workspace = true
 serde_json.workspace = true
 toml.workspace = true

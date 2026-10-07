@@ -129,11 +129,16 @@ impl ViewGeneration {
 
     /// The full value of page `id` without keeping it: what a layout job renders its own page
     /// with (the value is the job's; [`full`](Self::full) keeps the values `deref` and
-    /// `get_page` share). Equal to `full(id)`; the cached one is reused when it exists.
+    /// `get_page` share). Equal to `full(id)`; the cached one is reused when it exists. A
+    /// branch page's value is kept: it renders in several jobs (each pager, each format), and
+    /// its lists are the longest.
     #[must_use]
     pub fn page_value(&self, id: PageId) -> tera::Value {
         if let Some(v) = self.full[id].get() {
             return v.clone();
+        }
+        if self.shared.model.pages[id].kind.is_branch() {
+            return self.full(id);
         }
         self.full_value(id)
     }

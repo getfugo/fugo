@@ -8,6 +8,11 @@ use std::process::ExitCode;
 use clap::Parser;
 use ssg_cli::{Cli, Exit};
 
+/// A build allocates many small values (pages, template values, output strings) on every
+/// thread; mimalloc serves them faster than the system allocator.
+#[global_allocator]
+static ALLOCATOR: mimalloc::MiMalloc = mimalloc::MiMalloc;
+
 fn main() -> ExitCode {
     let args: Vec<OsString> = std::env::args_os().collect();
     // Flags may come before the command, as in the Go build (`args::command_first`).

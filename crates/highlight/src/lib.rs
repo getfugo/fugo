@@ -25,8 +25,8 @@ mod style;
 mod styles;
 mod token;
 
-use std::collections::{BTreeMap, BTreeSet};
-use std::sync::{Mutex, OnceLock, PoisonError};
+use std::collections::{BTreeMap, BTreeSet, HashMap};
+use std::sync::{Arc, Mutex, OnceLock, PoisonError};
 
 use ssg_base::Map;
 use ssg_base::diag::Diagnostic;
@@ -90,7 +90,12 @@ pub struct Highlight {
     defaults: Options,
     /// Style names that fell back to [`FALLBACK_STYLE`], for [`Highlight::diagnostics`].
     fallbacks: Mutex<BTreeSet<String>>,
+    /// The inline declarations of each style and settings, made once for every code block.
+    inline: Mutex<HashMap<(&'static str, CssSettings), InlineMap>>,
 }
+
+/// The compressed inline declarations per token type ([`style::inline_map`]).
+type InlineMap = Arc<BTreeMap<TokenType, String>>;
 
 impl std::fmt::Debug for Highlight {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -111,6 +116,7 @@ impl Highlight {
             styles: &tables.styles,
             defaults: Options::from_config(config),
             fallbacks: Mutex::new(BTreeSet::new()),
+            inline: Mutex::new(HashMap::new()),
         }
     }
 
@@ -187,7 +193,7 @@ impl Highlight {
         let tokens = lexer.tokens(code);
         let style = self.style(&o.style);
         let inline = match o.styling {
-            Styling::Inline => style::inline_map(
+            Styling::Inline => self.inline_map(
                 style,
                 CssSettings {
                     all_classes: false,
@@ -195,7 +201,7 @@ impl Highlight {
                     highlight_lines: !o.highlight_ranges().is_empty(),
                 },
             ),
-            Styling::Classes => BTreeMap::new(),
+            Styling::Classes => InlineMap::default(),
         };
         let tokens: Vec<(TokenType, &str)> =
             tokens.iter().map(|t| (t.ty, t.value.as_str())).collect();
@@ -250,8 +256,17 @@ impl Highlight {
             .collect()
     }
 
+    /// The inline declarations of `style` with settings `s`, made on first use.
+    fn inline_map(&self, style: &'static Style, s: CssSettings) -> InlineMap {
+        let mut m = self.inline.lock().unwrap_or_else(PoisonError::into_inner);
+        Arc::clone(
+            m.entry((style.name(), s))
+                .or_insert_with(|| Arc::new(style::inline_map(style, s))),
+        )
+    }
+
     /// The style named `name` (exactly, as Chroma), else the fallback with a warning.
-    fn style(&self, name: &str) -> &Style {
+    fn style(&self, name: &str) -> &'static Style {
         self.styles.get(name).unwrap_or_else(|| {
             self.fallbacks
                 .lock()
