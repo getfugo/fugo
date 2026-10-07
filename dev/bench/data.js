@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791385294404,
+  "lastUpdate": 1791393854349,
   "repoUrl": "https://github.com/getfugo/fugo",
   "entries": {
     "Benchmark": [
@@ -97248,6 +97248,66 @@ window.BENCHMARK_DATA = {
           {
             "name": "10,000 generated pages: peak memory",
             "value": 610.9,
+            "unit": "MiB",
+            "extra": "10061 pages; median of 5 builds after a warm-up build"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "blackb1rd.mov@gmail.com",
+            "name": "Prachya Saechua",
+            "username": "blackb1rd"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "b5c5689181eeba878a644f12c7b01236ffd9bdbc",
+          "message": "cms: Open a pull request for each draft, and merge the branch in to publish (#190)\n\n- A draft's first save opens a pull request from its branch, labelled\n  fugo-cms, that links back to the draft in the editor; the drafts list\n  and the draft's page link it. Publishing or discarding deletes the\n  branch, which closes it, and a published draft's pull request says which\n  commit published it. Without the Pull requests permission there are\n  none, and drafts work as before; a GitHub App's token asks for it only\n  when the installation has it.\n- Publishing a draft whose files the branch changed since merges the\n  branch into the draft first, with GitHub's merge: a file the branch\n  moved keeps the draft's changes, and changes to different lines are both\n  kept. Only when both changed the same lines does it stop and name the\n  files. The merge commit carries the draft's trailers, and a draft's\n  saves (its authors, who may discard it) leave such merges out.\n- A page opened from a draft saves to that draft while it exists.\n- Decap CMS's drafts (cms/<collection>/<slug>) are in the drafts list\n  under their pull request's title, and are shown, published and\n  discarded like the editor's own.\n\nCo-Authored-By: Claude Opus 5.5 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-10-08T00:14:27+07:00",
+          "tree_id": "86624fdcbce5a93f66e31bd5f96d107975c394b1",
+          "url": "https://github.com/getfugo/fugo/commit/b5c5689181eeba878a644f12c7b01236ffd9bdbc"
+        },
+        "date": 1791393842443,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "docs site: build time",
+            "value": 132.8,
+            "unit": "ms",
+            "extra": "334 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "docs site: peak memory",
+            "value": 175.6,
+            "unit": "MiB",
+            "extra": "334 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "1,000 generated pages: build time",
+            "value": 140.7,
+            "unit": "ms",
+            "extra": "1061 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "1,000 generated pages: peak memory",
+            "value": 149,
+            "unit": "MiB",
+            "extra": "1061 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "10,000 generated pages: build time",
+            "value": 1669.7,
+            "unit": "ms",
+            "extra": "10061 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "10,000 generated pages: peak memory",
+            "value": 609.9,
             "unit": "MiB",
             "extra": "10061 pages; median of 5 builds after a warm-up build"
           }
