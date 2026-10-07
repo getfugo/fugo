@@ -1,4 +1,5 @@
-// editor/folders.ts (in the built editor, assets/admin/cms.js): the folders a new page can go in.
+// editor/folders.ts (in the built editor, assets/admin/cms.js): the folders of a section, and
+// where a moved page's files go; and the page whose layout a preview borrows.
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -23,6 +24,17 @@ test("the folders below a section, in key order, with their depth", () => {
     { key: "docs/guides/install", title: "Installing", depth: 2 },
     { key: "docs/reference", title: "Reference", depth: 1 },
   ]);
+});
+
+test("a folder without a page of its own is one too, named after its directory", () => {
+  const entries = [...ENTRIES, { key: "docs/reference/old-api/v1", kind: "page", title: "Version 1" }];
+  assert.deepEqual(
+    foldersOf({ key: "docs" }, entries).filter((f) => f.key.startsWith("docs/reference")),
+    [
+      { key: "docs/reference", title: "Reference", depth: 1 },
+      { key: "docs/reference/old-api", title: "Old api", depth: 2 },
+    ],
+  );
 });
 
 test("a section without folders, and the root section, have none", () => {

@@ -207,14 +207,6 @@ h2 {
   gap: 0.4rem;
 }
 
-// A new page or folder in a section: the folder it goes in, the title, Create.
-.new-page {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  margin: 0.3rem 0 0.8rem;
-}
-
 table.entries {
   width: 100%;
   border-collapse: collapse;
@@ -225,6 +217,26 @@ table.entries {
     padding: 0.35rem 0.5rem;
     border-bottom: 1px solid var(--line);
     vertical-align: top;
+  }
+
+  // A folder: its icon and title, then the pages below it.
+  tr.folder > td:first-child > a {
+    font-weight: 600;
+  }
+
+  .folder-icon {
+    width: 1em;
+    height: 1em;
+    margin-right: 0.35rem;
+    vertical-align: -0.125em;
+    fill: none;
+    stroke: currentColor;
+    stroke-linejoin: round;
+  }
+
+  // Where a match of the filter is, below the folder shown.
+  .where {
+    display: block;
   }
 }
 

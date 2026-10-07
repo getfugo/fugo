@@ -63,11 +63,13 @@ test("the start page: the site, its sections and the signed-in person", { skip }
   assert.ok(!$("#app").textContent.includes("Loading the editor"));
 });
 
-test("a section lists its pages, section pages first; the filter hides the others", { skip }, async () => {
+test("a section lists its folders, then its pages; the filter looks below it too", { skip }, async () => {
   await go("#/s/posts", () => $("table.entries"));
   assert.equal($(".sidebar a.active").getAttribute("href"), "#/s/posts");
-  const titles = () => $$("table.entries tbody tr:not([hidden]) td:first-child a").map(text);
-  assert.deepEqual(titles(), ["Posts", "Sweet", "Crisps", "Wafers"]);
+  const titles = () => $$("table.entries tbody td:first-child > a").map(text);
+  assert.deepEqual(titles(), ["Sweet", "Crisps", "Wafers"]);
+  assert.equal($("tr.folder a").getAttribute("href"), "#/s/posts/sweet");
+  assert.equal($(".title-row a.button").getAttribute("href"), "#/e/posts%2F_index", "the folder's own page");
   const filter = $("input.filter");
   type(filter, "waf");
   assert.deepEqual(titles(), ["Wafers"]);
@@ -75,24 +77,18 @@ test("a section lists its pages, section pages first; the filter hides the other
   type(filter, "");
 });
 
-test("New page asks for the folder, then opens the new page", { skip }, async () => {
-  await go("#/s/posts", () => $("table.entries"));
-  const newPage = $$(".title-row button").find((b) => text(b) === "New page");
-  newPage.click();
-  assert.deepEqual($$("form.new-page option").map(text), ["Folder…", "Posts", "Sweet"]);
-  newPage.click();
-  assert.equal($("form.new-page"), null, "a second click closes the form");
-  newPage.click();
-  $("form.new-page select").value = "posts/sweet";
-  $("form.new-page input[name=title]").value = "Honey Butter";
-  $("form.new-page").dispatchEvent(new window.Event("submit", { bubbles: true, cancelable: true }));
-  await until(() => $(".crumbs")?.textContent.includes("posts/sweet/honey-butter"));
+test("New page makes a page in the folder shown, and opens it", { skip }, async () => {
+  await go("#/s/posts/sweet", () => text($("h1")) === "Sweet");
+  assert.equal(text($(".crumbs")), "Pages / Posts");
+  $$(".title-row button").find((b) => text(b) === "New page").click();
+  await until(() => $(".doc-head code")?.textContent.includes("posts/sweet/honey-butter"));
+  assert.equal(text($(".crumbs")), "Pages / Posts / Sweet");
   assert.equal($(".fields input#f-title").value, "Honey Butter");
   assert.equal(text($(".actions .primary")), "Save draft");
 });
 
 test("a page: a field per key, as the settings label them", { skip }, async () => {
-  await go("#/e/posts%2Fcrisps", () => $(".crumbs")?.textContent.includes("posts/crisps") && $(".fields"));
+  await go("#/e/posts%2Fcrisps", () => $(".doc-head code")?.textContent.includes("posts/crisps") && $(".fields"));
   assert.equal($("#f-title").value, "Crisps");
   const summary = $("#f-summary").closest(".field");
   assert.equal(text(summary.querySelector("label > span")), "Summary");
@@ -166,8 +162,8 @@ test("Save sends the page's file as typed", { skip }, async () => {
 });
 
 test("Edit as text shows the file, and the form comes back", { skip }, async () => {
-  await go("#/e/posts%2Fwafers", () => $(".crumbs")?.textContent.includes("posts/wafers") && $(".tabs"));
-  await go("#/e/posts%2Fcrisps", () => $(".crumbs")?.textContent.includes("posts/crisps") && $("#f-title"));
+  await go("#/e/posts%2Fwafers", () => $("h1")?.textContent === "Wafers" && $(".tabs"));
+  await go("#/e/posts%2Fcrisps", () => $(".doc-head code")?.textContent.includes("posts/crisps") && $("#f-title"));
   const toggle = $(".doc-head .toggle input");
   toggle.checked = true;
   toggle.dispatchEvent(new window.Event("change", { bubbles: true }));

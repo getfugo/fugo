@@ -250,9 +250,12 @@ page and redo your change.
 
 ## The editor
 
-- **Pages by section**, with their languages and drafts, and a filter. A section lists its
-  folders' `_index` pages too: the pages of a taxonomy's terms (`content/brands/lays/_index.md`)
-  are in its section (*Brands*, "52 brands"), even when it has no `_index` page of its own.
+- **Pages by folder**, at any depth: a section lists its folders, then its pages, with their
+  languages and drafts, and each folder lists its own the same way. The crumbs above a folder
+  or a page lead back up to *Pages*, the top, whose folders are the sections. The filter finds
+  pages and folders anywhere below the folder shown, and says where each is. The pages of a
+  taxonomy's terms (`content/brands/lays/_index.md`) are the folders of its section (*Brands*,
+  "52 brands"), even when it has no `_index` page of its own.
 - **A form for the front matter**: text, numbers, yes/no, dates, lists, nested tables and lists
   of tables, with the labels and inputs the build works out from the site's content, and the
   values pages share suggested as you type. Taxonomy fields (`tags`, `categories`, …) suggest
@@ -272,16 +275,18 @@ page and redo your change.
 - **Edit as text**: the whole file, front matter included, for anything the form does not show.
 - **Translations**: a tab per language, and *+ language* to add one (it starts as a copy).
 - **Files of the page**: a bundle's images and other files, uploads and deletions.
-- **New pages**, written the way the section's pages are: as bundles or single files, with the
-  section's front matter format and language suffixes.
-  In a section with folders of its own (a folder with an `_index` page, such as
-  `docs/guides/install/`), *New page* asks which folder the page goes in.
-- **New folders**: *New folder* makes a folder in the section, or in one of its folders, with
-  an `_index` page that holds the folder's title and text.
-- **Moving a page** to another folder of its section, with all its files (translations,
-  images, everything in its bundle). Each language's file keeps the URL its page had in
-  `aliases`, so that old links still work. A move saves the page like an edit: in a draft, with
-  `workflow = "review"`.
+- **New pages**: *New page* makes one in the folder shown, written the way its section's pages
+  are: as bundles or single files, with the section's front matter format and language
+  suffixes.
+- **New folders**: *New folder* makes a folder in the folder shown, with an `_index` page that
+  holds the folder's title and text (*Edit folder page*), and opens it, ready for its pages. The
+  folder's page is saved with the first page saved in it, in the same draft, or on its own.
+  *New section* (on the start page, or at the top) makes a folder at the top: a new section,
+  whose pages are written like those of the largest section.
+- **Moving a page** to another folder of its section, at any depth, with all its files
+  (translations, images, everything in its bundle). Each language's file keeps the URL its page
+  had in `aliases`, so that old links still work. A move saves the page like an edit: in a
+  draft, with `workflow = "review"`.
 
 Saving changes only what was edited. A file nobody changed is not written; in YAML front matter,
 the keys that did not change keep their text, comments and formatting. TOML and JSON front

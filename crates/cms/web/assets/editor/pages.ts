@@ -5,14 +5,15 @@ import { live } from "lit-html/directives/live.js";
 import { clone, decode, encode, join, split } from "../codec";
 import { base64ToText } from "../common";
 import { api, ApiError, messageOf } from "./api";
+import { crumbs } from "./browse";
 import { addTranslation, deletePage, discard, movePage, publish, save } from "./changes";
 import { type Doc } from "./data";
 import { show, toast, valueOf } from "./dom";
 import { bodyEditor, filesPanel } from "./files";
-import { foldersOf } from "./folders";
+import { foldersOf, ownFolder, placeOf } from "./folders";
 import { fieldsForm } from "./form";
 import { schedulePreview } from "./preview";
-import { canEdit, current, draftOf, langName, me, pending, setPage, site } from "./state";
+import { allEntries, canEdit, current, draftOf, langName, me, pending, sectionFor, setPage, site } from "./state";
 import { notFound } from "./views";
 
 /** A document of the open page: one language's file. */
@@ -39,7 +40,7 @@ export async function openPage(key: string): Promise<void> {
   const entry = site.entries.find((e) => e.key === key) ?? pending.get(key);
   if (!entry) return notFound();
   show(html`<p class="muted">Loading…</p>`);
-  const draft = draftOf(key);
+  const draft = (entry.savedWith ? draftOf(entry.savedWith) : null) ?? draftOf(key);
   const docs = new Map<string, Doc>();
   try {
     await Promise.all(
@@ -68,7 +69,6 @@ export async function openPage(key: string): Promise<void> {
 export function pageView(): void {
   const p = current();
   const { entry, draft, docs } = p;
-  const section = site.sections.find((s) => s.key === entry.section);
   const doc = docs.get(p.lang);
   const missing = site.languages.filter((l) => !docs.has(l.key));
   const editable = [...docs.values()].some((d) => canEdit(d.path));
@@ -78,7 +78,7 @@ export function pageView(): void {
     pageView();
   };
   show(html`
-    <div class="crumbs"><a href="#/s/${encodeURIComponent(entry.section)}">${section?.title ?? "Pages"}</a> / ${entry.key}</div>
+    <div class="crumbs">${crumbs(ownFolder(entry.key) ?? placeOf(entry.key) ?? "")}</div>
     <div class="title-row">
       <h1>${title}</h1>
       ${draft ? html`<a class="badge pending" href="#/d/${draft.id}">has a draft</a>` : nothing}
@@ -101,12 +101,13 @@ export function pageView(): void {
   `);
 }
 
-/** Moving a saved page to another folder of its section (none in a section without folders). */
+/** Moving a saved page to another folder of its section, at any depth (none in a section without
+ * folders). */
 function moveControl(): TemplateResult | typeof nothing {
   const { entry } = current();
-  const section = site.sections.find((s) => s.key === entry.section);
-  if (entry.kind !== "page" || entry.isNew || !section) return nothing;
-  const folders = foldersOf(section, [...site.entries, ...pending.values()]);
+  if (entry.kind !== "page" || entry.isNew || !entry.section) return nothing;
+  const section = sectionFor(entry.section);
+  const folders = foldersOf(section, allEntries());
   if (folders.length === 0) return nothing;
   const here = entry.key.includes("/") ? entry.key.slice(0, entry.key.lastIndexOf("/")) : "";
   const submit = (ev: Event) => {
