@@ -1,93 +1,16 @@
-// New pages, translations and deleting; saving, publishing and discarding drafts.
+// Moving, translations and deleting; saving, publishing and discarding drafts. New pages and
+// folders are in create.ts.
 
-import { clone, create, type FrontMatter, join } from "../codec";
+import { create, join } from "../codec";
 import { api, ApiError, messageOf } from "./api";
-import { type Change, type EntryFile, type Section } from "./data";
+import { keepNewFolders, newFolderDocs, pathFor } from "./create";
+import { type Change, type EntryFile } from "./data";
 import { toast } from "./dom";
 import { movedPath } from "./folders";
-import { taxonomies } from "./form";
-import { emptyOf, hintOf, problems, startOf } from "./hints";
+import { problems } from "./hints";
 import { docText, makeDoc, openPage, pageView } from "./pages";
 import { route } from "./route";
-import { canEdit, current, loadDrafts, pending, site } from "./state";
-
-const slugify = (s: string) =>
-  s
-    .normalize("NFKD")
-    .replace(/[̀-ͯ]/g, "")
-    .toLowerCase()
-    .replace(/[^\p{L}\p{N}]+/gu, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 80);
-
-/** The path of a page's file in `lang`, written like the section's pages. */
-function pathFor(section: Section, key: string, lang: string, bundle: boolean): string {
-  const style = section.style;
-  const langDir = site.languages.find((l) => l.key === lang)?.content_dir;
-  const root = langDir ?? site.content_dir ?? "content";
-  const suffix = style.lang_suffix || (!langDir && lang !== site.default_language) ? `.${lang}` : "";
-  return bundle ? `${root}/${key}/index${suffix}.${style.ext}` : `${root}/${key}${suffix}.${style.ext}`;
-}
-
-/** Asks for the title of a new page in the section's own folder, and makes it. */
-export function askNewPage(section: Section): void {
-  const title = prompt(`Title of the new page in ${section.title}:`)?.trim();
-  if (title) newPage(section, title);
-}
-
-/** A new page titled `title` in `folder`: the section's own, or one below it (`foldersOf`). */
-export function newPage(section: Section, title: string, folder = section.key): void {
-  const slug = slugify(title) || `page-${Date.now()}`;
-  const key = folder ? `${folder}/${slug}` : slug;
-  if (site.entries.some((e) => e.key === key)) {
-    toast(`A page ${key} exists already`, "error");
-    return;
-  }
-  const lang = site.default_language;
-  const path = pathFor(section, key, lang, section.style.bundle);
-  if (!canEdit(path)) {
-    toast(`You may not create ${path}`, "error");
-    return;
-  }
-  const data: FrontMatter = { title, date: new Date().toISOString() };
-  const terms = taxonomies();
-  const has = (key: string) => Object.keys(data).some((x) => x.toLowerCase() === key.toLowerCase());
-  for (const k of section.keys) {
-    if (has(k.key)) continue;
-    // A key's default, or the value every page of the section gives it; taxonomy keys start as
-    // empty lists (an empty string could name a term).
-    if (hintOf(k.key).default !== undefined || k.default !== undefined) data[k.key] = startOf(k.key, k.kind, k.default);
-    else if (terms.has(k.key.toLowerCase())) data[k.key] = [];
-    else if (["string", "list", "boolean"].includes(k.kind)) data[k.key] = emptyOf(k.kind);
-  }
-  // Keys only the settings name, with a default.
-  for (const [key, h] of Object.entries(site.fields ?? {})) {
-    if (h.unused && h.default !== undefined && !key.includes(".") && !has(key)) data[h.name ?? key] = clone(h.default);
-  }
-  const doc = makeDoc(path, join(create(section.style.format, data, "")), null, true);
-  pending.set(key, { key, section: section.key, kind: "page", bundle: section.style.bundle, title, resources: [], isNew: true, files: [{ lang, path, doc }] });
-  location.hash = `#/e/${encodeURIComponent(key)}`;
-}
-
-/** A new folder titled `title` in `parent` (the section's own, or one below it): its index page. */
-export function newFolder(section: Section, title: string, parent = section.key): void {
-  const slug = slugify(title) || `folder-${Date.now()}`;
-  const dir = parent ? `${parent}/${slug}` : slug;
-  const key = `${dir}/_index`;
-  if (pending.has(key) || site.entries.some((e) => e.key === key || e.key === dir || e.key.startsWith(`${dir}/`))) {
-    toast(`${dir} exists already`, "error");
-    return;
-  }
-  const lang = site.default_language;
-  const path = pathFor(section, dir, lang, true).replace(/\/index(\.[^/]+)$/, "/_index$1");
-  if (!canEdit(path)) {
-    toast(`You may not create ${path}`, "error");
-    return;
-  }
-  const doc = makeDoc(path, join(create(section.style.format, { title }, "")), null, true);
-  pending.set(key, { key, section: section.key, kind: "section", bundle: false, title, resources: [], isNew: true, files: [{ lang, path, doc }] });
-  location.hash = `#/e/${encodeURIComponent(key)}`;
-}
+import { canEdit, current, loadDrafts, pending, sectionFor, site } from "./state";
 
 /**
  * Moves the open page into `folder` (its section's own, or one below it), with all its files.
@@ -123,6 +46,7 @@ export async function movePage(folder: string): Promise<void> {
   }
   const resources = entry.resources.map((r) => movedPath(r, entry.key, key));
   entry.resources.forEach((r, i) => changes.push({ path: r, delete: true }, { path: resources[i], from: r, base: null }));
+  for (const d of newFolderDocs(key)) changes.push({ path: d.path, content: docText(d), encoding: "utf-8", base: null });
   if (!changes.every((c) => canEdit(c.path))) {
     toast("You may not move every file of this page", "error");
     return;
@@ -135,7 +59,9 @@ export async function movePage(folder: string): Promise<void> {
     toast(res.draft ? "Moved, as a draft" : "Moved: the site updates after its next build", "ok");
     const old = site.entries.indexOf(entry);
     if (!res.draft && old >= 0) site.entries.splice(old, 1);
-    site.entries.push({ ...entry, key, files, resources, isNew: undefined });
+    const moved = { ...entry, key, files, resources, isNew: undefined };
+    keepNewFolders(moved, res.draft ? key : null);
+    site.entries.push(moved);
     await loadDrafts();
     await openPage(key);
   } catch (e) {
@@ -146,7 +72,7 @@ export async function movePage(folder: string): Promise<void> {
 
 export function addTranslation(lang: string): void {
   const p = current();
-  const section = site.sections.find((s) => s.key === p.entry.section) ?? site.sections[0];
+  const section = sectionFor(p.entry.section);
   const from = p.docs.get(site.default_language) ?? [...p.docs.values()][0];
   const first = p.entry.files[0];
   let path: string;
@@ -191,7 +117,8 @@ export async function save(): Promise<void> {
     return;
   }
   const changes: Change[] = [];
-  for (const doc of p.docs.values()) {
+  // A page in a new folder saves the folder's page (and those of new folders above it) too.
+  for (const doc of [...newFolderDocs(p.entry.key), ...p.docs.values()]) {
     if (!canEdit(doc.path)) continue;
     let text: string;
     try {
@@ -215,10 +142,13 @@ export async function save(): Promise<void> {
 async function send(changes: Change[]): Promise<void> {
   const p = current();
   const title = p.docs.get(site.default_language)?.data?.title ?? p.entry.title;
+  // A new folder's page saved with a page is in that page's draft: its changes go there too.
+  const entry = p.draft?.entry ?? p.entry.key;
   try {
-    const res = await api<{ draft: string | null }>("POST", "save", null, { entry: p.entry.key, title: String(title ?? ""), changes });
+    const res = await api<{ draft: string | null }>("POST", "save", null, { entry, title: String(title ?? ""), changes });
     toast(res.draft ? "Saved as a draft" : "Saved: the site updates after its next build", "ok");
     pending.delete(p.entry.key);
+    keepNewFolders(p.entry, res.draft ? entry : null);
     const files = [...p.docs.entries()].map(([lang, d]): EntryFile => ({ lang, path: d.path, format: d.parts.format, title: String(d.data?.title ?? "") }));
     const known = site.entries.find((e) => e.key === p.entry.key);
     if (!known) {

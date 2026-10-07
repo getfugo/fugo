@@ -75,7 +75,7 @@ const FILES = {
 
 before(() => skip || startEditor(SITE, FILES));
 
-const openA = () => go("#/e/snacks%2Fa", () => $(".crumbs")?.textContent.includes("snacks/a") && $("#f-rating"));
+const openA = () => go("#/e/snacks%2Fa", () => $(".doc-head code")?.textContent.includes("snacks/a") && $("#f-rating"));
 const tab = (name) => $$(".tabs .tab").find((b) => text(b) === name);
 
 test("a closed table shows a summary of its values, and its fields when opened", { skip }, async () => {
@@ -131,7 +131,7 @@ test("Save checks the values: required ones, and numbers within their bounds", {
 test("a new page starts with its section's values and the settings' defaults", { skip }, async () => {
   await go("#/s/snacks", () => $("table.entries"));
   $$(".title-row button").find((b) => text(b) === "New page").click();
-  await until(() => $(".crumbs")?.textContent.includes("snacks/honey-butter"));
+  await until(() => $(".doc-head code")?.textContent.includes("snacks/honey-butter"));
   assert.equal($("#f-author").value, "Kitchen");
   assert.equal($("#f-type"), null, "a hidden key is not shown…");
   const raw = $(".doc-head .toggle input");

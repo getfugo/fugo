@@ -80,6 +80,9 @@ export interface Entry {
   files: EntryFile[];
   resources: string[];
   isNew?: boolean;
+  /** The page whose draft holds this one's files: a new folder's page, saved with the first
+   * page in it. */
+  savedWith?: string;
 }
 
 /** The content index (`GET site`, `crates/cms/src/index.rs`). */
