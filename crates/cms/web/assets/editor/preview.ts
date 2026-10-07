@@ -153,7 +153,7 @@ function refresh(): void {
   }
 }
 
-function mimeOf(path: string): string {
+export function mimeOf(path: string): string {
   const ext = path.split(".").pop()?.toLowerCase() ?? "";
   return { jpg: "image/jpeg", jpeg: "image/jpeg", png: "image/png", gif: "image/gif", webp: "image/webp", svg: "image/svg+xml", avif: "image/avif" }[ext] ?? "application/octet-stream";
 }

@@ -150,7 +150,9 @@ async function send(changes: Change[]): Promise<void> {
     toast(res.draft ? "Saved as a draft" : "Saved: the site updates after its next build", "ok");
     pending.delete(p.entry.key);
     keepNewFolders(p.entry, res.draft ? entry : null);
-    const files = [...p.docs.entries()].map(([lang, d]): EntryFile => ({ lang, path: d.path, format: d.parts.format, title: String(d.data?.title ?? "") }));
+    // A file keeps the address its page has on the site (the preview and the text's images use it).
+    const urlOf = (lang: string, path: string) => p.entry.files.find((f) => f.lang === lang && f.path === path)?.url;
+    const files = [...p.docs.entries()].map(([lang, d]): EntryFile => ({ lang, path: d.path, format: d.parts.format, title: String(d.data?.title ?? ""), url: urlOf(lang, d.path) }));
     const known = site.entries.find((e) => e.key === p.entry.key);
     if (!known) {
       site.entries.push({ ...p.entry, isNew: undefined, files, resources: p.uploads.map((u) => u.path) });

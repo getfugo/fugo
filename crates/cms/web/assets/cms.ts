@@ -113,10 +113,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-// The CMS editor: pages by section, a form for their front matter, their text with a preview,
-// bundle files, drafts and publishing. Everything goes through the API (`api/`, next to this
-// page), the content index included (it lists drafts, so only signed-in people get it); the API
-// checks every change again.
+// The CMS editor: pages by section, a form for their front matter, their text (as rich text or
+// Markdown) with a preview, bundle files, drafts and publishing. Everything goes through the API
+// (`api/`, next to this page), the content index included (it lists drafts, so only signed-in
+// people get it); the API checks every change again.
 //
 // The module also exports the codec and the shared helpers (for the tests); it starts the
 // editor only on its page (`#app`).
@@ -132,6 +132,7 @@ import { loadSite, page } from "./editor/state";
 export * from "./codec";
 export * from "./common";
 export { foldersOf, movedPath } from "./editor/folders";
+export { drawMarkdown, pastedHtml, writeMarkdown } from "./editor/markdown";
 export { shellUrl } from "./editor/preview";
 
 /** Loads the index and the signed-in person, then shows the page the address names. */

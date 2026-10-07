@@ -541,6 +541,212 @@ legend {
   grid-column: 1 / -1;
 }
 
+// Rich text or Markdown: two buttons as one control.
+.modes {
+  display: inline-flex;
+
+  button {
+    border-radius: 0;
+
+    &:first-child {
+      border-radius: $radius 0 0 $radius;
+    }
+
+    &:last-child {
+      border-radius: 0 $radius $radius 0;
+      margin-left: -1px;
+    }
+
+    &.active {
+      background: var(--bg);
+      border-color: var(--accent);
+      color: var(--accent);
+      position: relative;
+    }
+  }
+}
+
+// ── The rich text editor ──
+
+.rich {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--line);
+  border-radius: $radius;
+  background: var(--bg);
+
+  &:focus-within {
+    outline: 2px solid var(--accent);
+    outline-offset: -1px;
+  }
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.35rem;
+  border-bottom: 1px solid var(--line);
+  background: var(--panel);
+  border-radius: $radius $radius 0 0;
+
+  select {
+    padding: 0.1rem 0.3rem;
+    font-size: 13px;
+  }
+
+  button[aria-pressed="true"],
+  button[aria-expanded="true"] {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+}
+
+.image-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem;
+  border-bottom: 1px solid var(--line);
+
+  input {
+    font-size: 13px;
+    padding: 0.15rem 0.4rem;
+  }
+}
+
+// The text as it reads: the elements Markdown makes, close to how a page shows them.
+.rich-box {
+  flex: 1;
+  min-height: 22rem;
+  overflow: auto;
+  padding: 0.6rem 1rem;
+  line-height: 1.6;
+  outline: none;
+  overflow-wrap: break-word;
+
+  > :first-child {
+    margin-top: 0;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    margin: 1.2rem 0 0.5rem;
+    line-height: 1.3;
+  }
+
+  h1 {
+    font-size: 1.6rem;
+  }
+
+  h2 {
+    font-size: 1.35rem;
+  }
+
+  h3 {
+    font-size: 1.15rem;
+  }
+
+  h4,
+  h5,
+  h6 {
+    font-size: 1rem;
+  }
+
+  p,
+  ul,
+  ol,
+  pre,
+  table,
+  blockquote {
+    margin: 0 0 0.8rem;
+  }
+
+  blockquote {
+    border-left: 3px solid var(--line);
+    padding-left: 0.8rem;
+    margin-left: 0;
+    color: var(--muted);
+  }
+
+  pre {
+    @include mono;
+    background: var(--panel);
+    border-radius: $radius;
+    padding: 0.5rem 0.7rem;
+    overflow-x: auto;
+    white-space: pre-wrap;
+  }
+
+  :not(pre) > code {
+    background: var(--panel);
+    border-radius: 3px;
+    padding: 0.05rem 0.25rem;
+  }
+
+  img {
+    max-width: 100%;
+    max-height: 20rem;
+  }
+
+  table {
+    border-collapse: collapse;
+  }
+
+  th,
+  td {
+    border: 1px solid var(--line);
+    padding: 0.2rem 0.5rem;
+  }
+
+  hr {
+    border: none;
+    border-top: 1px solid var(--line);
+    margin: 1rem 0;
+  }
+
+  li > input[type="checkbox"] {
+    margin: 0 0.3rem 0 0;
+  }
+}
+
+// Source the editor shows as such: raw HTML, a shortcode, a link definition (edited as text).
+.md-raw {
+  margin: 0 0 0.8rem;
+  border: 1px dashed var(--line);
+  border-radius: $radius;
+  background: var(--panel);
+
+  &::before {
+    content: attr(data-md-raw);
+    display: block;
+    padding: 0.15rem 0.6rem 0;
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  [data-md-source] {
+    @include mono;
+    white-space: pre-wrap;
+    padding: 0.1rem 0.6rem 0.4rem;
+    outline: none;
+  }
+}
+
+.md-tag {
+  @include mono(12px);
+  color: var(--muted);
+  background: var(--panel);
+  border-radius: 3px;
+  padding: 0 0.2rem;
+}
+
 // With the preview open: the text and the page side by side on wide screens.
 .body-editor.previewing {
   display: grid;
@@ -552,8 +758,13 @@ legend {
   }
 
   textarea.body,
+  .rich,
   iframe.preview {
     height: 40rem;
+  }
+
+  .rich-box {
+    min-height: 0;
   }
 
   @media (max-width: 60rem) {

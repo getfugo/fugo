@@ -7,10 +7,11 @@ const b64urlBytes = (s: string) => Uint8Array.from(atob(b64url(s)), (c) => c.cha
 const b64urlJson = (s: string): Json => JSON.parse(new TextDecoder().decode(b64urlBytes(s)));
 
 /** The public keys of an Access team, fetched when a token names a key not seen yet (at most
- * once a minute). */
+ * once a minute; requests that come while they are fetched wait for them). */
 export class AccessKeys {
   private keys = new Map<string, CryptoKey>();
   private fetchedAt = -Infinity;
+  private fetching: Promise<void> | null = null;
 
   constructor(
     private readonly login: Settings["login"],
@@ -56,12 +57,26 @@ export class AccessKeys {
   }
 
   private async key(kid: unknown): Promise<CryptoKey> {
-    const known = typeof kid === "string" ? this.keys.get(kid) : undefined;
+    const unknownKey = () => new HttpError(401, "invalid sign-in token: unknown key");
+    if (typeof kid !== "string") throw unknownKey();
+    // A fresh Worker gets the editor's requests at once (a page's files): they wait for the
+    // one fetch.
+    if (!this.keys.has(kid) && this.fetching) await this.fetching;
+    const known = this.keys.get(kid);
     if (known) return known;
-    if (typeof kid !== "string" || this.now() - this.fetchedAt < 60_000) {
-      throw new HttpError(401, "invalid sign-in token: unknown key");
-    }
+    if (this.now() - this.fetchedAt < 60_000) throw unknownKey();
     this.fetchedAt = this.now();
+    this.fetching = this.fetchKeys().finally(() => {
+      this.fetching = null;
+    });
+    await this.fetching;
+    const found = this.keys.get(kid);
+    if (!found) throw unknownKey();
+    return found;
+  }
+
+  /** Fetches the team's keys, in place of those known. */
+  private async fetchKeys(): Promise<void> {
     const res = await this.fetcher(`${this.login.team}/cdn-cgi/access/certs`);
     if (!res.ok) throw new HttpError(502, `Cloudflare Access keys: HTTP ${res.status}`);
     const body: Json = await res.json();
@@ -78,8 +93,5 @@ export class AccessKeys {
       keys.set(jwk.kid, key);
     }
     this.keys = keys;
-    const found = keys.get(kid);
-    if (!found) throw new HttpError(401, "invalid sign-in token: unknown key");
-    return found;
   }
 }
