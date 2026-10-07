@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791394670837,
+  "lastUpdate": 1791400529412,
   "repoUrl": "https://github.com/getfugo/fugo",
   "entries": {
     "Benchmark": [
@@ -97368,6 +97368,66 @@ window.BENCHMARK_DATA = {
           {
             "name": "10,000 generated pages: peak memory",
             "value": 571,
+            "unit": "MiB",
+            "extra": "10061 pages; median of 5 builds after a warm-up build"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "blackb1rd.mov@gmail.com",
+            "name": "Prachya Saechua",
+            "username": "blackb1rd"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "9c86a1d2b13a0236bf90f713cab3855773e41da7",
+          "message": "fonts: Leave a font with CFF outlines whole, whatever its format (#192)\n\nklippa 0.1 has no CFF subsetter: it copies a `CFF ` or `CFF2` table\nwhole while it cuts `cmap`, `hmtx` and `maxp` down and renumbers the\nglyphs. A CFF font in a `.otf` or `.woff` file was therefore written back\nas a smaller font in which each character draws another glyph, with no\nwarning; only WOFF2 was left whole, because ttf2woff2 cannot write CFF.\n\nAny font with CFF outlines is now left whole, with the\n`fonts-left-whole` warning. Font Awesome 7's fonts are WOFF2 with CFF\noutlines (Font Awesome 6's are TrueType), so they stay at their full\nsize until the subsetter can cut CFF down.\n\nThe test builds a CFF font from Mulish (its tables, with a CFF table of\nempty glyphs in place of `glyf` and `loca`), so no new fixture is needed.\n\nCo-Authored-By: Claude Opus 5.5 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-10-08T01:54:39+07:00",
+          "tree_id": "0b1bb2451906c41d7da7d847ad4ca5797a06b0d7",
+          "url": "https://github.com/getfugo/fugo/commit/9c86a1d2b13a0236bf90f713cab3855773e41da7"
+        },
+        "date": 1791400526215,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "docs site: build time",
+            "value": 185.2,
+            "unit": "ms",
+            "extra": "334 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "docs site: peak memory",
+            "value": 167.5,
+            "unit": "MiB",
+            "extra": "334 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "1,000 generated pages: build time",
+            "value": 223.8,
+            "unit": "ms",
+            "extra": "1061 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "1,000 generated pages: peak memory",
+            "value": 153,
+            "unit": "MiB",
+            "extra": "1061 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "10,000 generated pages: build time",
+            "value": 2345.1,
+            "unit": "ms",
+            "extra": "10061 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "10,000 generated pages: peak memory",
+            "value": 595.1,
             "unit": "MiB",
             "extra": "10061 pages; median of 5 builds after a warm-up build"
           }
