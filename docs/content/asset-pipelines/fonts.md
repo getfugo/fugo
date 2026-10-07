@@ -50,7 +50,9 @@ left as they are:
 - A font none of whose characters the site uses (Font Awesome's `fa-v4compatibility`, say).
 - A variable font whose layout tables the subsetter cannot cut down yet: it would lose its
   kerning, mark positioning or ligatures. The build warns.
-- A WOFF2 font with CFF outlines, which fugo does not write yet. The build warns.
+- A font with CFF outlines, whatever its format, which the subsetter cannot cut down yet. Font
+  Awesome 7's fonts have them; Font Awesome 6's have TrueType outlines and are cut down. The
+  build warns.
 
 The build's summary line counts the fonts cut down and their sizes before and after. `fugo
 server` cuts them down too.
