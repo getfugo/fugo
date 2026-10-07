@@ -123,8 +123,9 @@ The Worker commits with one credential, stored as a Worker secret; editors need 
 account.
 
 - **A GitHub App** (recommended: not tied to a person, and its tokens expire after an hour).
-  Create an app with the repository permission *Contents: Read and write* and nothing else,
-  install it on the repository only, and generate a private key:
+  Create an app with the repository permissions *Contents: Read and write* and *Pull requests:
+  Read and write* (for the drafts' [pull requests](#drafts-and-publishing); without it there are
+  none) and nothing else, install it on the repository only, and generate a private key:
 
   ```sh
   npx wrangler secret put CMS_GITHUB_APP_ID      # the app's ID
@@ -132,7 +133,7 @@ account.
   ```
 
 - **A fine-grained personal access token**, for the repository only, with *Contents: Read and
-  write*:
+  write* and *Pull requests: Read and write*:
 
   ```sh
   npx wrangler secret put CMS_GITHUB_TOKEN
@@ -233,15 +234,24 @@ publish = true
 
 With `workflow = "review"` (the default), a save goes to the page's draft branch,
 `cms/<page>-<hash>`, made from your branch on the first save; later saves of the page — by anyone
-— add to it, so a writer and a translator work on one draft. The editor shows which pages have
+— add to it, so a writer and a translator work on one draft. A page with a draft opens as the
+draft has it, and saving it adds to that draft. The editor shows which pages have
 drafts, and the *Drafts* list shows each draft's changes as a diff.
+
+The first save also opens a pull request for the draft, labelled `fugo-cms`, which links back to
+the draft in the editor: the draft shows on GitHub too, for review and comments. Publishing or
+discarding the draft deletes its branch, which closes the pull request; a published draft's pull
+request says which commit published it. Without the *Pull requests* permission, drafts have no
+pull request and work the same.
 
 *Publish* (for roles with `publish = true`) checks every file of the draft against the
 publisher's roles, then writes the draft's files onto your branch as one commit: its author is
 the draft's first author, the others are `Co-authored-by`, and the publisher is
 `CMS-Published-By`. If your branch changed one of the draft's files since the draft was made,
-publishing stops and names the files: open the page, redo the change, and discard the draft.
-*Discard* deletes a draft: anyone may discard their own, publishers any.
+publishing first merges your branch into the draft, as git does: a file your branch moved keeps
+the draft's changes, and changes to different lines of a file are both kept. Only when both
+changed the same lines does publishing stop and name the files: open the page, redo the change,
+and discard the draft. *Discard* deletes a draft: anyone may discard their own, publishers any.
 
 With `workflow = "direct"`, every save is a commit to your branch, and there are no drafts.
 
@@ -356,6 +366,12 @@ The editor reads and writes the same files Decap CMS does, so content needs no c
 3. Remove the editors' write access to the repository: they sign in through Access now.
 
 The build warns while `static/admin/index.html` still exists: the editor replaces it.
+
+The drafts Decap's editorial workflow left open — its branches `cms/<collection>/<slug>` and
+their pull requests, labelled `decap-cms/draft` — are in the *Drafts* list too, under their pull
+request's title: review, publish or discard them there. Publishing merges what the site moved or
+changed since, as for any draft; but a page a Decap draft *creates* stays at the path it had then
+(git follows only files that existed), so move it where it belongs before publishing.
 
 Decap's `config.yml` mostly needs no counterpart: the build works out the fields from the
 content (see [fields](/configuration/cms/#fields)). Its settings map to `[cms.fields]` like this:

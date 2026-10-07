@@ -83,10 +83,18 @@ export interface CompareFile {
   patch?: string;
 }
 
+/** A draft's open pull request. */
+export interface Pull {
+  number: number;
+  url: string;
+  title: string;
+}
+
 export interface Comparison {
   mergeBase: string;
   files: CompareFile[];
-  commits: { sha: string; author: Author | null; message: string }[];
+  /** `merge`: a merge commit (one that brought the branch into a draft). */
+  commits: { sha: string; author: Author | null; message: string; merge: boolean }[];
 }
 
 /** A JSON answer of an API this module does not describe (GitHub's, read field by field). */
@@ -95,6 +103,8 @@ export type Json = any;
 export type Body = Record<string, unknown>;
 
 export const DRAFTS = "cms/";
+/** The label of the drafts' pull requests. */
+export const LABEL = "fugo-cms";
 export const LOCAL_HOSTS = new Set(["localhost", "127.0.0.1", "[::1]"]);
 export const MAX_CHANGES = 30;
 export const MAX_PATCH = 20000;

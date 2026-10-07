@@ -16,8 +16,10 @@
 // `CMS_GITHUB_APP_ID` and `CMS_GITHUB_APP_KEY`), with the editor as author.
 //
 // Workflow `review`: a save commits to the draft branch of its page (`cms/<id>`, made from the
-// branch); publishing copies the draft's files onto the branch in one commit and deletes the
-// draft. Workflow `direct`: a save commits to the branch.
+// branch, with a pull request labelled `fugo-cms` when the credential may open one); publishing
+// merges the branch into a draft whose files it changed since, then copies the draft's files
+// onto the branch in one commit and deletes the draft. Decap CMS's drafts
+// (`cms/<collection>/<slug>`) are drafts too. Workflow `direct`: a save commits to the branch.
 
 import { AccessKeys } from "./worker/access";
 import { Api } from "./worker/api";
@@ -216,7 +218,7 @@ export function parseUsers(raw: string): Map<string, string[]> {
 
 // ── Git hosts ──────────────────────────────────────────────────────────────────────────────────
 //
-// A host has the methods of `GitHub` below: head, branchesWithHeads, read, blobIds,
-// commitFiles, commitTree, compare, deleteBranch. Paths are project-relative; the host adds
-// `git.dir`.
+// A host has the methods of `GitHub` (worker/github.ts): head, branchesWithHeads, read, blobIds,
+// commitFiles, commitTree, compare, mergeInto, deleteBranch, openPulls, openPull, comment. Paths
+// are project-relative; the host adds `git.dir`.
 

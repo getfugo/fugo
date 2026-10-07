@@ -61,7 +61,8 @@ struct RawRole {
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Deserialize, Serialize)]
 #[serde(rename_all = "lowercase")]
 pub enum Workflow {
-    /// Saves go to a draft branch per page; a role with `publish` merges it into the branch.
+    /// Saves go to a draft branch per page (with a pull request labelled `fugo-cms`); a role
+    /// with `publish` merges it into the branch.
     #[default]
     Review,
     /// Saves are commits to the branch.

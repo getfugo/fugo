@@ -1,7 +1,9 @@
 // An in-memory GitHub for the Worker's tests: the REST calls and GraphQL queries the Worker
-// makes, with git semantics (snapshots as trees, fast-forward ref updates, merge bases).
+// makes, with git semantics (snapshots as trees, fast-forward ref updates, merge bases, merges:
+// fake-github-merge.js), and pull requests.
 
 import { createHash, createVerify } from "node:crypto";
+import { mergeTrees } from "./fake-github-merge.js";
 
 const sha1 = (s) => createHash("sha1").update(s).digest("hex");
 const jsonResponse = (status, body) =>
@@ -26,6 +28,11 @@ export class FakeGitHub {
     this.compareLimit = Infinity;
     /** Called after each REST call with (method, path): a push by someone else, in between. */
     this.after = null;
+    /** Pull requests: `{number, head, base, title, body, labels, comments, state}`. */
+    this.pulls = [];
+    /** Whether the token may read and write pull requests (else 403, as for a token with
+     * Contents only). */
+    this.pullAccess = true;
     const tree = this.putTree(new Map(Object.entries(files).map(([p, t]) => [p, this.putBlob(Buffer.from(t))])));
     this.refs.set(branch, this.putCommit({ tree, parents: [], message: "init", author: { name: "dev", email: "dev@example.com" } }));
   }
@@ -105,9 +112,22 @@ export class FakeGitHub {
     return null;
   }
 
-  /** Lets a GitHub App with `appId` and the public key `publicPem` mint tokens. */
-  allowApp(appId, publicPem, installation = 77) {
-    this.app = { appId: String(appId), publicPem, installation, issued: 0 };
+  /** Opens a pull request from `head` (the Worker's, or for a test one that Decap CMS opened). */
+  openPull(head, { title = `Pull ${head}`, labels = [], base = "main" } = {}) {
+    const pull = { number: this.pulls.length + 1, head, base, title, body: "", labels: [...labels], comments: [], state: "open" };
+    this.pulls.push(pull);
+    return pull;
+  }
+
+  /** The open pull request of branch `head`. */
+  pullOf(head) {
+    return this.pulls.find((p) => p.head === head && p.state === "open");
+  }
+
+  /** Lets a GitHub App with `appId` and the public key `publicPem` mint tokens, with the
+   * installation's `permissions`. */
+  allowApp(appId, publicPem, installation = 77, permissions = { contents: "write" }) {
+    this.app = { appId: String(appId), publicPem, installation, permissions, issued: 0, granted: null };
   }
 
   checkAppJwt(auth) {
@@ -139,12 +159,17 @@ export class FakeGitHub {
     if (url.hostname !== "api.github.com") throw new Error(`unexpected fetch ${url}`);
 
     if (this.app && url.pathname === `/repos/${this.repo}/installation`) {
-      return this.checkAppJwt(auth) ? jsonResponse(200, { id: this.app.installation }) : jsonResponse(401, { message: "Bad credentials" });
+      if (!this.checkAppJwt(auth)) return jsonResponse(401, { message: "Bad credentials" });
+      return jsonResponse(200, { id: this.app.installation, permissions: { ...this.app.permissions, metadata: "read" } });
     }
     if (this.app && url.pathname === `/app/installations/${this.app.installation}/access_tokens`) {
       if (!this.checkAppJwt(auth)) return jsonResponse(401, { message: "Bad credentials" });
-      if (JSON.stringify(body.permissions) !== '{"contents":"write"}') return jsonResponse(422, { message: "permissions" });
+      const asked = Object.entries(body.permissions ?? {});
+      if (body.permissions?.contents !== "write" || asked.some(([k, v]) => this.app.permissions[k] !== v)) {
+        return jsonResponse(422, { message: "The permissions requested are not granted to this installation." });
+      }
       this.app.issued++;
+      this.app.granted = body.permissions;
       return jsonResponse(201, { token: this.token, expires_at: new Date(Date.now() + 3600_000).toISOString() });
     }
     if (auth !== `Bearer ${this.token}`) return jsonResponse(401, { message: "Bad credentials" });
@@ -174,8 +199,10 @@ export class FakeGitHub {
     }
     if (method === "DELETE" && (m = path.match(/^\/git\/refs\/heads\/(.+)$/))) {
       if (!this.refs.delete(m[1])) return jsonResponse(422, { message: "Reference does not exist" });
+      for (const p of this.pulls) if (p.head === m[1]) p.state = "closed";
       return jsonResponse(204);
     }
+    if (/^\/(pulls|issues)(\/|$)/.test(path)) return this.pullsApi(method, path, url.searchParams, body);
     if (method === "GET" && (m = path.match(/^\/git\/commits\/([0-9a-f]+)$/))) {
       const c = this.commits.get(m[1]);
       if (!c) return jsonResponse(404, { message: "Not Found" });
@@ -235,9 +262,66 @@ export class FakeGitHub {
       const commits = [];
       for (let s = head; s && !behind.has(s); s = this.commits.get(s).parents[0]) {
         const c = this.commits.get(s);
-        commits.unshift({ sha: s, commit: { author: c.author, message: c.message } });
+        commits.unshift({ sha: s, commit: { author: c.author, message: c.message }, parents: c.parents.map((sha) => ({ sha })) });
       }
       return jsonResponse(200, { merge_base_commit: { sha: mb }, files: files.slice(0, this.compareLimit), commits });
+    }
+    if (method === "POST" && path === "/merges") return this.merge(body);
+    return jsonResponse(404, { message: `fake: no ${method} ${path}` });
+  }
+
+  /** `POST merges`: merges `head` (a branch or commit) into branch `base` with a merge commit by
+   * the bot; 204 when there is nothing to merge, 409 when they conflict. */
+  merge({ base, head, commit_message }) {
+    const ours = this.refs.get(base);
+    const theirs = this.refs.get(head) ?? (this.commits.has(head) ? head : undefined);
+    if (!ours || !theirs) return jsonResponse(404, { message: "Not Found" });
+    if (this.ancestors(ours).has(theirs)) return jsonResponse(204);
+    const tree = mergeTrees(this, this.mergeBase(ours, theirs), ours, theirs);
+    if (!tree) return jsonResponse(409, { message: "Merge conflict" });
+    const message = commit_message ?? `Merge ${head} into ${base}`;
+    const sha = this.putCommit({ tree: this.putTree(tree), parents: [ours, theirs], message, author: { name: "cms-bot", email: "bot@example.com" } });
+    this.refs.set(base, sha);
+    return jsonResponse(201, { sha });
+  }
+
+  /** The pull requests' REST calls (labels and comments through `issues/`). */
+  pullsApi(method, path, query, body) {
+    if (!this.pullAccess) return jsonResponse(403, { message: "Resource not accessible by integration" });
+    const owner = this.repo.split("/")[0];
+    let m;
+    if (method === "GET" && path === "/pulls") {
+      const head = query.get("head");
+      const list = this.pulls
+        .filter((p) => p.state === (query.get("state") ?? "open") && (!head || head === `${owner}:${p.head}`))
+        .reverse()
+        .slice(0, Number(query.get("per_page") ?? 30));
+      return jsonResponse(
+        200,
+        list.map((p) => ({
+          number: p.number,
+          html_url: `https://github.com/${this.repo}/pull/${p.number}`,
+          title: p.title,
+          head: { ref: p.head, repo: { full_name: this.repo } },
+          labels: p.labels.map((name) => ({ name })),
+        })),
+      );
+    }
+    if (method === "POST" && path === "/pulls") {
+      if (!this.refs.has(body.head) || !this.refs.has(body.base)) return jsonResponse(422, { message: "Validation Failed" });
+      if (this.pullOf(body.head)) return jsonResponse(422, { message: `A pull request already exists for ${owner}:${body.head}.` });
+      const pull = this.openPull(body.head, { title: body.title, base: body.base });
+      pull.body = body.body;
+      return jsonResponse(201, { number: pull.number });
+    }
+    const pull = (m = path.match(/^\/issues\/(\d+)\/(labels|comments)$/)) && this.pulls[Number(m[1]) - 1];
+    if (method === "POST" && pull && m[2] === "labels") {
+      for (const l of body.labels) if (!pull.labels.includes(l)) pull.labels.push(l);
+      return jsonResponse(200, pull.labels.map((name) => ({ name })));
+    }
+    if (method === "POST" && pull && m[2] === "comments") {
+      pull.comments.push(body.body);
+      return jsonResponse(201, { id: pull.comments.length });
     }
     return jsonResponse(404, { message: `fake: no ${method} ${path}` });
   }

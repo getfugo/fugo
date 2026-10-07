@@ -3,7 +3,7 @@
 import { html, nothing, type TemplateResult } from "lit-html";
 import { api, messageOf } from "./api";
 import { discard, publish } from "./changes";
-import { type Draft, type DraftDetail } from "./data";
+import { type Draft, type DraftDetail, type Pull } from "./data";
 import { show, toast } from "./dom";
 import { drafts, me, pending, site } from "./state";
 
@@ -15,7 +15,8 @@ export function draftList(list: Draft[]): TemplateResult {
         ${list.map(
           (d) => html`
             <tr>
-              <td><a href="#/d/${d.id}">${d.title || d.entry}</a></td>
+              <td><a href="#/d/${d.id}">${d.title || d.entry || d.id}</a></td>
+              <td>${pullLink(d.pr)}</td>
               <td class="muted">${d.author?.email ?? ""}</td>
               <td class="muted">${d.updated ? new Date(d.updated).toLocaleString() : ""}</td>
             </tr>
@@ -44,10 +45,11 @@ export async function draftView(id: string): Promise<void> {
   }
   const known = site.entries.some((e) => e.key === d.entry) || pending.has(d.entry);
   show(html`
-    <div class="crumbs"><a href="#/drafts">Drafts</a> / ${d.entry}</div>
-    <h1>${d.title || d.entry}</h1>
+    <div class="crumbs"><a href="#/drafts">Drafts</a> / ${d.entry || d.id}</div>
+    <h1>${d.title || d.entry || d.id}</h1>
+    ${d.pr ? html`<p class="muted">Pull request ${pullLink(d.pr)}</p>` : nothing}
     ${d.conflicts.length
-      ? html`<p class="warn">The site changed ${d.conflicts.join(", ")} since this draft was made: open the page, redo the changes, and discard this draft.</p>`
+      ? html`<p class="warn">The site changed ${d.conflicts.join(", ")} since this draft was made: publishing brings those changes into the draft first. If both changed the same lines, publishing stops and names the files: then open the page, redo the changes, and discard this draft.</p>`
       : nothing}
     <h2>Changes</h2>
     ${d.files.map(
@@ -64,11 +66,14 @@ export async function draftView(id: string): Promise<void> {
     </ul>
     <div class="actions">
       ${known ? html`<a class="button" href="#/e/${encodeURIComponent(d.entry)}">Open the page</a>` : nothing}
-      ${me.publish ? html`<button class="primary" ?disabled=${d.conflicts.length > 0} @click=${() => publish(id)}>Publish</button>` : nothing}
+      ${me.publish ? html`<button class="primary" @click=${() => publish(id)}>Publish</button>` : nothing}
       <button class="danger" @click=${() => discard(id)}>Discard</button>
     </div>
   `);
 }
+
+/** A link to a draft's pull request, in a new tab. */
+const pullLink = (pr: Pull | null) => (pr ? html`<a href=${pr.url} target="_blank" rel="noopener">#${pr.number}</a>` : nothing);
 
 const lineClass = (line: string) => (line.startsWith("+") ? "add" : line.startsWith("-") ? "del" : line.startsWith("@@") ? "hunk" : nothing);
 

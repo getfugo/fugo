@@ -117,20 +117,30 @@ interface Author {
   email: string;
 }
 
+/** A draft's open pull request on the git host. */
+export interface Pull {
+  number: number;
+  url: string;
+}
+
 export interface Draft {
   id: string;
+  /** The page's key (empty for a draft of Decap CMS). */
   entry: string;
   title: string;
   author: Author | null;
   updated?: string;
+  pr: Pull | null;
 }
 
 export interface DraftDetail {
   id: string;
   entry: string;
   title: string;
+  pr: Pull | null;
   files: { path: string; status: string; previous?: string; patch?: string }[];
   commits: { author: Author | null; subject: string }[];
+  /** The draft's files the site changed since it was made (publishing merges them first). */
   conflicts: string[];
 }
 

@@ -59,7 +59,7 @@ test("publish: copies the draft onto the branch in one commit and deletes the dr
   assert.equal(again.status, 404);
 });
 
-test("publish: deletions, and files the branch changed meanwhile", async () => {
+test("publish: deletions, and files the branch changed meanwhile that do not merge", async () => {
   const { call, gh } = setup();
   const post = "content/blog/post.md";
   const del = await save(call, "writer@example.com", "blog/post", [{ path: post, delete: true }]);
@@ -69,6 +69,7 @@ test("publish: deletions, and files the branch changed meanwhile", async () => {
   assert.equal(gh.text("main", post), undefined);
   assert.equal(gh.text("main", "content/blog/other.md"), "unrelated", "keeps the branch's other changes");
 
+  // Both rewrite the whole file: the merge (worker-merge.test.js) conflicts.
   const en = "content/almonds/honey/index.en.md";
   const r = await save(call, "writer@example.com", "almonds/honey", [{ path: en, content: "draft" }]);
   gh.push("main", { [en]: "changed on main" });
@@ -78,10 +79,12 @@ test("publish: deletions, and files the branch changed meanwhile", async () => {
   const detail = await call("GET", "draft", { query: { id: r.body.draft } });
   assert.deepEqual(detail.body.conflicts, [en]);
   assert.equal(gh.text("main", en), "changed on main");
+  assert.equal(gh.text(`cms/${r.body.draft}`, en), "draft");
 });
 
 test("publish: conflicts are found however many files the branch changed", async () => {
   const { call, gh } = setup();
+  // Both rewrite the whole file: it does not merge.
   const en = "content/almonds/honey/index.en.md";
   const r = await save(call, "writer@example.com", "almonds/honey", [{ path: en, content: "draft" }]);
   const many = Object.fromEntries(Array.from({ length: 20 }, (_, i) => [`content/aaa/${i}.md`, "x"]));

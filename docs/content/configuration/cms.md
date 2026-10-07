@@ -48,8 +48,9 @@ help = "Shown in lists and in search results."
 : The editor's title. Default: the site's `title`.
 
 `workflow`
-: `review` (default): saves go to a draft per page, and roles with `publish` publish drafts.
-  `direct`: every save is a commit to the branch.
+: `review` (default): saves go to a draft per page (a branch, with a pull request labelled
+  `fugo-cms`), and roles with `publish` publish drafts. `direct`: every save is a commit to the
+  branch.
 
 `media`
 : A directory for uploads to pages that are not bundles, inside a static directory, `assets/`
@@ -225,10 +226,11 @@ repository:
 
 `CMS_GITHUB_APP_ID`, `CMS_GITHUB_APP_KEY`
 : A GitHub App's ID and private key (PEM), the app installed on the repository with *Contents:
-  Read and write*.
+  Read and write*, and *Pull requests: Read and write* for the drafts' pull requests.
 
 `CMS_GITHUB_TOKEN`
-: Instead of an app: a fine-grained token for the repository with *Contents: Read and write*.
+: Instead of an app: a fine-grained token for the repository with *Contents: Read and write*
+  and *Pull requests: Read and write*.
 
 `CMS_DEV_USER`
 : For `wrangler dev` only (in `.dev.vars`): the email that requests to `localhost` sign in as,
