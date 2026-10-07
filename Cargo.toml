@@ -205,6 +205,10 @@ ureq = { version = "3.4", default-features = false, features = ["rustls", "gzip"
 # ── concurrency, errors, logging ──
 rayon = "1.12"
 dashmap = "6"
+# The binary's allocator (MIT; C, built by cc): faster than the system's for the many small
+# values of a build. `no_thp`: no transparent huge pages on Linux, which add ~50-100 MB of
+# resident memory for little speed.
+mimalloc = { version = "0.1.52", default-features = false, features = ["no_thp"] }
 thiserror = "2.0.21"
 anyhow = "1.0.104" # cli only
 tracing = "0.1.44"

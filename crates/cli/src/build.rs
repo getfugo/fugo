@@ -59,6 +59,8 @@ pub(crate) fn run(a: &BuildArgs) -> anyhow::Result<Exit> {
             if std::env::var_os(ssg_base::env_var!("TIMINGS")).is_some() {
                 print_timings(&r);
             }
+            // The process ends next: the system frees the model at once, not value by value.
+            std::mem::forget(r);
             Ok(Exit::Success)
         }
         Err(e) => {

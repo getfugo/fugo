@@ -472,5 +472,11 @@ pub fn build(r: BuildRequest) -> Result<BuildReport, BuildError> {
     report.diagnostics = diagnostics;
     report.memory = memory;
     report.model = Some(Arc::clone(session.model()));
+    // Freeing the session (its page values, templates and caches) takes a while on a large
+    // site: a thread of its own does it, so the caller has the report at once (and a CLI build
+    // exits without waiting for it).
+    let _ = std::thread::Builder::new()
+        .name("ssg-free".into())
+        .spawn(move || drop(session));
     Ok(report)
 }

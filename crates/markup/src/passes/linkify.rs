@@ -40,9 +40,16 @@ pub(crate) const TRIGGERS: &[u8] = b" *_~(";
 
 /// The link at the start of `s`, if any.
 pub(crate) fn find(s: &str) -> Option<Found> {
-    let (len, www, email) = if let Some(m) = URL.find(s) {
+    // The patterns' literal starts first: `find` runs at every word.
+    let url = ["http://", "https://", "ftp://"]
+        .iter()
+        .any(|p| s.starts_with(p))
+        .then(|| URL.find(s))
+        .flatten();
+    let www_url = || s.starts_with("www.").then(|| WWW.find(s)).flatten();
+    let (len, www, email) = if let Some(m) = url {
         (trim(&s[..m.end()]), false, false)
-    } else if let Some(m) = WWW.find(s) {
+    } else if let Some(m) = www_url() {
         (trim(&s[..m.end()]), true, false)
     } else {
         (email(s)?, false, true)

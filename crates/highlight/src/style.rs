@@ -245,6 +245,11 @@ pub struct Style {
 }
 
 impl Style {
+    /// Its name, as the bundled styles know it.
+    pub(crate) fn name(&self) -> &str {
+        &self.name
+    }
+
     /// A style from its definition.
     fn from_def(def: &StyleDef) -> Result<Self, String> {
         let mut entries = BTreeMap::new();

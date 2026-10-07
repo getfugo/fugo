@@ -15,6 +15,7 @@
 //! The resolution against resource URLs lives in `ssg-resources`, which does not depend on
 //! this crate: `ssg-build` hands [`UrlTokens::iter`] to the resource store.
 
+use std::borrow::Cow;
 use std::collections::BTreeSet;
 
 use ssg_base::paths::{self, OutputPath};
@@ -46,10 +47,11 @@ impl UrlTokens {
         if !text.contains('/') {
             return;
         }
-        let decoded = decode_json(&decode_html(text));
+        let html = decode_html(text);
+        let decoded = decode_json(&html);
         let dir = from.map(|p| paths::dir(p.as_str()).to_owned());
-        for word in decoded.split(is_hard_delimiter) {
-            if word.is_empty() || word.len() > MAX_TOKEN || !word.contains('/') {
+        for word in slash_words(&decoded) {
+            if word.len() > MAX_TOKEN {
                 continue;
             }
             self.add_word(word, dir.as_deref());
@@ -82,16 +84,23 @@ impl UrlTokens {
                 if path.ends_with('/') && !joined.ends_with('/') {
                     joined.push('/');
                 }
-                format!("{joined}{rest}")
+                Cow::Owned(format!("{joined}{rest}"))
             }
-            _ => token.to_owned(),
+            _ => Cow::Borrowed(token),
         };
         if let Some(end) = resolved.find(['?', '#'])
             && resolved[..end].contains('/')
         {
-            self.0.insert(resolved[..end].to_owned());
+            self.insert(&resolved[..end]);
         }
-        self.0.insert(resolved);
+        self.insert(&resolved);
+    }
+
+    /// Adds `token`, allocating only when it is new.
+    fn insert(&mut self, token: &str) {
+        if !self.0.contains(token) {
+            self.0.insert(token.to_owned());
+        }
     }
 
     /// Adds every token of `other`.
@@ -135,6 +144,26 @@ impl<'a> IntoIterator for &'a UrlTokens {
     }
 }
 
+/// The words of `text` split at hard delimiters that contain `/`, in order (`text.split(
+/// is_hard_delimiter)` less the other words, found from the slashes instead of by reading every
+/// character).
+fn slash_words(text: &str) -> impl Iterator<Item = &str> {
+    let mut from = 0;
+    std::iter::from_fn(move || {
+        let slash = from + text[from..].find('/')?;
+        let start = text[from..slash]
+            .char_indices()
+            .rev()
+            .find(|&(_, c)| is_hard_delimiter(c))
+            .map_or(from, |(i, c)| from + i + c.len_utf8());
+        let end = text[slash..]
+            .find(is_hard_delimiter)
+            .map_or(text.len(), |i| slash + i);
+        from = end;
+        Some(&text[start..end])
+    })
+}
+
 fn is_hard_delimiter(c: char) -> bool {
     c.is_whitespace() || matches!(c, '"' | '<' | '>' | '`' | '(' | ')' | '{' | '}' | '\\')
 }
@@ -145,7 +174,7 @@ fn is_soft_delimiter(c: char) -> bool {
 
 /// Decodes the character references a URL in HTML can carry: `&amp;`, `&quot;`, `&apos;`,
 /// `&lt;`, `&gt;` and numeric references; anything else stays as written.
-fn decode_html(s: &str) -> std::borrow::Cow<'_, str> {
+fn decode_html(s: &str) -> Cow<'_, str> {
     if !s.contains('&') {
         return s.into();
     }
@@ -189,9 +218,9 @@ fn decode_html(s: &str) -> std::borrow::Cow<'_, str> {
 
 /// Decodes JSON string escapes (`\/`, `\"`, `\\`, `\n`, `\uXXXX` with surrogate pairs); an
 /// invalid escape stays as written.
-fn decode_json(s: &str) -> String {
+fn decode_json(s: &str) -> Cow<'_, str> {
     if !s.contains('\\') {
-        return s.to_owned();
+        return s.into();
     }
     let mut out = String::with_capacity(s.len());
     let mut rest = s;
@@ -215,7 +244,7 @@ fn decode_json(s: &str) -> String {
         rest = &rest[len..];
     }
     out.push_str(rest);
-    out
+    out.into()
 }
 
 /// `\uXXXX` (or a surrogate pair `😀`) at the start of `s`: the character and the
@@ -268,6 +297,26 @@ mod tests {
             "/c/x&y.png",
         ] {
             assert!(t.iter().any(|x| x == want), "{want} not in {t:?}");
+        }
+    }
+
+    #[test]
+    fn slash_words_are_the_split_words_with_a_slash() {
+        for text in [
+            "",
+            "/",
+            "no slash here",
+            "/a b/ c/d/e </p>",
+            "<a href=\"/x\">x</a>\u{a0}/nbsp\u{2003}é/ü\u{2003}",
+            "(/p){/q}`/r`\\/s\\",
+            "x/",
+            "tail /end",
+        ] {
+            let want: Vec<&str> = text
+                .split(is_hard_delimiter)
+                .filter(|w| w.contains('/'))
+                .collect();
+            assert_eq!(slash_words(text).collect::<Vec<_>>(), want, "{text:?}");
         }
     }
 
