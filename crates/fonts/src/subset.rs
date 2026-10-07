@@ -4,7 +4,8 @@
 //! subsetter, in Rust) keeps the glyphs of the characters, the glyphs that layout features reach
 //! from them (ligatures, alternates, accents), and the layout tables, cut down to those glyphs.
 //! The result is encoded back into the font's format: OpenType as is, WOFF2 with its
-//! `glyf`/`loca` transform (ttf2woff2), WOFF with zlib ([`crate::woff`]).
+//! `glyf`/`loca` transform (ttf2woff2), WOFF with zlib ([`crate::woff`]). A font with CFF
+//! outlines is left whole: klippa does not cut them down yet.
 
 use std::borrow::Cow;
 use std::collections::BTreeSet;
@@ -97,11 +98,15 @@ pub fn cut(bytes: &[u8], chars: &BTreeSet<char>) -> Result<Outcome, SubsetError>
     if unicodes.is_empty() {
         return Ok(Outcome::Unused);
     }
-    if format == Format::Woff2 && font.table_data(Tag::new(b"CFF ")).is_some() {
-        return Ok(Outcome::Whole(Some(
-            "a WOFF2 font with CFF outlines (only TrueType outlines are written to WOFF2)"
-                .to_owned(),
-        )));
+    // klippa 0.1 copies a `CFF ` or `CFF2` table whole while it renumbers the glyphs: each
+    // character of the cut font would draw another glyph.
+    let cff = [(b"CFF ", "CFF"), (b"CFF2", "CFF2")]
+        .into_iter()
+        .find_map(|(tag, name)| font.table_data(Tag::new(tag)).map(|_| name));
+    if let Some(outlines) = cff {
+        return Ok(Outcome::Whole(Some(format!(
+            "a font with {outlines} outlines, which the subsetter cannot cut down yet"
+        ))));
     }
     let plan = Plan::new(
         &IntSet::empty(),

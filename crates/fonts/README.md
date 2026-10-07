@@ -56,8 +56,9 @@ transform, Brotli 11), WOFF by `src/woff.rs` (zlib per table, when smaller).
 **Left as they are.** A font that maps none of the characters (`Outcome::Unused`); a result
 that is not smaller (`Whole(None)`); and, with a warning (`fonts-left-whole`), a variable font
 that would lose `GSUB` or `GPOS` (klippa 0.1 drops the layout tables of a font with variation
-data, which it cannot cut down yet) and a WOFF2 font with CFF outlines (ttf2woff2 writes
-TrueType outlines only).
+data, which it cannot cut down yet) and a font with CFF outlines (`CFF ` or `CFF2`), in any
+format: klippa 0.1 copies those tables whole while it renumbers the glyphs, so each character
+would draw another glyph (and ttf2woff2 writes TrueType outlines only).
 
 ## Gotchas
 

@@ -4,7 +4,7 @@ use std::collections::BTreeSet;
 
 use ssg_fonts::{Format, Outcome, cut, encode_woff};
 
-use crate::support::{glyph_count, has_table, mapped, mulish, mulish_variable};
+use crate::support::{glyph_count, has_table, mapped, mulish, mulish_cff, mulish_variable};
 
 fn chars(s: &str) -> BTreeSet<char> {
     s.chars().collect()
@@ -68,6 +68,21 @@ fn a_variable_font_that_would_lose_its_kerning_stays_whole() {
         panic!("{outcome:?}");
     };
     assert!(reason.contains("GPOS"), "{reason}");
+}
+
+#[test]
+fn a_font_with_cff_outlines_stays_whole() {
+    // The subsetter would renumber the glyphs but keep the `CFF ` table whole: each character
+    // would draw another glyph.
+    let otf = mulish_cff();
+    let woff = encode_woff(&otf).expect("woff");
+    for font in [otf, woff] {
+        match cut(&font, &chars("Hi")).expect("cut") {
+            Outcome::Whole(Some(reason)) => assert!(reason.contains("CFF outlines"), "{reason}"),
+            Outcome::Cut(bytes) => panic!("cut down to {} bytes", bytes.len()),
+            other => panic!("{other:?}"),
+        }
+    }
 }
 
 #[test]
