@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791400529412,
+  "lastUpdate": 1791400532667,
   "repoUrl": "https://github.com/getfugo/fugo",
   "entries": {
     "Benchmark": [
@@ -98590,6 +98590,105 @@ window.BENCHMARK_DATA = {
           {
             "name": "BenchmarkSummaryFromHTMLWithDivider",
             "value": 83.5,
+            "unit": "ns/op"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "blackb1rd.mov@gmail.com",
+            "name": "Prachya Saechua",
+            "username": "blackb1rd"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "9c86a1d2b13a0236bf90f713cab3855773e41da7",
+          "message": "fonts: Leave a font with CFF outlines whole, whatever its format (#192)\n\nklippa 0.1 has no CFF subsetter: it copies a `CFF ` or `CFF2` table\nwhole while it cuts `cmap`, `hmtx` and `maxp` down and renumbers the\nglyphs. A CFF font in a `.otf` or `.woff` file was therefore written back\nas a smaller font in which each character draws another glyph, with no\nwarning; only WOFF2 was left whole, because ttf2woff2 cannot write CFF.\n\nAny font with CFF outlines is now left whole, with the\n`fonts-left-whole` warning. Font Awesome 7's fonts are WOFF2 with CFF\noutlines (Font Awesome 6's are TrueType), so they stay at their full\nsize until the subsetter can cut CFF down.\n\nThe test builds a CFF font from Mulish (its tables, with a CFF table of\nempty glyphs in place of `glyf` and `loca`), so no new fixture is needed.\n\nCo-Authored-By: Claude Opus 5.5 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-10-08T01:54:39+07:00",
+          "tree_id": "0b1bb2451906c41d7da7d847ad4ca5797a06b0d7",
+          "url": "https://github.com/getfugo/fugo/commit/9c86a1d2b13a0236bf90f713cab3855773e41da7"
+        },
+        "date": 1791400531690,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "BenchmarkSanitizeAnchorName",
+            "value": 482.61,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSanitizeAnchorNameAsciiOnly",
+            "value": 1336.01,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSanitizeAnchorNameBlackfriday",
+            "value": 590.95,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSanitizeAnchorNameString",
+            "value": 490.35,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSanitize/All_allowed",
+            "value": 223.09,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSanitize/Spaces",
+            "value": 234.28,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkRelURL",
+            "value": 357.59,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkAbsURL/relurl",
+            "value": 689.57,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkAbsURL/absurl",
+            "value": 21.8,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkTotalWords",
+            "value": 4507.65,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkStripHTML",
+            "value": 1132.8,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkParse",
+            "value": 9713.71,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkDecodeYAMLToMap",
+            "value": 15521.21,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSummaryFromHTML",
+            "value": 76.83,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSummaryFromHTMLWithDivider",
+            "value": 83.27,
             "unit": "ns/op"
           }
         ]
