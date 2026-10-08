@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791478385997,
+  "lastUpdate": 1791488948367,
   "repoUrl": "https://github.com/getfugo/fugo",
   "entries": {
     "Benchmark": [
@@ -97488,6 +97488,66 @@ window.BENCHMARK_DATA = {
           {
             "name": "10,000 generated pages: peak memory",
             "value": 597,
+            "unit": "MiB",
+            "extra": "10061 pages; median of 5 builds after a warm-up build"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "blackb1rd.mov@gmail.com",
+            "name": "Prachya Saechua",
+            "username": "blackb1rd"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "600ff851e909230def396307f2d20966025febe9",
+          "message": "npm: Replace a node_modules that npm, pnpm or yarn left out of date (#194)\n\nfugo left a node_modules that npm, pnpm or yarn wrote alone, so a build\nafter package.json moved on (Font Awesome 6.7.2 to 7.3.1) read the old\npackages until someone ran `npm ci`. Such a node_modules is now checked\nbefore each build (`crates/npm/src/stale.rs`):\n\n- each dependency of package.json is installed at a version its range\n  allows (deno_semver's npm ranges); tags, `file:`, git and alias\n  specifiers and a missing optional dependency are not checked;\n- for npm's, each entry of package-lock.json is installed at its\n  version; links and missing optional entries are not checked.\n\nWhile it is up to date it is left alone, as before. When it is not, it\nis removed, as `npm ci` does, and fugo installs the packages (npm.lock\nseeded from package-lock.json), saying why:\n\n  Installed the npm packages of package.json in 3622 ms: the\n  node_modules npm wrote was out of date (@fortawesome/fontawesome-free\n  6.7.2 is installed, package.json wants 7.3.1)\n\nA linked node_modules is still left alone. The server also checks again\nwhen package-lock.json changes, not only package.json.\n\nCo-Authored-By: Claude Opus 5.5 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-10-09T02:35:31+07:00",
+          "tree_id": "551296e5a1119b0015bfece787e172170086b8e6",
+          "url": "https://github.com/getfugo/fugo/commit/600ff851e909230def396307f2d20966025febe9"
+        },
+        "date": 1791488944623,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "docs site: build time",
+            "value": 191.8,
+            "unit": "ms",
+            "extra": "334 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "docs site: peak memory",
+            "value": 175.6,
+            "unit": "MiB",
+            "extra": "334 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "1,000 generated pages: build time",
+            "value": 238.2,
+            "unit": "ms",
+            "extra": "1061 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "1,000 generated pages: peak memory",
+            "value": 145.1,
+            "unit": "MiB",
+            "extra": "1061 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "10,000 generated pages: build time",
+            "value": 2097.6,
+            "unit": "ms",
+            "extra": "10061 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "10,000 generated pages: peak memory",
+            "value": 620.1,
             "unit": "MiB",
             "extra": "10061 pages; median of 5 builds after a warm-up build"
           }
