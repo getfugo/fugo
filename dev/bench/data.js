@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791488948367,
+  "lastUpdate": 1791488951559,
   "repoUrl": "https://github.com/getfugo/fugo",
   "entries": {
     "Benchmark": [
@@ -98908,6 +98908,105 @@ window.BENCHMARK_DATA = {
           {
             "name": "BenchmarkSummaryFromHTMLWithDivider",
             "value": 83.45,
+            "unit": "ns/op"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "blackb1rd.mov@gmail.com",
+            "name": "Prachya Saechua",
+            "username": "blackb1rd"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "600ff851e909230def396307f2d20966025febe9",
+          "message": "npm: Replace a node_modules that npm, pnpm or yarn left out of date (#194)\n\nfugo left a node_modules that npm, pnpm or yarn wrote alone, so a build\nafter package.json moved on (Font Awesome 6.7.2 to 7.3.1) read the old\npackages until someone ran `npm ci`. Such a node_modules is now checked\nbefore each build (`crates/npm/src/stale.rs`):\n\n- each dependency of package.json is installed at a version its range\n  allows (deno_semver's npm ranges); tags, `file:`, git and alias\n  specifiers and a missing optional dependency are not checked;\n- for npm's, each entry of package-lock.json is installed at its\n  version; links and missing optional entries are not checked.\n\nWhile it is up to date it is left alone, as before. When it is not, it\nis removed, as `npm ci` does, and fugo installs the packages (npm.lock\nseeded from package-lock.json), saying why:\n\n  Installed the npm packages of package.json in 3622 ms: the\n  node_modules npm wrote was out of date (@fortawesome/fontawesome-free\n  6.7.2 is installed, package.json wants 7.3.1)\n\nA linked node_modules is still left alone. The server also checks again\nwhen package-lock.json changes, not only package.json.\n\nCo-Authored-By: Claude Opus 5.5 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-10-09T02:35:31+07:00",
+          "tree_id": "551296e5a1119b0015bfece787e172170086b8e6",
+          "url": "https://github.com/getfugo/fugo/commit/600ff851e909230def396307f2d20966025febe9"
+        },
+        "date": 1791488950586,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "BenchmarkSanitizeAnchorName",
+            "value": 482.25,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSanitizeAnchorNameAsciiOnly",
+            "value": 1360.9,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSanitizeAnchorNameBlackfriday",
+            "value": 591.29,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSanitizeAnchorNameString",
+            "value": 481.98,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSanitize/All_allowed",
+            "value": 224.19,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSanitize/Spaces",
+            "value": 234.39,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkRelURL",
+            "value": 355.77,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkAbsURL/relurl",
+            "value": 684.04,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkAbsURL/absurl",
+            "value": 21.85,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkTotalWords",
+            "value": 4499.41,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkStripHTML",
+            "value": 1151.53,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkParse",
+            "value": 9416.86,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkDecodeYAMLToMap",
+            "value": 15584.4,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSummaryFromHTML",
+            "value": 77.11,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSummaryFromHTMLWithDivider",
+            "value": 84.7,
             "unit": "ns/op"
           }
         ]
