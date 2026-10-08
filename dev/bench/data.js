@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791478382711,
+  "lastUpdate": 1791478385997,
   "repoUrl": "https://github.com/getfugo/fugo",
   "entries": {
     "Benchmark": [
@@ -98749,6 +98749,105 @@ window.BENCHMARK_DATA = {
           {
             "name": "BenchmarkSummaryFromHTMLWithDivider",
             "value": 83.27,
+            "unit": "ns/op"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "blackb1rd.mov@gmail.com",
+            "name": "Prachya Saechua",
+            "username": "blackb1rd"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "b6c5071c47f629cdb95d8ebfa91d09c9f81bb70d",
+          "message": "fonts: Cut fonts with CFF outlines down, such as Font Awesome 7's (#193)\n\nklippa 0.1 copies a `CFF ` table whole, so since #192 a font with CFF\noutlines was left whole: Font Awesome 7's fonts (WOFF2, CFF) stayed at\n258 KB. Such a font is now cut down by allsorts, which fugo already\nuses: `subset` with its minimal profile and a Unicode `cmap` keeps\n`.notdef` and the glyphs of the characters, and writes `cmap`, `head`,\n`hhea`, `hmtx`, `maxp`, `name`, `OS/2`, `post` and `CFF `.\n\n- allsorts cuts no layout table down: a CFF font with `GSUB`, `GPOS` or\n  another table that matters is still left whole, with a warning that\n  names the tables. Font Awesome 7's fonts have none.\n- allsorts keeps the String INDEX whole, the names of every glyph. The\n  strings no kept glyph or Top DICT entry names are emptied in their\n  places, so no string id changes: Font Awesome 7 Solid cut down to 26\n  glyphs goes from 15 KB to 8 KB.\n- WOFF2: ttf2woff2 refuses a CFF font by its flavour alone, but stores\n  the tables of a font without `glyf` as they are, as WOFF2 has it for\n  CFF. `src/woff2.rs` gives it the font as TrueType and sets the\n  flavour back in the header (`encode_woff2`).\n- A font allsorts refuses is left whole with a warning, as every CFF\n  font was before. CFF2 fonts are still left whole.\n\nFont Awesome 7.3.1 cut down to seeksnack's icons: 9.5 KB of WOFF2 in\nall, from 258 KB (Font Awesome 6.7.2: 7.7 KB). Checked with OTS (the\nbrowsers' font sanitizer), fontTools (every character draws its\noriginal outline and advance) and Chrome, which draws the cut fonts\npixel for pixel as the whole ones.\n\nCo-authored-by: Claude Opus 5.5 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-10-08T23:41:02+07:00",
+          "tree_id": "7eb082a84b0fb259453188845d35388798fbaf19",
+          "url": "https://github.com/getfugo/fugo/commit/b6c5071c47f629cdb95d8ebfa91d09c9f81bb70d"
+        },
+        "date": 1791478385026,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "BenchmarkSanitizeAnchorName",
+            "value": 483.39,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSanitizeAnchorNameAsciiOnly",
+            "value": 1354.3,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSanitizeAnchorNameBlackfriday",
+            "value": 591.12,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSanitizeAnchorNameString",
+            "value": 482.22,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSanitize/All_allowed",
+            "value": 224.44,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSanitize/Spaces",
+            "value": 235.25,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkRelURL",
+            "value": 358.56,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkAbsURL/relurl",
+            "value": 672.98,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkAbsURL/absurl",
+            "value": 21.8,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkTotalWords",
+            "value": 4527.56,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkStripHTML",
+            "value": 1171.41,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkParse",
+            "value": 9657.4,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkDecodeYAMLToMap",
+            "value": 15407.82,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSummaryFromHTML",
+            "value": 77.19,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSummaryFromHTMLWithDivider",
+            "value": 83.45,
             "unit": "ns/op"
           }
         ]
