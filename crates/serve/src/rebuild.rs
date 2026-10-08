@@ -412,7 +412,7 @@ fn point_at_server(
 }
 
 /// The request's [`BuildRequest::prepare`], on a configuration the server loaded (at the
-/// start and when the configuration or `package.json` changes).
+/// start and when the configuration, `package.json` or `package-lock.json` changes).
 fn prepare(r: &BuildRequest, cfg: &Config) -> Result<(), ServeError> {
     match &r.prepare {
         Some(p) => p.prepare(cfg).map_err(|e| BuildError::Prepare(e).into()),

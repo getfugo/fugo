@@ -152,25 +152,145 @@ fn nothing_to_install() {
     assert!(registry.requests().is_empty());
 }
 
+/// Writes `node_modules` as another package manager leaves it: its state file `state` and the
+/// packages `(name, version)`, each with a file of its own.
+fn other_managers_node_modules(project: &Path, state: &str, packages: &[(&str, &str)]) {
+    let node_modules = project.join("node_modules");
+    std::fs::create_dir_all(&node_modules).expect("node_modules");
+    std::fs::write(node_modules.join(state), "{}").expect("state file");
+    for (name, version) in packages {
+        let dir = node_modules.join(name);
+        std::fs::create_dir_all(&dir).expect("package");
+        write_json(
+            &dir.join("package.json"),
+            &json!({ "name": name, "version": version }),
+        );
+        std::fs::write(dir.join("old.js"), "").expect("old.js");
+    }
+}
+
+/// The owner and the reason of [`Installed::Replaced`].
+fn replaced(installed: Installed) -> (&'static str, String) {
+    match installed {
+        Installed::Replaced { owner, reason, .. } => (owner, reason),
+        other => panic!("not replaced: {other:?}"),
+    }
+}
+
 #[test]
-fn another_package_managers_node_modules_is_left_alone() {
+fn another_package_managers_node_modules_is_left_alone_while_up_to_date() {
     let registry = Registry::start(&packages());
     let cache = tempfile::tempdir().expect("cache");
-    let p = project(&registry, &json!({ "dependencies": { "greet": "^1.0.0" } }));
-    let node_modules = p.path().join("node_modules");
-    std::fs::create_dir(&node_modules).expect("node_modules");
-    std::fs::write(node_modules.join(".package-lock.json"), "{}").expect("npm state");
+    let p = project(
+        &registry,
+        &json!({
+            "dependencies": { "greet": "^1.0.0", "tagged": "latest" },
+            "optionalDependencies": { "for-another-platform": "^1.0.0" },
+        }),
+    );
+    let lock = |shout: &str| {
+        json!({
+            "lockfileVersion": 3,
+            "packages": {
+                "": { "dependencies": { "greet": "^1.0.0", "tagged": "latest" } },
+                "node_modules/greet": { "version": "1.0.0" },
+                "node_modules/shout": { "version": shout },
+                "node_modules/tagged": { "version": "0.1.0" },
+                "node_modules/for-another-platform": { "version": "1.0.0", "optional": true },
+                "node_modules/local": { "resolved": "local", "link": true },
+            },
+        })
+    };
+    write_json(&p.path().join("package-lock.json"), &lock("1.2.0"));
+    other_managers_node_modules(
+        p.path(),
+        ".package-lock.json",
+        &[("greet", "1.0.0"), ("shout", "1.2.0"), ("tagged", "0.1.0")],
+    );
     assert_eq!(
         ensure_installed(p.path(), cache.path()).expect("npm's"),
         Installed::External("npm")
     );
-    std::fs::remove_file(node_modules.join(".package-lock.json")).expect("remove");
-    std::fs::create_dir(node_modules.join("left-pad")).expect("a package");
+    // Only npm's node_modules answers to package-lock.json.
+    write_json(&p.path().join("package-lock.json"), &lock("1.0.0"));
+    std::fs::remove_file(p.path().join("node_modules/.package-lock.json")).expect("remove");
+    std::fs::write(p.path().join("node_modules/.modules.yaml"), "{}").expect("pnpm state");
+    assert_eq!(
+        ensure_installed(p.path(), cache.path()).expect("pnpm's"),
+        Installed::External("pnpm")
+    );
+    std::fs::remove_file(p.path().join("node_modules/.modules.yaml")).expect("remove");
     assert_eq!(
         ensure_installed(p.path(), cache.path()).expect("unknown"),
         Installed::External("another package manager")
     );
+    assert!(p.path().join("node_modules/greet/old.js").is_file());
     assert!(registry.requests().is_empty());
+}
+
+#[test]
+fn another_package_managers_node_modules_is_replaced_when_out_of_date() {
+    let registry = Registry::start(&packages());
+    let cache = tempfile::tempdir().expect("cache");
+    let p = project(&registry, &json!({ "dependencies": { "greet": "^1.0.0" } }));
+    other_managers_node_modules(
+        p.path(),
+        ".package-lock.json",
+        &[("greet", "0.9.0"), ("left-pad", "1.0.0")],
+    );
+    let (owner, reason) = replaced(ensure_installed(p.path(), cache.path()).expect("replace"));
+    assert_eq!(owner, "npm");
+    assert_eq!(
+        reason,
+        "greet 0.9.0 is installed, package.json wants ^1.0.0"
+    );
+    assert_eq!(version(p.path(), "greet"), "1.0.0");
+    // Nothing of the old node_modules stays: its files, its packages, npm's state file.
+    for old in ["greet/old.js", "left-pad", ".package-lock.json"] {
+        assert!(!p.path().join("node_modules").join(old).exists(), "{old}");
+    }
+    // The node_modules is the installer's now.
+    assert_eq!(
+        ensure_installed(p.path(), cache.path()).expect("again"),
+        Installed::UpToDate
+    );
+
+    // A package that is not installed.
+    let p = project(&registry, &json!({ "dependencies": { "greet": "^1.0.0" } }));
+    other_managers_node_modules(p.path(), ".modules.yaml", &[("shout", "1.2.0")]);
+    let (owner, reason) = replaced(ensure_installed(p.path(), cache.path()).expect("replace"));
+    assert_eq!((owner, reason.as_str()), ("pnpm", "greet is not installed"));
+    assert_eq!(version(p.path(), "greet"), "1.0.0");
+}
+
+#[test]
+fn npms_node_modules_is_replaced_when_package_lock_json_has_other_versions() {
+    let registry = Registry::start(&packages());
+    let cache = tempfile::tempdir().expect("cache");
+    let p = project(&registry, &json!({ "dependencies": { "shout": "^1.0.0" } }));
+    write_json(
+        &p.path().join("package-lock.json"),
+        &json!({
+            "lockfileVersion": 3,
+            "packages": {
+                "": { "dependencies": { "shout": "^1.0.0" } },
+                "node_modules/shout": {
+                    "version": "1.0.0",
+                    "resolved": format!("{}shout/-/shout-1.0.0.tgz", registry.url()),
+                    "integrity": registry.integrity("shout", "1.0.0").expect("integrity"),
+                },
+            },
+        }),
+    );
+    // The range allows what npm installed, package-lock.json has another version.
+    other_managers_node_modules(p.path(), ".package-lock.json", &[("shout", "1.2.0")]);
+    let (_, reason) = replaced(ensure_installed(p.path(), cache.path()).expect("replace"));
+    assert_eq!(
+        reason,
+        "shout 1.2.0 is installed, package-lock.json has 1.0.0"
+    );
+    // The version of package-lock.json, not the newest the range allows.
+    assert_eq!(version(p.path(), "shout"), "1.0.0");
 }
 
 #[cfg(unix)]
@@ -179,6 +299,7 @@ fn a_linked_node_modules_is_left_alone() {
     let registry = Registry::start(&packages());
     let cache = tempfile::tempdir().expect("cache");
     let p = project(&registry, &json!({ "dependencies": { "greet": "^1.0.0" } }));
+    // Even without the packages of package.json.
     let elsewhere = tempfile::tempdir().expect("elsewhere");
     std::os::unix::fs::symlink(elsewhere.path(), p.path().join("node_modules")).expect("link");
     assert_eq!(

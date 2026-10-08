@@ -136,6 +136,16 @@ impl Registry {
         }
     }
 
+    /// The integrity (`sha512-…`) of a published version's tarball, as lock files record it.
+    #[must_use]
+    pub fn integrity(&self, name: &str, version: &str) -> Option<String> {
+        let state = self.state.lock().unwrap_or_else(PoisonError::into_inner);
+        let doc = state.documents.get(name)?;
+        doc["versions"][version]["dist"]["integrity"]
+            .as_str()
+            .map(str::to_owned)
+    }
+
     /// `http://127.0.0.1:<port>/`.
     #[must_use]
     pub fn url(&self) -> &str {

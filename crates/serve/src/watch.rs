@@ -33,8 +33,8 @@ pub(crate) enum Message {
 }
 
 /// Where configuration lives: the files it was read from (the project's and its themes', the
-/// project's `.env` files, and its `package.json`, whose packages are installed when the
-/// configuration loads), the configuration directories (the project's `--configDir` and each
+/// project's `.env` files, and its `package.json` and `package-lock.json`, whose packages are
+/// installed when the configuration loads), the configuration directories (the project's `--configDir` and each
 /// theme's `config/`), and the directories whose `config.*` file is configuration even when it
 /// did not exist yet (the project's and each theme's).
 #[derive(Clone, Debug)]
@@ -59,6 +59,7 @@ impl ConfigPlaces {
             files.insert(cfg.project_dir.join(name));
         }
         files.insert(cfg.project_dir.join("package.json"));
+        files.insert(cfg.project_dir.join("package-lock.json"));
         Self {
             files,
             dirs,

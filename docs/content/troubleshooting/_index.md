@@ -73,7 +73,10 @@ installing the npm packages of …/package.json: …
 ```
 
 fugo could not reach the registry, or a version in `package.json` does not exist. Check your
-network, proxy and `.npmrc`. A `node_modules` that npm, pnpm or yarn installed is used as it is.
+network, proxy and `.npmrc`. A `node_modules` that npm, pnpm or yarn installed is used as it is
+while it has the packages of `package.json`; when it is out of date, fugo installs the packages
+itself, and needs the registry too (see
+[npm packages](/asset-pipelines/npm-packages/#using-npm-pnpm-or-yarn-instead)).
 
 ### Not allowed by security
 
