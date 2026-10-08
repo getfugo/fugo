@@ -26,6 +26,20 @@ impl Prepare for Install {
                 }
                 Ok(())
             }
+            Ok(Installed::Replaced {
+                owner,
+                reason,
+                elapsed,
+            }) => {
+                if !self.quiet {
+                    println!(
+                        "Installed the npm packages of package.json in {} ms: the node_modules \
+                         {owner} wrote was out of date ({reason})",
+                        elapsed.as_millis()
+                    );
+                }
+                Ok(())
+            }
             Ok(Installed::NoPackages | Installed::External(_) | Installed::UpToDate) => Ok(()),
             Err(e) => Err(e.to_string()),
         }

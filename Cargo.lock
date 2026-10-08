@@ -7177,6 +7177,7 @@ dependencies = [
  "deno_npm_installer",
  "deno_npmrc",
  "deno_resolver",
+ "deno_semver",
  "node_resolver",
  "rustls",
  "serde_json",

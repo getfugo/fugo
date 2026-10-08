@@ -20,6 +20,7 @@ use sha2::{Digest, Sha256};
 use sys_traits::impls::RealSys;
 
 use crate::http::Http;
+use crate::stale;
 
 /// The lock file written next to `package.json` (Deno's lockfile format).
 pub const LOCK_FILE: &str = "npm.lock";
@@ -43,13 +44,20 @@ const OTHER_MANAGERS: [(&str, &str); 4] = [
 pub enum Installed {
     /// No `package.json`, or one without dependencies.
     NoPackages,
-    /// `node_modules` is someone else's (the package manager that wrote it, or "a link"): left
-    /// alone.
+    /// `node_modules` is someone else's and is left alone: "a link", or the package manager
+    /// that wrote it, when it has the packages of `package.json` (and of `package-lock.json`).
     External(&'static str),
     /// The stamp says `package.json` and the lock file are installed.
     UpToDate,
     /// Installed now.
     Installed { elapsed: Duration },
+    /// Installed now, in place of a `node_modules` that another package manager (`owner`)
+    /// wrote and that `reason` says is out of date.
+    Replaced {
+        owner: &'static str,
+        reason: String,
+        elapsed: Duration,
+    },
 }
 
 /// Why the packages could not be installed.
@@ -75,8 +83,8 @@ fn io(path: &Path) -> impl FnOnce(std::io::Error) -> InstallError + '_ {
 
 /// Installs the dependencies, dev dependencies and optional dependencies of
 /// `<project>/package.json` into `<project>/node_modules`, downloading into `<cache>/packages`,
-/// unless they are installed already or another package manager owns `node_modules` (see the
-/// crate docs). Writes [`LOCK_FILE`].
+/// unless they are installed already, `node_modules` is a link, or another package manager's
+/// `node_modules` has them (see the crate docs). Writes [`LOCK_FILE`].
 ///
 /// # Errors
 /// A `package.json` that does not parse, a registry that cannot be reached, a version that
@@ -88,13 +96,27 @@ pub fn ensure_installed(project: &Path, cache: &Path) -> Result<Installed, Insta
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => return Ok(Installed::NoPackages),
         Err(e) => return Err(io(&package_json)(e)),
     };
-    if !has_dependencies(&package_json, &text)? {
+    let json: serde_json::Value =
+        serde_json::from_slice(&text).map_err(|e| InstallError::PackageJson {
+            path: package_json.clone(),
+            message: e.to_string(),
+        })?;
+    if !has_dependencies(&json) {
         return Ok(Installed::NoPackages);
     }
     let node_modules = project.join("node_modules");
-    if let Some(owner) = other_owner(&node_modules)? {
-        return Ok(Installed::External(owner));
-    }
+    let replaced = match other_owner(&node_modules)? {
+        None => None,
+        Some(Owner::Link) => return Ok(Installed::External("a link")),
+        Some(Owner::Manager(owner)) => {
+            let Some(reason) = stale::out_of_date(project, &json, owner == "npm") else {
+                return Ok(Installed::External(owner));
+            };
+            // As `npm ci` does: nothing of the old packages stays.
+            std::fs::remove_dir_all(&node_modules).map_err(io(&node_modules))?;
+            Some((owner, reason))
+        }
+    };
     let stamp_path = node_modules.join(STAMP);
     if std::fs::read_to_string(&stamp_path).is_ok_and(|s| s == stamp(project, &text)) {
         return Ok(Installed::UpToDate);
@@ -105,43 +127,53 @@ pub fn ensure_installed(project: &Path, cache: &Path) -> Result<Installed, Insta
         message: format!("{e:#}"),
     })?;
     std::fs::write(&stamp_path, stamp(project, &text)).map_err(io(&stamp_path))?;
-    Ok(Installed::Installed {
-        elapsed: started.elapsed(),
+    let elapsed = started.elapsed();
+    Ok(match replaced {
+        Some((owner, reason)) => Installed::Replaced {
+            owner,
+            reason,
+            elapsed,
+        },
+        None => Installed::Installed { elapsed },
     })
 }
 
 /// Whether `package.json` declares packages to install.
-fn has_dependencies(path: &Path, text: &[u8]) -> Result<bool, InstallError> {
-    let json: serde_json::Value =
-        serde_json::from_slice(text).map_err(|e| InstallError::PackageJson {
-            path: path.to_owned(),
-            message: e.to_string(),
-        })?;
-    Ok(["dependencies", "devDependencies", "optionalDependencies"]
+fn has_dependencies(json: &serde_json::Value) -> bool {
+    ["dependencies", "devDependencies", "optionalDependencies"]
         .iter()
         .any(|k| {
             json.get(k)
                 .and_then(serde_json::Value::as_object)
                 .is_some_and(|m| !m.is_empty())
-        }))
+        })
+}
+
+/// Who else owns `node_modules`.
+enum Owner {
+    /// A link (the test harness links `tools/dev/node_modules`): never changed.
+    Link,
+    /// The package manager that wrote it: npm, pnpm, yarn, or "another package manager" for a
+    /// non-empty directory without Deno's `.deno`.
+    Manager(&'static str),
 }
 
 /// Who else owns `node_modules`, if anyone: a link, another package manager's state file, or
 /// a non-empty directory without Deno's `.deno`.
-fn other_owner(node_modules: &Path) -> Result<Option<&'static str>, InstallError> {
+fn other_owner(node_modules: &Path) -> Result<Option<Owner>, InstallError> {
     let meta = match std::fs::symlink_metadata(node_modules) {
         Ok(m) => m,
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => return Ok(None),
         Err(e) => return Err(io(node_modules)(e)),
     };
     if meta.file_type().is_symlink() {
-        return Ok(Some("a link"));
+        return Ok(Some(Owner::Link));
     }
     if let Some((_, manager)) = OTHER_MANAGERS
         .iter()
         .find(|(file, _)| node_modules.join(file).exists())
     {
-        return Ok(Some(manager));
+        return Ok(Some(Owner::Manager(manager)));
     }
     if node_modules.join(".deno").is_dir() {
         return Ok(None);
@@ -150,7 +182,7 @@ fn other_owner(node_modules: &Path) -> Result<Option<&'static str>, InstallError
         .map_err(io(node_modules))?
         .next()
         .is_none();
-    Ok((!empty).then_some("another package manager"))
+    Ok((!empty).then_some(Owner::Manager("another package manager")))
 }
 
 /// The stamp of an installation: the installer, the platform (optional packages differ), the

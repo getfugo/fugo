@@ -26,7 +26,8 @@ Installed the npm packages of package.json in 2102 ms
 ```
 
 The next build installs nothing until `package.json` or the lock file changes. `fugo server`
-installs again when you save `package.json`.
+installs again when you save `package.json`, and looks at `package-lock.json` again when it
+changes (see below).
 
 ## What gets installed
 
@@ -53,15 +54,27 @@ To upgrade, change the range in `package.json`, or delete `npm.lock`.
 
 ## Using npm, pnpm or yarn instead
 
-fugo manages a `node_modules` it created itself, or one that does not exist yet. It leaves
-`node_modules` alone if:
+fugo manages a `node_modules` it created itself, or one that does not exist yet. A
+`node_modules` that npm, pnpm or yarn wrote (their state files are inside), or that is not empty
+and that fugo did not create, fugo uses as long as it has the packages of `package.json`:
 
-- npm, pnpm or yarn wrote it (their state files are inside);
-- it is a link;
-- it is not empty and fugo did not create it.
+- each package is installed, at a version its range in `package.json` allows;
+- if npm wrote it and you have a `package-lock.json`, each package is at the version the lock
+  file gives.
 
-If you install with your own package manager, fugo uses what you installed. Delete
-`node_modules` to let fugo install it again.
+When a package is missing or at another version, fugo deletes `node_modules`, as `npm ci` does,
+and installs the packages itself, so a build never uses packages older than the ones you named:
+
+```text
+Installed the npm packages of package.json in 2102 ms: the node_modules npm wrote was out of date (@fortawesome/fontawesome-free 6.7.2 is installed, package.json wants 7.3.1)
+```
+
+The `node_modules` is then fugo's, until your package manager installs again. fugo runs no
+install scripts: if a program you run yourself needs one, install again with your package
+manager. fugo does not check dependencies that name a tag (`latest`), a path or a git
+repository, nor an optional dependency that is not installed (one for another platform).
+
+fugo leaves a `node_modules` that is a link alone, whatever it holds.
 
 ## Without the installer
 

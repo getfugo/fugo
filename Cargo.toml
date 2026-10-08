@@ -234,6 +234,7 @@ deno_npm_cache = "=0.78.0"
 deno_npmrc = "=0.20.0"
 deno_config = "=0.109.0"
 deno_error = "=0.7.1"
+deno_semver = "=0.10.1" # ssg-npm: the version ranges of package.json
 sys_traits = { version = "0.1.29", features = ["real"] }
 async-trait = "0.1"
 tar = "0.4" # ssg-npm tests: the packages of the local registry
