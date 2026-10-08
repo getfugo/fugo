@@ -3,9 +3,10 @@
 //! A WOFF or WOFF2 font is decoded to an OpenType font first (allsorts). klippa (HarfBuzz's
 //! subsetter, in Rust) keeps the glyphs of the characters, the glyphs that layout features reach
 //! from them (ligatures, alternates, accents), and the layout tables, cut down to those glyphs.
-//! The result is encoded back into the font's format: OpenType as is, WOFF2 with its
-//! `glyf`/`loca` transform (ttf2woff2), WOFF with zlib ([`crate::woff`]). A font with CFF
-//! outlines is left whole: klippa does not cut them down yet.
+//! klippa does not cut CFF outlines down: a font with them is cut down by allsorts
+//! ([`crate::cff`]), which keeps the glyphs of the characters, or left whole. The result is
+//! encoded back into the font's format: OpenType as is, WOFF2 by ttf2woff2
+//! ([`crate::woff2`]), WOFF with zlib ([`crate::woff`]).
 
 use std::borrow::Cow;
 use std::collections::BTreeSet;
@@ -15,12 +16,12 @@ use allsorts::font_data::FontData;
 use allsorts::tables::FontTableProvider;
 use fontcull_klippa::{Plan, SubsetFlags, subset_font};
 use fontcull_read_fonts::collections::IntSet;
-use fontcull_read_fonts::types::{NameId, Tag};
+use fontcull_read_fonts::types::{GlyphId, NameId, Tag};
 use fontcull_read_fonts::{FontRef, TableProvider};
 
 /// The tables HarfBuzz's subsetter drops by default (`hb-subset-input.cc`): layout tables it
 /// does not cut down (AAT and the legacy `kern`), Graphite, and tables browsers ignore.
-const DROP_TABLES: &[&[u8; 4]] = &[
+pub(crate) const DROP_TABLES: &[&[u8; 4]] = &[
     b"morx", b"mort", b"kerx", b"kern", b"JSTF", b"DSIG", b"EBDT", b"EBLC", b"EBSC", b"SVG ",
     b"PCLT", b"LTSH", b"Feat", b"Glat", b"Gloc", b"Silf", b"Sill",
 ];
@@ -89,29 +90,58 @@ pub fn cut(bytes: &[u8], chars: &BTreeSet<char>) -> Result<Outcome, SubsetError>
     };
     let font = FontRef::new(&sfnt).map_err(|e| SubsetError::new("not a font", e))?;
     let cmap = font.cmap().map_err(|e| SubsetError::new("no cmap", e))?;
-    let mut unicodes = IntSet::<u32>::empty();
-    for &c in chars {
-        if cmap.map_codepoint(c).is_some() {
-            unicodes.insert(u32::from(c));
-        }
-    }
-    if unicodes.is_empty() {
+    let mapped: Vec<(char, GlyphId)> = chars
+        .iter()
+        .filter_map(|&c| Some((c, cmap.map_codepoint(c)?)))
+        .collect();
+    if mapped.is_empty() {
         return Ok(Outcome::Unused);
     }
-    // klippa 0.1 copies a `CFF ` or `CFF2` table whole while it renumbers the glyphs: each
-    // character of the cut font would draw another glyph.
-    let cff = [(b"CFF ", "CFF"), (b"CFF2", "CFF2")]
-        .into_iter()
-        .find_map(|(tag, name)| font.table_data(Tag::new(tag)).map(|_| name));
-    if let Some(outlines) = cff {
-        return Ok(Outcome::Whole(Some(format!(
-            "a font with {outlines} outlines, which the subsetter cannot cut down yet"
-        ))));
+    let out = if font.table_data(Tag::new(b"CFF ")).is_some() {
+        if let Some(reason) = crate::cff::lost_tables(&font) {
+            return Ok(Outcome::Whole(Some(reason)));
+        }
+        let glyphs = mapped.iter().map(|(_, g)| u16::try_from(g.to_u32()));
+        match crate::cff::cut(&sfnt, glyphs.filter_map(Result::ok)) {
+            Ok(out) => out,
+            // allsorts refuses some CFF fonts (several fonts in one table, …), which were left
+            // whole before CFF fonts were cut down: they still are.
+            Err(e) => {
+                return Ok(Outcome::Whole(Some(format!(
+                    "a font with CFF outlines the subsetter cannot cut down ({e})"
+                ))));
+            }
+        }
+    } else if font.table_data(Tag::new(b"CFF2")).is_some() {
+        // klippa would copy the table whole while it renumbers the glyphs; allsorts would turn
+        // it into CFF, without its variations.
+        return Ok(Outcome::Whole(Some(
+            "a font with CFF2 outlines, which the subsetter cannot cut down yet".to_owned(),
+        )));
+    } else {
+        let out = cut_truetype(&font, &mapped.iter().map(|&(c, _)| u32::from(c)).collect())?;
+        if let Some(reason) = lost_layout(&font, &out) {
+            return Ok(Outcome::Whole(Some(reason)));
+        }
+        out
+    };
+    let encoded = match format {
+        Format::OpenType => out,
+        Format::Woff2 => crate::woff2::encode(&out)?,
+        Format::Woff => crate::woff::encode(&out)?,
+    };
+    if encoded.len() >= bytes.len() {
+        return Ok(Outcome::Whole(None));
     }
+    Ok(Outcome::Cut(encoded))
+}
+
+/// The font `font`, with TrueType outlines, cut down to the characters `unicodes` by klippa.
+fn cut_truetype(font: &FontRef<'_>, unicodes: &IntSet<u32>) -> Result<Vec<u8>, SubsetError> {
     let plan = Plan::new(
         &IntSet::empty(),
-        &unicodes,
-        &font,
+        unicodes,
+        font,
         SubsetFlags::default(),
         &DROP_TABLES.iter().map(|t| Tag::new(t)).collect(),
         &IntSet::all(),
@@ -119,20 +149,7 @@ pub fn cut(bytes: &[u8], chars: &BTreeSet<char>) -> Result<Outcome, SubsetError>
         &NAME_IDS.map(NameId::new).collect(),
         &std::iter::once(NAME_LANGUAGE).collect(),
     );
-    let out = subset_font(&font, &plan).map_err(|e| SubsetError::new("subsetting", e))?;
-    if let Some(reason) = lost_layout(&font, &out) {
-        return Ok(Outcome::Whole(Some(reason)));
-    }
-    let encoded = match format {
-        Format::OpenType => out,
-        Format::Woff2 => ttf2woff2::encode(&out, ttf2woff2::BrotliQuality::default())
-            .map_err(|e| SubsetError::new("writing WOFF2", e))?,
-        Format::Woff => crate::woff::encode(&out)?,
-    };
-    if encoded.len() >= bytes.len() {
-        return Ok(Outcome::Whole(None));
-    }
-    Ok(Outcome::Cut(encoded))
+    subset_font(font, &plan).map_err(|e| SubsetError::new("subsetting", e))
 }
 
 /// An OpenType font made of the tables of a WOFF or WOFF2 font.

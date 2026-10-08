@@ -6,12 +6,14 @@
 //! characters that entry asks for ([`subset::cut`]), in the font's own format, and writes it
 //! back. A font none of whose characters are used is left as it is.
 
+mod cff;
 mod chars;
 mod config;
 mod css;
 mod record;
 mod subset;
 mod woff;
+mod woff2;
 
 use rayon::prelude::*;
 use ssg_base::diag::Diagnostic;
@@ -24,6 +26,7 @@ pub use css::CssStrings;
 pub use record::Recorder;
 pub use subset::{Format, Outcome, SubsetError, cut};
 pub use woff::encode as encode_woff;
+pub use woff2::encode as encode_woff2;
 
 /// What went wrong.
 #[derive(Debug, thiserror::Error)]

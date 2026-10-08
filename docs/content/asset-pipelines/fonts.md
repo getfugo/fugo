@@ -44,15 +44,18 @@ kept, since a page may turn any of them on (`font-variant-caps`, `font-feature-s
 is the hinting. The subsetter is [klippa](https://github.com/googlefonts/fontations), a port of
 HarfBuzz's.
 
+A font with CFF outlines (PostScript's, in an OpenType font), such as Font Awesome 7's, is cut
+down by [allsorts](https://github.com/yeslogic/allsorts) instead. It keeps the glyphs of the
+characters and the tables that draw them, but cuts no layout table down.
+
 A font is written back in its own format: TrueType or OpenType, WOFF, or WOFF2. Some fonts are
 left as they are:
 
 - A font none of whose characters the site uses (Font Awesome's `fa-v4compatibility`, say).
 - A variable font whose layout tables the subsetter cannot cut down yet: it would lose its
   kerning, mark positioning or ligatures. The build warns.
-- A font with CFF outlines, whatever its format, which the subsetter cannot cut down yet. Font
-  Awesome 7's fonts have them; Font Awesome 6's have TrueType outlines and are cut down. The
-  build warns.
+- A font with CFF outlines and layout tables (`GSUB`, `GPOS`, …), or with CFF2 outlines, which
+  the subsetters cannot cut down yet. The build warns.
 
 The build's summary line counts the fonts cut down and their sizes before and after. `fugo
 server` cuts them down too.
