@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791565481610,
+  "lastUpdate": 1791565484405,
   "repoUrl": "https://github.com/getfugo/fugo",
   "entries": {
     "Benchmark": [
@@ -99226,6 +99226,105 @@ window.BENCHMARK_DATA = {
           {
             "name": "BenchmarkSummaryFromHTMLWithDivider",
             "value": 36.18,
+            "unit": "ns/op"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "blackb1rd.mov@gmail.com",
+            "name": "Prachya Saechua",
+            "username": "blackb1rd"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "89ccf47008294ea89280bf20eadc7d774cbfd8cc",
+          "message": "cms: Sign editors in with GitHub or Google, without Cloudflare Access (#196)\n\nThe editor signed people in through Cloudflare Access only: a Zero\nTrust team, an Access application and its policy, and a Google OAuth\nclient in Access, for up to 50 users on the free plan. The Worker now\nsigns people in itself (`[cms.login] provider = \"github\"`, \"google\",\nor both), with an OAuth app of the site's own:\n\n- `login/<provider>` sends the browser to the provider (OAuth 2.0 with\n  PKCE), with its state and code verifier in a signed cookie of ten\n  minutes that ties the sign-in to the browser. `callback/<provider>`\n  exchanges the code for the account's verified emails (GitHub: all of\n  them, the primary one first; Google: the ID token's) and drops the\n  provider's token; the first email `CMS_USERS` gives a role signs in,\n  with the account's name for its commits.\n- The session is a cookie of seven days (`__Host-`, HttpOnly, Secure,\n  SameSite=Lax) signed with HMAC-SHA-256 and the `CMS_SESSION_KEY`\n  secret (`worker/session.ts`). Roles are still looked up on every\n  request; a new key signs everyone out; `logout` deletes the cookie.\n- When the API answers 401 with the ways to sign in, the editor shows a\n  button for each, which comes back to the route it showed. Its header\n  has *Sign out* (Access's own logout with Access).\n- New secrets: `CMS_SESSION_KEY`, `CMS_GITHUB_CLIENT_ID` and\n  `CMS_GITHUB_CLIENT_SECRET`, `CMS_GOOGLE_CLIENT_ID` and\n  `CMS_GOOGLE_CLIENT_SECRET`.\n\nCloudflare Access stays: `provider = \"cloudflare-access\"`, or `team`\nand `aud` without a provider, as configurations have them today. The\nsettings the build gives the Worker name the kind of sign-in\n(`login.kind`), and the checks of `[cms.login]` moved to\n`config/login.rs`.\n\nCo-Authored-By: Claude Opus 5.5 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-10-09T23:50:23+07:00",
+          "tree_id": "77bd9e2880bf0e3736926ff29fa9a16e28af2336",
+          "url": "https://github.com/getfugo/fugo/commit/89ccf47008294ea89280bf20eadc7d774cbfd8cc"
+        },
+        "date": 1791565483670,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "BenchmarkSanitizeAnchorName",
+            "value": 449.68,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSanitizeAnchorNameAsciiOnly",
+            "value": 1134.34,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSanitizeAnchorNameBlackfriday",
+            "value": 562.95,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSanitizeAnchorNameString",
+            "value": 448.71,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSanitize/All_allowed",
+            "value": 201.4,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSanitize/Spaces",
+            "value": 210.47,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkRelURL",
+            "value": 334.03,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkAbsURL/relurl",
+            "value": 628.05,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkAbsURL/absurl",
+            "value": 18.98,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkTotalWords",
+            "value": 4419.74,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkStripHTML",
+            "value": 1135.14,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkParse",
+            "value": 8444.47,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkDecodeYAMLToMap",
+            "value": 12016.47,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSummaryFromHTML",
+            "value": 82.69,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSummaryFromHTMLWithDivider",
+            "value": 74.02,
             "unit": "ns/op"
           }
         ]
