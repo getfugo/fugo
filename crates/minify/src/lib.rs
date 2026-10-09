@@ -13,8 +13,9 @@
 //! wants more leniency publishes the input unchanged on `Err`. CSS never fails, as in tdewolff:
 //! rules lightningcss rejects (Tailwind's `@media screen(md)`, stray tokens, `@import` after
 //! rules) are passed through with only comments and whitespace removed, the rest is minified.
-//! HTML never fails either: inline CSS, JavaScript and JSON that do not parse are left as
-//! written.
+//! HTML never fails either: its inline CSS (`<style>`, `style` attributes) is printed compactly in
+//! syntax the browser targets read, rules lightningcss rejects passed through as in stand-alone
+//! CSS, and inline JavaScript and JSON that do not parse are left as written.
 
 #![forbid(unsafe_code)]
 
@@ -114,7 +115,8 @@ impl Minifier {
     }
 
     /// The minifier with CSS browser targets ([`project_browsers`]): stand-alone CSS gets the
-    /// vendor prefixes and the syntax those browsers need.
+    /// vendor prefixes and the syntax those browsers need, and CSS in HTML is printed in syntax
+    /// they read.
     #[must_use]
     pub fn with_browsers(mut self, browsers: Option<lightningcss::targets::Browsers>) -> Self {
         self.options.css.browsers = browsers;
@@ -161,7 +163,7 @@ impl Minifier {
         let o = &self.options;
         let out = match target {
             MinifyTarget::Html => html::minify(self, input)?,
-            MinifyTarget::Css => css::minify(&o.css, input),
+            MinifyTarget::Css => css::minify(css::Css::standalone(&o.css), input),
             MinifyTarget::Js => js::minify(&o.js, input)?,
             MinifyTarget::Json => json::minify(input)?,
             MinifyTarget::Svg => xml::minify(

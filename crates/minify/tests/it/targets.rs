@@ -1,5 +1,6 @@
 //! CSS with browser targets from a browserslist configuration: prefixes added and syntax lowered
-//! for the targets, hand-written fallbacks kept as written.
+//! for the targets, hand-written fallbacks kept as written; CSS in HTML (`<style>`, `style`)
+//! printed for the targets.
 
 use ssg_minify::{Minifier, MinifyTarget, project_browsers};
 
@@ -14,14 +15,15 @@ fn minifier(queries: &str) -> Minifier {
 
 /// Minifies `input` and checks that the result is a fixed point.
 fn min(m: &Minifier, input: &str) -> String {
+    min_as(m, MinifyTarget::Css, input)
+}
+
+fn min_as(m: &Minifier, target: MinifyTarget, input: &str) -> String {
     let out = m
-        .minify(MinifyTarget::Css, input)
+        .minify(target, input)
         .unwrap_or_else(|e| panic!("{e}: {input}"))
         .into_owned();
-    let again = m
-        .minify(MinifyTarget::Css, &out)
-        .expect("again")
-        .into_owned();
+    let again = m.minify(target, &out).expect("again").into_owned();
     assert_eq!(again, out, "not idempotent for {input:?}");
     out
 }
@@ -78,4 +80,106 @@ fn fallback_rules_kept_as_written() {
         );
         assert!(out.contains("-webkit-user-select:none"), "{out}");
     }
+}
+
+/// A page's `<style>` is printed for the targets: no range syntax in media queries, no
+/// `#rrggbbaa` (minify-html's own CSS minification has no targets). Nothing is added or merged.
+#[test]
+fn style_elements_for_the_targets() {
+    let m = minifier("Safari >= 12\n");
+    let html = |s: &str| min_as(&m, MinifyTarget::Html, s);
+    let css = "@media (min-width: 576px) { .a { color: rgba(0, 0, 0, .5); user-select: none } }";
+    let printed = "@media (min-width:576px){.a{color:rgba(0,0,0,.5);user-select:none}}";
+    assert_eq!(
+        html(&format!("<style>\n  {css}\n</style>")),
+        format!("<style>{printed}</style>")
+    );
+    assert_eq!(
+        html(&format!("<noscript><style>{css}</style></noscript>")),
+        format!("<noscript><style>{printed}</style></noscript>")
+    );
+    assert_eq!(
+        html(&format!("<svg><style>{css}</style></svg>")),
+        format!("<svg><style>{printed}</style></svg>")
+    );
+    assert_eq!(
+        html("<style>.i { display: -webkit-box; display: flex }</style>"),
+        "<style>.i{display:-webkit-box;display:flex}</style>"
+    );
+    // CSS a pipeline wrote for the targets stays as it is: lowering it again would add its
+    // prefixed rules once more.
+    let sheet = min(
+        &m,
+        ".f::file-selector-button{margin:0}.a{user-select:none;color:rgba(0,0,0,.5)}",
+    );
+    assert!(sheet.contains("::-webkit-file-upload-button"), "{sheet}");
+    let page = format!("<style>{sheet}</style>");
+    assert_eq!(html(&page), page);
+    // SVG markup in a `<style>` (a reference, CDATA) is kept as written.
+    for page in [
+        "<svg><style>.a &gt; .b { fill: red }</style></svg>",
+        "<svg><style><![CDATA[ .a { fill: red } ]]></style></svg>",
+    ] {
+        assert_eq!(html(page), page);
+    }
+}
+
+/// `style` attributes too, then written as minify-html writes attributes (unquoted when it can,
+/// after the quoted ones).
+#[test]
+fn style_attributes_for_the_targets() {
+    let m = minifier("Safari >= 12\n");
+    let html = |s: &str| min_as(&m, MinifyTarget::Html, s);
+    for (input, want) in [
+        (
+            "<p style=\"top: 0; right: 0; bottom: 0; left: 0; color: rgba(0,0,0,.5)\">x</p>",
+            "<p style=top:0;right:0;bottom:0;left:0;color:rgba(0,0,0,.5)>x</p>",
+        ),
+        (
+            "<p style=\"user-select : none\" title=\"a b\">x</p>",
+            "<p title=\"a b\" style=user-select:none>x</p>",
+        ),
+        (
+            "<p style=\"font-family: 'A B', &quot;C&quot;; content: 'a  b'\">x</p>",
+            "<p style='font-family:A B,C;content:\"a  b\"'>x</p>",
+        ),
+        (
+            "<p style=\"display: -webkit-box; display: flex\">x</p>",
+            "<p style=display:-webkit-box;display:flex>x</p>",
+        ),
+        (
+            "<svg><path d=\"M0 0\" style=\"fill: rgba(0,0,0,.5)\"/></svg>",
+            "<svg><path d=\"M0 0\" style=fill:rgba(0,0,0,.5) /></svg>",
+        ),
+        // Kept as minify-html writes them: CSS that does not parse, a `}`, CDATA.
+        (
+            "<p style=\"color: red }\">x</p>",
+            "<p style=\"color: red }\">x</p>",
+        ),
+        (
+            "<p style=\"color: red} p {color: blue\">x</p>",
+            "<p style=\"color: red} p {color: blue\">x</p>",
+        ),
+        (
+            "<svg><![CDATA[ <a style=\"x : y\"> ]]></svg>",
+            "<svg><![CDATA[ <a style=\"x : y\">]]></svg>",
+        ),
+    ] {
+        assert_eq!(html(input), want);
+    }
+}
+
+/// Without targets, inline CSS is printed compactly too.
+#[test]
+fn inline_css_without_targets() {
+    let m = Minifier::default();
+    assert_eq!(
+        min_as(
+            &m,
+            MinifyTarget::Html,
+            "<style>.o { top: 0; right: 0; bottom: 0; left: 0 }</style>\
+             <p style=\"top: 0; right: 0; bottom: 0; left: 0\">x</p>"
+        ),
+        "<style>.o{top:0;right:0;bottom:0;left:0}</style><p style=top:0;right:0;bottom:0;left:0>x</p>"
+    );
 }
