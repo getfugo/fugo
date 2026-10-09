@@ -2,9 +2,10 @@
 // (browse.ts).
 
 import { html, nothing, type TemplateResult } from "lit-html";
+import { messageOf, signOut } from "./api";
 import { askNewFolder, mayAddFolder } from "./create";
 import { type Section } from "./data";
-import { show } from "./dom";
+import { show, toast } from "./dom";
 import { draftList } from "./drafts";
 import { drafts, me, site } from "./state";
 
@@ -17,6 +18,7 @@ export function header(): TemplateResult {
       <span class="spacer"></span>
       ${me.workflow === "review" ? html`<a href="#/drafts" class="drafts-link">Drafts (${drafts.length})</a>` : nothing}
       <span class="user" title="Roles: ${me.roles.join(", ")}">${me.email}</span>
+      <button class="subtle small" @click=${() => signOut(me.login).catch((e) => toast(messageOf(e), "error"))}>Sign out</button>
     </header>
   `;
 }

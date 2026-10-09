@@ -1,6 +1,6 @@
 ---
 title: CMS editor
-description: The settings of the browser editor (`[cms]`) — its path and workflow, the git repository, the Cloudflare Access sign-in, roles, field hints — and the Worker's secrets.
+description: The settings of the browser editor (`[cms]`) — its path and workflow, the git repository, the sign-in, roles, field hints — and the Worker's secrets.
 weight: 95
 ---
 
@@ -22,9 +22,7 @@ repo = "you/site"
 branch = "main"
 
 [cms.login]
-provider = "cloudflare-access"
-team = "your-team"
-aud = "4714c1358e5d…"
+provider = ["github", "google"]
 
 [cms.roles.writer]
 edit = ["content/blog/**"]
@@ -86,20 +84,26 @@ help = "Shown in lists and in search results."
 
 ## Login
 
-`[cms.login]` says how people sign in.
+`[cms.login]` says how people sign in (see [sign in](/content-management/cms/#3-sign-in-with-github-or-google)).
 
 `provider`
-: `cloudflare-access`, the only one for now: [Cloudflare Access](https://developers.cloudflare.com/cloudflare-one/policies/access/)
+: `github`, `google`, or both (`["github", "google"]`, in the order of the editor's buttons):
+  the Worker sends people to sign in with their account, and keeps them signed in for seven days
+  with a cookie it signs. Each provider needs an OAuth app of yours, and the
+  [secrets](#secrets) below.
+
+  Or `cloudflare-access`: [Cloudflare Access](https://developers.cloudflare.com/cloudflare-one/policies/access/)
   signs people in (with Google, GitHub, Microsoft, a one-time PIN, …) before they reach the
-  editor, and the Worker checks the token it adds to every request.
+  editor, and the Worker checks the token it adds to every request; it needs `team` and `aud`.
+  Without `provider`, `team` and `aud` mean `cloudflare-access`.
 
 `team`
-: The Access team: its name (`your-team`) or domain (`your-team.cloudflareaccess.com`)
-  (required).
+: With `cloudflare-access`: the Access team, its name (`your-team`) or domain
+  (`your-team.cloudflareaccess.com`).
 
 `aud`
-: The audience (AUD) tag of the Access application that protects the editor, or a list of them
-  (required).
+: With `cloudflare-access`: the audience (AUD) tag of the Access application that protects the
+  editor, or a list of them.
 
 ## Roles
 
@@ -224,6 +228,18 @@ repository:
 : JSON: emails, or `@domain` for an email domain, to the roles they have:
   `{"ann@gmail.com": ["writer"], "@example.org": ["writer"]}` (required).
 
+`CMS_SESSION_KEY`
+: With `github` or `google`: a random key of 32 characters or more, which signs the session
+  cookies (`openssl rand -base64 32`). Changing it signs everyone out.
+
+`CMS_GITHUB_CLIENT_ID`, `CMS_GITHUB_CLIENT_SECRET`
+: With `github`: the client ID and a client secret of the GitHub OAuth app people sign in with
+  (not the bot's credential below).
+
+`CMS_GOOGLE_CLIENT_ID`, `CMS_GOOGLE_CLIENT_SECRET`
+: With `google`: the client ID and the client secret of the Google OAuth client people sign in
+  with.
+
 `CMS_GITHUB_APP_ID`, `CMS_GITHUB_APP_KEY`
 : A GitHub App's ID and private key (PEM), the app installed on the repository with *Contents:
   Read and write*, and *Pull requests: Read and write* for the drafts' pull requests.
@@ -234,4 +250,4 @@ repository:
 
 `CMS_DEV_USER`
 : For `wrangler dev` only (in `.dev.vars`): the email that requests to `localhost` sign in as,
-  since there is no Cloudflare Access locally. Deployed Workers ignore it.
+  without signing in. Deployed Workers ignore it.

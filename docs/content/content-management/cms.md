@@ -6,10 +6,9 @@ weight: 200
 
 With a `[cms]` table in its configuration, a build adds an editor to the site: a page at
 `/admin/` where people edit pages, translations and images in a form, save drafts, and publish
-them. They sign in with Google (or GitHub, Microsoft, a one-time code by email, …) through
-[Cloudflare Access](https://developers.cloudflare.com/cloudflare-one/policies/access/), and
-they never get access to the git repository: the editor's API commits as one bot account, with
-each person as the author of their changes. The site's usual build then publishes them.
+them. They sign in with their GitHub or Google account, and they never get access to the git
+repository: the editor's API commits as one bot account, with each person as the author of their
+changes. The site's usual build then publishes them.
 
 The editor needs no server of your own. It is static files, and its API is a
 [Cloudflare Worker](https://developers.cloudflare.com/workers/) that runs next to the site's
@@ -25,12 +24,13 @@ The editor works with sites whose repository is on GitHub; other git hosts may f
 
 ## How it works
 
-1. Someone opens `example.org/admin/`. Cloudflare Access asks them to sign in (with Google, for
-   example) before anything is served, and lets in only the people its policy names.
+1. Someone opens `example.org/admin/` and signs in with GitHub or Google. The Worker lets in
+   only the people the `CMS_USERS` secret gives a role, and keeps them signed in with a cookie
+   it signs.
 2. The editor lists the site's pages by section. They open one, and edit its front matter in a
    form and its text as rich text (or as Markdown), with a preview.
-3. *Save draft* sends the changes to the API. The Worker checks the sign-in token Cloudflare
-   Access added, finds the person's roles, checks every changed file against them, and commits
+3. *Save draft* sends the changes to the API. The Worker checks the sign-in, finds the person's
+   roles, checks every changed file against them, and commits
    to the page's draft branch as the bot, with the person as author.
 4. Someone whose role may publish opens the draft, reviews the changes and clicks *Publish*.
    The Worker copies the draft onto your branch as one commit and deletes the draft.
@@ -52,8 +52,7 @@ repo = "you/site"                   # GitHub owner/name
 branch = "main"
 
 [login]
-team = "your-team"                  # https://your-team.cloudflareaccess.com
-aud = "4714c1358e5d…"               # the Access application's audience (AUD) tag
+provider = ["github", "google"]     # or one of them
 
 [roles.writer]
 edit = ["content/**/index.en.md", "content/**/*.{jpg,png,webp}"]
@@ -97,21 +96,71 @@ Serve the site and the API from one Worker with
 
 `run_worker_first` runs the Worker for the API only; every other request is a static file,
 which costs nothing and does not count against the free plan's daily requests. The site lives
-at its own domain only: Cloudflare Access protects that domain, not the Worker's `workers.dev`
-or preview addresses, so keep those off (or put them behind Access too). Build and deploy with
+at its own domain only, the one people sign in at, so keep the Worker's `workers.dev` and
+preview addresses off. Build and deploy with
 [Cloudflare Workers](/host-and-deploy/cloudflare-workers/).
 
-### 3. Sign in with Google
+### 3. Sign in with GitHub or Google
 
-In the Cloudflare dashboard, under **Zero Trust** (free for up to 50 users):
+The Worker signs people in itself, with the providers `provider` names. Each needs an OAuth app
+of your own, which is free; people see its name when they sign in. Use one or both: GitHub for
+people who have an account there, Google for everyone else.
 
-1. **Settings → Authentication**: add Google as a login method. Cloudflare's guide shows how to
-   create the OAuth client in the Google Cloud console; its redirect URI is
-   `https://<team>.cloudflareaccess.com/cdn-cgi/access/callback`. Add other methods too if you
-   like: GitHub, Microsoft, a one-time PIN by email for people without such an account.
+**GitHub.** Under GitHub's **Settings → Developer settings → OAuth Apps** (yours, or an
+organisation's), create an app:
+
+- *Homepage URL*: `https://example.org`
+- *Authorization callback URL*: `https://example.org/admin/api/callback/github`
+
+Then *Generate a new client secret*, and store the app's client ID and the secret:
+
+```sh
+npx wrangler secret put CMS_GITHUB_CLIENT_ID
+npx wrangler secret put CMS_GITHUB_CLIENT_SECRET
+```
+
+**Google.** In the [Google Cloud console](https://console.cloud.google.com/), open **Google Auth
+Platform** (*APIs & Services → OAuth consent screen*) and set it up, with your site's name and
+the audience *External*. Under **Clients**, create a client of the type *Web application*, with
+the authorized redirect URI `https://example.org/admin/api/callback/google`. Under **Audience**,
+publish the app: while it is in testing, only its test users may sign in. An app that asks for no
+more than the email and the profile, like this one, needs no review by Google. Store its client
+ID and secret:
+
+```sh
+npx wrangler secret put CMS_GOOGLE_CLIENT_ID
+npx wrangler secret put CMS_GOOGLE_CLIENT_SECRET
+```
+
+**The session key**, which signs the cookie that keeps people signed in: any random text of 32
+characters or more.
+
+```sh
+openssl rand -base64 32 | npx wrangler secret put CMS_SESSION_KEY
+```
+
+Someone who opens the editor without being signed in sees a button for each provider. Back from
+the provider, the Worker reads the account's verified emails (on GitHub, all of them, the primary
+one first) and signs them in with the first one that `CMS_USERS` gives a role: that email is the
+author of their commits, with the account's name. An account with no such email is refused. They
+stay signed in for seven days, or until *Sign out*; changing `CMS_SESSION_KEY` signs everyone
+out. The Worker keeps nothing of the provider's: it reads the emails once and drops the
+provider's token.
+
+#### Or Cloudflare Access
+
+[Cloudflare Access](https://developers.cloudflare.com/cloudflare-one/policies/access/) can sign
+people in instead, before they reach the editor, with any of its login methods (a one-time PIN by
+email, Microsoft, …). It is free for up to 50 users, and set up in the Cloudflare dashboard,
+under **Zero Trust**:
+
+1. **Settings → Authentication**: add the login methods. Cloudflare's guide shows how to create
+   Google's OAuth client, for example; its redirect URI is
+   `https://<team>.cloudflareaccess.com/cdn-cgi/access/callback`.
 2. **Access → Applications**: add a *self-hosted* application for `example.org/admin` with a
    policy that allows the people who edit (their emails, or an email domain).
-3. Copy the application's **AUD tag** into `aud`, and your team name into `team`.
+3. In `[login]`, set `provider = "cloudflare-access"`, the application's **AUD tag** as `aud`,
+   and your team name as `team`. Access needs no `CMS_SESSION_KEY` or client secrets.
 
 Access then signs people in before they reach `/admin/` and gives every request a signed token.
 The Worker checks that token itself — its signature, team and audience — so a request that
@@ -161,9 +210,10 @@ npx wrangler secret put CMS_USERS
 ```
 
 The list lives in Cloudflare, not in the repository: changing it needs no commit, editors'
-emails are not published with the source, and no one can change it through the editor. The
-Access policy says who may sign in at all; `CMS_USERS` says what each of them may do. Someone
-who may sign in but has no role sees an error.
+emails are not published with the source, and no one can change it through the editor. It says
+who may sign in and what each of them may do; the Worker reads it on every request, so taking
+someone out of it takes effect at once. (With Cloudflare Access, the Access policy says who may
+sign in at all, and someone it lets in who has no role sees an error.)
 
 ### 6. Build and deploy on every push
 
@@ -320,8 +370,8 @@ fugo build -e production
 npx wrangler dev
 ```
 
-There is no Cloudflare Access locally, so put the person to sign in as into `.dev.vars` (keep
-it out of git), with the other secrets:
+Locally, a provider cannot send people back (its app knows the site's address only), so put the
+person to sign in as into `.dev.vars` (keep it out of git), with the other secrets:
 
 ```sh {title=".dev.vars"}
 CMS_DEV_USER=you@gmail.com
@@ -362,8 +412,13 @@ try it (in a `config/staging/cms.toml` built with `-e staging`, for example).
   that a template marks `safe`. With the review workflow, nothing reaches the site before a
   publisher reads the diff; with `workflow = "direct"`, give roles only to people you trust with
   the site.
-- The API checks the Cloudflare Access token of every request itself, refuses requests from
-  other sites (it checks the `Origin` header), and answers only JSON. The editor's pages may not
+- The API checks the sign-in of every request itself (the session cookie's signature, or the
+  Cloudflare Access token), refuses requests from other sites (it checks the `Origin` header),
+  and answers only JSON. The session cookie is the site's host's only, sent over HTTPS only, and
+  scripts cannot read it.
+- A `@domain` key in `CMS_USERS` lets in every account with a verified email of that domain,
+  including accounts made while someone still had such an email. Name people one by one when
+  that matters. The editor's pages may not
   be framed, and its preview runs in a sandboxed frame without scripts.
 - The editor never writes the files that run code at build time or deploy time (configuration,
   layouts, assets, content adapters, workflows), whatever a role says, and matches their names
@@ -377,7 +432,7 @@ The editor reads and writes the same files Decap CMS does, so content needs no c
 1. Add `[cms]` and deploy as above.
 2. Delete Decap's `static/admin/` (its `config.yml`, `index.html` and script) and its OAuth
    service.
-3. Remove the editors' write access to the repository: they sign in through Access now.
+3. Remove the editors' write access to the repository: they sign in to the editor now.
 
 The build warns while `static/admin/index.html` still exists: the editor replaces it.
 

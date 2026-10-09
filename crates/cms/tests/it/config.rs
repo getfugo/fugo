@@ -1,6 +1,6 @@
 //! `[cms]` decoding and checks.
 
-use ssg_cms::config::{Host, Provider, Workflow};
+use ssg_cms::config::{Host, Login, OauthProvider, Workflow};
 
 use crate::support::{cms_toml, load, write_files};
 
@@ -29,9 +29,13 @@ fn defaults_and_normalisation() {
     assert_eq!(c.git.host, Host::Github);
     assert_eq!(c.git.branch, "main");
     assert_eq!(c.git.dir, None);
-    assert_eq!(c.login.provider, Provider::CloudflareAccess);
-    assert_eq!(c.login.team, "https://team.cloudflareaccess.com");
-    assert_eq!(c.login.aud, vec!["aud-1".to_owned()]);
+    assert_eq!(
+        c.login,
+        Login::CloudflareAccess {
+            team: "https://team.cloudflareaccess.com".to_owned(),
+            aud: vec!["aud-1".to_owned()],
+        }
+    );
     assert_eq!(c.max_upload, 10 * 1024 * 1024);
     assert!(c.roles["owner"].publish);
 }
@@ -67,13 +71,85 @@ Options = ["1", "2"]
     assert_eq!(c.media.as_deref(), Some("static/uploads"));
     assert_eq!(c.git.branch, "release/1.x");
     assert_eq!(c.git.dir.as_deref(), Some("site/"));
-    assert_eq!(c.login.team, "https://team.cloudflareaccess.com");
-    assert_eq!(c.login.aud, vec!["a".to_owned(), "b".to_owned()]);
+    assert_eq!(
+        c.login,
+        Login::CloudflareAccess {
+            team: "https://team.cloudflareaccess.com".to_owned(),
+            aud: vec!["a".to_owned(), "b".to_owned()],
+        }
+    );
     assert!(c.roles.contains_key("writer"));
     assert_eq!(
         c.fields["price"].options,
         vec!["1".to_owned(), "2".to_owned()]
     );
+}
+
+/// `cms_toml`, its Cloudflare Access settings replaced by `login`.
+fn with_login(login: &str) -> String {
+    cms_toml("").replace("team = \"team\"\naud = \"aud-1\"\n", login)
+}
+
+#[test]
+fn accounts_the_worker_signs_people_in_with() {
+    let login = |toml: &str| settings(&with_login(toml)).expect("ok").expect("cms").login;
+    assert_eq!(
+        login("provider = \"GitHub\"\n"),
+        Login::Oauth {
+            providers: vec![OauthProvider::Github]
+        }
+    );
+    assert_eq!(
+        login("provider = [\"google\", \"github\", \"google\"]\n"),
+        Login::Oauth {
+            providers: vec![OauthProvider::Google, OauthProvider::Github]
+        }
+    );
+    assert_eq!(
+        login("provider = \"cloudflare-access\"\nteam = \"t\"\naud = \"a\"\n"),
+        Login::CloudflareAccess {
+            team: "https://t.cloudflareaccess.com".to_owned(),
+            aud: vec!["a".to_owned()],
+        }
+    );
+    // The Worker's settings: the kind, and what it needs.
+    let json = |l: &Login| serde_json::to_value(l).expect("json");
+    assert_eq!(
+        json(&login("provider = [\"github\", \"google\"]\n")),
+        serde_json::json!({"kind": "oauth", "providers": ["github", "google"]})
+    );
+    assert_eq!(
+        json(&login("team = \"t\"\naud = \"a\"\n")),
+        serde_json::json!({"kind": "cloudflare-access", "team": "https://t.cloudflareaccess.com", "aud": ["a"]})
+    );
+}
+
+#[test]
+fn login_errors() {
+    let cases = [
+        ("", "cms.login.provider: missing"),
+        ("provider = \"gitlab\"\n", "\"gitlab\" is not supported"),
+        (
+            "provider = [\"github\", \"cloudflare-access\"]\n",
+            "does not go with github",
+        ),
+        (
+            "provider = \"github\"\nteam = \"t\"\n",
+            "cms.login.team: only for provider = \"cloudflare-access\"",
+        ),
+        (
+            "provider = \"google\"\naud = \"a\"\n",
+            "cms.login.aud: only for",
+        ),
+        (
+            "provider = \"cloudflare-access\"\n",
+            "cms.login.team: missing",
+        ),
+    ];
+    for (toml, want) in cases {
+        let err = settings(&with_login(toml)).expect_err(toml);
+        assert!(err.contains(want), "{want:?} not in {err:?} for\n{toml}");
+    }
 }
 
 #[test]

@@ -37,8 +37,8 @@ Add a custom domain in the Worker's settings (or `"routes"` in `wrangler.jsonc`)
 A build with [`[cms]`](/configuration/cms/) also writes `public/_worker.js` (the editor's API),
 `public/.assetsignore` (which keeps `_worker.js` out of the static files) and a rule in
 `public/_headers` (Cloudflare's headers file: the editor may not be framed). Make the API the
-Worker's code, run it for the API's paths only, and serve the site at its own domain only,
-where Cloudflare Access protects the editor:
+Worker's code, run it for the API's paths only, and serve the site at its own domain only, the
+one people sign in at:
 
 ```jsonc {title="wrangler.jsonc"}
 {
@@ -56,7 +56,7 @@ where Cloudflare Access protects the editor:
 }
 ```
 
-The API's secrets (`CMS_USERS` and the GitHub credential) are set once with
+The API's secrets (`CMS_USERS`, the sign-in's and the GitHub credential) are set once with
 `npx wrangler secret put`; deploys keep them.
 
 ## Deploy from GitHub Actions

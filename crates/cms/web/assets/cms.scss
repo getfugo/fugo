@@ -72,6 +72,13 @@ code {
   border-radius: $radius;
 }
 
+// The ways to sign in, when no one is.
+.sign-in {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
 .spacer {
   flex: 1;
 }

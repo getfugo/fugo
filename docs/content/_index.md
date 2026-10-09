@@ -12,7 +12,7 @@ features:
   - title: Pipelines built in
     text: Sass, JavaScript bundling, image processing, fingerprinting, minification and CSS purging run in process, and npm packages install from package.json. No Node.js needed.
   - title: An editor in the browser
-    text: "Add `[cms]` and the build writes an editor at `/admin/`: people sign in with Google, edit pages, translations and images, and publish drafts, without access to the git repository. No server of your own: its API is a Cloudflare Worker that runs only when someone edits. [Set it up](/content-management/cms/)."
+    text: "Add `[cms]` and the build writes an editor at `/admin/`: people sign in with GitHub or Google, edit pages, translations and images, and publish drafts, without access to the git repository. No server of your own: its API is a Cloudflare Worker that runs only when someone edits. [Set it up](/content-management/cms/)."
   - title: One binary, live reload
     text: "Download a release for Linux, macOS or Windows, or build it with Cargo: nothing else to install. `fugo server` builds into memory, watches your project, and reloads the browser when something changes."
 ---

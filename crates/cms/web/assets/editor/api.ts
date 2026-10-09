@@ -34,3 +34,32 @@ export async function api<T>(method: "GET" | "POST", name: string, params?: Reco
 }
 
 export const messageOf = (e: unknown) => (e instanceof Error ? e.message : String(e));
+
+/** A way to sign in, as the API lists them when no one is signed in. */
+export interface SignIn {
+  provider: string;
+  label: string;
+}
+
+/** The ways to sign in of an error, when it is the API's "not signed in". */
+export function signInsOf(e: unknown): SignIn[] | null {
+  const ways = e instanceof ApiError && e.status === 401 ? e.data.signIn : null;
+  return Array.isArray(ways) ? ways : null;
+}
+
+/** The address that signs in with `provider`, then comes back to the route shown. */
+export function signInUrl(provider: string): string {
+  const url = new URL(`login/${encodeURIComponent(provider)}`, apiBase());
+  if (location.hash) url.searchParams.set("to", location.hash);
+  return url.href;
+}
+
+/** Signs out: the Worker's session, or Cloudflare Access's. */
+export async function signOut(login: string): Promise<void> {
+  if (login === "oauth") {
+    await api("POST", "logout", null, {});
+    location.reload();
+  } else {
+    location.assign("/cdn-cgi/access/logout");
+  }
+}

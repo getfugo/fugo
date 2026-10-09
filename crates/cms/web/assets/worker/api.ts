@@ -22,6 +22,7 @@ export class Api {
       edit: u.edit,
       publish: u.publish && this.s.workflow === "review",
       workflow: this.s.workflow,
+      login: this.s.login.kind,
       repo: this.s.git.repo,
       branch: this.s.git.branch,
       areas: this.s.areas,

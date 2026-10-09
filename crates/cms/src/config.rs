@@ -12,6 +12,10 @@ use ssg_base::glob::{self, Case, GlobOpts, Separator};
 use crate::CmsError;
 pub use crate::fields::{Field, Widget};
 
+mod login;
+use login::RawLogin;
+pub use login::{Login, OauthProvider};
+
 /// The largest upload Cloudflare serves as a static asset (25 MiB), in MiB.
 const MAX_UPLOAD_CEILING: u64 = 25;
 /// The default upload limit, in MiB.
@@ -40,14 +44,6 @@ struct RawGit {
     repo: Option<String>,
     branch: Option<String>,
     dir: Option<String>,
-}
-
-#[derive(Debug, Default, Deserialize)]
-#[serde(default, deny_unknown_fields, rename_all = "camelCase")]
-struct RawLogin {
-    provider: Option<String>,
-    team: Option<String>,
-    aud: Vec<String>,
 }
 
 #[derive(Debug, Default, Deserialize)]
@@ -89,25 +85,6 @@ impl Host {
     }
 }
 
-/// How editors sign in. Only Cloudflare Access for now.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize)]
-#[serde(rename_all = "kebab-case")]
-pub enum Provider {
-    #[default]
-    CloudflareAccess,
-}
-
-impl Provider {
-    const NAMES: &[&str] = &["cloudflare-access"];
-
-    fn parse(s: &str) -> Option<Self> {
-        match s.to_ascii_lowercase().as_str() {
-            "cloudflare-access" => Some(Self::CloudflareAccess),
-            _ => None,
-        }
-    }
-}
-
 /// The git repository the API commits to.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
 pub struct Git {
@@ -118,16 +95,6 @@ pub struct Git {
     /// The project's directory in the repository (`""` at its root, else `docs/`-style with a
     /// trailing slash); `None` until [`crate::paths::repo_dir`] finds it.
     pub dir: Option<String>,
-}
-
-/// The sign-in settings.
-#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
-pub struct Login {
-    pub provider: Provider,
-    /// The team domain's URL (`https://<team>.cloudflareaccess.com`), the tokens' issuer.
-    pub team: String,
-    /// The Access applications' audience tags; a token must carry one of them.
-    pub aud: Vec<String>,
 }
 
 /// What a role may do.
@@ -290,65 +257,6 @@ impl RawGit {
             repo,
             branch,
             dir,
-        })
-    }
-}
-
-impl RawLogin {
-    fn check(self) -> Result<Login, CmsError> {
-        let provider = match self.provider.as_deref() {
-            None => Provider::default(),
-            Some(p) => Provider::parse(p).ok_or_else(|| {
-                CmsError::config(
-                    "cms.login.provider",
-                    format!(
-                        "{p:?} is not supported (supported: {})",
-                        Provider::NAMES.join(", ")
-                    ),
-                )
-            })?,
-        };
-        let team = self.team.ok_or_else(|| {
-            CmsError::config(
-                "cms.login.team",
-                "missing: give the Cloudflare Access team name (<team>.cloudflareaccess.com)",
-            )
-        })?;
-        let host = team
-            .trim()
-            .trim_start_matches("https://")
-            .trim_end_matches('/');
-        let host = if host.contains('.') {
-            host.to_ascii_lowercase()
-        } else {
-            format!("{}.cloudflareaccess.com", host.to_ascii_lowercase())
-        };
-        if host.is_empty()
-            || !host
-                .bytes()
-                .all(|b| b.is_ascii_alphanumeric() || matches!(b, b'-' | b'.'))
-        {
-            return Err(CmsError::config(
-                "cms.login.team",
-                format!("{team:?} is not a team name or team domain"),
-            ));
-        }
-        let aud: Vec<String> = self
-            .aud
-            .into_iter()
-            .map(|a| a.trim().to_owned())
-            .filter(|a| !a.is_empty())
-            .collect();
-        if aud.is_empty() {
-            return Err(CmsError::config(
-                "cms.login.aud",
-                "missing: give the Access application's audience (AUD) tag",
-            ));
-        }
-        Ok(Login {
-            provider,
-            team: format!("https://{host}"),
-            aud,
         })
     }
 }

@@ -18,10 +18,20 @@ export interface Settings extends Limits {
   site: string;
   workflow: "review" | "direct";
   git: { host: string; repo: string; branch: string; dir?: string };
-  login: { provider: string; team: string; aud: string[] };
+  login: AccessLogin | { kind: "oauth"; providers: OauthProvider[] };
   roles: Record<string, Role>;
   maxUpload: number;
 }
+
+/** Cloudflare Access signs people in (`team`: the tokens' issuer; `aud`: the applications'). */
+export interface AccessLogin {
+  kind: "cloudflare-access";
+  team: string;
+  aud: string[];
+}
+
+/** An account the Worker signs people in with. */
+export type OauthProvider = "github" | "google";
 
 /** The Worker's bindings and secrets. */
 export interface Env {
@@ -30,6 +40,11 @@ export interface Env {
   CMS_GITHUB_TOKEN?: string;
   CMS_GITHUB_APP_ID?: string;
   CMS_GITHUB_APP_KEY?: string;
+  CMS_SESSION_KEY?: string;
+  CMS_GITHUB_CLIENT_ID?: string;
+  CMS_GITHUB_CLIENT_SECRET?: string;
+  CMS_GOOGLE_CLIENT_ID?: string;
+  CMS_GOOGLE_CLIENT_SECRET?: string;
   CMS_DEV_USER?: string;
 }
 
@@ -133,6 +148,15 @@ export class GitError extends Error {
   ) {
     super(message);
   }
+}
+
+const b64url = (s: string) => s.replace(/-/g, "+").replace(/_/g, "/").padEnd(Math.ceil(s.length / 4) * 4, "=");
+export const b64urlBytes = (s: string) => Uint8Array.from(atob(b64url(s)), (c) => c.charCodeAt(0));
+export const b64urlJson = (s: string): Json => JSON.parse(new TextDecoder().decode(b64urlBytes(s)));
+export function toB64url(bytes: Uint8Array): string {
+  let s = "";
+  for (const b of bytes) s += String.fromCharCode(b);
+  return btoa(s).replace(/=+$/, "").replace(/\+/g, "-").replace(/\//g, "_");
 }
 
 export const JSON_HEADERS = {

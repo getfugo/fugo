@@ -11,9 +11,10 @@
 //! | `.assetsignore` | keeps `_worker.js` out of the static files Cloudflare serves |
 //! | `_headers` | the editor's pages may not be framed (no clickjacking of *Publish*) |
 //!
-//! The Worker signs editors in with Cloudflare Access (it checks the token Access adds to every
-//! request), gives them the roles the `CMS_USERS` secret names, and commits as one bot to the
-//! git host ([`config::Host`]: GitHub), with the editor as author. What a role may write is cut
+//! The Worker signs editors in ([`config::Login`]: itself, with a GitHub or Google account and a
+//! cookie it signs; or Cloudflare Access, whose token it checks on every request), gives them the
+//! roles the `CMS_USERS` secret names, and commits as one bot to the git host
+//! ([`config::Host`]: GitHub), with the editor as author. What a role may write is cut
 //! down to the areas of [`paths`]. Nothing here runs a program; the JavaScript runs in the
 //! browser and on Cloudflare.
 //!
