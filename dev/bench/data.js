@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791564568517,
+  "lastUpdate": 1791565481610,
   "repoUrl": "https://github.com/getfugo/fugo",
   "entries": {
     "Benchmark": [
@@ -97608,6 +97608,66 @@ window.BENCHMARK_DATA = {
           {
             "name": "10,000 generated pages: peak memory",
             "value": 571,
+            "unit": "MiB",
+            "extra": "10061 pages; median of 5 builds after a warm-up build"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "blackb1rd.mov@gmail.com",
+            "name": "Prachya Saechua",
+            "username": "blackb1rd"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "89ccf47008294ea89280bf20eadc7d774cbfd8cc",
+          "message": "cms: Sign editors in with GitHub or Google, without Cloudflare Access (#196)\n\nThe editor signed people in through Cloudflare Access only: a Zero\nTrust team, an Access application and its policy, and a Google OAuth\nclient in Access, for up to 50 users on the free plan. The Worker now\nsigns people in itself (`[cms.login] provider = \"github\"`, \"google\",\nor both), with an OAuth app of the site's own:\n\n- `login/<provider>` sends the browser to the provider (OAuth 2.0 with\n  PKCE), with its state and code verifier in a signed cookie of ten\n  minutes that ties the sign-in to the browser. `callback/<provider>`\n  exchanges the code for the account's verified emails (GitHub: all of\n  them, the primary one first; Google: the ID token's) and drops the\n  provider's token; the first email `CMS_USERS` gives a role signs in,\n  with the account's name for its commits.\n- The session is a cookie of seven days (`__Host-`, HttpOnly, Secure,\n  SameSite=Lax) signed with HMAC-SHA-256 and the `CMS_SESSION_KEY`\n  secret (`worker/session.ts`). Roles are still looked up on every\n  request; a new key signs everyone out; `logout` deletes the cookie.\n- When the API answers 401 with the ways to sign in, the editor shows a\n  button for each, which comes back to the route it showed. Its header\n  has *Sign out* (Access's own logout with Access).\n- New secrets: `CMS_SESSION_KEY`, `CMS_GITHUB_CLIENT_ID` and\n  `CMS_GITHUB_CLIENT_SECRET`, `CMS_GOOGLE_CLIENT_ID` and\n  `CMS_GOOGLE_CLIENT_SECRET`.\n\nCloudflare Access stays: `provider = \"cloudflare-access\"`, or `team`\nand `aud` without a provider, as configurations have them today. The\nsettings the build gives the Worker name the kind of sign-in\n(`login.kind`), and the checks of `[cms.login]` moved to\n`config/login.rs`.\n\nCo-Authored-By: Claude Opus 5.5 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-10-09T23:50:23+07:00",
+          "tree_id": "77bd9e2880bf0e3736926ff29fa9a16e28af2336",
+          "url": "https://github.com/getfugo/fugo/commit/89ccf47008294ea89280bf20eadc7d774cbfd8cc"
+        },
+        "date": 1791565478646,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "docs site: build time",
+            "value": 179.5,
+            "unit": "ms",
+            "extra": "334 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "docs site: peak memory",
+            "value": 173.4,
+            "unit": "MiB",
+            "extra": "334 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "1,000 generated pages: build time",
+            "value": 198.3,
+            "unit": "ms",
+            "extra": "1061 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "1,000 generated pages: peak memory",
+            "value": 154.9,
+            "unit": "MiB",
+            "extra": "1061 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "10,000 generated pages: build time",
+            "value": 2076,
+            "unit": "ms",
+            "extra": "10061 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "10,000 generated pages: peak memory",
+            "value": 607.8,
             "unit": "MiB",
             "extra": "10061 pages; median of 5 builds after a warm-up build"
           }
