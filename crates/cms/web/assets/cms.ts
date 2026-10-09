@@ -122,7 +122,7 @@
 // editor only on its page (`#app`).
 
 import { html, render } from "lit-html";
-import { messageOf } from "./editor/api";
+import { messageOf, signInsOf, signInUrl } from "./editor/api";
 import { type Doc } from "./editor/data";
 import { app } from "./editor/dom";
 import { docText } from "./editor/pages";
@@ -143,12 +143,19 @@ export async function start(): Promise<void> {
     const root = app();
     root.className = "";
     root.replaceChildren();
+    const ways = signInsOf(e);
     render(
-      html`
-        <h1>${document.title}</h1>
-        <p class="warn">${messageOf(e)}</p>
-        <p class="muted">The editor needs its API (the site's Worker) and a sign-in through Cloudflare Access.</p>
-      `,
+      ways
+        ? html`
+            <h1>${document.title}</h1>
+            <p>Sign in to edit the site.</p>
+            <p class="sign-in">${ways.map((w) => html`<a class="button" href=${signInUrl(w.provider)}>Sign in with ${w.label}</a>`)}</p>
+          `
+        : html`
+            <h1>${document.title}</h1>
+            <p class="warn">${messageOf(e)}</p>
+            <p class="muted">The editor needs its API (the site's Worker), and a sign-in.</p>
+          `,
       root,
     );
     return;

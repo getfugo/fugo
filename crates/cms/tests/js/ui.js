@@ -25,8 +25,9 @@ export const sent = [];
 export let window, document;
 
 /** Starts the editor on the content index `site`, whose files are `files` (path → text); `more`
- * replaces requests of the fake API (name → function of the query and the body). */
-export async function startEditor(site, files, more = {}) {
+ * replaces requests of the fake API (name → function of the query and the body, which may return
+ * a Response), at the address `url`, and waits until `ready`. */
+export async function startEditor(site, files, more = {}, { url = "https://example.org/admin/", ready = () => document.querySelector("header") } = {}) {
   const api = {
     site: () => site,
     me: () => ME,
@@ -41,10 +42,11 @@ export async function startEditor(site, files, more = {}) {
     const body = init.body ? JSON.parse(init.body) : undefined;
     if (body) sent.push({ name, body });
     const data = api[name]?.(u.searchParams, body);
+    if (data instanceof Response) return data;
     return new Response(JSON.stringify(data ?? { error: "not found" }), { status: data ? 200 : 404 });
   };
   const { Window } = await import(pathToFileURL(join(modules, "happy-dom/lib/index.js")).href);
-  window = new Window({ url: "https://example.org/admin/" });
+  window = new Window({ url });
   document = window.document;
   // The editor and lit-html use the browser's globals.
   for (const k of ["document", "location", "Event", "KeyboardEvent", "FormData", "DOMParser", "Node", "HTMLElement"]) {
@@ -53,7 +55,7 @@ export async function startEditor(site, files, more = {}) {
   Object.assign(globalThis, { window, fetch, confirm: () => true, prompt: () => "Honey Butter" });
   document.body.innerHTML = `<div id="app" class="loading">Loading the editor…</div>`;
   await import("../../assets/admin/cms.js");
-  await until(() => document.querySelector("header"));
+  await until(ready);
 }
 
 /** Waits (a second at most) until `ready` is true, and returns what it returns. */

@@ -69,7 +69,7 @@ fn published_settings() -> serde_json::Value {
         "site": "http://localhost:8787/",
         "workflow": "review",
         "git": {"host": "github", "repo": "owner/site", "branch": "main", "dir": ""},
-        "login": {"provider": "cloudflare-access", "team": "https://team.cloudflareaccess.com", "aud": ["aud"]},
+        "login": {"kind": "cloudflare-access", "team": "https://team.cloudflareaccess.com", "aud": ["aud"]},
         "roles": {"owner": {"edit": ["**"], "publish": true}},
         "areas": [],
         "deny": ["**/_content.*"],

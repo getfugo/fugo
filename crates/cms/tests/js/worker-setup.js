@@ -1,8 +1,9 @@
 // The fixtures of the Worker tests: settings, files and users, Access keys and tokens, and a
-// Worker over a fake GitHub and a fake Access team (`setup`).
+// Worker over a fake GitHub, a fake Access team and fake providers to sign in with (`setup`).
 
 import { createWorker } from "../../assets/worker.js";
 import { FakeGitHub } from "./fake-github.js";
+import { CLIENTS, FakeOAuth } from "./fake-oauth.js";
 
 export const ORIGIN = "https://snack.example";
 export const TEAM = "https://team.cloudflareaccess.com";
@@ -16,7 +17,7 @@ export const SETTINGS = {
   site: `${ORIGIN}/`,
   workflow: "review",
   git: { host: "github", repo: "owner/site", branch: "main", dir: "" },
-  login: { provider: "cloudflare-access", team: TEAM, aud: [AUD] },
+  login: { kind: "cloudflare-access", team: TEAM, aud: [AUD] },
   roles: {
     writer: { edit: ["content/**/index.en.md", "content/**/*.{jpg,png,svg}", "content/blog/**"], publish: false },
     translator: { edit: ["content/**/index.th.md"], publish: false },
@@ -30,6 +31,9 @@ export const SETTINGS = {
   deny: ["**/_content.*"],
   maxUpload: 64 * 1024,
 };
+
+/** The settings of a Worker that signs people in itself. */
+export const OAUTH_SETTINGS = { ...SETTINGS, login: { kind: "oauth", providers: ["github", "google"] } };
 
 export const FILES = {
   "content/almonds/honey/index.en.md": "---\ntitle: Honey\n---\nEnglish\n",
@@ -77,8 +81,9 @@ export async function token(claims = {}, { key = keys.privateKey, kid = "k1", al
 
 // ── A Worker over the fakes ──
 
-export function setup({ settings = SETTINGS, files = FILES, env = {}, index } = {}) {
+export function setup({ settings = SETTINGS, files = FILES, env = {}, index, now = () => NOW } = {}) {
   const gh = new FakeGitHub({ files });
+  const oauth = new FakeOAuth(now);
   let certFetches = 0;
   const fetch = async (input, init) => {
     const url = typeof input === "string" ? input : input.url;
@@ -86,10 +91,20 @@ export function setup({ settings = SETTINGS, files = FILES, env = {}, index } = 
       certFetches++;
       return Response.json({ keys: [publicJwk], public_cert: { kid: "k1" } });
     }
+    if (oauth.handles(url)) return oauth.fetch(url, init);
     return gh.fetch(input, init);
   };
-  const worker = createWorker(settings, { fetch, now: () => NOW, index });
-  const fullEnv = { CMS_USERS: JSON.stringify(USERS), CMS_GITHUB_TOKEN: "test-token", ...env };
+  const worker = createWorker(settings, { fetch, now, index });
+  const fullEnv = {
+    CMS_USERS: JSON.stringify(USERS),
+    CMS_GITHUB_TOKEN: "test-token",
+    CMS_SESSION_KEY: "a session key of thirty-two characters or more",
+    CMS_GITHUB_CLIENT_ID: CLIENTS.github.id,
+    CMS_GITHUB_CLIENT_SECRET: CLIENTS.github.secret,
+    CMS_GOOGLE_CLIENT_ID: CLIENTS.google.id,
+    CMS_GOOGLE_CLIENT_SECRET: CLIENTS.google.secret,
+    ...env,
+  };
   async function call(method, name, { as = "writer@example.com", body, query, headers, jwt } = {}) {
     const url = new URL(`${settings.api}${name}`, ORIGIN);
     for (const [k, v] of Object.entries(query ?? {})) url.searchParams.set(k, v);
@@ -102,7 +117,7 @@ export function setup({ settings = SETTINGS, files = FILES, env = {}, index } = 
     const res = await worker.fetch(new Request(url, { method, headers: h, body: body === undefined ? undefined : JSON.stringify(body) }), fullEnv);
     return { status: res.status, body: await res.json(), headers: res.headers };
   }
-  return { gh, worker, call, env: fullEnv, certFetches: () => certFetches };
+  return { gh, oauth, worker, call, env: fullEnv, certFetches: () => certFetches };
 }
 
 export const save = (call, as, entry, changes, title = "") => call("POST", "save", { as, body: { entry, title, changes } });

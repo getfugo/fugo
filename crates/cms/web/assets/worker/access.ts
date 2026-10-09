@@ -1,10 +1,6 @@
 // Cloudflare Access: the public keys of a team, and the tokens Access adds to requests.
 
-import { type Fetch, HttpError, type Json, type Settings } from "./shared";
-
-const b64url = (s: string) => s.replace(/-/g, "+").replace(/_/g, "/").padEnd(Math.ceil(s.length / 4) * 4, "=");
-const b64urlBytes = (s: string) => Uint8Array.from(atob(b64url(s)), (c) => c.charCodeAt(0));
-const b64urlJson = (s: string): Json => JSON.parse(new TextDecoder().decode(b64urlBytes(s)));
+import { type AccessLogin, b64urlBytes, b64urlJson, type Fetch, HttpError, type Json } from "./shared";
 
 /** The public keys of an Access team, fetched when a token names a key not seen yet (at most
  * once a minute; requests that come while they are fetched wait for them). */
@@ -14,7 +10,7 @@ export class AccessKeys {
   private fetching: Promise<void> | null = null;
 
   constructor(
-    private readonly login: Settings["login"],
+    private readonly login: AccessLogin,
     private readonly fetcher: Fetch,
     private readonly now: () => number,
   ) {}

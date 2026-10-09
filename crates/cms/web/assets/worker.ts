@@ -6,11 +6,12 @@
 // Requests under `SETTINGS.api` (`/admin/api/`) are the API; anything else goes to the static
 // files (`env.ASSETS`), for a Worker that runs first on every path.
 //
-// Every request is signed in by Cloudflare Access: the Worker checks the token Access adds
-// (`Cf-Access-Jwt-Assertion`) against the team's keys and the application's audience, so a
-// request that bypasses Access is refused too. For `wrangler dev` only, a request to localhost
-// without a token is `CMS_DEV_USER` (a variable of `.dev.vars`, which is never deployed). The
-// `CMS_USERS` secret gives an email its roles (`{"ann@example.com": ["writer"],
+// Sign-in (`[cms.login]`): the Worker signs people in itself with a GitHub or Google account and
+// keeps them signed in with a cookie it signs (worker/oauth.ts); or Cloudflare Access signs every
+// request in, and the Worker checks the token Access adds (`Cf-Access-Jwt-Assertion`) against the
+// team's keys and the application's audience, so a request that bypasses Access is refused too.
+// For `wrangler dev` only, a request to localhost that is not signed in is `CMS_DEV_USER` (a
+// variable of `.dev.vars`, which is never deployed). The `CMS_USERS` secret gives an email its roles (`{"ann@example.com": ["writer"],
 // "@example.com": ["reader"]}`); a role's `edit` globs are cut down to the settings' areas
 // (`mayEdit`). Commits go to the git host as one bot (`CMS_GITHUB_TOKEN`, or the GitHub App of
 // `CMS_GITHUB_APP_ID` and `CMS_GITHUB_APP_KEY`), with the editor as author.
@@ -25,6 +26,7 @@ import { AccessKeys } from "./worker/access";
 import { Api } from "./worker/api";
 import { appToken, type TokenCache } from "./worker/app";
 import { GitHub } from "./worker/github";
+import { OAuth } from "./worker/oauth";
 import { type Body, type Env, type Fetch, GitError, HttpError, json, JSON_HEADERS, LOCAL_HOSTS, type Settings, type User, type WorkerOptions } from "./worker/shared";
 
 export * from "./common";
@@ -38,33 +40,43 @@ export function createWorker(settings: Settings, options: WorkerOptions = {}) {
   const fetcher: Fetch = options.fetch ?? ((input, init) => fetch(input, init));
   const now = options.now ?? (() => Date.now());
   const index = options.index;
-  const access = new AccessKeys(settings.login, fetcher, now);
+  const login = settings.login;
+  const access = login.kind === "cloudflare-access" ? new AccessKeys(login, fetcher, now) : null;
+  const oauth = login.kind === "oauth" ? new OAuth(settings, login.providers, fetcher, now) : null;
   const appTokens: TokenCache = new Map();
   let users: { raw: string | undefined; map: Map<string, string[]> } = { raw: undefined, map: new Map() };
 
   async function signIn(request: Request, url: URL, env: Env): Promise<User> {
     const token = request.headers.get("cf-access-jwt-assertion");
-    let email: string;
-    if (token) {
-      email = await access.verify(token);
-    } else if (env.CMS_DEV_USER && LOCAL_HOSTS.has(url.hostname)) {
-      email = String(env.CMS_DEV_USER).trim().toLowerCase();
-    } else {
-      throw new HttpError(401, "not signed in: open the editor through Cloudflare Access");
+    let who: { email: string; name?: string } | null = null;
+    if (access && token) {
+      who = { email: await access.verify(token) };
+    } else if (oauth) {
+      who = await oauth.session(request, env);
     }
-    const raw = env.CMS_USERS;
-    if (!raw) throw new HttpError(500, "the CMS_USERS secret is not set");
-    if (users.raw !== raw) users = { raw, map: parseUsers(raw) };
-    const names = users.map.get(email) ?? users.map.get(email.slice(email.indexOf("@"))) ?? [];
-    const roles = names.filter((n) => Object.hasOwn(settings.roles, n));
+    if (!who && env.CMS_DEV_USER && LOCAL_HOSTS.has(url.hostname)) {
+      who = { email: String(env.CMS_DEV_USER).trim().toLowerCase() };
+    }
+    if (!who) throw oauth?.notSignedIn() ?? new HttpError(401, "not signed in: open the editor through Cloudflare Access");
+    const { email } = who;
+    const roles = rolesOf(email, env);
     if (roles.length === 0) throw new HttpError(403, `${email} has no role in the editor`);
     return {
       email,
-      name: email.slice(0, email.indexOf("@")) || email,
+      name: who.name || email.slice(0, email.indexOf("@")) || email,
       roles,
       edit: [...new Set(roles.flatMap((r) => settings.roles[r].edit))],
       publish: roles.some((r) => settings.roles[r].publish),
     };
+  }
+
+  /** The roles `CMS_USERS` gives an email (lower case), by the email or its domain. */
+  function rolesOf(email: string, env: Env): string[] {
+    const raw = env.CMS_USERS;
+    if (!raw) throw new HttpError(500, "the CMS_USERS secret is not set");
+    if (users.raw !== raw) users = { raw, map: parseUsers(raw) };
+    const names = users.map.get(email) ?? users.map.get(email.slice(email.indexOf("@"))) ?? [];
+    return names.filter((n) => Object.hasOwn(settings.roles, n));
   }
 
   function host(env: Env): GitHub {
@@ -85,6 +97,13 @@ export function createWorker(settings: Settings, options: WorkerOptions = {}) {
     const name = url.pathname.slice(settings.api.length);
     if (method !== "GET" && method !== "POST") throw new HttpError(405, "method not allowed");
     if (method === "POST") checkPost(request, url, settings);
+    if (oauth) {
+      // Signing in and out: before (and without) a sign-in.
+      const at = /^(login|callback)\/([^/]*)$/.exec(name);
+      if (method === "GET" && at?.[1] === "login") return oauth.start(url, env, at[2]);
+      if (method === "GET" && at?.[1] === "callback") return oauth.callback(request, url, env, at[2], (e) => rolesOf(e, env).length > 0);
+      if (method === "POST" && name === "logout") return oauth.signOut();
+    }
     const user = await signIn(request, url, env);
     // The body only after sign-in: nobody else gets the Worker to read or parse anything.
     const body = method === "POST" ? await readBody(request, settings) : {};

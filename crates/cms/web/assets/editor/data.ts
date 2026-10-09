@@ -110,6 +110,8 @@ export interface Me extends Limits {
   edit: string[];
   publish: boolean;
   workflow: string;
+  /** How people sign in (`[cms.login]`): with an account through the Worker, or Access. */
+  login: "oauth" | "cloudflare-access";
 }
 
 interface Author {
