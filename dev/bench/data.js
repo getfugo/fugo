@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791488951559,
+  "lastUpdate": 1791564565502,
   "repoUrl": "https://github.com/getfugo/fugo",
   "entries": {
     "Benchmark": [
@@ -97548,6 +97548,66 @@ window.BENCHMARK_DATA = {
           {
             "name": "10,000 generated pages: peak memory",
             "value": 620.1,
+            "unit": "MiB",
+            "extra": "10061 pages; median of 5 builds after a warm-up build"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "blackb1rd.mov@gmail.com",
+            "name": "Prachya Saechua",
+            "username": "blackb1rd"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "95ab645a622e96c113eca8b187e58deb3e467979",
+          "message": "minify: Print inline CSS for the project's browser targets (#195)\n\n`--minify` passed each `<style>` and `style` attribute through\nminify-html's own CSS minification, which runs lightningcss without\nbrowser targets. It wrote the newest syntax for every browser: media\nqueries in range syntax, (width>=576px), which Safari before 16.4 and\nChrome before 104 do not read, #rrggbbaa colours, and `inset` for top,\nright, bottom and left (Safari 14.1). A page whose style sheet was\nwritten for its browserslist lost that in its inline copy; the blog\nkept its CSS as written only with an invalid rule at its end, which\nmade that pass give up.\n\nminify-html no longer minifies CSS. Between its two passes, each\n`<style>` and `style` attribute goes through this crate's CSS minifier\nand is printed compactly for the targets (`min-width` media queries,\n`rgba()`), as `purge_css` prints it:\n\n- Nothing is added or merged (`Css::inline`: lightningcss's `minify`\n  pass does not run). Inline CSS is often a pipeline's output already,\n  and that pass adds its prefixed rules again each time\n  (`::-webkit-file-upload-button` for `::file-selector-button`): the\n  blog's CSS grew on every pass, 29661, 29888, 30064 bytes.\n- Rules lightningcss rejects pass through as in a style sheet.\n- A `style` value is decoded (the references minify-html writes) and\n  minified as a list of declarations. The second minify-html pass then\n  writes it as it writes every attribute (quoted or not, the quoted\n  ones first), so the result stays idempotent. A value with another\n  reference, and the text of an SVG `<style>` with a reference or\n  CDATA, are kept as written.\n\nBuilt without its workaround, the blog is byte for byte the blog built\nwith it, less that rule; seeksnack's pages are unchanged.\n\nCo-Authored-By: Claude Opus 5.5 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-10-09T23:28:04+07:00",
+          "tree_id": "6d515257a5a6755bf3e20abf2c93ba29923da851",
+          "url": "https://github.com/getfugo/fugo/commit/95ab645a622e96c113eca8b187e58deb3e467979"
+        },
+        "date": 1791564562716,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "docs site: build time",
+            "value": 109.2,
+            "unit": "ms",
+            "extra": "334 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "docs site: peak memory",
+            "value": 167.7,
+            "unit": "MiB",
+            "extra": "334 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "1,000 generated pages: build time",
+            "value": 126.7,
+            "unit": "ms",
+            "extra": "1061 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "1,000 generated pages: peak memory",
+            "value": 151,
+            "unit": "MiB",
+            "extra": "1061 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "10,000 generated pages: build time",
+            "value": 1557.9,
+            "unit": "ms",
+            "extra": "10061 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "10,000 generated pages: peak memory",
+            "value": 571,
             "unit": "MiB",
             "extra": "10061 pages; median of 5 builds after a warm-up build"
           }
