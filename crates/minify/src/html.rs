@@ -1,5 +1,11 @@
-//! HTML through minify-html (inline CSS through lightningcss), then each inline `<script>` by
-//! its type: JavaScript through oxc, JSON through this crate's JSON minifier.
+//! HTML through minify-html, then the code it embeds ([`minify_embedded`]): each `<style>` and
+//! `style` attribute through this crate's CSS minifier, with the project's browser targets
+//! ([`styles`]), and each inline `<script>` by its type: JavaScript through oxc, JSON through
+//! this crate's JSON minifier.
+
+mod styles;
+
+use std::ops::Range;
 
 use oxc_span::SourceType;
 
@@ -8,7 +14,7 @@ use crate::{Minifier, MinifyError, MinifyTarget, js, json, target_for};
 
 pub(crate) fn minify(m: &Minifier, input: &str) -> Result<String, MinifyError> {
     let o = &m.options.html;
-    let mut cfg = minify_html::Cfg {
+    let cfg = minify_html::Cfg {
         keep_comments: o.comments == HtmlComments::KeepAll,
         keep_ssi_comments: o.comments != HtmlComments::Remove,
         keep_closing_tags: o.keep_end_tags,
@@ -16,25 +22,26 @@ pub(crate) fn minify(m: &Minifier, input: &str) -> Result<String, MinifyError> {
         keep_input_type_text_attr: o.keep_default_attr_vals,
         preserve_brace_template_syntax: o.templates == TemplateSyntax::Braces,
         preserve_chevron_percent_template_syntax: o.templates == TemplateSyntax::ChevronPercent,
-        minify_css: m.is_enabled(MinifyTarget::Css),
-        // Scripts are minified afterwards, by `minify_scripts`.
+        // Inline CSS and scripts are minified afterwards, by `minify_embedded`.
+        minify_css: false,
         minify_js: false,
         // Spec-compliant output only: no `<!doctypehtml>`, no unquoted values with `"'=<>` or
         // backticks, no attributes run together.
         ..minify_html::Cfg::default()
     };
-    let mut out = minify_html::minify(input.as_bytes(), &cfg);
-    // A second pass (inline CSS is done) makes the result idempotent where minify-html decides
-    // on the tokens it has not yet removed: it collapses whitespace before it drops comments
-    // (`a <!-- c --> b` leaves two spaces), and it omits an end tag by the next sibling as
-    // written (`</tfoot>` before an omitted `</tbody>`).
+    let utf8 = |b: Vec<u8>| String::from_utf8(b).map_err(|_| MinifyError::HtmlEncoding);
+    let (mut out, attributes) =
+        minify_embedded(m, &utf8(minify_html::minify(input.as_bytes(), &cfg))?);
+    // A second pass makes the result idempotent where minify-html decides on the tokens it has
+    // not yet removed: it collapses whitespace before it drops comments (`a <!-- c --> b` leaves
+    // two spaces), and it omits an end tag by the next sibling as written (`</tfoot>` before an
+    // omitted `</tbody>`). It also writes the `style` attributes minified in between as it writes
+    // every attribute (quoted or not, the quoted ones first).
     let dropped_comments = o.comments != HtmlComments::KeepAll && input.contains("<!--");
-    if dropped_comments || !o.keep_end_tags {
-        cfg.minify_css = false;
-        out = minify_html::minify(&out, &cfg);
+    if dropped_comments || !o.keep_end_tags || attributes {
+        out = utf8(minify_html::minify(out.as_bytes(), &cfg))?;
     }
-    let out = String::from_utf8(out).map_err(|_| MinifyError::HtmlEncoding)?;
-    Ok(collapse_titles(&minify_scripts(m, &out)))
+    Ok(collapse_titles(&out))
 }
 
 /// Elements whose content is text, not markup: a `<script>` there is not an element.
@@ -88,19 +95,30 @@ impl ScriptKind {
     }
 }
 
-/// `html` with the content of each `<script>` minified by its type ([`ScriptKind`]). Content
-/// that does not parse, or that holds preserved template syntax, is kept as written.
+/// `html` with the code it embeds minified: the content of each `<script>` by its type
+/// ([`ScriptKind`]), the CSS of each `<style>` and `style` attribute ([`styles`]). Code that does
+/// not parse, or that holds preserved template syntax, is kept as written. The flag tells whether
+/// a `style` attribute changed.
 ///
 /// minify-html's own JS minification is not used: it prints oxc's `/* @__PURE__ */`
 /// annotations, which can make the result longer than the input so that it keeps the input
 /// with its line breaks (Google Tag Manager's snippet does this); it parses a classic script as
 /// a module, so a global `var` is inlined away; it drops the mangled names; and it leaves JSON
-/// (`application/ld+json`) as written.
-fn minify_scripts(m: &Minifier, html: &str) -> String {
+/// (`application/ld+json`) as written. Nor is its CSS minification: it has no browser targets,
+/// so it writes the newest syntax (`@media (width>=576px)`, `#rrggbbaa`, `inset`) for every
+/// browser.
+fn minify_embedded(m: &Minifier, html: &str) -> (String, bool) {
     let lower = html.to_ascii_lowercase();
+    let css = m.is_enabled(MinifyTarget::Css);
     let mut out = String::new();
     // `html[..copied]` is in `out`.
     let mut copied = 0;
+    let mut replace = |range: Range<usize>, with: &str| {
+        out.push_str(&html[copied..range.start]);
+        out.push_str(with);
+        copied = range.end;
+    };
+    let mut attributes = false;
     let mut at = 0;
     // The number of open `<svg>`/`<math>` elements.
     let mut foreign = 0_usize;
@@ -109,11 +127,24 @@ fn minify_scripts(m: &Minifier, html: &str) -> String {
             at = lower[lt..].find("-->").map_or(lower.len(), |i| lt + i + 3);
             continue;
         }
+        // In SVG and MathML, a CDATA section is text.
+        if foreign > 0 && lower[lt..].starts_with("<![cdata[") {
+            at = lower[lt..].find("]]>").map_or(lower.len(), |i| lt + i + 3);
+            continue;
+        }
         let Some(tag) = Tag::parse(html, &lower, lt) else {
             at = lt + 1;
             continue;
         };
         at = tag.end;
+        if css
+            && !tag.closing
+            && let Some(style) = tag.style.clone()
+            && let Some(min) = styles::attribute(m, &html[style.text])
+        {
+            replace(style.span, &min);
+            attributes = true;
+        }
         if FOREIGN_ELEMENTS.contains(&tag.name) {
             if tag.closing {
                 foreign = foreign.saturating_sub(1);
@@ -128,32 +159,38 @@ fn minify_scripts(m: &Minifier, html: &str) -> String {
         let end = lower[at..]
             .find(&format!("</{}", tag.name))
             .map_or(lower.len(), |i| at + i);
-        if tag.name == "script"
-            && foreign == 0
-            && let Some(min) = minify_script(m, tag.typ, &html[at..end])
-        {
-            out.push_str(&html[copied..at]);
-            out.push_str(&min);
-            copied = end;
+        let text = &html[at..end];
+        let min = match tag.name {
+            "script" if foreign == 0 => minify_script(m, tag.typ, text),
+            "style" if css => styles::element(m, text, foreign > 0),
+            _ => None,
+        };
+        if let Some(min) = min {
+            replace(at..end, &min);
         }
         at = end;
     }
     if copied == 0 {
-        return html.to_owned();
+        return (html.to_owned(), false);
     }
     out.push_str(&html[copied..]);
-    out
+    (out, attributes)
+}
+
+/// Whether `code` holds template syntax that minify-html preserves.
+fn holds_template(m: &Minifier, code: &str) -> bool {
+    let delims: &[&str] = match m.options.html.templates {
+        TemplateSyntax::None => &[],
+        TemplateSyntax::Braces => &["{{", "{%", "{#"],
+        TemplateSyntax::ChevronPercent => &["<%"],
+    };
+    delims.iter().any(|d| code.contains(d))
 }
 
 /// The minified `code` of a `<script>` of type `typ`, if it is JavaScript or JSON that parses
 /// and the type is enabled.
 fn minify_script(m: &Minifier, typ: Option<&str>, code: &str) -> Option<String> {
-    let template_delims: &[&str] = match m.options.html.templates {
-        TemplateSyntax::None => &[],
-        TemplateSyntax::Braces => &["{{", "{%", "{#"],
-        TemplateSyntax::ChevronPercent => &["<%"],
-    };
-    if code.is_empty() || template_delims.iter().any(|d| code.contains(d)) {
+    if code.is_empty() || holds_template(m, code) {
         return None;
     }
     let js = &m.options.js;
@@ -184,6 +221,8 @@ struct Tag<'a> {
     self_closing: bool,
     /// The value of the first `type` attribute.
     typ: Option<&'a str>,
+    /// The value of the first `style` attribute.
+    style: Option<AttrValue>,
     /// The offset after the `>`.
     end: usize,
 }
@@ -208,6 +247,7 @@ impl<'a> Tag<'a> {
         let name = &lower[start..i];
         let mut self_closing = false;
         let mut typ = None;
+        let mut style = None;
         loop {
             match *b.get(i)? {
                 b'>' => break,
@@ -236,23 +276,29 @@ impl<'a> Tag<'a> {
                     while b.get(i).is_some_and(|&c| is_space(c)) {
                         i += 1;
                     }
-                    let value = match *b.get(i)? {
+                    let value_start = i;
+                    let text = match *b.get(i)? {
                         q @ (b'"' | b'\'') => {
                             let close = i + 1 + lower[i + 1..].find(char::from(q))?;
-                            let value = &html[i + 1..close];
                             i = close + 1;
-                            value
+                            value_start + 1..close
                         }
                         _ => {
-                            let value_start = i;
                             while b.get(i).is_some_and(|&c| !is_space(c) && c != b'>') {
                                 i += 1;
                             }
-                            &html[value_start..i]
+                            value_start..i
                         }
                     };
-                    if attr == "type" && typ.is_none() {
-                        typ = Some(value);
+                    match attr {
+                        "type" if typ.is_none() => typ = Some(&html[text]),
+                        "style" if style.is_none() => {
+                            style = Some(AttrValue {
+                                span: value_start..i,
+                                text,
+                            });
+                        }
+                        _ => {}
                     }
                 }
             }
@@ -262,9 +308,19 @@ impl<'a> Tag<'a> {
             closing,
             self_closing,
             typ,
+            style,
             end: i + 1,
         })
     }
+}
+
+/// Where the value of an attribute is written.
+#[derive(Clone)]
+struct AttrValue {
+    /// The value with its quotes.
+    span: Range<usize>,
+    /// Between the quotes.
+    text: Range<usize>,
 }
 
 /// `html` with the whitespace of every `<title>` collapsed and trimmed, as Go's minifier writes

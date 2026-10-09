@@ -19,6 +19,12 @@
 //! `radial-gradient(circle at …)` followed by a `-webkit-radial-gradient` browsers reject. So a
 //! style rule declaring a property twice is not merged: it counts as rejected and is rescued as
 //! written, while the rules around it are minified with the targets.
+//!
+//! CSS in HTML (`<style>`, `style` attributes: [`Css::inline`]) skips that pass even with targets:
+//! it is only printed compactly, in syntax the targets read (`min-width` media queries,
+//! `rgba()`). It is often a pipeline's output already (`minify`, `purge_css`), and the pass does
+//! not leave CSS it has prefixed as it is: it adds its prefixed rules again
+//! (`::-webkit-file-upload-button` for `::file-selector-button`) each time.
 
 use lightningcss::declaration::DeclarationBlock;
 use lightningcss::properties::PropertyId;
@@ -28,15 +34,41 @@ use lightningcss::targets::{Features, Targets};
 
 use crate::options::CssOptions;
 
+/// How CSS is minified: its options, and whether lightningcss's `minify` pass runs.
+#[derive(Clone, Copy)]
+pub(crate) struct Css<'a> {
+    options: &'a CssOptions,
+    /// Prefixes added, syntax lowered, rules and declarations merged for the targets.
+    lower: bool,
+}
+
+impl<'a> Css<'a> {
+    /// Stand-alone CSS: lowered for the browser targets, if there are any.
+    pub(crate) fn standalone(options: &'a CssOptions) -> Self {
+        Self {
+            options,
+            lower: options.browsers.is_some(),
+        }
+    }
+
+    /// CSS in HTML: printed for the targets, never lowered.
+    pub(crate) fn inline(options: &'a CssOptions) -> Self {
+        Self {
+            options,
+            lower: false,
+        }
+    }
+}
+
 /// Minifies `input`; never fails (as the Go implementation's minifier).
-pub(crate) fn minify(o: &CssOptions, input: &str) -> String {
+pub(crate) fn minify(o: Css<'_>, input: &str) -> String {
     whole(o, input).unwrap_or_else(|| tolerant(o, input))
 }
 
 /// lightningcss can reorder `!important` declarations it keeps unparsed differently when it
 /// minifies its own output; passes repeat (at most three) until the output is stable. `None` if
 /// lightningcss rejects `input`.
-fn whole(o: &CssOptions, input: &str) -> Option<String> {
+fn whole(o: Css<'_>, input: &str) -> Option<String> {
     let mut out = pass(o, input)?;
     for _ in 0..2 {
         match pass(o, &out) {
@@ -47,12 +79,13 @@ fn whole(o: &CssOptions, input: &str) -> Option<String> {
     Some(out)
 }
 
-/// One lightningcss pass over `input`; `None` if lightningcss rejects it, or, with browser
-/// targets, if a style rule in it declares a property twice (see the module documentation).
-fn pass(o: &CssOptions, input: &str) -> Option<String> {
-    let targets = targets(o);
+/// One lightningcss pass over `input`; `None` if lightningcss rejects it, or, when it lowers for
+/// browser targets, if a style rule in it declares a property twice (see the module
+/// documentation).
+fn pass(o: Css<'_>, input: &str) -> Option<String> {
+    let targets = targets(o.options);
     let mut sheet = StyleSheet::parse(input, ParserOptions::default()).ok()?;
-    if o.browsers.is_some() {
+    if o.lower {
         if has_fallbacks(&sheet.rules) {
             return None;
         }
@@ -118,7 +151,7 @@ fn declares_twice(block: &DeclarationBlock<'_>) -> bool {
 
 /// A style sheet lightningcss rejects: each top-level rule is tried on its own, runs of accepted
 /// rules go through lightningcss together, rejected rules are rescued.
-fn tolerant(o: &CssOptions, input: &str) -> String {
+fn tolerant(o: Css<'_>, input: &str) -> String {
     let chunks = split(input);
     let text = |from: usize, to: usize| -> &str {
         if from == to {
@@ -151,7 +184,7 @@ fn tolerant(o: &CssOptions, input: &str) -> String {
 /// rule), the rule that makes the difference is rescued: the shortest rejected prefix is found by
 /// bisection.
 fn run<'a>(
-    o: &CssOptions,
+    o: Css<'_>,
     text: &impl Fn(usize, usize) -> &'a str,
     mut from: usize,
     to: usize,
@@ -194,7 +227,7 @@ const GROUP_RULES: [&str; 8] = [
 ];
 
 /// One top-level rule lightningcss rejects.
-fn rescue(o: &CssOptions, rule: &str) -> String {
+fn rescue(o: Css<'_>, rule: &str) -> String {
     let Some((open, close)) = block(rule) else {
         return fallback(rule);
     };
@@ -214,19 +247,28 @@ fn rescue(o: &CssOptions, rule: &str) -> String {
         out.push('{');
         out.push_str(&minify(o, body));
     } else {
-        // A style rule whose selector lightningcss rejects: its declarations under `*`.
-        let wrapped = format!("*{{{body}}}");
-        match whole(o, &wrapped) {
-            Some(s) if s.is_empty() => out.push('{'),
-            Some(s) if s.starts_with("*{") && block(&s) == Some((1, Some(s.len() - 1))) => {
-                out.push_str(&s[1..s.len() - 1]);
-            }
-            _ => return fallback(rule),
-        }
+        // A style rule whose selector lightningcss rejects: its declarations on their own.
+        let Some(declarations) = declarations(o, body) else {
+            return fallback(rule);
+        };
+        out.push('{');
+        out.push_str(&declarations);
     }
     out.push('}');
     out.push_str(&fallback(after));
     out
+}
+
+/// A list of declarations (the body of a style rule, a `style` attribute), minified as the
+/// declarations of a rule for `*`; `None` if lightningcss rejects them or they do not stay in
+/// that one rule (a `}` that closes it early, nesting lowered for the targets).
+pub(crate) fn declarations(o: Css<'_>, input: &str) -> Option<String> {
+    let s = whole(o, &format!("*{{{input}}}"))?;
+    if s.is_empty() {
+        return Some(s);
+    }
+    (s.starts_with("*{") && block(&s) == Some((1, Some(s.len() - 1))))
+        .then(|| s[2..s.len() - 1].to_owned())
 }
 
 /// What starts at `b[i]` and is copied (or dropped) as a whole.

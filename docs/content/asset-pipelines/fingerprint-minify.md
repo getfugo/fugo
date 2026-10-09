@@ -24,7 +24,10 @@ them needs are removed, as autoprefixer does. Without a
 browserslist configuration, prefixes stay as written.
 
 `fugo build --minify` minifies every rendered page as well, per the `[minify]` configuration;
-`[minify] minifyOutput = true` does the same without the flag.
+`[minify] minifyOutput = true` does the same without the flag. A page's `<style>` elements and
+`style` attributes are printed compactly, in syntax the browsers of the browserslist configuration
+read (`min-width` media queries, `rgba()` colours), but nothing is added to them: CSS inlined
+from a pipeline, such as `minify` or `purge_css`, is prefixed already.
 
 ## Fingerprint
 
