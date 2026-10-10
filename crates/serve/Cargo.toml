@@ -26,6 +26,7 @@ ssg-vfs.workspace = true
 ssg-site.workspace = true
 ssg-publish.workspace = true
 ssg-build.workspace = true
+ssg-cms.workspace = true
 axum.workspace = true
 tokio.workspace = true
 notify.workspace = true

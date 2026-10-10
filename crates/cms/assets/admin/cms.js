@@ -571,7 +571,7 @@ Please report this to https://github.com/markedjs/marked.`,e){let e=`<p>An error
       <span class="spacer"></span>
       ${R.workflow===`review`?j`<a href="#/drafts" class="drafts-link">Drafts (${Pa.length})</a>`:N}
       <span class="user" title="Roles: ${R.roles.join(`, `)}">${R.email}</span>
-      <button class="subtle small" @click=${()=>ca(R.login).catch(e=>$(F(e),`error`))}>Sign out</button>
+      ${R.login===`local`?N:j`<button class="subtle small" @click=${()=>ca(R.login).catch(e=>$(F(e),`error`))}>Sign out</button>`}
     </header>
   `}function Vu(){let e=/^#\/([se])\/(.*)$/.exec(location.hash),t=e?decodeURIComponent(e[2]):null,n=t===null?null:e?.[1]===`s`||t.includes(`/`)?t.split(`/`)[0]:``;return j`
     <nav class="sidebar">
@@ -584,9 +584,9 @@ Please report this to https://github.com/markedjs/marked.`,e){let e=`<p>An error
           `)}
       </ul>
     </nav>
-  `}function Hu(){let e=Pa.filter(e=>e.author?.email?.toLowerCase()===R.email),t=R.workflow===`direct`?`Your changes go to the site when you save them.`:R.publish?`Your changes are saved as drafts; you can publish drafts.`:`Your changes are saved as drafts; someone who may publish puts them on the site.`;Ju(j`
+  `}function Hu(){let e=Pa.filter(e=>e.author?.email?.toLowerCase()===R.email),t=R.workflow===`direct`?`Your changes go to the site when you save them.`:R.publish?`Your changes are saved as drafts; you can publish drafts.`:`Your changes are saved as drafts; someone who may publish puts them on the site.`,n=R.login===`local`?`Editing the git repository on this computer as ${R.email}`:`Signed in as ${R.email}`;Ju(j`
     <h1>${L.title}</h1>
-    <p class="muted">Signed in as ${R.email} (${R.roles.join(`, `)}). ${t}</p>
+    <p class="muted">${n} (${R.roles.join(`, `)}). ${t}</p>
     ${e.length?j`<h2>Your drafts</h2>${oo(e)}`:N}
     <div class="title-row">
       <h2>Sections</h2>

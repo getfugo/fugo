@@ -1,6 +1,6 @@
 //! The HTTP side (Go's `fileServer`): the files of the served tree, directory indexes and
-//! redirects as Go's `http.FileServer` does them, the 404 page, `livereload.js` and the
-//! LiveReload WebSocket.
+//! redirects as Go's `http.FileServer` does them, the 404 page, `livereload.js`, the
+//! LiveReload WebSocket and the CMS editor's API.
 
 use std::sync::Arc;
 
@@ -14,7 +14,7 @@ use axum::response::{IntoResponse, Response};
 use ssg_base::url::{Component, unescape};
 
 use crate::tree::{Host, Served};
-use crate::{HttpCache, Shared, livereload};
+use crate::{HttpCache, Shared, cms, livereload};
 
 #[derive(Clone)]
 struct HostState {
@@ -33,12 +33,17 @@ pub(crate) fn router(shared: Arc<Shared>, index: usize) -> Router {
 async fn handle(State(s): State<HostState>, req: Request) -> Response {
     // The parts only: the body is not `Sync`, so a reference to the request cannot be held
     // across an await.
-    let (mut req, _body) = req.into_parts();
+    let (mut req, body) = req.into_parts();
     let served = s.shared.served();
     let Some(host) = served.hosts.get(s.index) else {
         return plain_not_found();
     };
     let path = decode(req.uri.path());
+    if let Some(editor) = &served.cms
+        && let Some(name) = path.strip_prefix(editor.api.as_str())
+    {
+        return cms::answer(Arc::clone(editor), &req, body, name).await;
+    }
     if s.shared.live_reload {
         let base = host.base_path.as_str();
         if path.strip_prefix(base) == Some("livereload.js") {

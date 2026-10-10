@@ -187,8 +187,8 @@ pub struct BuildReport {
     pub images: usize,
     /// Static files copied.
     pub static_files: usize,
-    /// The URL path of the CMS editor (`/admin/`), when the configuration has `[cms]`.
-    pub cms: Option<String>,
+    /// The CMS editor (its path, `/admin/`, and its API), when the configuration has `[cms]`.
+    pub cms: Option<Arc<ssg_cms::Editor>>,
     /// The fonts `[fonts]` cut down, by path.
     pub fonts: Vec<ssg_fonts::Cut>,
     /// Target collisions, by path then loser order.
@@ -457,7 +457,7 @@ pub fn build(r: BuildRequest) -> Result<BuildReport, BuildError> {
         for w in cms.warnings {
             session.diagnostics().push(w);
         }
-        report.cms = Some(cms.path);
+        report.cms = Some(Arc::new(cms.editor));
         laps.lap(&mut report, "cms");
     }
 

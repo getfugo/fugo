@@ -164,7 +164,8 @@ impl Rebuilder {
             Tree::Memory(m) => Some(Arc::clone(m)),
             Tree::Disk(_) => None,
         };
-        self.shared.install(Served::new(tree, &self.cfg));
+        let cms = report.cms.clone();
+        self.shared.install(Served::new(tree, &self.cfg, cms));
         match static_files(&self.vfs, &self.cfg) {
             Ok(files) => self.static_files = files,
             Err(e) => self.error(&format!("listing the static files: {e}")),

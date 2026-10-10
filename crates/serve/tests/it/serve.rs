@@ -6,6 +6,7 @@ use ssg_serve::{HttpCache, LiveReloadOptions, Target, Watch};
 
 use crate::{LiveReload, PATIENCE, get, request, serve, site, write};
 
+mod cms;
 mod sites;
 mod watching;
 

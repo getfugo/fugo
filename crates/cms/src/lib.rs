@@ -15,8 +15,9 @@
 //! cookie it signs; or Cloudflare Access, whose token it checks on every request), gives them the
 //! roles the `CMS_USERS` secret names, and commits as one bot to the git host
 //! ([`config::Host`]: GitHub), with the editor as author. What a role may write is cut
-//! down to the areas of [`paths`]. Nothing here runs a program; the JavaScript runs in the
-//! browser and on Cloudflare.
+//! down to the areas of [`paths`]. The JavaScript runs in the browser and on Cloudflare; on
+//! this computer, `fugo server` answers the editor's API itself, from the local git repository
+//! ([`local`]).
 //!
 //! The editor and the Worker are written in TypeScript and Sass (`web/`); `tools/cms/build.sh`
 //! type-checks them and builds them with the generator itself into `assets/admin/cms.js`,
@@ -28,6 +29,7 @@
 pub mod config;
 pub mod fields;
 pub mod index;
+pub mod local;
 pub mod paths;
 
 use ssg_base::Sink;
@@ -36,6 +38,7 @@ use ssg_base::paths::OutputPath;
 use ssg_config::Config;
 
 pub use config::CmsConfig;
+pub use local::Editor;
 
 /// The editor's static files, published under `<path>/` (built from `web/`).
 const ADMIN_FILES: &[(&str, &[u8])] = &[
@@ -79,6 +82,8 @@ pub struct Published {
     pub entries: usize,
     /// Notices: an output of the site the editor replaced, a project outside a git repository.
     pub warnings: Vec<Diagnostic>,
+    /// The editor's API as `fugo server` answers it.
+    pub editor: Editor,
 }
 
 /// The configuration's `[cms]`, checked (`None` without one).
@@ -153,10 +158,12 @@ pub fn publish(
     )?;
     write_assetsignore(sink)?;
     write_headers(sink, &index.path)?;
+    let paths = (index.path.clone(), index.api);
     Ok(Some(Published {
         path: index.path,
         entries,
         warnings,
+        editor: Editor::new(cfg, &cms, areas, paths, index_json),
     }))
 }
 

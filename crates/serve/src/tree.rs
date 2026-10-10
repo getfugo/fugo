@@ -11,6 +11,7 @@ use std::sync::Arc;
 use axum::body::Bytes;
 use ssg_base::Sink;
 use ssg_base::paths::OutputPath;
+use ssg_cms::Editor;
 use ssg_config::Config;
 use ssg_publish::{DiskSink, MemorySink};
 
@@ -102,6 +103,8 @@ pub(crate) struct Served {
     /// Indexed like the listeners.
     pub(crate) hosts: Vec<Host>,
     pub(crate) media_types: MediaTypes,
+    /// The CMS editor of `[cms]`, whose API the server answers (`cms.rs`).
+    pub(crate) cms: Option<Arc<Editor>>,
 }
 
 impl Served {
@@ -111,10 +114,11 @@ impl Served {
             tree: Tree::Memory(Arc::default()),
             hosts: Vec::new(),
             media_types: MediaTypes::default(),
+            cms: None,
         }
     }
 
-    pub(crate) fn new(tree: Tree, cfg: &Config) -> Self {
+    pub(crate) fn new(tree: Tree, cfg: &Config, cms: Option<Arc<Editor>>) -> Self {
         let languages = || {
             let mut dirs: Vec<String> = cfg
                 .sites
@@ -145,6 +149,7 @@ impl Served {
             tree,
             hosts,
             media_types: MediaTypes::from_config(cfg),
+            cms,
         }
     }
 }

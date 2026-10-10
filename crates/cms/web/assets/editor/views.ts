@@ -18,7 +18,7 @@ export function header(): TemplateResult {
       <span class="spacer"></span>
       ${me.workflow === "review" ? html`<a href="#/drafts" class="drafts-link">Drafts (${drafts.length})</a>` : nothing}
       <span class="user" title="Roles: ${me.roles.join(", ")}">${me.email}</span>
-      <button class="subtle small" @click=${() => signOut(me.login).catch((e) => toast(messageOf(e), "error"))}>Sign out</button>
+      ${me.login === "local" ? nothing : html`<button class="subtle small" @click=${() => signOut(me.login).catch((e) => toast(messageOf(e), "error"))}>Sign out</button>`}
     </header>
   `;
 }
@@ -54,9 +54,10 @@ export function home(): void {
       : me.publish
         ? "Your changes are saved as drafts; you can publish drafts."
         : "Your changes are saved as drafts; someone who may publish puts them on the site.";
+  const who = me.login === "local" ? `Editing the git repository on this computer as ${me.email}` : `Signed in as ${me.email}`;
   show(html`
     <h1>${site.title}</h1>
-    <p class="muted">Signed in as ${me.email} (${me.roles.join(", ")}). ${how}</p>
+    <p class="muted">${who} (${me.roles.join(", ")}). ${how}</p>
     ${mine.length ? html`<h2>Your drafts</h2>${draftList(mine)}` : nothing}
     <div class="title-row">
       <h2>Sections</h2>
