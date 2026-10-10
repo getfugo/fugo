@@ -110,8 +110,9 @@ export interface Me extends Limits {
   edit: string[];
   publish: boolean;
   workflow: string;
-  /** How people sign in (`[cms.login]`): with an account through the Worker, or Access. */
-  login: "oauth" | "cloudflare-access";
+  /** How people sign in (`[cms.login]`): with an account through the Worker, or Access; or
+   * nobody does (`local`: `fugo server` answers the API from the git repository). */
+  login: "oauth" | "cloudflare-access" | "local";
 }
 
 interface Author {

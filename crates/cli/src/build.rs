@@ -52,7 +52,7 @@ pub(crate) fn run(a: &BuildArgs) -> anyhow::Result<Exit> {
         Ok(r) => {
             report::diagnostics(&r.diagnostics);
             if !a.quiet {
-                print_summary(&r);
+                print_summary(&r, false);
                 let total: Duration = r.timings.iter().map(|(_, d)| *d).sum();
                 println!("Total in {} ms", total.as_millis());
             }
@@ -81,7 +81,7 @@ fn print_timings(r: &BuildReport) {
 }
 
 /// What a build produced (`build`, and `server`'s first build).
-pub(crate) fn print_summary(r: &BuildReport) {
+pub(crate) fn print_summary(r: &BuildReport, server: bool) {
     println!(
         "pages {} | files {} (aliases {}) | resources {} | processed images {} | static files {}",
         r.pages, r.outputs, r.aliases, r.resources, r.images, r.static_files
@@ -101,7 +101,12 @@ pub(crate) fn print_summary(r: &BuildReport) {
             after.div_ceil(1024)
         );
     }
-    if let Some(path) = &r.cms {
-        println!("CMS editor at {path} (API Worker: _worker.js)");
+    match &r.cms {
+        Some(e) if server => println!(
+            "CMS editor at {} (its API: the git repository here, for this computer only)",
+            e.path
+        ),
+        Some(e) => println!("CMS editor at {} (API Worker: _worker.js)", e.path),
+        None => {}
     }
 }

@@ -75,7 +75,9 @@ help = "Shown in lists and in search results."
 : `owner/name` (required).
 
 `branch`
-: The branch the site is built from, which the editor publishes to. Default: `main`.
+: The branch the site is built from, which the editor publishes to. Default: `main`. With
+  `fugo server`, which answers the editor's API from the local repository, the editor uses the
+  branch checked out instead ([try it locally](/content-management/cms/#try-it-locally)).
 
 `dir`
 : The project's directory in the repository, when it is not the repository's root (`site`).

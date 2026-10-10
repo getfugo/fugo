@@ -113,7 +113,7 @@ impl Reporter for Printer {
                 report::diagnostics(&r.diagnostics);
                 if first {
                     if !self.quiet {
-                        build::print_summary(r);
+                        build::print_summary(r, true);
                     }
                     println!("Built in {} ms", elapsed.as_millis());
                 } else {

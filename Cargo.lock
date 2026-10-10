@@ -6869,8 +6869,11 @@ dependencies = [
 name = "ssg-cms"
 version = "0.0.0-DEV"
 dependencies = [
+ "base64 0.23.1",
+ "jiff",
  "serde",
  "serde_json",
+ "sha2 0.11.0",
  "ssg-base",
  "ssg-config",
  "ssg-pageparser",
@@ -7314,6 +7317,7 @@ dependencies = [
  "serde_json",
  "ssg-base",
  "ssg-build",
+ "ssg-cms",
  "ssg-config",
  "ssg-publish",
  "ssg-site",

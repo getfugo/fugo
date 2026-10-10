@@ -11,7 +11,8 @@
 //!   directories, Go's `http.FileServer` redirects, content types from the site's media types,
 //!   single byte ranges, and for a missing page the `404.html` of the path's language with
 //!   status 404; `livereload.js` and the `livereload` WebSocket on the same port, below the
-//!   base URL's path.
+//!   base URL's path; the API of the CMS editor of `[cms]` (`cms.rs`), answered from the local
+//!   git repository for this computer only.
 //! - **Watching** (`watch.rs`, `rebuild.rs`): the mounts of the project and its themes and the
 //!   configuration files, through notify with a 1 s debounce (or polling). A change of the
 //!   site rebuilds it all, a static-only change copies the changed static files, a
@@ -23,6 +24,7 @@
 #![forbid(unsafe_code)]
 
 mod address;
+mod cms;
 mod http;
 mod livereload;
 mod rebuild;
@@ -448,7 +450,8 @@ fn spawn_http(
                     let listener = tokio::net::TcpListener::from_std(listener)?;
                     let mut stopped = stopped.clone();
                     servers.spawn(async move {
-                        axum::serve(listener, router)
+                        let service = router.into_make_service_with_connect_info::<SocketAddr>();
+                        axum::serve(listener, service)
                             .with_graceful_shutdown(async move {
                                 let _ = stopped.wait_for(|stop| *stop).await;
                             })

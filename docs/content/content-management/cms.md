@@ -363,7 +363,34 @@ matter are written anew when they change.
 
 ## Try it locally
 
-Build for production, then run the Worker with `wrangler dev`:
+`fugo server` answers the editor's API itself, from the git repository on your computer,
+whenever the configuration it serves has `[cms]`. You need no Worker, git host or sign-in:
+
+```sh
+fugo server -e production   # or put a cms.toml into config/development/ too
+```
+
+Then open `http://localhost:1313/admin/`. The editor works as it does on the site:
+
+- **Who you are:** you edit as your git identity (`git config user.name` and `user.email`),
+  with every role, so you may change anything the editor can and publish.
+- **Drafts:** each page's draft is a local branch `cms/<id>`, made from the branch you have
+  checked out (`branch` of `[cms.git]` is not used locally).
+- **Publishing:** *Publish* (or, with `workflow = "direct"`, *Save and publish*) commits onto
+  that branch and updates your files, and the server rebuilds the site. If you have uncommitted
+  changes to the same files, it refuses until you commit or stash them; changes to other files
+  stay as they are.
+- **Nothing leaves your computer:** push with `git push` when you are happy, or delete the
+  drafts' branches.
+
+The API answers only at `localhost` (or `127.0.0.1`), and only to this computer, even with
+`--bind 0.0.0.0`. Publishing a draft whose files changed on the branch in the meantime needs
+git 2.38 or newer.
+
+### Try the Worker
+
+To try the Worker itself, with sign-in and the GitHub repository, build for production, then
+run it with `wrangler dev`:
 
 ```sh
 fugo build -e production
@@ -416,6 +443,9 @@ try it (in a `config/staging/cms.toml` built with `-e staging`, for example).
   Cloudflare Access token), refuses requests from other sites (it checks the `Origin` header),
   and answers only JSON. The session cookie is the site's host's only, sent over HTTPS only, and
   scripts cannot read it.
+- `fugo server` answers the API without a sign-in, so it answers only connections from your
+  computer to `localhost`: other computers on the network, and pages of other sites (directly,
+  or through a name of theirs that leads to your computer), cannot use it.
 - A `@domain` key in `CMS_USERS` lets in every account with a verified email of that domain,
   including accounts made while someone still had such an email. Name people one by one when
   that matters. The editor's pages may not
