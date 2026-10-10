@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791650063409,
+  "lastUpdate": 1791652953490,
   "repoUrl": "https://github.com/getfugo/fugo",
   "entries": {
     "Benchmark": [
@@ -97728,6 +97728,66 @@ window.BENCHMARK_DATA = {
           {
             "name": "10,000 generated pages: peak memory",
             "value": 592.7,
+            "unit": "MiB",
+            "extra": "10061 pages; median of 5 builds after a warm-up build"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "blackb1rd.mov@gmail.com",
+            "name": "Prachya Saechua",
+            "username": "blackb1rd"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "09c3da468b41cdc365aa416e7de774a5dd8489ba",
+          "message": "cms: List a taxonomy's terms as pages, and folders as a tree (#197)\n\nThe editor listed every term of a taxonomy (content/tags/crisp/_index.md)\nas a folder: \"0 pages\" beside its section, and \"Nothing in this folder\nyet.\" inside it, the term's page reachable only through Edit folder page.\n\n- A term with nothing below it is listed as its page, which opens in the\n  editor. In a hierarchical taxonomy, a term with terms below it stays a\n  folder; a folder outside a taxonomy stays one, even when it is empty.\n- A folder says what it holds: a taxonomy's folder counts its terms\n  (\"3 tags\"), any other its pages.\n- The crumbs of a term's page end at the folder that lists it.\n- The sidebar is a tree of folders (editor/tree.ts): the sections, and\n  their folders below them at any depth, which open and close in place\n  without drawing the view again. The folder shown, or the one whose list\n  has the page shown, is marked, and it and the folders above it open; the\n  sidebar scrolls to it, and only itself, when the mark moves. On narrow\n  screens it scrolls within half the screen.\n- The editor's tests never give assert an element. A failing assertion\n  prints its values to depth 1000 with their getters, and from an element\n  happy-dom's getters reach the whole window: the test process grew to\n  tens of gigabytes, which a heap limit does not stop. They compare a\n  count, a text or `a === b` instead, as ui.js now says.\n\nCo-authored-by: Claude Opus 5.5 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-10-10T17:05:44Z",
+          "tree_id": "9c8276a9f8fc71e70e056bda62f23387ecb0643e",
+          "url": "https://github.com/getfugo/fugo/commit/09c3da468b41cdc365aa416e7de774a5dd8489ba"
+        },
+        "date": 1791652951093,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "docs site: build time",
+            "value": 145.5,
+            "unit": "ms",
+            "extra": "334 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "docs site: peak memory",
+            "value": 169.6,
+            "unit": "MiB",
+            "extra": "334 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "1,000 generated pages: build time",
+            "value": 173,
+            "unit": "ms",
+            "extra": "1061 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "1,000 generated pages: peak memory",
+            "value": 149.1,
+            "unit": "MiB",
+            "extra": "1061 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "10,000 generated pages: build time",
+            "value": 1851.3,
+            "unit": "ms",
+            "extra": "10061 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "10,000 generated pages: peak memory",
+            "value": 604.5,
             "unit": "MiB",
             "extra": "10061 pages; median of 5 builds after a warm-up build"
           }
