@@ -73,7 +73,7 @@ test("a section lists its folders, then its pages; the filter looks below it too
   const filter = $("input.filter");
   type(filter, "waf");
   assert.deepEqual(titles(), ["Wafers"]);
-  assert.equal($("input.filter"), filter, "a redraw keeps the element, so typing goes on");
+  assert.ok($("input.filter") === filter, "a redraw keeps the element, so typing goes on");
   type(filter, "");
 });
 
@@ -104,7 +104,7 @@ test("terms: Enter adds one and keeps the input, × removes one", { skip }, () =
   input.value = "sweet";
   input.dispatchEvent(new window.KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true }));
   assert.deepEqual(chips(), ["crisp", "sweet"]);
-  assert.equal($(".terms input"), input, "the same input, to type the next term in");
+  assert.ok($(".terms input") === input, "the same input, to type the next term in");
   assert.equal(input.value, "");
   $$(".terms .chip button")[0].click();
   assert.deepEqual(chips(), ["sweet"]);

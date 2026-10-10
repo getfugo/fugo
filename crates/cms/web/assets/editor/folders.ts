@@ -43,6 +43,16 @@ export function allFolders(entries: Pick<Entry, "key">[]): string[] {
   return [...out].sort();
 }
 
+/** The folders that hold a page or another folder, besides their own page. */
+export function filledFolders(entries: Pick<Entry, "key">[]): Set<string> {
+  const out = new Set<string>();
+  for (const e of entries) {
+    const own = ownFolder(e.key);
+    for (let dir = own === null ? parentDir(e.key) : own && parentDir(own); dir && !out.has(dir); dir = parentDir(dir)) out.add(dir);
+  }
+  return out;
+}
+
 /** `potato-chips` → `Potato chips`; the root is `Pages` (as the index names sections). */
 function nameTitle(name: string): string {
   const words = name.replace(/[-_]/g, " ");

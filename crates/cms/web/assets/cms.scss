@@ -130,17 +130,71 @@ header {
     padding: 0;
   }
 
-  a {
+  // A row of the tree: its toggle, then its link. The rows of nested lists are indented by their
+  // depth (set on each), so that a marked row is as wide as the sidebar.
+  .node {
     display: flex;
-    justify-content: space-between;
-    padding: 0.25rem 1rem;
-    color: var(--text);
-    text-decoration: none;
+    align-items: center;
+    padding: 0 1rem 0 calc(0.25rem + var(--depth, 0) * 0.85rem);
 
     &:hover,
     &.active {
       background: var(--line);
     }
+  }
+
+  .twisty {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.25rem;
+    height: 1.25rem;
+    padding: 0;
+    border: 0;
+    border-radius: $radius;
+    background: none;
+    color: var(--muted);
+
+    svg {
+      width: 0.85rem;
+      height: 0.85rem;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 1.6;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      transition: transform 0.1s;
+    }
+
+    &[aria-expanded="true"] svg {
+      transform: rotate(90deg);
+    }
+  }
+
+  button.twisty {
+    cursor: pointer;
+
+    &:hover {
+      color: var(--text);
+    }
+  }
+
+  a {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 0.25rem 0 0.25rem 0.15rem;
+    color: var(--text);
+    text-decoration: none;
+  }
+
+  .name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .count {
@@ -986,9 +1040,10 @@ pre.diff {
     grid-template-columns: 1fr;
   }
 
+  // Above the view: its tree scrolls on its own, below half the screen.
   .sidebar {
     position: static;
-    max-height: none;
+    max-height: 45vh;
     border-right: none;
     border-bottom: 1px solid var(--line);
   }

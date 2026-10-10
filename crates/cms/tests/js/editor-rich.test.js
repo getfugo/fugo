@@ -187,7 +187,7 @@ test("lists as the browser's editing makes them lose no text", { skip }, () => {
 test("HTML and shortcodes show as their source, never as elements, and are edited as text", { skip }, () => {
   const markdown = '<script>alert(1)</script>\n\n<img src=x onerror="alert(1)">\n\n{{< youtube abc >}}\n\nText <span onclick="alert(1)">here</span>.\n';
   const { box, write } = draw(markdown);
-  assert.equal(box.querySelector("script, img, [onclick], [onerror]"), null);
+  assert.equal(box.querySelectorAll("script, img, [onclick], [onerror]").length, 0);
   const sources = [...box.querySelectorAll(".md-raw")];
   assert.deepEqual(sources.map((s) => s.getAttribute("data-md-raw")), ["HTML", "HTML", "Shortcode"]);
   assert.deepEqual(sources.map((s) => s.textContent), ["<script>alert(1)</script>", '<img src=x onerror="alert(1)">', "{{< youtube abc >}}"]);
@@ -217,7 +217,7 @@ test("pasted HTML becomes what Markdown can hold of it", { skip }, () => {
     '<script>alert(1)</script><p><img src="https://elsewhere.example/x.png" onerror="alert(1)" alt="x"></p></b>';
   const box = document.createElement("div");
   box.innerHTML = cms.pastedHtml(pasted, url, drawn.cx);
-  assert.equal(box.querySelector("script, [onerror], [data-md-b], [data-md-i]"), null);
+  assert.equal(box.querySelectorAll("script, [onerror], [data-md-b], [data-md-i]").length, 0);
   assert.equal(
     box.innerHTML.replace(/\n/g, ""),
     '<p><strong>Bold</strong> and <em>italic</em></p><ul><li>one</li><li>two</li></ul><p><img src="https://elsewhere.example/x.png" data-md-src="https://elsewhere.example/x.png" alt="x"></p>',
@@ -242,7 +242,7 @@ test("Markdown shows the text as typed in rich text, and rich text draws what is
   p.lastChild.data = ", loudly.";
   p.dispatchEvent(new window.Event("input", { bubbles: true }));
   $$(".modes button").find((b) => text(b) === "Markdown").click();
-  assert.equal($(".rich-box"), null);
+  assert.equal($$(".rich-box").length, 0);
   const area = $("textarea.body");
   assert.equal(area.value, "\nThey *crunch*, loudly.\n\n<!-- more -->\n\nSalt, then [more](/salt/). ![Salt](salt.jpg)\n");
   area.value = "## Salt\n\nThey crunch.\n";
@@ -258,7 +258,7 @@ test("the image button opens a form with the page's files", { skip }, () => {
   assert.ok($(".image-form input[name=src]"));
   assert.equal(button.getAttribute("aria-expanded"), "true");
   $$(".image-form button").find((b) => text(b) === "Cancel").click();
-  assert.equal($(".image-form"), null);
+  assert.equal($$(".image-form").length, 0);
 });
 
 test("what is typed in rich text is saved", { skip }, async () => {

@@ -1,7 +1,8 @@
 // Rendering: the editor's frame (header and sidebar) around a view, and toasts.
 
 import { html, render } from "lit-html";
-import { header, sidebar } from "./views";
+import { reveal, sidebar } from "./tree";
+import { header } from "./views";
 
 /** The value of the input an event came from. */
 export const valueOf = (ev: Event) => (ev.target as HTMLInputElement).value;
@@ -24,7 +25,16 @@ export function show(content: unknown): void {
     root.className = "";
     mounted = true;
   }
-  render(html`${header()}<div class="layout">${sidebar()}<main>${content}</main></div>`, root);
+  render(html`${header()}<div class="layout"><nav class="sidebar" aria-label="Folders"></nav><main>${content}</main></div>`, root);
+  drawSidebar();
+}
+
+/** Draws the sidebar, on its own: a folder opened or closed in its tree changes nothing else. */
+export function drawSidebar(): void {
+  const nav = app().querySelector<HTMLElement>(".layout > .sidebar");
+  if (!nav) return;
+  render(sidebar(), nav);
+  reveal(nav);
 }
 
 let toastTimer: ReturnType<typeof setTimeout> | undefined;

@@ -76,7 +76,7 @@ const answer = (title) => (globalThis.prompt = () => title);
 
 test("the root: the sections as folders, then the pages at the top", { skip }, async () => {
   await go("#/s/", () => text($("h1") ?? { textContent: "" }) === "Pages");
-  assert.equal($(".crumbs"), null);
+  assert.equal($$(".crumbs").length, 0);
   assert.equal($(".sidebar a.active").getAttribute("href"), "#/s/");
   assert.deepEqual(titles(), ["Snacks", "About"]);
   assert.equal(text($("tr.folder .muted")), "3 pages", "the pages anywhere below it");
@@ -88,7 +88,7 @@ test("a folder at any depth: its folders and pages, and the way back up", { skip
   await go("#/s/snacks/chips", () => text($("h1")) === "Chips");
   assert.equal(text($(".crumbs")), "Pages / Snacks");
   assert.deepEqual($$(".crumbs a").map((a) => a.getAttribute("href")), ["#/s/", "#/s/snacks"]);
-  assert.equal($(".sidebar a.active").getAttribute("href"), "#/s/snacks");
+  assert.equal($(".sidebar a.active").getAttribute("href"), "#/s/snacks/chips", "the folder, in the sidebar's tree");
   assert.deepEqual(titles(), ["Potato chips", "Tortilla"]);
   assert.ok(button("New folder"), "below the root, a folder");
 
@@ -98,7 +98,7 @@ test("a folder at any depth: its folders and pages, and the way back up", { skip
 
   await go("#/s/snacks/chips/potato-chips/wavy", () => text($("h1")) === "Wavy");
   assert.deepEqual(titles(), ["Ruffles"]);
-  assert.equal(button("Edit folder page"), undefined);
+  assert.ok(!button("Edit folder page"));
 
   await go("#/s/snacks/nothing", () => text($("h1")) === "Not found");
 });
@@ -155,7 +155,7 @@ test("New folder opens the new folder; its page is saved with the first page in 
   assert.equal(body.changes[0].base, null);
 
   await go("#/s/snacks/chips/extruded", () => text($("h1")) === "Extruded" && $("table.entries"));
-  assert.equal($(".title-row .badge"), null, "saved");
+  assert.equal($$(".title-row .badge").length, 0, "saved");
   assert.deepEqual(titles(), ["Cheese Puffs"]);
 });
 

@@ -73,6 +73,10 @@ export async function go(hash, ready) {
   return until(ready);
 }
 
+// Never give assert an element (`assert.equal($(".x"), null)`): when the assertion fails, node
+// prints its values to depth 1000 with their getters, and from an element happy-dom's getters
+// reach the whole window, new objects each time: the process takes tens of gigabytes, and a
+// heap limit does not stop it. Compare a count, a text, an attribute or `a === b` instead.
 export const $ = (s) => document.querySelector(s);
 export const $$ = (s) => [...document.querySelectorAll(s)];
 export const text = (el) => el.textContent.replace(/\s+/g, " ").trim();

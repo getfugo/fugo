@@ -33,6 +33,8 @@ export const canEdit = (path: string) => mayEdit(me, me.edit, path);
 export const langName = (key: string) => site.languages.find((l) => l.key === key)?.name ?? key;
 /** The pages of the index, and those made in the editor and not saved yet. */
 export const allEntries = (): Entry[] => [...site.entries, ...pending.values()];
+/** The taxonomy whose terms the folder `dir` holds: that of its section (`tags`). */
+export const taxonomyOf = (dir: string) => site.taxonomies.find((t) => t.plural === dir.split("/")[0]);
 
 /** The section of folder `dir` (its first name; `""` at the root): the index's, or a new one,
  * whose pages are written like those of the largest section. */

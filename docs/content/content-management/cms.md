@@ -314,8 +314,12 @@ page and redo your change.
   languages and drafts, and each folder lists its own the same way. The crumbs above a folder
   or a page lead back up to *Pages*, the top, whose folders are the sections. The filter finds
   pages and folders anywhere below the folder shown, and says where each is. The pages of a
-  taxonomy's terms (`content/brands/lays/_index.md`) are the folders of its section (*Brands*,
-  "52 brands"), even when it has no `_index` page of its own.
+  taxonomy's terms (`content/brands/lays/_index.md`) are listed as pages of its section
+  (*Brands*, "3 brands"), even when it has no `_index` page of its own; in a hierarchical
+  taxonomy, a term with terms below it is a folder.
+- **A tree of folders** in the sidebar: the sections, with their folders below them at any
+  depth, which open and close in place. The folder shown, or the one whose list has the page
+  shown, is marked, and the folders above it open.
 - **A form for the front matter**: text, numbers, yes/no, dates, lists, nested tables and lists
   of tables, with the labels and inputs the build works out from the site's content, and the
   values pages share suggested as you type. Taxonomy fields (`tags`, `categories`, …) suggest
