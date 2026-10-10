@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791565484405,
+  "lastUpdate": 1791650060683,
   "repoUrl": "https://github.com/getfugo/fugo",
   "entries": {
     "Benchmark": [
@@ -97668,6 +97668,66 @@ window.BENCHMARK_DATA = {
           {
             "name": "10,000 generated pages: peak memory",
             "value": 607.8,
+            "unit": "MiB",
+            "extra": "10061 pages; median of 5 builds after a warm-up build"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "blackb1rd.mov@gmail.com",
+            "name": "blackb1rd",
+            "username": "blackb1rd"
+          },
+          "committer": {
+            "email": "blackb1rd.mov@gmail.com",
+            "name": "blackb1rd",
+            "username": "blackb1rd"
+          },
+          "distinct": true,
+          "id": "cdb696d2a002f8488ae5c6b5ada26d00150aef2a",
+          "message": "Refactor sign-in handling and styles\n\n- Removed old sign-in styles from cms.scss and added new styles for the sign-in card and buttons.\n- Created a new signin.ts module to encapsulate sign-in rendering logic.\n- Updated cms.ts to utilize the new showSignIn function for rendering sign-in options.\n- Added licensing information to cms.js.LEGAL.txt.\n\nSigned-off-by: blackb1rd <blackb1rd.mov@gmail.com>",
+          "timestamp": "2026-10-10T23:20:33+07:00",
+          "tree_id": "fd2cb2686fd5e26185b93c9e310b4d212ce4fb3f",
+          "url": "https://github.com/getfugo/fugo/commit/cdb696d2a002f8488ae5c6b5ada26d00150aef2a"
+        },
+        "date": 1791650057522,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "docs site: build time",
+            "value": 186.2,
+            "unit": "ms",
+            "extra": "334 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "docs site: peak memory",
+            "value": 173.4,
+            "unit": "MiB",
+            "extra": "334 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "1,000 generated pages: build time",
+            "value": 222.5,
+            "unit": "ms",
+            "extra": "1061 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "1,000 generated pages: peak memory",
+            "value": 155.1,
+            "unit": "MiB",
+            "extra": "1061 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "10,000 generated pages: build time",
+            "value": 2337.6,
+            "unit": "ms",
+            "extra": "10061 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "10,000 generated pages: peak memory",
+            "value": 592.7,
             "unit": "MiB",
             "extra": "10061 pages; median of 5 builds after a warm-up build"
           }
