@@ -96,7 +96,7 @@ test("a table offers the keys other pages have in it, as their settings label th
   assert.deepEqual([...add.options].map(text), ["Add…", "Saturated"]);
   choose(add, "saturated");
   assert.equal($("#f-nutrition-fat-saturated").value, "0");
-  assert.equal($("#f-nutrition-fat-total").closest("fieldset").querySelector(".add-field"), null);
+  assert.ok(!$("#f-nutrition-fat-total").closest("fieldset").querySelector(".add-field"));
 });
 
 test("a value one for every language goes to each language's file", { skip }, async () => {
@@ -133,7 +133,7 @@ test("a new page starts with its section's values and the settings' defaults", {
   $$(".title-row button").find((b) => text(b) === "New page").click();
   await until(() => $(".doc-head code")?.textContent.includes("snacks/honey-butter"));
   assert.equal($("#f-author").value, "Kitchen");
-  assert.equal($("#f-type"), null, "a hidden key is not shown…");
+  assert.equal($$("#f-type").length, 0, "a hidden key is not shown…");
   const raw = $(".doc-head .toggle input");
   raw.checked = true;
   raw.dispatchEvent(new window.Event("change", { bubbles: true }));

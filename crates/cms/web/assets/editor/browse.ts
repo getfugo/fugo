@@ -6,9 +6,9 @@ import { html, nothing, type TemplateResult } from "lit-html";
 import { askNewFolder, askNewPage, mayAddFolder, mayAddPage } from "./create";
 import { type Entry } from "./data";
 import { show, valueOf } from "./dom";
-import { allFolders, folderHref, folderTitle, ownFolder, parentDir } from "./folders";
-import { allEntries, draftOf } from "./state";
-import { notFound } from "./views";
+import { allFolders, filledFolders, folderHref, folderTitle, ownFolder, parentDir, placeOf } from "./folders";
+import { allEntries, draftOf, taxonomyOf } from "./state";
+import { holds, notFound } from "./views";
 
 /** Links to the root and to each folder down to `dir`. */
 export function crumbs(dir: string): TemplateResult {
@@ -16,6 +16,28 @@ export function crumbs(dir: string): TemplateResult {
   const dirs = [""];
   if (dir) dir.split("/").forEach((name, i) => dirs.push(i ? `${dirs[i]}/${name}` : name));
   return html`${dirs.map((d, i) => html`${i ? " / " : ""}<a href=${folderHref(d)}>${folderTitle(d, entries)}</a>`)}`;
+}
+
+/**
+ * The terms of a taxonomy with nothing in them but their own page (`tags/crisp`): they are
+ * listed as that page, the term's, and not as empty folders. A term with terms below it (in a
+ * hierarchical taxonomy) stays a folder.
+ */
+export function termFolders(entries: Entry[]): Set<string> {
+  const filled = filledFolders(entries);
+  const out = new Set<string>();
+  for (const e of entries) {
+    const dir = ownFolder(e.key);
+    if (dir?.includes("/") && taxonomyOf(dir) && !filled.has(dir)) out.add(dir);
+  }
+  return out;
+}
+
+/** The folder whose list has the page `key`, where the page's crumbs end: the one it is in; for a
+ * folder's own page, that folder, unless the page is a term's, listed in the folder above. */
+export function listedIn(key: string): string {
+  const own = ownFolder(key);
+  return own === null || termFolders(allEntries()).has(own) ? (placeOf(key) ?? "") : own;
 }
 
 /** The filter of the folder shown. It stays while the view is redrawn, until another folder is
@@ -32,12 +54,17 @@ export function folderView(dir: string): void {
   const listed = (key: string) => (query ? !dir || key.startsWith(`${dir}/`) : parentDir(key) === dir);
   const matches = (title: string, key: string) => !query || `${title} ${key}`.toLowerCase().includes(query);
   const byTitle = (a: { title: string }, b: { title: string }) => a.title.localeCompare(b.title);
+  const terms = termFolders(entries);
   const subfolders = folders
-    .filter(listed)
+    .filter((key) => listed(key) && !terms.has(key))
     .map((key) => ({ key, title: folderTitle(key, entries) }))
     .filter((f) => matches(f.title, f.key))
     .sort(byTitle);
-  const pages = entries.filter((e) => ownFolder(e.key) === null && listed(e.key) && matches(e.title, e.key)).sort(byTitle);
+  // A page's path: its key, or for a term's page, listed as a page, its folder.
+  const pathOf = (e: Entry) => ownFolder(e.key) ?? e.key;
+  const pages = entries
+    .filter((e) => (ownFolder(e.key) === null || terms.has(pathOf(e))) && listed(pathOf(e)) && matches(e.title, pathOf(e)))
+    .sort(byTitle);
   // Where a match of the filter is, below this folder.
   const where = (key: string) => parentDir(key).slice(dir ? dir.length + 1 : 0);
   const own = entries.find((e) => ownFolder(e.key) === dir);
@@ -68,7 +95,7 @@ export function folderView(dir: string): void {
       </thead>
       <tbody>
         ${subfolders.map((f) => folderRow(f.key, f.title, where(f.key), entries))}
-        ${pages.map((e) => pageRow(e, where(e.key)))}
+        ${pages.map((e) => pageRow(e, where(pathOf(e))))}
       </tbody>
     </table>
     ${subfolders.length || pages.length ? nothing : html`<p class="muted">${query ? "Nothing matches." : "Nothing in this folder yet."}</p>`}
@@ -84,15 +111,18 @@ function badgeOf(e: Entry | undefined): TemplateResult | typeof nothing {
   return draft ? html`<a class="badge pending" href="#/d/${draft.id}">draft</a>` : nothing;
 }
 
-/** A folder in the list: its pages below it, and its own page's languages. */
+/** A folder in the list: its pages below it (in a taxonomy's folder, its terms), and its own
+ * page's languages. */
 function folderRow(key: string, title: string, where: string, entries: Entry[]): TemplateResult {
   const own = entries.find((e) => e.key === `${key}/_index`);
-  const count = entries.filter((e) => e.kind === "page" && e.key.startsWith(`${key}/`)).length;
+  const below = entries.filter((e) => e.key.startsWith(`${key}/`) && e !== own);
+  const pages = below.filter((e) => e.kind === "page").length;
+  const terms = taxonomyOf(key) ? below.filter((e) => ownFolder(e.key) !== null).length : 0;
   return html`
     <tr class="folder">
       <td>
         <a href=${folderHref(key)}><svg class="folder-icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M1.5 3.5h4.5l1.5 1.5h7v7.5h-13z" /></svg>${title}</a>
-        <span class="muted">${count === 1 ? "1 page" : `${count} pages`}</span>
+        <span class="muted">${holds(key, pages, terms)}</span>
         ${where ? html`<small class="muted where">in ${where}</small>` : nothing}
       </td>
       <td>${own ? langs(own) : nothing}</td>

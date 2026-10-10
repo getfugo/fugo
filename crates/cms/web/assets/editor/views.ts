@@ -1,4 +1,4 @@
-// The layout (header and sidebar) and the start page. A section's view is that of its folder
+// The header and the start page. The sidebar is tree.ts; a section's view is that of its folder
 // (browse.ts).
 
 import { html, nothing, type TemplateResult } from "lit-html";
@@ -7,7 +7,7 @@ import { askNewFolder, mayAddFolder } from "./create";
 import { type Section } from "./data";
 import { show, toast } from "./dom";
 import { draftList } from "./drafts";
-import { drafts, me, site } from "./state";
+import { drafts, me, site, taxonomyOf } from "./state";
 
 export function header(): TemplateResult {
   return html`
@@ -20,27 +20,6 @@ export function header(): TemplateResult {
       <span class="user" title="Roles: ${me.roles.join(", ")}">${me.email}</span>
       ${me.login === "local" ? nothing : html`<button class="subtle small" @click=${() => signOut(me.login).catch((e) => toast(messageOf(e), "error"))}>Sign out</button>`}
     </header>
-  `;
-}
-
-export function sidebar(): TemplateResult {
-  // The section of the folder or page shown (a page at the top is the root's).
-  const at = /^#\/([se])\/(.*)$/.exec(location.hash);
-  const path = at ? decodeURIComponent(at[2]) : null;
-  const selected = path === null ? null : at?.[1] === "s" || path.includes("/") ? path.split("/")[0] : "";
-  return html`
-    <nav class="sidebar">
-      <h2>Sections</h2>
-      <ul>
-        ${site.sections.map(
-          (s) => html`
-            <li>
-              <a href="#/s/${encodeURIComponent(s.key)}" class=${s.key === selected ? "active" : nothing} title=${sizeOf(s)}>${s.title}<span class="count">${s.count || s.folders}</span></a>
-            </li>
-          `,
-        )}
-      </ul>
-    </nav>
   `;
 }
 
@@ -73,13 +52,16 @@ export function home(): void {
   `);
 }
 
-/** What a section holds: its pages and its folders, which in a taxonomy's section are its terms
- * (`52 brands`). The sidebar shows the pages, or the folders of a section without pages. */
-function sizeOf(s: Section): string {
-  const taxonomy = site.taxonomies.find((t) => t.plural === s.key);
+/** What a section holds, on its card (and over its name in the sidebar). */
+const sizeOf = (s: Section) => holds(s.key, s.count, s.folders);
+
+/** What the folder `dir` holds: `pages` and `folders`, which in a taxonomy's folder are its terms
+ * (`3 tags`); the pages only when there are some or no folders. */
+export function holds(dir: string, pages: number, folders: number): string {
+  const taxonomy = taxonomyOf(dir);
   const count = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
-  const parts = s.count || !s.folders ? [count(s.count, "page", "pages")] : [];
-  if (s.folders) parts.push(taxonomy ? count(s.folders, taxonomy.singular, taxonomy.plural) : count(s.folders, "folder", "folders"));
+  const parts = pages || !folders ? [count(pages, "page", "pages")] : [];
+  if (folders) parts.push(taxonomy ? count(folders, taxonomy.singular, taxonomy.plural) : count(folders, "folder", "folders"));
   return parts.join(" · ");
 }
 

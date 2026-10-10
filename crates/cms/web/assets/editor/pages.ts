@@ -5,12 +5,12 @@ import { live } from "lit-html/directives/live.js";
 import { clone, decode, encode, join, split } from "../codec";
 import { base64ToText } from "../common";
 import { api, ApiError, messageOf } from "./api";
-import { crumbs } from "./browse";
+import { crumbs, listedIn } from "./browse";
 import { addTranslation, deletePage, discard, movePage, publish, save } from "./changes";
 import { type Doc } from "./data";
 import { show, toast, valueOf } from "./dom";
 import { bodyEditor, filesPanel } from "./files";
-import { foldersOf, ownFolder, placeOf } from "./folders";
+import { foldersOf } from "./folders";
 import { fieldsForm } from "./form";
 import { schedulePreview } from "./preview";
 import { allEntries, canEdit, current, draftOf, langName, me, pending, sectionFor, setPage, site } from "./state";
@@ -78,7 +78,7 @@ export function pageView(): void {
     pageView();
   };
   show(html`
-    <div class="crumbs">${crumbs(ownFolder(entry.key) ?? placeOf(entry.key) ?? "")}</div>
+    <div class="crumbs">${crumbs(listedIn(entry.key))}</div>
     <div class="title-row">
       <h1>${title}</h1>
       ${draft ? html`<a class="badge pending" href="#/d/${draft.id}">has a draft</a>` : nothing}
