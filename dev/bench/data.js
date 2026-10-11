@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791692256957,
+  "lastUpdate": 1791739338479,
   "repoUrl": "https://github.com/getfugo/fugo",
   "entries": {
     "Benchmark": [
@@ -97848,6 +97848,66 @@ window.BENCHMARK_DATA = {
           {
             "name": "10,000 generated pages: peak memory",
             "value": 613.6,
+            "unit": "MiB",
+            "extra": "10061 pages; median of 5 builds after a warm-up build"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "blackb1rd.mov@gmail.com",
+            "name": "Prachya Saechua",
+            "username": "blackb1rd"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "4d0bceffb1740d4ebf8897c680ddf3ee4a220072",
+          "message": "images: Publish images without their metadata, with a copyright notice (#200)\n\nOriginal images were published byte for byte: page resources, assets\nwhose URL a page prints and static files kept their EXIF, so a phone\nphoto went online with its GPS position, its camera and its dates.\n\nThey are now published without it, and can carry the site's notice:\n\n    [imaging]\n    stripMetadata = true    # the default\n    copyright = \"© 2026 by Jane Doe, all rights reserved\"\n    author = \"Jane Doe\"\n    titleFromFileName = true\n\n- JPEG, PNG and WebP files are rewritten without decoding them: EXIF,\n  XMP, IPTC, comments, text and vendor chunks and anything after the\n  image go; the colour profile, the other colour information and the\n  orientation stay. Other formats are published as they are.\n- The notice goes into EXIF (Copyright, Artist) and XMP (dc:rights,\n  dc:creator, dc:title) of every published JPEG, PNG and WebP file,\n  processed ones included, with their source's title; a simple WebP\n  file gets a VP8X header. The image cache keeps the encoder's bytes.\n  The notice needs stripMetadata.\n- ResourceStore::publish, both static syncs, fugo server's static copy\n  (ssg-publish now depends on ssg-images) and ImageQueue::process apply\n  it. .content, fingerprints and img | exif stay the source's.\n- On by default, a deliberate difference from the Go build;\n  stripMetadata = false gives its bytes. The docs sites' 13 static PNG\n  icons differ at L4 (same pixels): tools/dev/changes/image-metadata.md\n  and the docs baselines; gates A-D2 and A-D3 accept only those.\n- The imaging, image processing and differences docs, the READMEs of\n  ssg-images, ssg-resources and ssg-publish, and HANDOFF describe it.\n\nSigned-off-by: blackb1rd <blackb1rd.mov@gmail.com>\nCo-Authored-By: Claude Opus 5.5 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-10-11T23:49:41+07:00",
+          "tree_id": "e09841002e0ebb4b4f1b47b79565e844af9edf5d",
+          "url": "https://github.com/getfugo/fugo/commit/4d0bceffb1740d4ebf8897c680ddf3ee4a220072"
+        },
+        "date": 1791739335045,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "docs site: build time",
+            "value": 190.2,
+            "unit": "ms",
+            "extra": "334 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "docs site: peak memory",
+            "value": 168,
+            "unit": "MiB",
+            "extra": "334 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "1,000 generated pages: build time",
+            "value": 220.8,
+            "unit": "ms",
+            "extra": "1061 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "1,000 generated pages: peak memory",
+            "value": 147.3,
+            "unit": "MiB",
+            "extra": "1061 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "10,000 generated pages: build time",
+            "value": 2009.5,
+            "unit": "ms",
+            "extra": "10061 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "10,000 generated pages: peak memory",
+            "value": 601.4,
             "unit": "MiB",
             "extra": "10061 pages; median of 5 builds after a warm-up build"
           }
