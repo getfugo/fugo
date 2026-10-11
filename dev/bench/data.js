@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791739338479,
+  "lastUpdate": 1791739341385,
   "repoUrl": "https://github.com/getfugo/fugo",
   "entries": {
     "Benchmark": [
@@ -99862,6 +99862,105 @@ window.BENCHMARK_DATA = {
           {
             "name": "BenchmarkSummaryFromHTMLWithDivider",
             "value": 59.17,
+            "unit": "ns/op"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "blackb1rd.mov@gmail.com",
+            "name": "Prachya Saechua",
+            "username": "blackb1rd"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "4d0bceffb1740d4ebf8897c680ddf3ee4a220072",
+          "message": "images: Publish images without their metadata, with a copyright notice (#200)\n\nOriginal images were published byte for byte: page resources, assets\nwhose URL a page prints and static files kept their EXIF, so a phone\nphoto went online with its GPS position, its camera and its dates.\n\nThey are now published without it, and can carry the site's notice:\n\n    [imaging]\n    stripMetadata = true    # the default\n    copyright = \"© 2026 by Jane Doe, all rights reserved\"\n    author = \"Jane Doe\"\n    titleFromFileName = true\n\n- JPEG, PNG and WebP files are rewritten without decoding them: EXIF,\n  XMP, IPTC, comments, text and vendor chunks and anything after the\n  image go; the colour profile, the other colour information and the\n  orientation stay. Other formats are published as they are.\n- The notice goes into EXIF (Copyright, Artist) and XMP (dc:rights,\n  dc:creator, dc:title) of every published JPEG, PNG and WebP file,\n  processed ones included, with their source's title; a simple WebP\n  file gets a VP8X header. The image cache keeps the encoder's bytes.\n  The notice needs stripMetadata.\n- ResourceStore::publish, both static syncs, fugo server's static copy\n  (ssg-publish now depends on ssg-images) and ImageQueue::process apply\n  it. .content, fingerprints and img | exif stay the source's.\n- On by default, a deliberate difference from the Go build;\n  stripMetadata = false gives its bytes. The docs sites' 13 static PNG\n  icons differ at L4 (same pixels): tools/dev/changes/image-metadata.md\n  and the docs baselines; gates A-D2 and A-D3 accept only those.\n- The imaging, image processing and differences docs, the READMEs of\n  ssg-images, ssg-resources and ssg-publish, and HANDOFF describe it.\n\nSigned-off-by: blackb1rd <blackb1rd.mov@gmail.com>\nCo-Authored-By: Claude Opus 5.5 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-10-11T23:49:41+07:00",
+          "tree_id": "e09841002e0ebb4b4f1b47b79565e844af9edf5d",
+          "url": "https://github.com/getfugo/fugo/commit/4d0bceffb1740d4ebf8897c680ddf3ee4a220072"
+        },
+        "date": 1791739340451,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "BenchmarkSanitizeAnchorName",
+            "value": 537.29,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSanitizeAnchorNameAsciiOnly",
+            "value": 1287.07,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSanitizeAnchorNameBlackfriday",
+            "value": 650.72,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSanitizeAnchorNameString",
+            "value": 537.02,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSanitize/All_allowed",
+            "value": 239.03,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSanitize/Spaces",
+            "value": 260.38,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkRelURL",
+            "value": 340.89,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkAbsURL/relurl",
+            "value": 618.43,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkAbsURL/absurl",
+            "value": 23.59,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkTotalWords",
+            "value": 5329.56,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkStripHTML",
+            "value": 1092.53,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkParse",
+            "value": 9804.99,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkDecodeYAMLToMap",
+            "value": 14917.31,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSummaryFromHTML",
+            "value": 81.34,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSummaryFromHTMLWithDivider",
+            "value": 77.26,
             "unit": "ns/op"
           }
         ]
