@@ -6823,6 +6823,7 @@ dependencies = [
  "ssg-cms",
  "ssg-config",
  "ssg-fonts",
+ "ssg-images",
  "ssg-layouts",
  "ssg-publish",
  "ssg-render",
@@ -7002,6 +7003,7 @@ version = "0.0.0-DEV"
 dependencies = [
  "ab_glyph",
  "color_quant 2.0.0",
+ "crc32fast",
  "fast_image_resize",
  "image",
  "imageproc",
@@ -7240,6 +7242,7 @@ dependencies = [
  "serde_json",
  "ssg-base",
  "ssg-config",
+ "ssg-images",
  "ssg-minify",
  "ssg-testkit",
  "ssg-vfs",

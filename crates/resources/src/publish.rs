@@ -16,7 +16,9 @@ use ssg_base::paths::OutputPath;
 use ssg_base::url::{Component, unescape};
 use ssg_base::{Idx as _, ImageOpId, ResourceId, Sink};
 
-use crate::store::{Body, Origin, PublishPolicy, Resource, ResourceError, ResourceStore, lock};
+use crate::store::{
+    Body, Origin, PublishPolicy, Resource, ResourceError, ResourceKind, ResourceStore, lock,
+};
 
 /// What [`ResourceStore::publish`] did.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
@@ -180,6 +182,20 @@ impl ResourceStore {
         index
     }
 
+    /// The bytes `r` is published with: its content, an image's (not processed) with the
+    /// metadata [`image_metadata`](crate::StoreConfig::image_metadata) gives it.
+    fn published_content(&self, r: &Resource) -> Result<Arc<[u8]>, ResourceError> {
+        let bytes = self.content(r.id)?;
+        if r.kind != ResourceKind::Image {
+            return Ok(bytes);
+        }
+        Ok(self
+            .cfg
+            .image_metadata
+            .original(&bytes, &r.name)
+            .map_or(bytes, Into::into))
+    }
+
     /// The resources a URL token names (several when they share a target).
     #[must_use]
     pub fn resolve_token(&self, token: &str) -> Vec<ResourceId> {
@@ -193,7 +209,9 @@ impl ResourceStore {
     /// [`PublishPolicy::Eager`], resources marked with
     /// [`mark_published`](Self::mark_published), and resources named by one of `tokens`
     /// (except [`PublishPolicy::Never`]). Targets are written once, in path order; processed
-    /// images are produced by the [`ImageQueue`](ssg_images::ImageQueue) (in parallel).
+    /// images are produced by the [`ImageQueue`](ssg_images::ImageQueue) (in parallel), the
+    /// others get the metadata [`image_metadata`](crate::StoreConfig::image_metadata) gives
+    /// them.
     /// Call it outside any render; calling it again publishes only what is new.
     ///
     /// # Errors
@@ -258,7 +276,7 @@ impl ResourceStore {
                 images.insert(target, op);
                 continue;
             }
-            let bytes = self.content(r.id)?;
+            let bytes = self.published_content(r)?;
             sink.write(&target, &bytes)
                 .map_err(|source| ResourceError::Write {
                     path: target.clone(),
@@ -277,7 +295,7 @@ impl ResourceStore {
             if r.policy == PublishPolicy::Never || published.contains(&r.target) {
                 continue;
             }
-            let bytes = self.content(id)?;
+            let bytes = self.published_content(&r)?;
             sink.write(&r.target, &bytes)
                 .map_err(|source| ResourceError::Write {
                     path: r.target.clone(),

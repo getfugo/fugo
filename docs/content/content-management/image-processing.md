@@ -131,7 +131,8 @@ social cards with the page title.
 
 `img | exif`
 : The EXIF data of a JPEG or TIFF: `date`, `lat`, `long` and `tags`, filtered by
-  `[imaging.exif]`; none when the image has none.
+  `[imaging.exif]`; none when the image has none. It reads your file, though the published
+  copy has no metadata (`[imaging] stripMetadata`).
 
 ## QR codes
 
@@ -144,5 +145,7 @@ The [`qr` shortcode](/content-management/shortcodes/#qr) does the same in conten
 
 ## Configuration
 
-`[imaging]` sets the defaults: `quality`, `resampleFilter`, `anchor`, `bgColor`, `hint`, and
-`[imaging.exif]` what EXIF data is read. See [Imaging](/configuration/imaging/).
+`[imaging]` sets the defaults: `quality`, `resampleFilter`, `anchor`, `bgColor`, `hint`,
+`[imaging.exif]` what EXIF data is read, `stripMetadata` (on by default) that published
+originals lose their metadata, and `copyright`, `author` and `titleFromFileName` what every
+published image carries instead. See [Imaging](/configuration/imaging/).

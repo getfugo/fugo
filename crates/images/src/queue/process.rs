@@ -163,7 +163,9 @@ impl ImageQueue {
                 return Err(self.for_target(target, *id, e));
             }
             if let Some(Ok(bytes)) = results.get(id) {
-                sink.write(target, bytes)
+                // The notice goes in here, not into the cache: it is the site's, not the image's.
+                let stamped = self.imaging.metadata.processed(bytes, target.as_str());
+                sink.write(target, stamped.as_deref().unwrap_or(bytes))
                     .map_err(|e| ImageError::io(target.as_str(), e))?;
             }
         }

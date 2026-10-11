@@ -25,6 +25,7 @@ gift's resize and Go's JPEG decoder for that).
 | `Enqueued` | `id`, `file_name` (`<stem>_hu_<16 hex>.<ext>`), `width`, `height`, `format`. |
 | `ImageCache` | `[caches.images]`: `ImageCache::from_config(&FileCache)`; entries are read while younger than `maxAge` (never with `maxAge = 0` / `--ignoreCache`). |
 | `exif::read`, `exif::orientation`, `Exif` | `.Exif`: date (`DateTimeOriginal`, wall clock), position, tags filtered by `[imaging.exif]`. |
+| `strip_metadata`, `rewrite_metadata`, `Notice`, `ImageMetadata` | `[imaging] stripMetadata` (fugo's own, on by default): a JPEG, PNG or WebP file without EXIF, XMP, IPTC, comments, text chunks, vendor data and what follows the image, rewritten without decoding; the colour profile and colour information stay, and the orientation. `rewrite_metadata` writes a `Notice` in their place (`[imaging] copyright`, `author`, `titleFromFileName`): EXIF `Artist` and `Copyright` with the orientation, and an XMP packet (`dc:title`, `dc:creator`, `dc:rights`); a simple WebP file gets a `VP8X` header for them. `ImageMetadata::original` (used by `ssg-resources` and `ssg-publish`) and `::processed` (the queue's writes to the sink; the cache keeps the encoder's bytes) apply the settings. |
 | `resize_size`, `fit_size`, `cover_size`, `crop_rect`, `rotated_size` | The size maths, public for callers that need a size without queueing. |
 | `jpeg::encode`, `jpeg::Pixels`, `jpeg::YCbCr` | Go's `jpeg.Encode`: RGB(A), grey or planar YCbCr pixels at a quality (1–100, clamped) → baseline JPEG, 4:2:0 or one grey component. |
 
@@ -170,6 +171,11 @@ tests compare against the Go implementation's golden QR images and `TestQR`'s co
 * `queue`: names, identity, chains, publishing only wanted results, the cache, WebP, all formats.
 * `exif`: date and position against `oracle/images/exif` (every real image matches; 2335
   cases, all sources available).
+* `metadata`: the segments and chunks kept of JPEG (baseline and progressive), PNG and WebP
+  files, the orientation alone kept of their EXIF; every JPEG, PNG and WebP file of `testdata/`
+  decodes to the same pixels after stripping, and stripping twice changes nothing.
+  `metadata::notice`: the notice's EXIF and XMP in each format (simple lossy and lossless WebP
+  files made extended), and every decodable image of `testdata/` with it.
 
 The T01 manifest format (`testdata/golden/images/manifest.json`):
 

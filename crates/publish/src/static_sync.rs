@@ -6,7 +6,8 @@
 //! the source (unless `noChmod` / `noTimes`), and with `cleanDestinationDir` every file of the
 //! publish directory that is not a static file is removed first (directories whose name starts
 //! with `.`, such as `.git`, are kept). [`sync_static`] copies the same files into any
-//! [`Sink`] (memory builds).
+//! [`Sink`] (memory builds). Both copy images with the metadata `[imaging]` gives them (by
+//! default, none of their own).
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
@@ -17,6 +18,7 @@ use rayon::prelude::*;
 use ssg_base::paths::{self, OutputPath};
 use ssg_base::{IdVec, Idx, LangIdx, Sink, Value};
 use ssg_config::Config;
+use ssg_images::{ImageFormat, ImageMetadata};
 use ssg_vfs::{Component, FileRef, NFC_NAMES, Vfs, entry_name};
 
 use crate::PublishError;
@@ -33,6 +35,8 @@ pub struct StaticSyncOptions {
     /// Multihost sites: each language's static files go below its own directory, indexed by
     /// language (`None`: one tree at the root).
     pub language_dirs: Option<IdVec<LangIdx, String>>,
+    /// The metadata the copy gives images (`[imaging] stripMetadata`, `copyright`, …).
+    pub image_metadata: ImageMetadata,
 }
 
 impl Default for StaticSyncOptions {
@@ -42,13 +46,14 @@ impl Default for StaticSyncOptions {
             permissions: true,
             clean_destination: false,
             language_dirs: None,
+            image_metadata: ImageMetadata::default(),
         }
     }
 }
 
 impl StaticSyncOptions {
-    /// The options of a configuration (`noTimes`, `noChmod`, `cleanDestinationDir`, and the
-    /// language directories of a multihost site).
+    /// The options of a configuration (`noTimes`, `noChmod`, `cleanDestinationDir`, the
+    /// language directories of a multihost site, and the metadata of images of `[imaging]`).
     #[must_use]
     pub fn from_config(cfg: &Config) -> Self {
         let flag = |key: &str| cfg.raw.get(key).and_then(Value::as_bool).unwrap_or(false);
@@ -64,6 +69,26 @@ impl StaticSyncOptions {
             permissions: !flag("nochmod"),
             clean_destination: flag("cleandestinationdir"),
             language_dirs,
+            image_metadata: ImageMetadata::from_config(&cfg.imaging),
+        }
+    }
+
+    /// The bytes of the static file `src` as they are published: an image's with the metadata
+    /// [`image_metadata`](Self::image_metadata) gives it.
+    ///
+    /// # Errors
+    /// An unreadable file.
+    pub fn read(&self, src: &Path) -> io::Result<Vec<u8>> {
+        let bytes = fs::read(src)?;
+        let image = src
+            .extension()
+            .and_then(std::ffi::OsStr::to_str)
+            .and_then(ImageFormat::from_extension)
+            .is_some();
+        let name = src.file_name().and_then(std::ffi::OsStr::to_str);
+        match name.filter(|_| image) {
+            Some(name) => Ok(self.image_metadata.original(&bytes, name).unwrap_or(bytes)),
+            None => Ok(bytes),
         }
     }
 
@@ -93,7 +118,7 @@ pub fn sync_static(
 ) -> Result<usize, PublishError> {
     let files = vfs.walk(Component::Static)?;
     files.par_iter().try_for_each(|f| {
-        let bytes = fs::read(&f.abs).map_err(|e| PublishError::io(&f.abs, e))?;
+        let bytes = o.read(&f.abs).map_err(|e| PublishError::io(&f.abs, e))?;
         let path = OutputPath::new(&o.target(f));
         sink.write(&path, &bytes)
             .map_err(|source| PublishError::Write { path, source })
@@ -189,7 +214,7 @@ fn make_dir(dir: &Path) -> Result<(), PublishError> {
 }
 
 fn sync_file(src: &Path, dest: &Path, o: &StaticSyncOptions) -> Result<(), PublishError> {
-    let bytes = fs::read(src).map_err(|e| PublishError::io(src, e))?;
+    let bytes = o.read(src).map_err(|e| PublishError::io(src, e))?;
     let current = match fs::symlink_metadata(dest) {
         Ok(m) if m.is_dir() => {
             fs::remove_dir_all(dest).map_err(|e| PublishError::io(dest, e))?;

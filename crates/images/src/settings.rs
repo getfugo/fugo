@@ -6,12 +6,14 @@ use ssg_config::ImagingConfig;
 
 use crate::color::Color;
 use crate::error::ImageError;
+use crate::metadata::ImageMetadata;
 use crate::spec::{Anchor, Hint, Resample};
 
 /// The EXIF fields excluded when neither `includeFields` nor `excludeFields` is set.
 pub const DEFAULT_EXIF_EXCLUDE: &str = "GPS|Exif|Exposure[M|P|B]|Contrast|Resolution|Sharp|JPEG|Metering|Sensing|Saturation|ColorSpace|Flash|WhiteBalance";
 
-/// `[imaging]`: the defaults of processing specs and the EXIF reader settings.
+/// `[imaging]`: the defaults of processing specs, the EXIF reader settings and the metadata of
+/// published images.
 #[derive(Clone, Debug)]
 pub struct Imaging {
     pub resample: Resample,
@@ -23,6 +25,7 @@ pub struct Imaging {
     /// The colour transparent results are flattened onto for formats without transparency.
     pub background: Color,
     pub exif: ExifSettings,
+    pub metadata: ImageMetadata,
 }
 
 impl Default for Imaging {
@@ -34,6 +37,7 @@ impl Default for Imaging {
             quality: 75,
             background: Color::WHITE,
             exif: ExifSettings::default(),
+            metadata: ImageMetadata::default(),
         }
     }
 }
@@ -164,6 +168,7 @@ impl Imaging {
                 .ok_or_else(|| config("imaging.quality")(format!("{} is not 1–100", c.quality)))?,
             background: c.bg_color.parse()?,
             exif: ExifSettings::from_map(&c.exif)?,
+            metadata: ImageMetadata::from_config(c),
         })
     }
 }

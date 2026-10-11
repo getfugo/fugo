@@ -1,6 +1,6 @@
 ---
 title: Imaging
-description: Default quality, resampling filter, anchor, background colour and EXIF handling for image processing.
+description: Default quality, resampling filter, anchor, background colour and EXIF handling for image processing, and the metadata of published images.
 weight: 40
 ---
 
@@ -11,6 +11,10 @@ weight: 40
   anchor = "smart"
   bgColor = "#ffffff"
   hint = "photo"
+  stripMetadata = true
+  copyright = ""
+  author = ""
+  titleFromFileName = false
   [imaging.exif]
     includeFields = ""
     excludeFields = ""
@@ -35,6 +39,15 @@ weight: 40
 `hint`
 : The WebP encoding hint: `photo` (default), `picture`, `drawing`, `icon`, `text`.
 
+`stripMetadata`
+: Publish JPEG, PNG and WebP images without their metadata (`true` by default; fugo's own
+  setting). See [Image metadata](#image-metadata).
+
+`copyright`, `author`, `titleFromFileName`
+: A copyright notice, an author and the file name as the title, written into every JPEG, PNG
+  and WebP image fugo publishes (fugo's own settings; they need `stripMetadata`). See
+  [Copyright notice](#copyright-notice).
+
 `exif.includeFields`, `exif.excludeFields`
 : Regular expressions of the EXIF tags to keep in `img | exif`. By default fugo leaves out
   large and technical tags.
@@ -44,3 +57,41 @@ weight: 40
 
 Processed images are cached in `resources/_gen/images`; keep that directory between builds (or
 commit it) to avoid processing images again. See [Caching](/configuration/caching/).
+
+## Image metadata
+
+A photo carries metadata: the camera, when it was taken and, from a phone, where (its GPS
+position). Processed images (`resize`, `fill`, filters, …) never do. The images fugo publishes
+as they are do: page resources, assets whose URL a page prints, and the files of `static/`.
+
+By default, fugo removes from those JPEG, PNG and WebP files EXIF (camera, dates, GPS
+position, thumbnail), XMP, IPTC, comments, PNG text chunks and other vendor data,
+and anything appended after the image (such as the video of a motion photo). What changes how
+the image looks stays: the colour profile and other colour information, and the EXIF
+orientation, which a photo taken sideways needs to show upright.
+
+Only the published copies change: your files keep their metadata, and `img | exif` still reads
+it. Other formats (GIF, TIFF, BMP, AVIF, HEIC, …) are published as they are. Copies published
+by an earlier build, and your Git history if the images are committed, keep their metadata.
+
+To publish your images byte for byte as they are, as the Go implementation does, set
+`stripMetadata = false`.
+
+## Copyright notice
+
+fugo can write a copyright notice, an author and a title into every JPEG, PNG and WebP image
+it publishes, the processed ones included:
+
+{{< code-toggle file=config >}}
+[imaging]
+  copyright = "© 2026 by Jane Doe, all rights reserved"
+  author = "Jane Doe"
+  titleFromFileName = true
+{{< /code-toggle >}}
+
+They go into the image's EXIF (`Copyright` and `Artist`, which photo applications show) and
+XMP (`dc:rights`, `dc:creator` and `dc:title`, which Google Images shows as the copyright
+notice and the creator), in place of the image's own metadata: they need `stripMetadata`.
+With `titleFromFileName`, `harbour_view.jpg` gets the title `harbour_view`, and an image
+processed from it the same. The text is written as it is: update the year yourself. Each
+setting holds at most 1000 bytes, without line breaks.

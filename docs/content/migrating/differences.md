@@ -60,6 +60,9 @@ Some flags
 - Settings that the Go implementation ignores silently (a `[caches]` entry that is not a table, an output format
   without a media type) are errors.
 - `build.version` is fugo's version.
+- Images published as they are (page resources, assets, static files) lose their metadata:
+  EXIF with the GPS position, XMP, IPTC and comments. `[imaging] stripMetadata = false` keeps
+  it; see [Image metadata](/configuration/imaging/#image-metadata).
 - Settings and the environment are not read from environment variables: `--environment` chooses
   the environment. Secrets that templates read go in the
   [`.env` files](/configuration/introduction/#the-env-file).
@@ -76,6 +79,8 @@ When you compare a fugo build with the Go implementation's, these are normal:
 - **Sass output**: grass follows Dart Sass, not LibSass; no source maps.
 - **JavaScript bundles**: rolldown instead of esbuild.
 - **Processed images**: equal to the eye, not to the byte; file names have fugo's own hashes.
+- **Original images**: JPEG, PNG and WebP files without their metadata, unless
+  `[imaging] stripMetadata = false`.
 - **Highlighted code**: the same colours and classes, with a few differences in span structure.
 - **Typography**: characters where the Go implementation writes entities (`’` for `&rsquo;`).
 - **Sort order** of titles in some languages: fugo uses newer Unicode collation data.

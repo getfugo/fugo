@@ -25,10 +25,12 @@ outputs are frozen as golden data, §9), and outputs are compared structurally.
     757/757, L3 750/750, A7 1.0.
   - A-D3, the legacy docs site (`testdata/legacy-docs`) **without patches against the published
     site** (getfugo.github.io at a1928152, the Go build of 2025-10-13; T74): L1 2372/2372, L2
-    776/776, L3 769/769, L4 873/873, A7 1.0 — every page's visible text equals the published
+    776/776, L3 769/769, L4 860/873, A7 1.0 — every page's visible text equals the published
     one. `tools/legacy-docs/build.sh` builds the site.
   - The Go build's stats file (next to its configuration) is not compared: fugo writes none
     (T75).
+  - The docs sites' 13 static PNG icons differ at L4 (same pixels): `[imaging] stripMetadata`,
+    on by default, publishes them without their text chunks (`image-metadata`, §7).
   - A-DET: identical output with 1 and 8 threads and across runs.
 - **A-P, performance** (T70; release build, 4 CPUs, medians of 5–6 runs): the docs site builds
   cold in 3.29 s against Go's 3.99 s (0.82×; goal ≤ 1.5×), warm in 3.26 s against 3.51 s
@@ -89,7 +91,7 @@ Dependencies point down the table (lower crates never depend on higher ones). Li
 | `markup` | `ssg-markup` | Markdown through comrak behind an engine-neutral API, plus the Go implementation's passes (goldmark's pipe tables, heading IDs, attributes, deflists, alerts, passthrough, emoji, linkify, typographer, TOC, context markers) | 4.5k + 3.7k |
 | `highlight` | `ssg-highlight` | code highlighting: a port of Chroma v2.19.0 (its XML lexers converted to Rust data, its Go lexers ported, its regex-lexer engine on a port of the regexp2 dialect, its HTML formatter), Chroma class names or inline styles from Chroma's style files | 2.6k + 0.8k |
 | `minify` | `ssg-minify` | output minification (minify-html, lightningcss, oxc) | 1.5k + 1.3k |
-| `images` | `ssg-images` | image processing (resize, fit, fill, crop with Go's smart crop, filters, text, QR, dither, EXIF), the image cache | 6.3k + 3.3k |
+| `images` | `ssg-images` | image processing (resize, fit, fill, crop with Go's smart crop, filters, text, QR, dither, EXIF), the image cache, the metadata of published images (their own stripped, a copyright notice written) | 6.3k + 3.3k |
 | `jsbuild` | `ssg-jsbuild` | `js_build` in process: rolldown with fugo's plugin (assets-first resolution, `@params`, `inject`, CSS imports), TC39 decorators and the `es5` target | 9.6k + 5.8k |
 | `resources` | `ssg-resources` | the `ResourceStore`: assets, page resources, pipes, all in process (Sass via grass, `js_build`, minify, fingerprint, `execute_as_template`, `post_process`), `get_remote` with its cache | 5.0k + 3.2k |
 | `publish` | `ssg-publish` | sinks, canonify/absolute URLs, URL-token extraction, held outputs, the HTML elements `purge_css` keeps, static sync | 1.9k + 1.3k |
@@ -313,7 +315,9 @@ published resources are published on reference; no `#ZgotmplZ`; YAML 1.2 (`yes` 
 string); deterministic winners for URL collisions; newer CLDR collation; no v1 shortcodes
 (the legacy in-template version declaration); segment-aware prefix lookup; target-path assets: earlier language wins; site
 functions inside components need `page=` or `@__nh`; `build.version` is fugo's version; the
-template object is `build` and the environment variables are `FUGO_*` (below).
+template object is `build` and the environment variables are `FUGO_*` (below); original JPEG,
+PNG and WebP images are published without their metadata unless `[imaging] stripMetadata =
+false` (`ssg_images::strip_metadata`).
 
 Allowed output differences (REWRITE_PLAN.md §7.3): minifier bytes, highlight span structure,
 typographic characters vs entities, CSS/JS bundle bytes, term-collision winners, the order of
@@ -324,6 +328,7 @@ Per site (the ratchet's changes files, `tools/dev/changes/`):
 | Site | Entry | Class |
 |---|---|---|
 | docs-i01, docs-reduced, docs-live | the Go build's stats file (`project:*`): not compared, fugo writes none (until T75: `<?xml` and `<=` are not tags, engine-difference) | accepted-deviation (T75) |
+| docs-i01, docs-reduced, docs-live | L4: the 13 static PNG icons, published without their text chunks (`[imaging] stripMetadata`, on by default; same pixels) | accepted-deviation (image-metadata) |
 
 The earlier docs entries (a table on lazy list-item lines, the GoAT pages drawn by svgbob, the
 math pages as MathML) are `bug-fixed` in T74: goldmark's table transformer, bep/goat and KaTeX
