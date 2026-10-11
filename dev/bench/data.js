@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791652955562,
+  "lastUpdate": 1791692254187,
   "repoUrl": "https://github.com/getfugo/fugo",
   "entries": {
     "Benchmark": [
@@ -97788,6 +97788,66 @@ window.BENCHMARK_DATA = {
           {
             "name": "10,000 generated pages: peak memory",
             "value": 604.5,
+            "unit": "MiB",
+            "extra": "10061 pages; median of 5 builds after a warm-up build"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "blackb1rd.mov@gmail.com",
+            "name": "Prachya Saechua",
+            "username": "blackb1rd"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "b5df639af52ca2f4afec3daf97a5d9a90f28f6d7",
+          "message": "config: Read an environment's settings from [environments.<name>] (#199)\n\nThe settings of one environment had to live in a folder of their own,\nconfig/production/ or config/development/, beside config/_default/: a\nsetting or two per environment meant a folder and a file for each.\n\nThey are now a table of the configuration:\n\n    [environments.production.minify]\n    minifyOutput = true\n\n    [environments.development]\n    buildDrafts = true\n\n- The table of the build's environment (--environment) is merged over\n  the rest of the configuration as a later file would be: tables merge\n  key by key, _merge = \"none\" replaces, menu is menus and legacy keys\n  are migrated. It is above config/_default/ and below the flags. The\n  other environments' tables are dropped; fugo config does not print\n  them. A theme's table applies to the theme's own configuration.\n- A folder of the configuration directory other than _default that\n  holds a configuration file (config/production/, in a theme too) is an\n  error that names the table its settings go in, whatever the build's\n  environment: its settings would otherwise be lost without a word.\n- An error in a value of the table points at its line.\n- The oracle's configdir and theme cases recreate Go's environment\n  folders as tables (ssg_testkit::environments, for ssg-config's load\n  tests and ssg-vfs's theme mounts) and pass as before: configdir\n  1015/1015, themes 1135/1136.\n- The configuration and CMS docs ([environments.production.cms]), the\n  migration guide, the differences, the --environment help and HANDOFF\n  say where an environment's settings go now.\n\nSigned-off-by: blackb1rd <blackb1rd.mov@gmail.com>\nCo-Authored-By: Claude Opus 5.5 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-10-11T11:03:43+07:00",
+          "tree_id": "53d6588a6714a9908870e4daba79acea18fd27af",
+          "url": "https://github.com/getfugo/fugo/commit/b5df639af52ca2f4afec3daf97a5d9a90f28f6d7"
+        },
+        "date": 1791692250674,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "docs site: build time",
+            "value": 145.2,
+            "unit": "ms",
+            "extra": "334 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "docs site: peak memory",
+            "value": 169.7,
+            "unit": "MiB",
+            "extra": "334 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "1,000 generated pages: build time",
+            "value": 166.9,
+            "unit": "ms",
+            "extra": "1061 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "1,000 generated pages: peak memory",
+            "value": 151,
+            "unit": "MiB",
+            "extra": "1061 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "10,000 generated pages: build time",
+            "value": 1764.4,
+            "unit": "ms",
+            "extra": "10061 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "10,000 generated pages: peak memory",
+            "value": 613.6,
             "unit": "MiB",
             "extra": "10061 pages; median of 5 builds after a warm-up build"
           }
