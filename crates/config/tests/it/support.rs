@@ -10,7 +10,6 @@ use ssg_config::site::UglyUrls;
 use ssg_config::{CliOverrides, Config, LoadOptions, SiteConfig};
 
 mod dump;
-mod environments;
 
 pub use dump::*;
 
@@ -72,10 +71,7 @@ pub fn materialize(case: &J, site_dir: &str) -> Result<Site, NotApplicable> {
         .as_str()
         .filter(|s| !s.is_empty())
         .unwrap_or("config");
-    environments::move_folders(&dir.join(config_dir));
-    for theme in std::fs::read_dir(dir.join("themes")).into_iter().flatten() {
-        environments::move_folders(&theme.expect("theme").path().join("config"));
-    }
+    ssg_testkit::environments::recreate_as_tables(&dir, config_dir);
     // The oracle recorded the Go program's environment variables ([`GO_ENV_PREFIX`]); the same
     // settings are read with this program's prefix (`ssg_base::ENV_PREFIX`), and none under the
     // Go names.

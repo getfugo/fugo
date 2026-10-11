@@ -1,9 +1,18 @@
-//! The Go build's environment folders (`config/production/`), recreated as this port reads the
-//! same settings: `[environments.<name>]` tables of the configuration.
+//! The Go build's environment folders (`config/production/`) in the oracles' sites, recreated
+//! as this port reads the same settings: `[environments.<name>]` tables of the configuration.
 
 use std::path::{Path, PathBuf};
 
 use ssg_base::{Map, Value};
+
+/// Recreates the environment folders of `site`'s configuration directory (`config_dir`,
+/// relative to `site`) and of its themes' (`themes/*/config`) as tables ([`move_folders`]).
+pub fn recreate_as_tables(site: &Path, config_dir: &str) {
+    move_folders(&site.join(config_dir));
+    for theme in std::fs::read_dir(site.join("themes")).into_iter().flatten() {
+        move_folders(&theme.expect("theme").path().join("config"));
+    }
+}
 
 /// Replaces each folder of `config_dir` other than `_default` with JSON files in
 /// `config_dir/_default` (`config.environment-<n>.json`, root files) that hold its files'
