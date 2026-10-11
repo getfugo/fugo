@@ -120,7 +120,7 @@ tera = { version = "=2.4.0", features = ["no_fmt", "fast_hash", "preserve_order"
 tera-contrib = { version = "0.3", default-features = false, features = ["regex", "urlencode", "base64", "filesize_format"] }
 
 # ── markdown & text ──
-comrak = { version = "0.55", default-features = false, features = ["attributes", "shortcodes"] }
+comrak = { version = "0.56", default-features = false, features = ["attributes", "shortcodes"] }
 regex = "1.13"
 aho-corasick = "1.1"
 html5gum = "0.8.4"
