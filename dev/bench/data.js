@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791692254187,
+  "lastUpdate": 1791692256957,
   "repoUrl": "https://github.com/getfugo/fugo",
   "entries": {
     "Benchmark": [
@@ -99703,6 +99703,105 @@ window.BENCHMARK_DATA = {
           {
             "name": "BenchmarkSummaryFromHTMLWithDivider",
             "value": 59.62,
+            "unit": "ns/op"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "blackb1rd.mov@gmail.com",
+            "name": "Prachya Saechua",
+            "username": "blackb1rd"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "b5df639af52ca2f4afec3daf97a5d9a90f28f6d7",
+          "message": "config: Read an environment's settings from [environments.<name>] (#199)\n\nThe settings of one environment had to live in a folder of their own,\nconfig/production/ or config/development/, beside config/_default/: a\nsetting or two per environment meant a folder and a file for each.\n\nThey are now a table of the configuration:\n\n    [environments.production.minify]\n    minifyOutput = true\n\n    [environments.development]\n    buildDrafts = true\n\n- The table of the build's environment (--environment) is merged over\n  the rest of the configuration as a later file would be: tables merge\n  key by key, _merge = \"none\" replaces, menu is menus and legacy keys\n  are migrated. It is above config/_default/ and below the flags. The\n  other environments' tables are dropped; fugo config does not print\n  them. A theme's table applies to the theme's own configuration.\n- A folder of the configuration directory other than _default that\n  holds a configuration file (config/production/, in a theme too) is an\n  error that names the table its settings go in, whatever the build's\n  environment: its settings would otherwise be lost without a word.\n- An error in a value of the table points at its line.\n- The oracle's configdir and theme cases recreate Go's environment\n  folders as tables (ssg_testkit::environments, for ssg-config's load\n  tests and ssg-vfs's theme mounts) and pass as before: configdir\n  1015/1015, themes 1135/1136.\n- The configuration and CMS docs ([environments.production.cms]), the\n  migration guide, the differences, the --environment help and HANDOFF\n  say where an environment's settings go now.\n\nSigned-off-by: blackb1rd <blackb1rd.mov@gmail.com>\nCo-Authored-By: Claude Opus 5.5 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-10-11T11:03:43+07:00",
+          "tree_id": "53d6588a6714a9908870e4daba79acea18fd27af",
+          "url": "https://github.com/getfugo/fugo/commit/b5df639af52ca2f4afec3daf97a5d9a90f28f6d7"
+        },
+        "date": 1791692256028,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "BenchmarkSanitizeAnchorName",
+            "value": 419.79,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSanitizeAnchorNameAsciiOnly",
+            "value": 1001.7,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSanitizeAnchorNameBlackfriday",
+            "value": 505.28,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSanitizeAnchorNameString",
+            "value": 419.5,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSanitize/All_allowed",
+            "value": 185.27,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSanitize/Spaces",
+            "value": 200.83,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkRelURL",
+            "value": 272.19,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkAbsURL/relurl",
+            "value": 525.92,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkAbsURL/absurl",
+            "value": 18.29,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkTotalWords",
+            "value": 3603.18,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkStripHTML",
+            "value": 877.9,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkParse",
+            "value": 7747.96,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkDecodeYAMLToMap",
+            "value": 11648.36,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSummaryFromHTML",
+            "value": 60.83,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSummaryFromHTMLWithDivider",
+            "value": 59.17,
             "unit": "ns/op"
           }
         ]
