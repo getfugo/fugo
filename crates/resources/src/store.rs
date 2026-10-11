@@ -15,7 +15,9 @@ use ssg_base::paths::{self, OutputPath, Permalink, UrlPath};
 use ssg_base::url::BaseUrl;
 use ssg_base::{IdVec, Idx, ImageOpId, LangIdx, Map, PageId, Params, ResourceId, Value};
 use ssg_config::{Config, MediaType, MediaTypes};
-use ssg_images::{Enqueued, ImageError, ImageFormat, ImageInput, ImageQueue, QrLevel};
+use ssg_images::{
+    Enqueued, ImageError, ImageFormat, ImageInput, ImageMetadata, ImageQueue, QrLevel,
+};
 use ssg_vfs::{Component, Vfs, VfsError};
 use xxhash_rust::xxh3::xxh3_64;
 
@@ -165,6 +167,8 @@ pub struct StoreConfig {
     pub vfs: Option<Arc<Vfs>>,
     /// Processed images; `None` gives a store that cannot publish or read them.
     pub images: Option<Arc<ImageQueue>>,
+    /// The metadata publishing gives the images that are not processed (`[imaging]`).
+    pub image_metadata: ImageMetadata,
     pub remote: RemoteConfig,
     /// What the pipes need: the project and publish directories, external tools, the
     /// `js_build` bundler, the minifier.
@@ -197,6 +201,7 @@ impl StoreConfig {
             media_types: Arc::clone(&cfg.media_types),
             vfs,
             images,
+            image_metadata: ImageMetadata::from_config(&cfg.imaging),
             remote: RemoteConfig::from_config(cfg),
             transforms: Arc::new(TransformEnv::from_config(cfg)),
         }

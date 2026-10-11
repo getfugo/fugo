@@ -307,3 +307,62 @@ fn static_into_memory() {
         Some("User-agent: *\n")
     );
 }
+
+/// `[imaging] stripMetadata`, on by default: both copies write static images without their
+/// metadata, and a second sync leaves the stripped file alone; other files are copied as they
+/// are, and with `stripMetadata = false` images too.
+#[test]
+fn static_images_without_their_metadata() {
+    let photo = fs::read(ssg_testkit::fixture::repo_file(
+        "resources/testdata/exif/orientation6.jpg",
+    ))
+    .unwrap();
+    let stripped = ssg_images::strip_metadata(&photo).unwrap();
+    let tmp = tempfile::tempdir().unwrap();
+    for (setting, want) in [
+        ("", &stripped),
+        ("[imaging]\nstripMetadata = false\n", &photo),
+    ] {
+        let site = tmp.path().join("site");
+        fs::create_dir_all(site.join("static/img")).unwrap();
+        fs::write(
+            site.join("config.toml"),
+            format!("baseURL = \"https://example.org/\"\n{setting}"),
+        )
+        .unwrap();
+        fs::write(site.join("static/img/photo.JPG"), &photo).unwrap();
+        // Not an image by its name: copied as it is.
+        fs::write(site.join("static/img/photo.bin"), &photo).unwrap();
+        let cfg = load(&LoadOptions {
+            source: site.clone(),
+            env: vec![(
+                "HOME".into(),
+                tmp.path().join("home").to_str().unwrap().into(),
+            )],
+            ..LoadOptions::default()
+        })
+        .unwrap();
+        let vfs = Vfs::new(&cfg).unwrap();
+        let options = StaticSyncOptions::from_config(&cfg);
+
+        let sink = ssg_publish::MemorySink::new();
+        ssg_publish::sync_static(&vfs, &sink, &options).unwrap();
+        assert_eq!(
+            sink.get("/img/photo.JPG").as_deref(),
+            Some(&want[..]),
+            "{setting}"
+        );
+        assert_eq!(sink.get("/img/photo.bin").as_deref(), Some(&photo[..]));
+
+        let public = tmp.path().join("public");
+        for _ in 0..2 {
+            sync_static_dir(&vfs, &public, &options).unwrap();
+            assert_eq!(
+                &fs::read(public.join("img/photo.JPG")).unwrap(),
+                want,
+                "{setting}"
+            );
+            assert_eq!(fs::read(public.join("img/photo.bin")).unwrap(), photo);
+        }
+    }
+}

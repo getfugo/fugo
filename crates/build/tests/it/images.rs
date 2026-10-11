@@ -79,3 +79,139 @@ fn referenced_images_are_processed_and_published() {
     let cached = files_below(&tmp.path().join("site/resources/_gen/images"));
     assert_eq!(cached.len(), 1, "{cached:?}");
 }
+
+/// `[imaging] stripMetadata`, on by default: the bundle's photo and the static one are
+/// published without their EXIF (GPS position included), while `exif` still reads the source.
+#[test]
+fn originals_without_their_metadata() {
+    let tmp = tempfile::tempdir().expect("tempdir");
+    let site = tmp.path().join("site");
+    write_files(
+        &site,
+        &[
+            (
+                "config.toml".to_owned(),
+                "baseURL = \"https://example.org/\"\ntitle = \"Images\"\n".to_owned(),
+            ),
+            (
+                "layouts/single.html".to_owned(),
+                "{% set pic = page.resources | get_resource(name=\"pic.jpg\") -%}\
+                 {% set x = pic | exif %}{{ x.lat > 0 }}"
+                    .to_owned(),
+            ),
+            ("layouts/list.html".to_owned(), "list".to_owned()),
+            (
+                "content/p/index.md".to_owned(),
+                "---\ntitle: P\n---\n".to_owned(),
+            ),
+        ],
+    );
+    let photo = testdata("upstream/resources/testdata/sunset.jpg");
+    fs::copy(&photo, site.join("content/p/pic.jpg")).expect("copy the image");
+    fs::create_dir_all(site.join("static")).expect("static");
+    fs::copy(&photo, site.join("static/pic.jpg")).expect("copy the image");
+    let report = build(BuildRequest {
+        source: site,
+        sink: SinkKind::Memory,
+        cli: CliOverrides {
+            cache_dir: Some(tmp.path().join("cache")),
+            ..CliOverrides::default()
+        },
+        ..BuildRequest::default()
+    })
+    .unwrap_or_else(|e| panic!("images build: {e}"));
+    let mem = report.memory.as_ref().expect("memory");
+    assert_eq!(mem.text("p/index.html").as_deref(), Some("true"));
+    let all = ssg_images::ExifSettings {
+        include: None,
+        exclude: None,
+        ..ssg_images::ExifSettings::default()
+    };
+    let source = fs::read(&photo).expect("read");
+    assert!(ssg_images::exif::read(&source, &all).is_some_and(|e| e.lat_long.is_some()));
+    for path in ["p/pic.jpg", "pic.jpg"] {
+        let bytes = mem.get(path).unwrap_or_else(|| panic!("{path}"));
+        assert!(ssg_images::exif::read(&bytes, &all).is_none(), "{path}");
+        assert!(bytes.len() < source.len(), "{path}");
+    }
+}
+
+/// `[imaging] copyright`, `author` and `titleFromFileName`: the bundle's photo, the static one
+/// and the processed one carry them (the processed one its source's title).
+#[test]
+fn published_images_carry_the_notice() {
+    let tmp = tempfile::tempdir().expect("tempdir");
+    let site = tmp.path().join("site");
+    write_files(
+        &site,
+        &[
+            (
+                "config.toml".to_owned(),
+                "baseURL = \"https://example.org/\"\ntitle = \"Images\"\n[imaging]\n\
+                 copyright = \"© 2026 by A. Author\"\nauthor = \"A. Author\"\n\
+                 titleFromFileName = true\n"
+                    .to_owned(),
+            ),
+            ("layouts/single.html".to_owned(), SINGLE.to_owned()),
+            ("layouts/list.html".to_owned(), "list".to_owned()),
+            (
+                "content/p/index.md".to_owned(),
+                "---\ntitle: P\n---\n".to_owned(),
+            ),
+        ],
+    );
+    let photo = testdata("upstream/resources/testdata/sunset.jpg");
+    fs::copy(&photo, site.join("content/p/pic.jpg")).expect("copy the image");
+    fs::create_dir_all(site.join("static")).expect("static");
+    fs::copy(&photo, site.join("static/view.jpg")).expect("copy the image");
+    let report = build(BuildRequest {
+        source: site,
+        sink: SinkKind::Memory,
+        cli: CliOverrides {
+            cache_dir: Some(tmp.path().join("cache")),
+            ..CliOverrides::default()
+        },
+        ..BuildRequest::default()
+    })
+    .unwrap_or_else(|e| panic!("images build: {e}"));
+    let mem = report.memory.as_ref().expect("memory");
+    let processed = mem
+        .paths()
+        .iter()
+        .map(|p| p.relative().to_owned())
+        .find(|p| p.contains("_hu_"))
+        .expect("a processed image");
+    let all = ssg_images::ExifSettings {
+        include: None,
+        exclude: None,
+        ..ssg_images::ExifSettings::default()
+    };
+    for (path, title) in [
+        ("p/pic.jpg", "pic"),
+        ("view.jpg", "view"),
+        (&processed, "pic"),
+    ] {
+        let bytes = mem.get(path).unwrap_or_else(|| panic!("{path}"));
+        let e = ssg_images::exif::read(&bytes, &all).unwrap_or_else(|| panic!("{path}: no EXIF"));
+        let tag = |t: &str| {
+            e.tags
+                .get(t)
+                .and_then(ssg_base::Value::as_str)
+                .map(str::to_owned)
+        };
+        assert_eq!(
+            tag("Copyright").as_deref(),
+            Some("© 2026 by A. Author"),
+            "{path}"
+        );
+        assert_eq!(tag("Artist").as_deref(), Some("A. Author"), "{path}");
+        assert_eq!(e.lat_long, None, "{path}");
+        let xmp_title = format!("<dc:title><rdf:Alt><rdf:li xml:lang=\"x-default\">{title}<");
+        assert!(
+            bytes
+                .windows(xmp_title.len())
+                .any(|w| w == xmp_title.as_bytes()),
+            "{path}: title {title}"
+        );
+    }
+}

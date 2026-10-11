@@ -87,7 +87,11 @@ the result's `.content` gets the result here). Otherwise the lowest id wins. Can
 dropped, percent-escapes decoded (either case), scheme dropped and host lower-cased for
 absolute and protocol-relative URLs. Each resource is indexed under its relative permalink and
 its permalink in the same form. Processed images go to `ImageQueue::process` (rayon) in one
-batch.
+batch. The other images (bundle files, assets, remote images, their copies and fingerprints)
+are written with the metadata `StoreConfig::image_metadata` gives them (`[imaging]
+stripMetadata`, on by default: none of their own; `copyright`, `author`, `titleFromFileName`;
+`ImageMetadata::original`); their `.content`, and so `exif`, fingerprints
+and `Data.Integrity`, are the source's.
 
 ## GetRemote and the getresource cache
 
@@ -144,7 +148,7 @@ Listed with their reasons in `expected_diffs.toml` (the tests read it):
 | `resources::{synth,docs}` | `oracle/resources/resources` (assets, bundles, metadata, publishing) | 43 + 89 records, 34 + 89 published files |
 | `fingerprint` | `oracle/resources/transform` (fingerprint chains, SRI, copy) | 144 equal to Go, 28 sha1 errors, 52 copy conflicts |
 | `remote` | `oracle/resource-transformers/getremote` (key vectors, 48 calls from the Go build's cache, 51 YouTube entries) | 48 + 48 + 51 |
-| `identity`, `publish` | — | named targets, concat, metadata, image seam, multihost, token forms |
+| `identity`, `publish` | — | named targets, concat, metadata, image seam, multihost, token forms, images without their metadata |
 | `identity::qr_codes`, `gohash` unit test | Go's `TestQR` (8 option maps: file names; bytes via `ssg-images`) | names, bytes, sizes, identity, publishing, multihost |
 | `pipes::tocss` | `oracle/resource-transformers/tocss` (LibSass on t16site) + the reconstruction's SCSS | 31: 16 equal (normalised), 15 accepted; reconstruction compiled, slash division checked; explicit-extension `@import`/`@use` found in `includePaths` (relative imports of the found file, import-only files, the indented syntax) |
 | `pipes::jsbuild` | `oracle/resource-transformers/jsbuild` (t16site, docs) | 62 + 6: media types, data, links (fingerprints normalised), `Data.Integrity`'s algorithm, errors at Go's positions, published files; what the scripts do is compared in `ssg-jsbuild` |

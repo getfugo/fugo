@@ -43,6 +43,7 @@ impl<'a> Loader<'a> {
                 "must be between 1 and 100",
             ));
         }
+        check_notice(&imaging)?;
         let minify =
             MinifyConfig::decode(&section(t, "minify")).map_err(|e| decode_error("minify", &e))?;
         let mounts: Vec<MountConfig> = match tree::get_path(t, "module.mounts") {
@@ -125,4 +126,34 @@ impl<'a> Loader<'a> {
             },
         })
     }
+}
+
+/// The longest copyright notice or author `[imaging]` takes, in bytes: they go into every
+/// published image.
+const NOTICE_MAX: usize = 1000;
+
+/// `[imaging]`'s copyright notice, author and title: text without control characters, and
+/// only with `stripMetadata` (an image's own metadata is replaced to write them).
+fn check_notice(imaging: &ImagingConfig) -> Result<(), ConfigError> {
+    for (key, text) in [
+        ("imaging.copyright", &imaging.copyright),
+        ("imaging.author", &imaging.author),
+    ] {
+        if text.len() > NOTICE_MAX || text.chars().any(char::is_control) {
+            return Err(ConfigError::invalid(
+                key,
+                format!("must be at most {NOTICE_MAX} bytes of text without control characters"),
+            ));
+        }
+    }
+    let notice =
+        !imaging.copyright.is_empty() || !imaging.author.is_empty() || imaging.title_from_file_name;
+    if notice && !imaging.strip_metadata {
+        return Err(ConfigError::invalid(
+            "imaging.stripMetadata",
+            "must be true to write copyright, author or titleFromFileName into images: their \
+             own metadata is replaced",
+        ));
+    }
+    Ok(())
 }

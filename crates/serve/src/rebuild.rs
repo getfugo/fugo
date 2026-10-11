@@ -334,13 +334,14 @@ impl Rebuilder {
             .map(|(t, _)| t.clone())
             .collect();
         let tree = self.shared.served().tree.clone();
+        let options = StaticSyncOptions::from_config(&self.cfg);
         // Only files whose bytes change count (an editor saving the same bytes, a write
         // reported twice).
         let mut changed: Vec<&String> = Vec::new();
         for t in &targets {
             let current = tree.read_now(t);
             let result = match files.get(t) {
-                Some(abs) => std::fs::read(abs).and_then(|bytes| {
+                Some(abs) => options.read(abs).and_then(|bytes| {
                     if current.as_deref() == Some(bytes.as_slice()) {
                         return Ok(());
                     }

@@ -26,6 +26,7 @@ image.workspace = true
 fast_image_resize.workspace = true
 webp.workspace = true
 kamadak-exif.workspace = true
+crc32fast.workspace = true
 imageproc.workspace = true
 jiff.workspace = true
 rayon.workspace = true

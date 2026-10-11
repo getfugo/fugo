@@ -94,6 +94,31 @@ pub fn assert_l1_passes(d: &serde_json::Value, passes: &[&str], files: u64) {
     }
 }
 
+/// Every compared file of `level` is equal but those the baseline of `label` accepts as
+/// deviations of `task` (the clean ratchet of [`compare`] checked that each differs as the
+/// baseline recorded).
+pub fn assert_equal_but(d: &serde_json::Value, label: &str, level: &str, task: &str) {
+    let path = repo_dir().join(format!("testdata/baselines/{label}.json"));
+    let baseline: serde_json::Value =
+        serde_json::from_str(&std::fs::read_to_string(&path).expect("baseline"))
+            .expect("baseline parses");
+    let unaccepted: Vec<&String> = d["files"]
+        .as_object()
+        .expect("files")
+        .iter()
+        .filter(|(_, f)| f[level]["status"].as_str().is_some_and(|s| s != "ok"))
+        .filter(|(key, _)| {
+            let b = &baseline["files"][key.as_str()][level];
+            b["task"] != task || b["class"] != "accepted-deviation"
+        })
+        .map(|(key, _)| key)
+        .collect();
+    assert!(
+        unaccepted.is_empty(),
+        "{level} must be equal but for the accepted deviations of {task}: {unaccepted:?}"
+    );
+}
+
 /// Every compared file or fact of each of `levels` is equal.
 pub fn assert_equal(d: &serde_json::Value, levels: &[&str]) {
     for level in levels {

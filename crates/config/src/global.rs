@@ -185,6 +185,15 @@ pub struct ImagingConfig {
     pub compression: String,
     #[serde(deserialize_with = "crate::de_map")]
     pub exif: Map,
+    /// Publish original images without their metadata (EXIF, XMP, IPTC, comments); fugo's own,
+    /// on by default.
+    pub strip_metadata: bool,
+    /// The copyright notice written into every published image (empty: none); fugo's own.
+    pub copyright: String,
+    /// The author written into every published image (empty: none); fugo's own.
+    pub author: String,
+    /// Write an image's file name, without its extension, as its title; fugo's own.
+    pub title_from_file_name: bool,
 }
 
 impl Default for ImagingConfig {
@@ -197,6 +206,10 @@ impl Default for ImagingConfig {
             bg_color: "#ffffff".to_owned(),
             compression: String::new(),
             exif: Map::new(),
+            strip_metadata: true,
+            copyright: String::new(),
+            author: String::new(),
+            title_from_file_name: false,
         }
     }
 }

@@ -121,3 +121,44 @@ fn toc_end_level_and_permalink_errors() {
     let e = p.load(CliOverrides::default(), &[]).expect_err("pattern");
     assert_eq!(position(&e), ("config.toml".into(), 2, 1));
 }
+
+/// `[imaging]`'s copyright, author and title: read with `stripMetadata` (on by default), refused
+/// without it, and refused with control characters or more than 1000 bytes.
+#[test]
+fn image_notice() {
+    let p = Project::new(&[(
+        "config.toml",
+        "[imaging]\ncopyright = \"© 2026 A\"\nauthor = \"A\"\ntitleFromFileName = true\n",
+    )]);
+    let c = p.ok();
+    assert!(c.imaging.strip_metadata);
+    assert_eq!(
+        (c.imaging.copyright.as_str(), c.imaging.author.as_str()),
+        ("© 2026 A", "A")
+    );
+    assert!(c.imaging.title_from_file_name);
+
+    for (config, key) in [
+        (
+            "[imaging]\nstripMetadata = false\ncopyright = \"© A\"\n",
+            "imaging.stripMetadata",
+        ),
+        (
+            "[imaging]\nstripMetadata = false\ntitleFromFileName = true\n",
+            "imaging.stripMetadata",
+        ),
+        ("[imaging]\nauthor = \"A\\nB\"\n", "imaging.author"),
+        (
+            &format!("[imaging]\ncopyright = \"{}\"\n", "x".repeat(1001)),
+            "imaging.copyright",
+        ),
+    ] {
+        let e = Project::new(&[("config.toml", config)])
+            .load(CliOverrides::default(), &[])
+            .expect_err(config);
+        let ConfigError::Invalid { key: got, .. } = &e else {
+            panic!("{e}")
+        };
+        assert_eq!(got, key, "{config}");
+    }
+}

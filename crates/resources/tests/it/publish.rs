@@ -1,11 +1,13 @@
 //! Publishing: eager bundles, URL tokens in every escaped form (paths with `&` and `'` like the
 //! real-site-like `herrs-salt-&-vinegar` and `Lay's` bundles), absolute and
-//! protocol-relative tokens, the `publish` filter, `Never`, and repeated publishing.
+//! protocol-relative tokens, the `publish` filter, `Never`, and repeated publishing; images
+//! without their metadata with `[imaging] stripMetadata`.
 
 use std::fs;
 
 use ssg_base::{Idx, LangIdx};
-use ssg_resources::{BundleResource, PublishPolicy};
+use ssg_resources::{BundleResource, HashAlgo, PublishPolicy, Transform};
+use ssg_testkit::fixture::repo_file;
 
 use crate::support::{MemSink, store};
 
@@ -111,4 +113,60 @@ fn tokens_in_every_form() {
         again.0.lock().unwrap().keys().collect::<Vec<_>>(),
         ["css/unused.css"]
     );
+}
+
+/// With `[imaging] stripMetadata`, a bundle image and a fingerprinted asset image are published
+/// without their metadata (the orientation stays); other files and, without the setting,
+/// images are published as they are.
+#[test]
+fn images_without_their_metadata() {
+    let photo = fs::read(repo_file("resources/testdata/exif/orientation6.jpg")).unwrap();
+    let tmp = tempfile::tempdir().unwrap();
+    for strip in [true, false] {
+        let site = tmp.path().join(format!("site-{strip}"));
+        fs::create_dir_all(site.join("content/p")).unwrap();
+        fs::create_dir_all(site.join("assets/img")).unwrap();
+        fs::write(
+            site.join("config.toml"),
+            format!("baseURL = \"https://example.org/\"\n[imaging]\nstripMetadata = {strip}\n"),
+        )
+        .unwrap();
+        fs::write(site.join("content/p/photo.jpg"), &photo).unwrap();
+        fs::write(site.join("content/p/notes.txt"), "Exif").unwrap();
+        fs::write(site.join("assets/img/photo.jpg"), &photo).unwrap();
+        let s = store(&site, &tmp.path().join("home"));
+        let l = LangIdx::from_index(0);
+        for name in ["photo.jpg", "notes.txt"] {
+            s.register_bundle(&BundleResource {
+                lang: l,
+                file: site.join("content/p").join(name),
+                name: name.to_owned(),
+                dir: "/p".to_owned(),
+                policy: PublishPolicy::Eager,
+            });
+        }
+        let asset = s.get_asset(l, "img/photo.jpg").unwrap().unwrap();
+        let fingerprinted = s
+            .transform(asset, Transform::Fingerprint(HashAlgo::Sha256))
+            .unwrap();
+        let link = s.resource(fingerprinted).rel_permalink.clone();
+        let sink = MemSink::default();
+        s.publish([link.as_str()], &sink).unwrap();
+        let files = sink.0.lock().unwrap();
+        assert_eq!(files.len(), 3, "{:?}", files.keys());
+        assert_eq!(files["p/notes.txt"], b"Exif");
+        for (path, bytes) in files.iter().filter(|(p, _)| p.ends_with(".jpg")) {
+            if strip {
+                assert_eq!(
+                    ssg_images::exif::orientation(bytes),
+                    Some(6),
+                    "{path}: the orientation stays"
+                );
+                assert!(bytes.len() < photo.len(), "{path}: stripped");
+                assert_eq!(ssg_images::strip_metadata(bytes), None, "{path}");
+            } else {
+                assert_eq!(*bytes, photo, "{path}: as it is");
+            }
+        }
+    }
 }

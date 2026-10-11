@@ -85,6 +85,17 @@ pub fn store(dir: &Path, home: &Path) -> ResourceStore {
     ResourceStore::new(StoreConfig::from_config(&cfg, Some(vfs), None))
 }
 
+/// [`store`] publishing images with their metadata, as the Go implementation does
+/// (`[imaging] stripMetadata = false`): what the oracles recorded.
+pub fn go_store(dir: &Path, home: &Path) -> ResourceStore {
+    let cfg = config(dir, home);
+    let vfs = Arc::new(Vfs::new(&cfg).unwrap());
+    ResourceStore::new(StoreConfig {
+        image_metadata: ssg_images::ImageMetadata::KEEP,
+        ..StoreConfig::from_config(&cfg, Some(vfs), None)
+    })
+}
+
 /// A sink that keeps what is written.
 #[derive(Default)]
 pub struct MemSink(pub Mutex<BTreeMap<String, Vec<u8>>>);

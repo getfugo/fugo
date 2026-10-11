@@ -43,4 +43,6 @@ serde_json.workspace = true
 
 [dev-dependencies]
 ssg-testkit.workspace = true
+# Reading the EXIF of published images.
+ssg-images.workspace = true
 tempfile.workspace = true

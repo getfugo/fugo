@@ -22,6 +22,7 @@ workspace = true
 ssg-workspace-hack.workspace = true
 ssg-base.workspace = true
 ssg-config.workspace = true
+ssg-images.workspace = true
 ssg-minify.workspace = true
 ssg-vfs.workspace = true
 aho-corasick.workspace = true

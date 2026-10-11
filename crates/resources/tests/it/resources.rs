@@ -17,7 +17,7 @@ use ssg_resources::meta::ResourceMeta;
 use ssg_resources::{BundleResource, PublishPolicy, ResourceStore};
 use ssg_testkit::fixture::repo_file;
 
-use crate::support::{MemSink, diff, rec, repo_dir, rule, store, synth_site, want};
+use crate::support::{MemSink, diff, go_store, rec, repo_dir, rule, synth_site, want};
 
 /// The Go program's JS package file as Go mounted it in `assets/_jsconfig` (the recorded Go
 /// data's name); this port mounts `package.config.json` instead.
@@ -48,7 +48,7 @@ fn run(name: &str, dir: &Path) -> usize {
     rule("resources", "key_and_size");
     let fx: J = ssg_testkit::fixture::oracle(&format!("oracle/resources/resources/{name}.json.gz"));
     let home = tempfile::tempdir().unwrap();
-    let store: ResourceStore = store(dir, home.path());
+    let store: ResourceStore = go_store(dir, home.path());
     let mut failures = Vec::new();
     let records = fx["records"].as_array().unwrap();
     let mut links = Vec::new();

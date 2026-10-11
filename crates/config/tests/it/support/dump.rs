@@ -182,6 +182,11 @@ pub fn dump(c: &Config, s: &SiteConfig) -> JMap<String, J> {
     );
     let mut imaging = serde_json::to_value(&c.imaging).expect("json");
     imaging["exif"] = map(&c.imaging.exif);
+    // fugo's own settings: the Go implementation has none.
+    let own = imaging.as_object_mut().expect("a table");
+    for key in ["stripMetadata", "copyright", "author", "titleFromFileName"] {
+        own.remove(key);
+    }
     put("imaging", imaging);
     let mut minify = JMap::new();
     minify.insert("minifyoutput".into(), json!(c.minify.minify_output));

@@ -9,6 +9,10 @@
 //! encodes (JPEG with [`jpeg`], a port of Go's encoder; PNG, GIF, TIFF and BMP with `image`;
 //! WebP with libwebp). See the crate README for the accepted differences from the Go
 //! implementation.
+//!
+//! [`strip_metadata`] removes the metadata of a JPEG, PNG or WebP file without decoding it, and
+//! [`rewrite_metadata`] writes a [`Notice`] (title, author, copyright) in its place
+//! (`[imaging] stripMetadata`, `copyright`, `author`, `titleFromFileName`).
 
 #![forbid(unsafe_code)]
 
@@ -26,6 +30,7 @@ mod format;
 mod gift;
 pub mod jpeg;
 mod jpegdec;
+mod metadata;
 mod pixels;
 mod plan;
 mod qr;
@@ -42,6 +47,7 @@ pub use exif::Exif;
 pub use filter::{ImageFilter, ImageInput, MAX_PADDING, MemoryImage, PaddingSpec};
 pub use font::FontId;
 pub use format::ImageFormat;
+pub use metadata::{ImageMetadata, Notice, rewrite_metadata, strip_metadata};
 pub use plan::{Size, cover_size, crop_rect, fit_size, resize_size, rotated_size};
 pub use qr::{QrLevel, QrModules, qr_modules, qr_png};
 pub use queue::{Enqueued, ImageCache, ImageQueue};

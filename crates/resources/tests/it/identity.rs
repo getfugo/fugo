@@ -57,6 +57,7 @@ fn bare(multihost: bool) -> ResourceStore {
         media_types: Arc::new(MediaTypes::default()),
         vfs: None,
         images: None,
+        image_metadata: ssg_images::ImageMetadata::KEEP,
         remote: RemoteConfig::default(),
         transforms: Arc::default(),
     })
