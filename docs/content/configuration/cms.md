@@ -5,8 +5,9 @@ weight: 95
 ---
 
 `[cms]` adds the browser editor described in [Editing in the browser](/content-management/cms/)
-to a build. Put it in the configuration of the environment that deploys it —
-`config/production/cms.toml` holds the table's keys — so that other builds have no editor. Keys
+to a build. Put it in the table of the environment that deploys it,
+`[environments.production.cms]` (see [environments](/configuration/introduction/#environments)),
+so that other builds have no editor; the examples below write it at the root, as `[cms]`. Keys
 are case-insensitive, like every setting.
 
 ```toml {title="config.toml"}

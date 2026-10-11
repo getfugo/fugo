@@ -14,7 +14,7 @@ fugo renders [Tera](https://keats.github.io/tera/), not Go templates.
 - **Content**: Markdown and HTML files, front matter in TOML, YAML or JSON, page bundles,
   sections, taxonomies, menus, `cascade`, summaries, shortcode calls in content, multilingual
   content.
-- **Configuration**: the same keys, the configuration directory, environments, `_merge`.
+- **Configuration**: the same keys, `config/_default/`, environments, `_merge`.
 - **Layout names**: the current ones — `home.html`, `single.html`, `_partials/`, `_shortcodes/`,
   `_markup/` — and their lookup order.
 - **Data, i18n, assets and static files**, mounts and themes from `themes/` or `_vendor/`.
@@ -29,6 +29,7 @@ fugo renders [Tera](https://keats.github.io/tera/), not Go templates.
 | `.Site.Title`, `.Page.RelPermalink` | `site.title`, `page.rel_permalink` |
 | A configuration file named after the generator | `config.toml` (or `config.yaml`, `config.yml`, `config.json`) is the configuration file |
 | Settings from environment variables | Settings come from files and flags only; secrets that templates read go in the [`.env` file](/configuration/introduction/#the-env-file) |
+| Environment folders (`config/production/`) | `[environments.production]` in the configuration file (see [Environments](/configuration/introduction/#environments)); a folder is an error |
 | A template object named after the generator | fugo's `build` object holds the version and environment (`build.version`, `build.is_production`) |
 | A build stats file for Tailwind CSS (`buildStats`) | none: [Tailwind's CLI](/asset-pipelines/tailwind-css/) finds the classes itself |
 | The generator's build and server commands | `fugo` (or `fugo build`) / `fugo server` |
@@ -40,8 +41,10 @@ The other differences — unsupported features and commands — are listed in
 ## Moving a site
 
 1. **Rename the configuration file** to `config.toml` (in a configuration directory,
-   `config/_default/config.toml`). Settings your CI passes as environment variables move to
-   `config/<environment>/` or to command-line flags; `--environment` chooses the environment
+   `config/_default/config.toml`). Move each environment's folder (`config/production/`) into
+   the configuration's `[environments.production]` table; fugo stops with an error at such a
+   folder. Settings your CI passes as environment variables move to
+   `[environments.<name>]` or to command-line flags; `--environment` chooses the environment
    (no variable does), and secrets that templates read go in the
    [`.env` files](/configuration/introduction/#the-env-file).
 2. **Use the current layout names.** If your layouts still use `_default/` or `partials/`,

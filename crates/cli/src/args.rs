@@ -98,8 +98,8 @@ pub struct ProjectArgs {
     /// The configuration directory (default `config`).
     #[arg(long, alias = "configDir", value_name = "DIR", global = true)]
     pub config_dir: Option<PathBuf>,
-    /// The build environment (default `production`, `development` for `server`); also picks
-    /// the project's `.env.<environment>` file.
+    /// The build environment (default `production`, `development` for `server`): picks the
+    /// configuration's `[environments.<environment>]` table and the `.env.<environment>` file.
     #[arg(short = 'e', long, value_name = "ENV", global = true)]
     pub environment: Option<String>,
     /// The site's base URL.

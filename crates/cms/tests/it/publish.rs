@@ -379,10 +379,12 @@ fn only_the_environment_with_the_table_gets_the_editor() {
     write_files(
         dir.path(),
         &[
-            ("config.toml", "baseURL = \"https://example.org/\"\n"),
             (
-                "config/production/cms.toml",
-                &cms_toml("").replace("[cms]\n", "").replace("[cms.", "["),
+                "config.toml",
+                &format!(
+                    "baseURL = \"https://example.org/\"\n{}",
+                    cms_toml("").replace("[cms", "[environments.production.cms")
+                ),
             ),
             ("content/a.md", "---\ntitle: A\n---\n"),
         ],
@@ -390,7 +392,10 @@ fn only_the_environment_with_the_table_gets_the_editor() {
     let (_, out) = publish(dir.path(), "development");
     assert!(out.is_none(), "development has no [cms]");
     let (sink, out) = publish(dir.path(), "production");
-    assert!(out.is_some(), "production has config/production/cms.toml");
+    assert!(
+        out.is_some(),
+        "production has [environments.production.cms]"
+    );
     assert!(sink.paths().contains(&"_worker.js".to_owned()));
 }
 

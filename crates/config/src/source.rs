@@ -406,7 +406,8 @@ fn file_prefix(stem: &str) -> Vec<String> {
     }
 }
 
-fn collect_files(dir: &Path, out: &mut Vec<PathBuf>) -> Result<(), ConfigError> {
+/// The files below `dir`, at any depth, into `out`.
+pub(crate) fn collect_files(dir: &Path, out: &mut Vec<PathBuf>) -> Result<(), ConfigError> {
     let entries = std::fs::read_dir(dir).map_err(|source| ConfigError::Io {
         path: dir.to_owned(),
         source,

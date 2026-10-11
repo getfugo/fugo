@@ -41,33 +41,34 @@ The editor works with sites whose repository is on GitHub; other git hosts may f
 
 ### 1. Turn the editor on for production builds
 
-Put `[cms]` in `config/production/cms.toml` (see [environments](/configuration/introduction/#environments)),
-so production builds have the editor and `fugo server` does not:
+Put `[cms]` in the production table of `config.toml`, `[environments.production.cms]` (see
+[environments](/configuration/introduction/#environments)), so production builds have the
+editor and `fugo server` does not:
 
-```toml {title="config/production/cms.toml"}
+```toml {title="config.toml"}
+[environments.production.cms]
 media = "static/images/uploads"     # where uploads go when a page has no bundle (optional)
 
-[git]
+[environments.production.cms.git]
 repo = "you/site"                   # GitHub owner/name
 branch = "main"
 
-[login]
+[environments.production.cms.login]
 provider = ["github", "google"]     # or one of them
 
-[roles.writer]
+[environments.production.cms.roles.writer]
 edit = ["content/**/index.en.md", "content/**/*.{jpg,png,webp}"]
 
-[roles.translator]
+[environments.production.cms.roles.translator]
 edit = ["content/**/index.th.md"]
 
-[roles.publisher]
+[environments.production.cms.roles.publisher]
 edit = ["**"]
 publish = true
 ```
 
-A file named `cms.toml` holds the table's keys; in `config.toml` the same settings go under
-`[cms]`, `[cms.git]`, `[cms.login]` and `[cms.roles.writer]`. Every setting is described in
-[CMS editor settings](/configuration/cms/).
+At the root, as `[cms]`, `[cms.git]` and so on, the same settings give every build the editor.
+Every setting is described in [CMS editor settings](/configuration/cms/).
 
 `fugo build` (environment `production`) then writes the editor into `public/admin/`, and the API
 into `public/_worker.js`, with the content index inside it (the titles and paths of every page,
@@ -371,7 +372,7 @@ matter are written anew when they change.
 whenever the configuration it serves has `[cms]`. You need no Worker, git host or sign-in:
 
 ```sh
-fugo server -e production   # or put a cms.toml into config/development/ too
+fugo server -e production   # or give [environments.development] a cms table too
 ```
 
 Then open `http://localhost:1313/admin/`. The editor works as it does on the site:
@@ -412,7 +413,7 @@ CMS_GITHUB_TOKEN=github_pat_…
 
 `CMS_DEV_USER` signs in requests to `localhost` only, and only when it is set; deployed Workers
 ignore it. The editor commits to the real repository: point `branch` at a test branch while you
-try it (in a `config/staging/cms.toml` built with `-e staging`, for example).
+try it (in an `[environments.staging.cms]` table, built with `-e staging`, for example).
 
 ## Limits
 

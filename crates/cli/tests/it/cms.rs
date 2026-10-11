@@ -3,13 +3,17 @@
 
 use crate::{binary, stderr, stdout};
 
+const SITE: &str = "baseURL = \"https://example.org/\"\ntitle = \"Site\"\n\
+                    disableKinds = [\"taxonomy\", \"term\"]\n";
+
+/// `[cms]`, for production builds only.
 const CMS: &str = r#"
-[git]
+[environments.production.cms.git]
 repo = "owner/site"
-[login]
+[environments.production.cms.login]
 team = "team"
 aud = "aud"
-[roles.owner]
+[environments.production.cms.roles.owner]
 edit = ["**"]
 publish = true
 "#;
@@ -17,12 +21,9 @@ publish = true
 fn project() -> tempfile::TempDir {
     let dir = tempfile::tempdir().expect("tempdir");
     std::fs::create_dir(dir.path().join(".git")).expect(".git");
+    let config = format!("{SITE}{CMS}");
     for (path, text) in [
-        (
-            "config.toml",
-            "baseURL = \"https://example.org/\"\ntitle = \"Site\"\ndisableKinds = [\"taxonomy\", \"term\"]\n",
-        ),
-        ("config/production/cms.toml", CMS),
+        ("config.toml", config.as_str()),
         ("layouts/single.html", "{{ page.title }}"),
         ("layouts/home.html", "home"),
         ("layouts/list.html", "{{ page.title }}"),
@@ -89,8 +90,8 @@ fn development_builds_do_not() {
 fn a_wrong_setting_fails_the_build() {
     let dir = project();
     std::fs::write(
-        dir.path().join("config/production/cms.toml"),
-        CMS.replace("owner/site", "no-slash"),
+        dir.path().join("config.toml"),
+        format!("{SITE}{}", CMS.replace("owner/site", "no-slash")),
     )
     .expect("write");
     let o = binary(dir.path(), &["build"], &[]);
@@ -198,9 +199,9 @@ fn cms_fields_prints_the_fields_the_build_gives_the_editor() {
             "---\ntitle: B\ndate: 2026-01-02\ndraft: false\nimage_preview: b.jpg\ndescription: About B\nrating:\n  taste: 4\nwhenSeen: Paris\n---\n",
         ),
         (
-            "config/production/cms.toml",
+            "config.toml",
             &format!(
-                "{CMS}[fields.description]\nlabel = \"Short text\"\nhelp = \"One \\\"line\\\"\"\n[fields.flavours]\noptions = [\"sweet\", \"salty\"]\nmultiple = true\n"
+                "{SITE}{CMS}[environments.production.cms.fields.description]\nlabel = \"Short text\"\nhelp = \"One \\\"line\\\"\"\n[environments.production.cms.fields.flavours]\noptions = [\"sweet\", \"salty\"]\nmultiple = true\n"
             ),
         ),
     ];

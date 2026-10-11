@@ -31,6 +31,11 @@ pub enum ConfigError {
         owner: String,
         themes_dir: PathBuf,
     },
+    /// A folder of the configuration directory other than `_default` (`config/production/`)
+    /// holds configuration files. An environment's settings are a table of the configuration,
+    /// `[environments.<name>]`.
+    #[error("{}: environment folders are not read; move its settings into the configuration file, under [environments.{environment}] (its params.toml becomes [environments.{environment}.params])", dir.display())]
+    EnvironmentFolder { dir: PathBuf, environment: String },
     /// A file is not valid TOML, YAML or JSON.
     #[error("{position}: {message}")]
     Syntax { position: Position, message: String },
@@ -64,7 +69,8 @@ impl ConfigError {
             Self::Io { .. }
             | Self::NotFound { .. }
             | Self::ThemeNotFound { .. }
-            | Self::ThemeOutsideThemesDir { .. } => None,
+            | Self::ThemeOutsideThemesDir { .. }
+            | Self::EnvironmentFolder { .. } => None,
         }
     }
 }

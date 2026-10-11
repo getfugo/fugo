@@ -1,7 +1,7 @@
 //! The CMS editor of `[cms]`: a page under the site (`/admin/`) where people edit content in the
 //! browser, and the API it calls, which runs as a Cloudflare Worker next to the static files.
 //!
-//! A build with a `[cms]` table (usually in `config/production/cms.toml`, so only production
+//! A build with a `[cms]` table (usually `[environments.production.cms]`, so only production
 //! builds have it) writes, after the site:
 //!
 //! | File | What |

@@ -8,6 +8,8 @@ mod languages;
 
 pub(super) struct Loader<'a> {
     pub(super) o: &'a LoadOptions,
+    /// The build's environment: `--environment`, else `production`.
+    pub(super) environment: String,
     /// The project's configuration files.
     pub(super) sources: source::Sources,
     /// Each theme's configuration files, in precedence order.
@@ -17,8 +19,15 @@ pub(super) struct Loader<'a> {
 
 impl<'a> Loader<'a> {
     pub(super) fn new(o: &'a LoadOptions) -> Self {
+        let environment = o
+            .cli
+            .environment
+            .clone()
+            .filter(|e| !e.is_empty())
+            .unwrap_or_else(|| "production".to_owned());
         Self {
             o,
+            environment,
             sources: source::Sources::default(),
             theme_sources: Vec::new(),
             diagnostics: Vec::new(),
@@ -36,13 +45,7 @@ impl<'a> Loader<'a> {
 
     pub(super) fn run(mut self) -> Result<Config, ConfigError> {
         let project = self.o.source.clone();
-        let environment = self
-            .o
-            .cli
-            .environment
-            .clone()
-            .filter(|e| !e.is_empty())
-            .unwrap_or_else(|| "production".to_owned());
+        let environment = self.environment.clone();
 
         // Step 2: sources.
         let config_dir = project.join(
@@ -54,19 +57,19 @@ impl<'a> Loader<'a> {
         );
         self.sources.files =
             source::project_files(&project, &self.o.config_files, &mut self.diagnostics)?;
-        for sub in ["_default", environment.as_str()] {
-            let dir = config_dir.join(sub);
-            if dir.is_dir() {
-                self.sources.files.extend(source::dir_files(&dir)?);
-            }
+        environments::refuse_folders(&config_dir)?;
+        let default_dir = config_dir.join("_default");
+        if default_dir.is_dir() {
+            self.sources.files.extend(source::dir_files(&default_dir)?);
         }
         if self.sources.files.is_empty() {
             return Err(ConfigError::NotFound { dir: project });
         }
         let env_file = EnvFile::load(&project, &environment, &mut self.diagnostics)?;
 
-        // Steps 3 and 4: normalise, migrate, merge.
+        // Steps 3 and 4: normalise, the environment's table, migrate, merge.
         let mut root = self.sources.merged();
+        environments::apply(&mut root, &environment).map_err(|e| self.locate(e, ""))?;
         self.migrate(&mut root);
         tree::merge_deep(&mut root, &tree::normalize_keys(&self.o.cli.to_tree()));
         let mut root = tree::normalize_keys(&root);
@@ -217,7 +220,7 @@ impl<'a> Loader<'a> {
     }
 
     /// Adds the file position of the offending key to a value error: the project's files
-    /// first, then the themes' in precedence order.
+    /// first, then the themes' in precedence order, and in each the environment's table first.
     pub(super) fn locate(&self, e: ConfigError, lang: &str) -> ConfigError {
         match e {
             ConfigError::Invalid {
@@ -228,9 +231,18 @@ impl<'a> Loader<'a> {
                 let segs = key_segments(&key);
                 let mut in_lang = vec!["languages".to_owned(), lang.to_owned()];
                 in_lang.extend(segs.iter().cloned());
+                let in_env = |k: &[String]| {
+                    let mut out = vec![
+                        "environments".to_owned(),
+                        ssg_base::text::to_lower(&self.environment),
+                    ];
+                    out.extend(k.iter().cloned());
+                    out
+                };
+                let keys = [in_env(&in_lang), in_env(&segs), in_lang, segs];
                 let found = std::iter::once(&self.sources)
                     .chain(&self.theme_sources)
-                    .find_map(|s| s.locate(&in_lang).or_else(|| s.locate(&segs)));
+                    .find_map(|s| keys.iter().find_map(|k| s.locate(k)));
                 match found {
                     Some(found) => ConfigError::Invalid {
                         key: found.dotted_key(),

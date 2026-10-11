@@ -1,6 +1,7 @@
 //! Behaviour tests of the pipeline: the legacy-key table on a synthetic real-site-style
 //! configuration, the `[minify]` option tables, environment variables (never settings),
-//! `CliOverrides`, `[caches]` placeholders, `[privacy]`, and error positions.
+//! `[environments.<name>]`, `CliOverrides`, `[caches]` placeholders, `[privacy]`, and error
+//! positions.
 
 use std::path::{Path, PathBuf};
 use std::time::Duration;
@@ -9,6 +10,7 @@ use ssg_base::Value;
 use ssg_config::global::MaxAge;
 use ssg_config::{CliOverrides, Config, ConfigError, LoadOptions, load};
 
+mod environments;
 mod errors;
 mod languages;
 mod settings;

@@ -24,35 +24,59 @@ read: rename a configuration file named after another generator to `config.toml`
 
 ## Configuration directory
 
-Settings can be split into files in `config/` (or `--config-dir`):
+Settings can be split into files in `config/_default/` (or `_default/` of `--config-dir`):
 
 ```text
 config/
-├── _default/
-│   ├── config.toml       root settings
-│   ├── params.toml       [params]
-│   ├── menus.en.toml     [languages.en.menus]
-│   └── languages.toml    [languages]
-├── production/
-│   └── config.toml       only in production
-└── development/
-    └── params.toml       only in development
+└── _default/
+    ├── config.toml       root settings
+    ├── params.toml       [params]
+    ├── menus.en.toml     [languages.en.menus]
+    └── languages.toml    [languages]
 ```
 
 A file's name says where its settings go: `params.toml` is `[params]`, `menus.en.toml` the
 English menus, `config.toml` the root.
 
+The settings of one environment go in its [`[environments.<name>]`](#environments) table, not in
+a folder of their own: fugo stops with an error at `config/production/`, or any other folder
+beside `_default/` that holds a configuration file, and names the table its settings belong in.
+
 ## Environments
 
 The environment is `production` for `fugo build` and `development` for `fugo server`;
-`--environment staging` chooses another. `config/<environment>/` is merged over
-`config/_default/`, `.env.<environment>` over `.env` (see [The .env file](#the-env-file)), and
-templates read it as `build.environment`, `build.is_production`, `build.is_development`.
+`--environment staging` chooses another. The settings of one environment go in its table,
+`[environments.<name>]`, which fugo merges over the rest of the configuration when it builds for
+that environment:
+
+```toml {title="config.toml"}
+baseURL = "https://example.org/"
+title = "My site"
+
+[environments.production.minify]
+minifyOutput = true
+
+[environments.development]
+buildDrafts = true
+buildFuture = true
+
+[environments.development.params]
+analytics = false
+```
+
+The table holds any setting, as the root does: `[environments.production.params]` is `[params]`
+in production builds. It is merged as a later file would be: tables merge key by key, other
+values replace, and a table with `_merge = "none"` replaces the one it is merged into. The other
+environments' tables are not read, and `fugo config` prints the result without them. A theme's
+`[environments.<name>]` tables apply to the theme's own configuration.
+
+`.env.<environment>` is read over `.env` (see [The .env file](#the-env-file)), and templates read
+the environment as `build.environment`, `build.is_production`, `build.is_development`.
 
 ## Precedence
 
 From lowest to highest: themes (see [Themes](/configuration/themes/#configuration)), the configuration
-file, `config/_default/`, `config/<environment>/`, command-line flags (`--base-url`,
+file, `config/_default/`, `[environments.<environment>]`, command-line flags (`--base-url`,
 `--destination`, …).
 
 A table with `_merge = "none"` replaces the table below it instead of merging into it.
@@ -60,7 +84,7 @@ A table with `_merge = "none"` replaces the table below it instead of merging in
 ## Environment variables
 
 Settings never come from environment variables: a setting that differs per machine or per
-deployment belongs in `config/<environment>/` or on the command line, and the environment
+deployment belongs in `[environments.<name>]` or on the command line, and the environment
 itself comes from the command (`--environment`). Keep API keys and other secrets in the
 `.env` files.
 
