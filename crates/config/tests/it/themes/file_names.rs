@@ -90,12 +90,12 @@ fn explicit_config_files_are_unchanged() {
 #[test]
 fn config_in_the_config_directory_is_a_root_file() {
     let p = Project::new(&[
-        ("config/_default/config.toml", "title = \"dir\"\n"),
-        ("config/_default/params.toml", "p = 1\n"),
         (
-            "config/production/config.toml",
-            "[params]\nq = 2\n[languages.en]\nweight = 1\n",
+            "config/_default/config.toml",
+            "title = \"dir\"\n[environments.production.params]\nq = 2\n\
+             [environments.production.languages.en]\nweight = 1\n",
         ),
+        ("config/_default/params.toml", "p = 1\n"),
     ]);
     let c = p.ok();
     assert_eq!(c.default_site().title, "dir");

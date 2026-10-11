@@ -15,8 +15,9 @@
 //!   `[[module.imports]]` paths. A theme of a theme must stay below `themesDir` unless its path
 //!   was replaced. Remote modules are not downloaded: an import that is not found is an error.
 //! - **Configuration.** The first `config.*` in the theme's directory, then its
-//!   `config/_default/**` and `config/<environment>/**`, read like the project's; `theme.toml`
-//!   (theme-site metadata) is not configuration.
+//!   `config/_default/**`, read like the project's, with its `[environments.<name>]` table of
+//!   the build's environment merged over them; `theme.toml` (theme-site metadata) is not
+//!   configuration.
 //! - **Mounts.** The importer's `[[module.imports.mounts]]`, else the theme's own
 //!   `[[module.mounts]]` (sources relative to the theme's directory), else each component
 //!   directory the theme has ([`ThemeMounts`]); the file system layer mounts them after the
@@ -34,7 +35,7 @@ use ssg_base::{Map, Value};
 use crate::error::ConfigError;
 use crate::global::{COMPONENTS, MountConfig};
 use crate::source::{self, Format, Source, Sources};
-use crate::{de, decode_error, tree};
+use crate::{de, decode_error, environments, tree};
 
 mod collect;
 
@@ -258,12 +259,8 @@ impl Vendor {
 }
 
 /// A theme's configuration files: the first of `config.*`, `config.*` in `dir`,
-/// then `config/_default/**` and `config/<environment>/**`.
-fn read_config(
-    dir: &Path,
-    environment: &str,
-    diagnostics: &mut Vec<Diagnostic>,
-) -> Result<Sources, ConfigError> {
+/// then `config/_default/**` (a folder of an environment is an error).
+fn read_config(dir: &Path, diagnostics: &mut Vec<Diagnostic>) -> Result<Sources, ConfigError> {
     let mut files = Vec::new();
     let (found, warning) = source::find_config_file(dir);
     diagnostics.extend(warning);
@@ -271,11 +268,11 @@ fn read_config(
         let format = Format::from_path(&path).expect("a configuration file name");
         files.push(Source::read(&path, format, Vec::new())?);
     }
-    for sub in ["_default", environment] {
-        let d = dir.join("config").join(sub);
-        if d.is_dir() {
-            files.extend(source::dir_files(&d)?);
-        }
+    let config_dir = dir.join("config");
+    environments::refuse_folders(&config_dir)?;
+    let d = config_dir.join("_default");
+    if d.is_dir() {
+        files.extend(source::dir_files(&d)?);
     }
     Ok(Sources { files })
 }

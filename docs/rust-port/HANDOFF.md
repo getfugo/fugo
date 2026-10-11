@@ -164,7 +164,9 @@ environment variable fugo reads or sets is `FUGO_*`: the harness switches
 default `get_env` allowlist (`^FUGO_`). Settings and the environment never come from the process environment
 (2026-10-03: the `FUGO_TITLE`, `FUGO_PARAMS_X`, `FUGO_CACHEDIR` overrides and
 `FUGO_ENVIRONMENT` were removed; `--environment` chooses the environment, the harness passes
-`--cacheDir`). **The asset pipeline is Rust only** (2026-10-03, T75): no PostCSS, Babel or
+`--cacheDir`). An environment's settings are the configuration's `[environments.<name>]` table,
+merged over the rest; a folder of the configuration directory other than `_default`
+(`config/production/`) is an error (`ssg_config` README, step 3). **The asset pipeline is Rust only** (2026-10-03, T75): no PostCSS, Babel or
 Tailwind pipe, no stats file (`[build] buildStats`/`writeStats` are "no longer supported"
 warnings), and fugo runs no programs (`[security.exec]` is accepted and has no effect). `minify`
 adds vendor prefixes for the browserslist, `js_build` lowers for the browser targets,
@@ -337,7 +339,8 @@ tests read them, with counts):
   absolute paths);
   imaging, media types and output formats per project, not per language; `deployment`,
   `segments`, `httpCache`, `server` untyped; errors instead of silently ignored values; no
-  mapstructure weak decoding.
+  mapstructure weak decoding; environments are `[environments.<name>]` tables, and
+  `config/<environment>/` folders are an error (the oracle's are recreated as tables).
 - **pageparser**: a summary divider at the start of a page without front matter is a divider;
   JSON integers stay integers; YAML 1.2; TOML leap seconds stay strings; closing tags must name
   their shortcode; unclosed inline shortcodes are errors; Org front matter not decoded.

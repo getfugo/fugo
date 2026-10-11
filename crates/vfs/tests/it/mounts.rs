@@ -45,6 +45,8 @@ fn write_case(root: &Path, files: &serde_json::Map<String, J>) {
             fs::write(&p, text).unwrap();
         }
     }
+    // Go's environment folders (a theme's `config/production/`) are tables here.
+    ssg_testkit::environments::recreate_as_tables(&site, "config");
 }
 
 fn dump(m: &Mount, root: &str) -> J {

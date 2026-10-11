@@ -77,8 +77,9 @@ cannot see, and pages without a template. Add `--deny-warnings` in CI. See
 
 The environment is `production` for builds and `development` for the server. Change it with
 `-e staging`. Templates read it as `build.environment`
-(`build.is_production`, `build.is_development`), and the configuration directory's
-`config/<environment>/` applies on top of `config/_default/`.
+(`build.is_production`, `build.is_development`), and the configuration's
+[`[environments.<environment>]`](/configuration/introduction/#environments) table applies over
+the rest of it.
 
 ## Inspect the configuration
 

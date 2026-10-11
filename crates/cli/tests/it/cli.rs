@@ -97,7 +97,7 @@ fn version_line_has_the_go_format() {
 #[test]
 fn config_prints_the_resolved_configuration() {
     let s = site_from(
-        "-- config.toml --\nbaseURL = \"https://e.org/\"\ntitle = \"T\"\n-- config/production/params.toml --\ncolor = \"red\"\n",
+        "-- config.toml --\nbaseURL = \"https://e.org/\"\ntitle = \"T\"\n[environments.production.params]\ncolor = \"red\"\n",
     );
     let o = binary(
         s.path(),
@@ -111,6 +111,10 @@ fn config_prints_the_resolved_configuration() {
     assert_eq!(site["title"], "T", "{site}");
     let text = stdout(&o);
     assert!(text.contains("\"color\": \"red\""), "{text}");
+    assert!(
+        !text.contains("environments"),
+        "the environments' tables are not settings: {text}"
+    );
     assert!(
         !text.contains("\"size\""),
         "an environment variable is not a setting: {text}"

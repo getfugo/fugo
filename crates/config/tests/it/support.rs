@@ -65,6 +65,13 @@ pub fn materialize(case: &J, site_dir: &str) -> Result<Site, NotApplicable> {
             std::fs::write(&path, expand(content.as_str().expect("text"))).expect("write");
         }
     }
+    // Go's environment folders, in the project's configuration directory and the themes', are
+    // `[environments.<name>]` tables here.
+    let config_dir = case["configDir"]
+        .as_str()
+        .filter(|s| !s.is_empty())
+        .unwrap_or("config");
+    ssg_testkit::environments::recreate_as_tables(&dir, config_dir);
     // The oracle recorded the Go program's environment variables ([`GO_ENV_PREFIX`]); the same
     // settings are read with this program's prefix (`ssg_base::ENV_PREFIX`), and none under the
     // Go names.

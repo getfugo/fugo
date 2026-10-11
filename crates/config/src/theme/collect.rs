@@ -86,11 +86,10 @@ impl Collector<'_> {
         let (dir, vendored) = self.find(owner_path.as_deref(), owner_dir, imp)?;
         let sources = match imp.reads {
             Reads::Nothing => Sources::default(),
-            Reads::All | Reads::ConfigOnly => {
-                read_config(&dir, self.environment, self.diagnostics)?
-            }
+            Reads::All | Reads::ConfigOnly => read_config(&dir, self.diagnostics)?,
         };
-        let tree = sources.merged();
+        let mut tree = sources.merged();
+        environments::apply(&mut tree, self.environment).map_err(|e| locate_in(&sources, e))?;
         let own_mounts: Vec<MountConfig> = match tree::get_path(&tree, "module.mounts") {
             None | Some(Value::Null) => Vec::new(),
             Some(v) => de::from_value(v)

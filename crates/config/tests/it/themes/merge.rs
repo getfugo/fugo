@@ -242,8 +242,9 @@ fn load_config_from_themes_sitemap_by_root_strategy() {
     }
 }
 
-/// `TestLoadConfigFromThemeDir`: the theme's `config/_default` and `config/production` over
-/// its `config.toml`; the project's `config/config.toml` is not a configuration file.
+/// `TestLoadConfigFromThemeDir`: the theme's `config/_default` over its `config.toml`, and its
+/// `[environments.production]` (Go's `config/production`) over both; the project's
+/// `config/config.toml` is not a configuration file.
 #[test]
 fn load_config_from_theme_dir() {
     let p = Project::new(&[
@@ -253,16 +254,12 @@ fn load_config_from_theme_dir() {
         ),
         (
             "themes/test-theme/config.toml",
-            "[params]\nt1 = \"tv1\"\nt2 = \"tv2\"\n",
+            "[params]\nt1 = \"tv1\"\nt2 = \"tv2\"\n[environments.production.params]\nt3 = \"tv3p\"\n",
         ),
         ("config/config.toml", "[params]\nm2 = \"mv2\"\n"),
         (
             "themes/test-theme/config/_default/config.toml",
             "[params]\nt2 = \"tv2d\"\nt3 = \"tv3d\"\n",
-        ),
-        (
-            "themes/test-theme/config/production/config.toml",
-            "[params]\nt3 = \"tv3p\"\n",
         ),
     ]);
     assert_eq!(

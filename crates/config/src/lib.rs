@@ -7,13 +7,14 @@
 //! 2. **Sources**: the project file (the first of `config.toml`, `config.yaml`,
 //!    `config.yml`, `config.json`, then `config.*`; the Go program's configuration file name is
 //!    not read; a warning names the others when several exist; or the explicit list), then
-//!    `config/_default/**` and `config/<environment>/**` (file names place their content:
-//!    `config.*` at the root, `params.toml` under `params`, `menus.en.toml` under
-//!    `languages.en.menus`).
-//! 3. **Normalise** each tree ([`tree::normalize_keys`]) and migrate legacy keys
+//!    `config/_default/**` (file names place their content: `config.*` at the root,
+//!    `params.toml` under `params`, `menus.en.toml` under `languages.en.menus`). Other folders
+//!    of the directory (`config/production/`) are an error.
+//! 3. **Normalise** each tree ([`tree::normalize_keys`]), merge the environment's
+//!    `[environments.<name>]` table over them and migrate legacy keys
 //!    ([`tree::migrate_legacy_keys`]).
-//! 4. **Merge once**: file < directory < CLI (settings never come from the environment,
-//!    [`env`]); then the themes
+//! 4. **Merge once**: file < directory < environment table < CLI (settings never come from
+//!    the environment variables, [`env`]); then the themes
 //!    ([`theme`]: `theme`, `[[module.imports]]` and their themes) are read and their
 //!    configuration merged below the project's by Go's `_merge` rules ([`merge`]).
 //! 5. **Per language**: `languages.X` over the root (`params` merge deeply, `menus`,
@@ -31,6 +32,7 @@ pub mod de;
 pub mod duration;
 pub mod env;
 pub mod env_file;
+mod environments;
 mod error;
 pub mod global;
 pub mod markup;

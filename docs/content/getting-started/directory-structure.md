@@ -29,8 +29,9 @@ simply empty.
   `config.toml`.
 
 `config/`
-: Configuration split into files and [environments](/configuration/introduction/#configuration-directory):
-  `config/_default/` for every build, `config/production/` and `config/development/` on top.
+: Configuration split into files in `config/_default/`
+  (see [Configuration directory](/configuration/introduction/#configuration-directory)). Each
+  environment's settings go in its `[environments.<name>]` table, not in a folder.
 
 `content/`
 : The pages of the site. The directory tree becomes the URL tree: `content/posts/hello.md` is
