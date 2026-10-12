@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791829533734,
+  "lastUpdate": 1791829536864,
   "repoUrl": "https://github.com/getfugo/fugo",
   "entries": {
     "Benchmark": [
@@ -100021,6 +100021,105 @@ window.BENCHMARK_DATA = {
           {
             "name": "BenchmarkSummaryFromHTMLWithDivider",
             "value": 77.26,
+            "unit": "ns/op"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "blackb1rd.mov@gmail.com",
+            "name": "Prachya Saechua",
+            "username": "blackb1rd"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "ef021b770d633864fd9ec18867309cd33cdd50e9",
+          "message": "config: Read one configuration file (#206)\n\nThe configuration was spread over several files: config.toml, the files\nof config/_default/ (one per table) and the files of a --config list,\nmerged in order; of config.toml and config.yaml side by side, one was\nread and the other named in a warning. Every setting now lives in one\nfile, the project's config.toml (or config.yaml, config.yml or\nconfig.json).\n\n- A configuration directory is an error that names, for each of its\n  files, the table of the configuration file its settings go in, as the\n  Go build placed them:\n\n    config: configuration directories are not read; move the settings\n    of its files into the configuration file: _default/imaging.toml\n    under [imaging], _default/params.toml under [params],\n    production/params.toml under [environments.production.params]\n\n  It covers the configuration files in the folders of config/, at any\n  depth, in the project and in a theme, with or without a config.toml.\n- Several of config.toml, config.yaml, config.yml and config.json are\n  an error (they were a warning), in a theme too.\n- --config names one file: a comma-separated list is a usage error.\n  --config-dir (--configDir) is gone. LoadOptions::config_file and\n  BuildRequest::config_file replace the config_files lists, and\n  Theme::config_file its list; CliOverrides::config_dir and the\n  config-file-ignored warning are gone.\n- The CMS writes no configuration: its config area (the params and\n  menus files of config/_default/) is gone, so a role's glob that only\n  reached them is an error. Values editors change belong in data files.\n- fugo server still watches config/, so a file put there shows the\n  error.\n- The oracle's configuration directories are folded into one file\n  (ssg_testkit::config_dir, which replaces ssg_testkit::environments):\n  configdir 1014/1014 (the case whose file does not parse is not\n  applicable), basic 2586/2595 (the cases with config.toml and\n  config.yaml, and with a --config list, are not applicable), themes\n  1135/1136 as before.\n- The configuration, CMS, migration and directory structure docs, the\n  differences, the READMEs of ssg-config, ssg-cli, ssg-build and\n  ssg-serve, the README, HANDOFF and docs/data/commands.json say so.\n\nSigned-off-by: blackb1rd <blackb1rd.mov@gmail.com>\nCo-Authored-By: Claude Opus 5.5 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-10-13T01:02:42+07:00",
+          "tree_id": "73033f8db37329961a3eb594ad922136d9753905",
+          "url": "https://github.com/getfugo/fugo/commit/ef021b770d633864fd9ec18867309cd33cdd50e9"
+        },
+        "date": 1791829535829,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "BenchmarkSanitizeAnchorName",
+            "value": 461.57,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSanitizeAnchorNameAsciiOnly",
+            "value": 1157.55,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSanitizeAnchorNameBlackfriday",
+            "value": 579.32,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSanitizeAnchorNameString",
+            "value": 460.1,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSanitize/All_allowed",
+            "value": 206.06,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSanitize/Spaces",
+            "value": 215.15,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkRelURL",
+            "value": 338.94,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkAbsURL/relurl",
+            "value": 640.46,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkAbsURL/absurl",
+            "value": 20.36,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkTotalWords",
+            "value": 4693.17,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkStripHTML",
+            "value": 1092.74,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkParse",
+            "value": 8770.28,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkDecodeYAMLToMap",
+            "value": 12584.87,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSummaryFromHTML",
+            "value": 77.08,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSummaryFromHTMLWithDivider",
+            "value": 69.75,
             "unit": "ns/op"
           }
         ]
