@@ -4,34 +4,36 @@ The configuration of a project (docs/rust-port/REWRITE_PLAN.md §2.4, §3.1 A1):
 `Value`-tree pipeline, then typed serde structs whose `Default` holds Go's defaults.
 
 ```
-LoadOptions { source, config_files, cli: CliOverrides, env }
+LoadOptions { source, config_file, cli: CliOverrides, env }
   └─ load() ─► Config { sites: IdVec<LangIdx, SiteConfig>, output_formats, media_types, … }
 ```
 
-1. **Bootstrap**: environment = `--environment` → `production` (no variable chooses it);
-   config directory = `--configDir` or `config`.
-2. **Sources** (`source`): the project file, the first that exists of `config.toml`,
-   `config.yaml`, `config.yml`, `config.json` (`config_file_names()`; the Go program's
-   configuration file name is not read). When several exist, the first is read and a
-   warning (`config-file-ignored`, at the file read) names the others. Or the `--config`
-   list (unchanged: first file wins, `custom` finds `custom.toml`…). Then `config/_default/**`
-   in path order. A file's name places it: `config.*` at
-   the root (a file with the Go program's configuration file name is an ordinary file, under
-   its base name), `params.en.toml` under `languages.en.params`, `menus.en.toml` (or
-   `menu.en.toml`) under `languages.en.menus`, `name.toml` under `name`. Any other folder of
-   the directory that holds a configuration file (`config/production/`, Go's environments) is
-   an error (`ConfigError::EnvironmentFolder`) that names the table its settings go in.
+1. **Bootstrap**: environment = `--environment` → `production` (no variable chooses it).
+2. **Source** (`source`): **one configuration file**. The project's `config.toml`,
+   `config.yaml`, `config.yml` or `config.json` (`config_file_names()`; the Go program's
+   configuration file name is not read); several of them are an error
+   (`ConfigError::SeveralFiles`), and so is none (`NotFound`). Or the `--config` file
+   (`custom` finds `custom.toml`…), when the project's `config.*` are not read. The Go build's
+   configuration directory is not read: configuration files in the folders of `config/`
+   (`config/_default/`, `config/production/`, at any depth) are an error
+   (`ConfigError::ConfigDirectory`, `config_dir`) that names, for each file, the table of the
+   configuration file its settings go in, as Go placed them: `_default/params.toml` under
+   `[params]`, `_default/menu.en.toml` under `[languages.en.menus]`, `_default/config.toml` at
+   its root (a file with the Go program's configuration file name is an ordinary file, under
+   its base name), `production/params.toml` under `[environments.production.params]`. Files
+   of `config/` itself, and folders without configuration files, are neither read nor an
+   error.
 3. **Normalise** (`tree::normalize_keys`: lower-case keys except inside arrays, `menu` →
-   `menus`, drop `internal`), **the environment's table** (`environments`: the merged tree's
+   `menus`, drop `internal`), **the environment's table** (`environments`: the tree's
    `[environments.<env>]`, the environment's name lower-cased, normalised and merged over the
    tree as a later file would be, then `environments` removed; a value that is not a table is
    an error) and **migrate legacy keys** (`tree::LEGACY_KEYS`, applied at the
    root and in each language table; a current key wins; each migration is a deprecation
    `Diagnostic`).
-4. **Merge once**: file < `_default` < `[environments.<env>]` < CLI (`CliOverrides::to_tree`);
+4. **Merge once**: file < `[environments.<env>]` < CLI (`CliOverrides::to_tree`);
    settings never come from the environment variables (`env`). `disableKinds`/`disableLanguages` strings are split on commas and white space.
-   `_merge = "none"` in a table makes it replace instead of merge (a later file's `_merge`
-   wins over an earlier one's).
+   `_merge = "none"` in a table makes it replace instead of merge (the environment table's
+   `_merge` wins over the file's).
    **Then the themes** (`theme`, below): found, their configuration read, and merged below
    the project's with Go's `_merge` strategies (`merge`, below). Legacy keys are migrated
    once more over the merged tree.
@@ -65,10 +67,9 @@ LoadOptions { source, config_files, cli: CliOverrides, env }
   list) renames `[[module.imports]]` paths (not `theme` names, as in Go). A theme's own
   imports must stay below `themesDir` unless replaced. An import that is not found is an
   error (`ConfigError::ThemeNotFound`): remote modules are not downloaded.
-- Configuration: the first of `config.*` in the theme's directory
-  (with the same warning), then its `config/_default/**`, assembled like the project's, with
-  its own `[environments.<env>]` merged over them (a folder of an environment is the same
-  error). `theme.toml` is theme-site metadata, not configuration.
+- Configuration: the theme's one `config.*` file (several are the same error as in the
+  project), with its own `[environments.<env>]` merged over it; a configuration directory of
+  the theme is the same error. `theme.toml` is theme-site metadata, not configuration.
 - Mounts (`Theme::mounts`, used by `ssg-vfs`): the importer's `[[module.imports.mounts]]`,
   else the theme's own `[[module.mounts]]` (sources relative to the theme's directory), else
   `ThemeMounts::Components` (each component directory it has, plus its JS config files);
@@ -116,12 +117,12 @@ one.
 | item | what |
 |---|---|
 | `load(&LoadOptions) -> Result<Config, ConfigError>` | the pipeline |
-| `LoadOptions` | `source`, `config_files`, `cli`, `env` (the process environment: `FUGO*` plus `HOME`, `XDG_CACHE_HOME`, `TMPDIR`, `USER`) |
-| `CliOverrides` | typed CLI layer (`base_url`, `environment`, `destination`, `minify`, `build_drafts/future/expired`, `cache_dir`, `themes_dir`, `theme`, `ignore_cache`, `config_dir`, `no_times`, `no_chmod`); `to_tree()` |
-| `Config` | `project_dir`, `environment`, `config_files` (the themes' then the project's, lowest precedence first), `sites`, `disabled_languages`, `multihost`, `default_language_in_subdir`, `output_formats: Arc<OutputFormats>`, `media_types: Arc<MediaTypes>`, `content_types`, `default_output_format`, `dirs`, `cache_dir`, `mounts`, `themes: Vec<Theme>`, `build`, `caches`, `security`, `privacy`, `imaging`, `minify`, `content: ContentFilter`, `timeout`, `ignore_files`, `ignore_logs`, `enable_git_info`, `raw: Params`, `diagnostics` (deprecations, ignored configuration files; the build reports them); `default_site()`, `site(key)` |
-| `Theme` / `ThemeMounts` (`theme`) | a theme in precedence order: `path`, `dir`, `owner`, `config_files`, `mounts` (`Components`, `Configured(Vec<MountConfig>)`, `None`), `vendored`; `theme::path_key` |
+| `LoadOptions` | `source`, `config_file` (`--config`), `cli`, `env` (the process environment: `FUGO*` plus `HOME`, `XDG_CACHE_HOME`, `TMPDIR`, `USER`) |
+| `CliOverrides` | typed CLI layer (`base_url`, `environment`, `destination`, `minify`, `build_drafts/future/expired`, `cache_dir`, `themes_dir`, `theme`, `ignore_cache`, `no_times`, `no_chmod`); `to_tree()` |
+| `Config` | `project_dir`, `environment`, `config_files` (the themes' then the project's, one each, lowest precedence first), `sites`, `disabled_languages`, `multihost`, `default_language_in_subdir`, `output_formats: Arc<OutputFormats>`, `media_types: Arc<MediaTypes>`, `content_types`, `default_output_format`, `dirs`, `cache_dir`, `mounts`, `themes: Vec<Theme>`, `build`, `caches`, `security`, `privacy`, `imaging`, `minify`, `content: ContentFilter`, `timeout`, `ignore_files`, `ignore_logs`, `enable_git_info`, `raw: Params`, `diagnostics` (deprecations, `.env` warnings; the build reports them); `default_site()`, `site(key)` |
+| `Theme` / `ThemeMounts` (`theme`) | a theme in precedence order: `path`, `dir`, `owner`, `config_file`, `mounts` (`Components`, `Configured(Vec<MountConfig>)`, `None`), `vendored`; `theme::path_key` |
 | `merge` | `MergeStrategy` (`None`, `Shallow`, `Deep`; `parse`, `written`, `default_for`), `merge_themes(&mut Map, themes)` |
-| `config_file_names()`, `CONFIG_BASE_NAMES`, `CONFIG_EXTENSIONS` | the configuration file lookup order |
+| `config_file_names()`, `CONFIG_BASE_NAMES`, `CONFIG_EXTENSIONS` | the configuration file names |
 | `SiteConfig` (`site`) | per language: `language: Language` (key, name, code, `Direction`, weight, `time_zone`, `url_prefix`, own title), `base_url: BaseUrl`, `title`, `copyright`, `params: Params`, `taxonomies: IdVec<TaxonomyIdx, TaxonomyDef>`, `outputs: KindOutputs`, `permalinks: Permalinks`, `pagination`, `markup: MarkupConfig`, `front_matter: Vec<(DateField, Vec<DateSource>)>`, `related`, `sitemap`, `services`, `menus: Vec<MenuEntryConfig>`, `cascade: Vec<CascadeConfig>`, `urls: UrlPolicy` (`LinkStyle`, `LinkOutput`, `UglyUrls`, `PathCase`, `Accents`), `disable_kinds: KindSet`, `aliases: AliasPolicy`, `robots_txt: RobotsPolicy`, `emoji: EmojiPolicy`, `titles: TitleConfig`, `summary_length`, `content_dir`, `static_dirs`, `ref_links`, `main_sections`, `has_cjk_language`; `site_urls()` → `base::url::SiteUrls` |
 | `MediaTypes` / `MediaType` (`media`) | `IdVec<MediaTypeId, _>` sorted by type string; `decode`, `get`, `by_type`, `by_suffix`; `BUILTIN`, `ContentTypes` |
 | `OutputFormats` / `OutputFormat` (`output`) | `IdVec<FormatId, _>` in render order (non-zero weights ascending, then name); `Escaping`, `UglyPolicy`, `LinkPolicy`, `Listing`, `Placement`; `builtin`, `decode`, `by_name` |
@@ -137,15 +138,16 @@ one.
 |---|---|
 | `nh-allconfig/load` values for docs and testsite | `load::acceptance_sites` (strict, no accepted differences): `repo/docs`, `repo/docs-development`, `repo/testsite` 294/294 checks. Each case compares the language order, multihost, timeout, compiled cache directories, per-language facts (baseURL, prefix, name, weight, title, time zone, direction), kind outputs, disabled kinds, and 57 keys of Go's per-language `config` command dump (zero values ignored; `[minify.tdewolff]` defaults belong to the minify crate) |
 | … and t24 sites | `sites::t24_sites`: the 17 `sitebuild/assemble` sites load; languages equal Go's for all; the formats of the enabled kinds equal Go's `.Site` render formats for 25 of 26 site languages (`asm-taxo` adds `json` in page front matter, which the site config cannot know; the check is "a subsequence of Go's") |
-| other `load` groups (coverage) | `load::other_groups`: basic 2738/2747, configdir 1015/1015 (Go's environment folders recreated as `[environments.<name>]` tables, `ssg_testkit::environments`), env 2051/2054, languages 2287/2290, merge 1777/1780, mounts 1045/1045, sections 3128/3139, themes 1135/1136; every difference is listed in `expected_diffs.toml` with its reason (a configured media type's `delimiter`, which Go's dump shows as written, is compared as decoded) |
+| other `load` groups (coverage) | `load::other_groups`: basic 2586/2595, configdir 1014/1014 (Go's configuration directories folded into the one configuration file, `ssg_testkit::config_dir`; the case with a file that does not parse is not applicable, and so are `basic`'s cases with several configuration files or a `--config` list), env 2051/2054, languages 2287/2290, merge 1777/1780, mounts 1045/1045, sections 3128/3139, themes 1135/1136; every difference is listed in `expected_diffs.toml` with its reason (a configured media type's `delimiter`, which Go's dump shows as written, is compared as decoded) |
 | themes (C1) | the `merge/*` and `themes/*` groups above compare every merged value of Go's per-language dumps (params, language params, menus, output formats, media types, taxonomies, languages, …); `themes::*` ports the Go site builder's `config_test.go` (`TestLoadConfigFromThemes` default/shallow/no params/sitemap by root strategy, `TestLoadConfigFromThemeDir`, `TestLoadConfigThemeLanguage`, `TestLoadConfigModules`, `TestConfigOutputFormatDefinedInTheme`), `config/allconfig` (`TestMergeDeep`, `TestMergeDeepBuildStats*`) and `modules` (`TestDecodeConfig*`, `TestPathKey`) with their expected values, plus the lookup order, the rules above and error positions in theme files; `ssg-vfs` `mounts::theme_mounts_match_go` compares the 30 themes of the oracle cases (order, directory, vendoring, owner, mounts) |
 | media tables equal | `media::builtin_media_tables`: the 41 built-in types (field by field, sorted: main, sub, mime suffix, suffixes, delimiter, first/full suffix) and the 6 default content types equal Go's; `media::output_formats`: the 15 built-in output formats in render order, every field |
 | `[mediaTypes]`/`[outputFormats]` decoding | DecodeTypes 1165/1410 equal, DecodeConfig 1203/1530 equal; named cases that differ are listed in `tests/it/media.rs` with reasons; generated cases are tallied by category (see deviation 8) |
 | legacy-key table on a synthetic real-site-style config | `api::legacy_keys`: a real-site-style config written with every legacy key (root and language level) decodes to the current settings; the deprecation notices are an insta snapshot |
 | no settings from the environment; `CliOverrides` | `api::environment_variables_are_not_settings` (variables named like settings change nothing); `api::cli_overrides_and_precedence` (file < dir < environment table < CLI; only `--environment` chooses the environment); `env_file::the_environment_s_file_wins` |
-| `[environments.<name>]` | `api::environments`: the build environment's table over the configuration (and a theme's over its own), precedence, merged like a later file (`_merge`, `menu`, legacy keys), errors located in the table, environment folders an error |
+| `[environments.<name>]` | `api::environments`: the build environment's table over the configuration (and a theme's over its own), precedence, merged like a later file (`_merge`, `menu`, legacy keys), errors located in the table |
+| one configuration file | `themes::file_names`: each name read alone, several an error (project and theme), `--config`, configuration directories an error naming each file's table (with and without a configuration file, at any depth, in a theme), the Go program's file name not read |
 | `[caches]` with `:cacheDir`/`:project`; privacy | `api::caches_resolve_placeholders`, `api::privacy`, plus the oracle's `cachesCompiled` and `privacy` in every load case |
-| error spans | `api::error_positions`: TOML, YAML and JSON syntax errors; typed errors in a config-dir file, in a language table, in an array element; language errors — each with file, line and column |
+| error spans | `api::error_positions`: TOML, YAML and JSON syntax errors; typed errors in a nested table, in a language table, in an array element; language errors — each with file, line and column |
 | insta snapshots | `tests/it/snapshots/`: typed summaries of docs, testsite and the 16 t24 sites; deprecation notices; an error display |
 
 ## Accepted deviations
@@ -200,6 +202,14 @@ one.
    `.env.<environment>` over it; `NAME=value` lines read beside the configuration, never into it (`Config::env_file`, skipped when serialised, names only in
    `Debug`); `get_env` reads its names without the `getenv` allowlist, the process environment
    winning; `FUGO*` names in it are ignored with a warning (`env-file-prefix`).
+12. **One configuration file**: Go merges a configuration directory (`config/_default/**`,
+   then `config/<environment>/**`; `--configDir`) and `--config a.toml,b.toml` lists into its
+   configuration, and of several `config.*` files reads the first. Here the configuration is one
+   file: configuration files in a configuration directory are an error that names the table each
+   one's settings go in (`[environments.<name>]` for an environment's), several `config.*` files
+   are an error, and the CLI has no `--configDir` and takes one `--config` file. The oracle's
+   configuration directories are folded into one file (`ssg_testkit::config_dir`); its cases
+   with several files or a `--config` list are not applicable.
 
 ## Notes for later tasks
 

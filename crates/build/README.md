@@ -6,7 +6,7 @@ entry point).
 ```rust
 pub enum SinkKind { Disk /* default */, Memory }
 pub struct BuildRequest { pub source: PathBuf, pub destination: Option<PathBuf>,
-                          pub config_files: Vec<PathBuf> /* T37: --config */, pub cli: CliOverrides,
+                          pub config_file: Option<PathBuf> /* T37: --config */, pub cli: CliOverrides,
                           pub clock: Option<jiff::Timestamp>, pub sink: SinkKind,
                           pub clean_destination: Option<bool> /* None: the config's cleanDestinationDir */,
                           pub threads: Option<usize> /* T36: the render pool size */,
@@ -28,7 +28,7 @@ pub struct BuildReport { pub pages, pub outputs, pub aliases, pub resources, pub
 
 **`fugo server` (T71).** The server loads the configuration itself (once per
 configuration change) with every language's base URL pointed at its listener and passes it as
-`config` (then `source`, `config_files`, `cli` and `destination` are not read). With
+`config` (then `source`, `config_file`, `cli` and `destination` are not read). With
 `live_reload`, every language's `SiteLinks::livereload` is its base URL (the port replaced by
 `LiveReload::port` when set), so the publisher puts the LiveReload script into every HTML page
 but the alias redirects (`Output::alias`, set for alias, `page/1/` alias and language-redirect

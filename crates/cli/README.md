@@ -32,8 +32,9 @@ Kebab-case, with Go's camelCase spelling as an alias. As in the Go build (cobra)
 come before the command: `args::command_first` moves the command to the front before clap
 parses, so `fugo -s site server` is `fugo server -s site` (a flag keeps its value:
 `fugo -e server` builds with the environment `server`). The Go build's persistent flags,
-`-s`, `-d`, `-e`, `--config`, `--config-dir`, `--themes-dir`, `--clock`, `-q` and `-M`,
-are clap `global` flags: every command accepts them, and
+`-s`, `-d`, `-e`, `--config`, `--themes-dir`, `--clock`, `-q` and `-M`, are clap `global`
+flags (not `--configDir`: the configuration is one file, and a configuration directory is an
+error): every command accepts them, and
 one that does not use a flag ignores it (`version -s x`, `config -q -d out`), as Go did. A
 boolean flag also takes pflag's explicit value, with Go's `strconv.ParseBool` spellings (`1`,
 `t`, `T`, `TRUE`, `true`, `True`; `0`, `f`, `F`, `FALSE`, `false`, `False`). The flags that set
@@ -46,8 +47,7 @@ it into the flag (true) or drops it (false, the default).
 | Flag | Alias | Commands | Effect |
 |---|---|---|---|
 | `-s`, `--source DIR` | | all | project directory (default: the working directory) |
-| `--config A,B` | | all | configuration files, relative to the source, first wins; default: the first of `config.{toml,yaml,yml,json}` (a warning names the others when several exist) |
-| `--config-dir DIR` | `--configDir` | all | `CliOverrides::config_dir` |
+| `--config FILE` | | all | the configuration file, relative to the source (one: a comma-separated list is a usage error); default: the project's `config.{toml,yaml,yml,json}` (several are an error) |
 | `-e`, `--environment ENV` | | all | the environment (default `production`; `development` for `server`); picks `.env.<ENV>` |
 | `-b`, `--base-url URL` | `--baseURL` | all | `baseURL` |
 | `-t`, `--theme A,B` | | all | `theme` |
@@ -126,7 +126,8 @@ message carries Tera's `--> <template>:<line>:<col>` snippet. A successful build
 
 | Old flag | Here |
 |---|---|
-| `source/s destination/d environment/e theme/t themesDir baseURL/b cacheDir ignoreCache buildDrafts/D buildFuture/F buildExpired/E clock config configDir cleanDestinationDir renderToMemory/M minify quiet` | the flags above (kebab-case + the camelCase alias) |
+| `source/s destination/d environment/e theme/t themesDir baseURL/b cacheDir ignoreCache buildDrafts/D buildFuture/F buildExpired/E clock config cleanDestinationDir renderToMemory/M minify quiet` | the flags above (kebab-case + the camelCase alias; `config` names one file) |
+| `configDir` | not supported (clap usage error): the configuration is one file |
 | `noTimes noChmod` | the flags above |
 | `logLevel noBuildLock gc printPathWarnings printI18nWarnings printUnusedTemplates templateMetrics templateMetricsHints` | not supported (clap usage error, above) |
 | `contentDir/c layoutDir/l disableKinds enableGitInfo panicOnWarning` | configuration keys (file or `FUGO_*`), not flags |

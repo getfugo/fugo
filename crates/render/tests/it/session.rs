@@ -45,7 +45,7 @@ fn session(dir: &Path) -> Arc<Session> {
     let cfg = Arc::new(
         ssg_config::load(&LoadOptions {
             source: dir.to_path_buf(),
-            config_files: Vec::new(),
+            config_file: None,
             cli: ssg_config::CliOverrides::default(),
             env: Vec::new(),
         })

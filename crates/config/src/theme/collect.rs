@@ -11,7 +11,6 @@ pub(super) struct Collector<'a> {
     /// [`path_key`]s of the imports taken.
     pub(super) seen: BTreeSet<String>,
     pub(super) out: Collected,
-    pub(super) diagnostics: &'a mut Vec<Diagnostic>,
 }
 
 impl Collector<'_> {
@@ -84,23 +83,25 @@ impl Collector<'_> {
     ) -> Result<usize, ConfigError> {
         let owner_path = owner.map(|i| self.out.themes[i].path.clone());
         let (dir, vendored) = self.find(owner_path.as_deref(), owner_dir, imp)?;
-        let sources = match imp.reads {
-            Reads::Nothing => Sources::default(),
-            Reads::All | Reads::ConfigOnly => read_config(&dir, self.diagnostics)?,
+        let source = match imp.reads {
+            Reads::Nothing => None,
+            Reads::All | Reads::ConfigOnly => read_config(&dir)?,
         };
-        let mut tree = sources.merged();
-        environments::apply(&mut tree, self.environment).map_err(|e| locate_in(&sources, e))?;
+        let mut tree = source.as_ref().map(Source::normalized).unwrap_or_default();
+        environments::apply(&mut tree, self.environment)
+            .map_err(|e| locate_in(source.as_ref(), e))?;
         let own_mounts: Vec<MountConfig> = match tree::get_path(&tree, "module.mounts") {
             None | Some(Value::Null) => Vec::new(),
             Some(v) => de::from_value(v)
-                .map_err(|e| locate_in(&sources, decode_error("module.mounts", &e)))?,
+                .map_err(|e| locate_in(source.as_ref(), decode_error("module.mounts", &e)))?,
         };
         let mounts = match &imp.mounts {
             ImportMounts::None => ThemeMounts::None,
             ImportMounts::These(m) => ThemeMounts::Configured(m.clone()),
             ImportMounts::Own if own_mounts.is_empty() => ThemeMounts::Components,
             ImportMounts::Own => {
-                check_mounts(&own_mounts, "module.mounts").map_err(|e| locate_in(&sources, e))?;
+                check_mounts(&own_mounts, "module.mounts")
+                    .map_err(|e| locate_in(source.as_ref(), e))?;
                 ThemeMounts::Configured(own_mounts)
             }
         };
@@ -108,11 +109,11 @@ impl Collector<'_> {
             path: imp.path.clone(),
             dir,
             owner: owner_path,
-            config_files: sources.files.iter().map(|s| s.path.to_path_buf()).collect(),
+            config_file: source.as_ref().map(|s| s.path.to_path_buf()),
             mounts,
             vendored,
         });
-        self.out.sources.push(sources);
+        self.out.sources.push(source);
         self.out.trees.push(tree);
         Ok(self.out.themes.len() - 1)
     }
@@ -164,7 +165,7 @@ impl Collector<'_> {
     /// project's, which the caller locates).
     pub(super) fn locate(&self, e: ConfigError, owner: Option<usize>) -> ConfigError {
         match owner {
-            Some(i) => locate_in(&self.out.sources[i], e),
+            Some(i) => locate_in(self.out.sources[i].as_ref(), e),
             None => e,
         }
     }

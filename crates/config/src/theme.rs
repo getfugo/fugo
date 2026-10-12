@@ -14,10 +14,9 @@
 //!   project's `module.replacements` (`"old -> new, …"`, a string or a list) renames
 //!   `[[module.imports]]` paths. A theme of a theme must stay below `themesDir` unless its path
 //!   was replaced. Remote modules are not downloaded: an import that is not found is an error.
-//! - **Configuration.** The first `config.*` in the theme's directory, then its
-//!   `config/_default/**`, read like the project's, with its `[environments.<name>]` table of
-//!   the build's environment merged over them; `theme.toml` (theme-site metadata) is not
-//!   configuration.
+//! - **Configuration.** The theme's one `config.*` file, with its `[environments.<name>]`
+//!   table of the build's environment merged over it; a configuration directory is an error,
+//!   as in the project. `theme.toml` (theme-site metadata) is not configuration.
 //! - **Mounts.** The importer's `[[module.imports.mounts]]`, else the theme's own
 //!   `[[module.mounts]]` (sources relative to the theme's directory), else each component
 //!   directory the theme has ([`ThemeMounts`]); the file system layer mounts them after the
@@ -28,14 +27,14 @@ use std::path::{Component, Path, PathBuf};
 use std::sync::Arc;
 
 use serde::{Deserialize, Serialize};
-use ssg_base::diag::{Diagnostic, Position};
+use ssg_base::diag::Position;
 use ssg_base::glob::{self, Glob, GlobOpts};
 use ssg_base::{Map, Value};
 
 use crate::error::ConfigError;
 use crate::global::{COMPONENTS, MountConfig};
-use crate::source::{self, Format, Source, Sources};
-use crate::{de, decode_error, environments, tree};
+use crate::source::{self, Source};
+use crate::{config_dir, de, decode_error, environments, tree};
 
 mod collect;
 
@@ -51,9 +50,8 @@ pub struct Theme {
     pub dir: PathBuf,
     /// The theme that imported this one (`None`: the project).
     pub owner: Option<String>,
-    /// The files its configuration was read from, lowest precedence first (none with
-    /// `ignoreConfig`).
-    pub config_files: Vec<PathBuf>,
+    /// The file its configuration was read from (none with `ignoreConfig`).
+    pub config_file: Option<PathBuf>,
     pub mounts: ThemeMounts,
     /// The version `_vendor/modules.txt` lists, when the theme was found in a `_vendor`
     /// directory.
@@ -163,9 +161,9 @@ enum ImportMounts {
 pub(crate) struct Collected {
     /// In precedence order.
     pub themes: Vec<Theme>,
-    /// Each theme's configuration files (in `themes` order).
-    pub sources: Vec<Sources>,
-    /// Each theme's configuration tree (its files merged, keys normalised).
+    /// Each theme's configuration file (in `themes` order).
+    pub sources: Vec<Option<Source>>,
+    /// Each theme's configuration tree (keys normalised, its environment's table merged).
     pub trees: Vec<Map>,
 }
 
@@ -180,7 +178,6 @@ pub(crate) fn collect(
     project: &Path,
     root: &Map,
     environment: &str,
-    diagnostics: &mut Vec<Diagnostic>,
 ) -> Result<Collected, ConfigError> {
     let dirs = crate::Dirs::from_tree(root);
     let ignore_vendor = match root.get("ignorevendorpaths").and_then(de::weak_string) {
@@ -204,7 +201,6 @@ pub(crate) fn collect(
         },
         seen: BTreeSet::new(),
         out: Collected::default(),
-        diagnostics,
     };
     let imports = c.imports(root, None)?;
     c.visit(None, project, imports)?;
@@ -258,23 +254,13 @@ impl Vendor {
     }
 }
 
-/// A theme's configuration files: the first of `config.*`, `config.*` in `dir`,
-/// then `config/_default/**` (a folder of an environment is an error).
-fn read_config(dir: &Path, diagnostics: &mut Vec<Diagnostic>) -> Result<Sources, ConfigError> {
-    let mut files = Vec::new();
-    let (found, warning) = source::find_config_file(dir);
-    diagnostics.extend(warning);
-    if let Some(path) = found {
-        let format = Format::from_path(&path).expect("a configuration file name");
-        files.push(Source::read(&path, format, Vec::new())?);
-    }
-    let config_dir = dir.join("config");
-    environments::refuse_folders(&config_dir)?;
-    let d = config_dir.join("_default");
-    if d.is_dir() {
-        files.extend(source::dir_files(&d)?);
-    }
-    Ok(Sources { files })
+/// A theme's configuration file: the `config.*` in `dir`, if there is one (several, or a
+/// configuration directory, are an error).
+fn read_config(dir: &Path) -> Result<Option<Source>, ConfigError> {
+    config_dir::refuse(dir)?;
+    source::find_config_file(dir)?
+        .map(|path| source::read_file(&path))
+        .transpose()
 }
 
 /// The project's `module.replacements`: `"old -> new"` pairs, comma-separated in a string (or
@@ -330,14 +316,14 @@ fn check_mounts(mounts: &[MountConfig], key: &str) -> Result<(), ConfigError> {
     Ok(())
 }
 
-/// Adds the position of a value error's key in `sources` (the theme's configuration).
-fn locate_in(sources: &Sources, e: ConfigError) -> ConfigError {
+/// Adds the position of a value error's key in `source` (the theme's configuration).
+fn locate_in(source: Option<&Source>, e: ConfigError) -> ConfigError {
     match e {
         ConfigError::Invalid {
             key,
             position: None,
             message,
-        } => match sources.locate(&crate::key_segments(&key)) {
+        } => match source.and_then(|s| s.locate(&crate::key_segments(&key))) {
             Some(found) => ConfigError::Invalid {
                 key: found.dotted_key(),
                 position: Some(found.position),

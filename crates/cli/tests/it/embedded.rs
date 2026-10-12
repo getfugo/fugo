@@ -57,13 +57,20 @@ const NO_NETWORK: &[(&str, &str)] = &[
     ("ALL_PROXY", "http://127.0.0.1:9"),
 ];
 
+/// The overlay's settings, which go into the testsite's `config.toml`.
+const OVERLAY_CONFIG: &str = "overlay-config.toml";
+
 /// The testsite plus the overlay, in `dir`.
 fn overlay_site(dir: &Path) {
     testsite(dir);
-    Archive::read(&fixture("embedded-overlay.txtar"))
-        .expect("read overlay")
-        .write_to(dir)
-        .expect("write overlay");
+    let mut overlay = Archive::read(&fixture("embedded-overlay.txtar")).expect("read overlay");
+    let at = overlay
+        .files
+        .iter()
+        .position(|f| f.name == OVERLAY_CONFIG)
+        .expect(OVERLAY_CONFIG);
+    let settings = overlay.files.remove(at).data;
+    overlay.write_to(dir).expect("write overlay");
     for png in [
         "content/embedded/bundle/feature.png",
         "content/embedded/bundle/other.png",
@@ -82,6 +89,7 @@ fn overlay_site(dir: &Path) {
         "timeout = \"5s\"\n[markup.goldmark.parser]\nwrapStandAloneImageWithinParagraph = false\n\
          [markup.goldmark.parser.attribute]\nblock = true\n",
     );
+    toml.push_str(&settings);
     fs::write(&cfg, toml).expect("write config.toml");
     let cache = dir.join("resources/_gen/getresource");
     fs::create_dir_all(&cache).expect("mkdir cache");
@@ -99,21 +107,23 @@ fn read(dir: &Path, rel: &str) -> String {
     fs::read_to_string(dir.join("public").join(rel)).unwrap_or_else(|e| panic!("{rel}: {e}"))
 }
 
-/// Builds the overlay site with `privacy` as `config/_default/privacy.toml`; the site dir and
-/// the warnings (with the temporary directory redacted).
+/// Builds the overlay site with `privacy` (`[privacy.*]` tables) in its `config.toml`; the site
+/// dir and the warnings (with the temporary directory redacted).
 fn build(privacy: &str) -> (tempfile::TempDir, std::path::PathBuf, String) {
     let tmp = tempfile::tempdir().expect("tempdir");
     let site = tmp.path().join("testsite");
     overlay_site(&site);
-    fs::write(site.join("config/_default/privacy.toml"), privacy).expect("privacy.toml");
+    let cfg = site.join("config.toml");
+    let toml = fs::read_to_string(&cfg).expect("config.toml") + privacy;
+    fs::write(&cfg, toml).expect("write config.toml");
     let o = binary(&site, &["--clock", "2026-01-01T00:00:00Z"], NO_NETWORK);
     let err = crate::redact_site(&stderr(&o), &site);
     assert!(o.status.success(), "{err}");
     (tmp, site, err)
 }
 
-const PRIVACY: &str =
-    "[googleAnalytics]\nrespectDoNotTrack = true\n[youtube]\nprivacyEnhanced = true\n";
+const PRIVACY: &str = "[privacy.googleAnalytics]\nrespectDoNotTrack = true\n\
+                       [privacy.youtube]\nprivacyEnhanced = true\n";
 
 /// Every page of the overlay that calls an embedded template.
 #[test]
@@ -149,7 +159,8 @@ fn embedded_templates() {
 #[test]
 fn embedded_templates_simple_and_disabled() {
     let (_tmp, site, warnings) = build(
-        "[vimeo]\nsimple = true\nenableDNT = false\n[x]\nsimple = true\n[instagram]\nsimple = true\n",
+        "[privacy.vimeo]\nsimple = true\nenableDNT = false\n[privacy.x]\nsimple = true\n\
+         [privacy.instagram]\nsimple = true\n",
     );
     assert_eq!(warnings, "", "no warnings");
     let page = read(&site, "embedded/shortcodes/index.html");
@@ -165,8 +176,9 @@ fn embedded_templates_simple_and_disabled() {
     });
 
     let (_tmp, site, warnings) = build(
-        "[googleAnalytics]\ndisable = true\n[youtube]\ndisable = true\n[vimeo]\ndisable = true\n\
-         [x]\ndisable = true\n[instagram]\ndisable = true\n",
+        "[privacy.googleAnalytics]\ndisable = true\n[privacy.youtube]\ndisable = true\n\
+         [privacy.vimeo]\ndisable = true\n[privacy.x]\ndisable = true\n[privacy.instagram]\n\
+         disable = true\n",
     );
     assert_eq!(warnings, "", "no warnings");
     let page = read(&site, "embedded/shortcodes/index.html");

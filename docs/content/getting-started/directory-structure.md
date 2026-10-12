@@ -8,8 +8,7 @@ A fugo project looks like this:
 
 ```text
 my-site/
-├── config.toml        the configuration (or config.yaml, config.yml, config.json)
-├── config/            optional: configuration split by environment
+├── config.toml        the configuration, one file (or config.yaml, config.yml, config.json)
 ├── content/           Markdown and HTML content
 ├── layouts/           Tera templates
 ├── assets/            files processed by asset pipelines (Sass, JavaScript, images)
@@ -24,14 +23,11 @@ Only `config.toml` and the content are required to start. A directory that does 
 simply empty.
 
 `config.toml`, `config.yaml`, `config.yml`, `config.json`
-: The [configuration](/configuration/). fugo reads the first one that exists, in that order.
-  Other file names are not read: rename a configuration file named after another generator to
-  `config.toml`.
-
-`config/`
-: Configuration split into files in `config/_default/`
-  (see [Configuration directory](/configuration/introduction/#configuration-directory)). Each
-  environment's settings go in its `[environments.<name>]` table, not in a folder.
+: The [configuration](/configuration/), one file: several are an error. Other file names are
+  not read: rename a configuration file named after another generator to `config.toml`. Every
+  setting is in it, each environment's in its `[environments.<name>]` table: fugo does not read
+  a configuration directory (`config/_default/`), and stops with an error at one (see
+  [No configuration directory](/configuration/introduction/#no-configuration-directory)).
 
 `content/`
 : The pages of the site. The directory tree becomes the URL tree: `content/posts/hello.md` is

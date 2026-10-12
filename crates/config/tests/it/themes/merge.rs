@@ -242,9 +242,10 @@ fn load_config_from_themes_sitemap_by_root_strategy() {
     }
 }
 
-/// `TestLoadConfigFromThemeDir`: the theme's `config/_default` over its `config.toml`, and its
-/// `[environments.production]` (Go's `config/production`) over both; the project's
-/// `config/config.toml` is not a configuration file.
+/// `TestLoadConfigFromThemeDir`: the theme's `config/_default` over its `config.toml` (one
+/// file here, the directory's values winning), and its `[environments.production]` (Go's
+/// `config/production`) over it; the project's `config/config.toml` is not a configuration
+/// file.
 #[test]
 fn load_config_from_theme_dir() {
     let p = Project::new(&[
@@ -254,13 +255,10 @@ fn load_config_from_theme_dir() {
         ),
         (
             "themes/test-theme/config.toml",
-            "[params]\nt1 = \"tv1\"\nt2 = \"tv2\"\n[environments.production.params]\nt3 = \"tv3p\"\n",
+            "[params]\nt1 = \"tv1\"\nt2 = \"tv2d\"\nt3 = \"tv3d\"\n\
+             [environments.production.params]\nt3 = \"tv3p\"\n",
         ),
         ("config/config.toml", "[params]\nm2 = \"mv2\"\n"),
-        (
-            "themes/test-theme/config/_default/config.toml",
-            "[params]\nt2 = \"tv2d\"\nt3 = \"tv3d\"\n",
-        ),
     ]);
     assert_eq!(
         params(&p.ok()),
@@ -315,7 +313,7 @@ title = "Svensk Title Theme"
 }
 
 /// `config/allconfig` `TestMergeDeep`: the root's `_merge = "deep"` over two themes, the second
-/// configured in its `config/_default/config.toml`.
+/// configured in its `config/_default/config.toml` (its `config.toml` here).
 #[test]
 fn merge_deep() {
     let p = Project::new(&[
@@ -327,10 +325,7 @@ fn merge_deep() {
             "themes/theme1/config.toml",
             "[sitemap]\nfilename = 'mysitemap.xml'\n[services]\n[services.googleAnalytics]\nid = 'foo bar'\n[taxonomies]\n  foo = 'bars'\n",
         ),
-        (
-            "themes/theme2/config/_default/config.toml",
-            "[taxonomies]\n  bar = 'baz'\n",
-        ),
+        ("themes/theme2/config.toml", "[taxonomies]\n  bar = 'baz'\n"),
     ]);
     let c = p.ok();
     let s = c.default_site();

@@ -25,8 +25,8 @@ strings. A theme's more specific template still beats your general one: the them
 
 ## Configuration
 
-A theme's `config.toml` (or `config/` directory) is merged below yours: your values always win,
-and the theme adds what you do not set. The theme's
+A theme's configuration file (one `config.toml`, as in a project) is merged below yours: your
+values always win, and the theme adds what you do not set. The theme's
 [`[environments.<name>]`](/configuration/introduction/#environments) table of the build's
 environment is merged over its own settings first.
 

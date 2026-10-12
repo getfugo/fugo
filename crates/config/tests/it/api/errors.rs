@@ -35,20 +35,17 @@ fn error_positions() {
     let e = p.load(CliOverrides::default(), &[]).expect_err("syntax");
     assert_eq!(position(&e), ("config.json".into(), 2, 12));
 
-    // A value of the wrong type points at its key, in the file that set it.
-    let p = Project::new(&[
-        ("config.toml", "title = \"x\"\n"),
-        (
-            "config/_default/markup.toml",
-            "[goldmark]\n[goldmark.parser]\nautoHeadingIDType = \"nope\"\n",
-        ),
-    ]);
+    // A value of the wrong type points at its key.
+    let p = Project::new(&[(
+        "config.toml",
+        "title = \"x\"\n[markup.goldmark]\n[markup.goldmark.parser]\nautoHeadingIDType = \"nope\"\n",
+    )]);
     let e = p.load(CliOverrides::default(), &[]).expect_err("typed");
     let ConfigError::Invalid { key, .. } = &e else {
         panic!("{e}")
     };
     assert_eq!(key, "markup.goldmark.parser.autoHeadingIDType");
-    assert_eq!(position(&e), ("markup.toml".into(), 3, 1));
+    assert_eq!(position(&e), ("config.toml".into(), 4, 1));
 
     // In a language table.
     let p = Project::new(&[(

@@ -274,10 +274,6 @@ fn the_worker_has_the_settings_and_common_inline() {
             ("content".to_owned(), "content/**".to_owned()),
             ("data".to_owned(), "data/**".to_owned()),
             ("i18n".to_owned(), "i18n/**".to_owned()),
-            (
-                "config".to_owned(),
-                "config/_default/{params,menus,menu}.*".to_owned()
-            ),
         ]
     );
     let content_ext = settings["areas"][0]["ext"].as_array().expect("ext");

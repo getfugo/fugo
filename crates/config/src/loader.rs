@@ -10,10 +10,10 @@ pub(super) struct Loader<'a> {
     pub(super) o: &'a LoadOptions,
     /// The build's environment: `--environment`, else `production`.
     pub(super) environment: String,
-    /// The project's configuration files.
-    pub(super) sources: source::Sources,
-    /// Each theme's configuration files, in precedence order.
-    pub(super) theme_sources: Vec<source::Sources>,
+    /// The project's configuration file.
+    pub(super) source: Option<source::Source>,
+    /// Each theme's configuration file, in precedence order.
+    pub(super) theme_sources: Vec<Option<source::Source>>,
     pub(super) diagnostics: Vec<Diagnostic>,
 }
 
@@ -28,7 +28,7 @@ impl<'a> Loader<'a> {
         Self {
             o,
             environment,
-            sources: source::Sources::default(),
+            source: None,
             theme_sources: Vec::new(),
             diagnostics: Vec::new(),
         }
@@ -47,28 +47,16 @@ impl<'a> Loader<'a> {
         let project = self.o.source.clone();
         let environment = self.environment.clone();
 
-        // Step 2: sources.
-        let config_dir = project.join(
-            self.o
-                .cli
-                .config_dir
-                .as_deref()
-                .unwrap_or(Path::new("config")),
-        );
-        self.sources.files =
-            source::project_files(&project, &self.o.config_files, &mut self.diagnostics)?;
-        environments::refuse_folders(&config_dir)?;
-        let default_dir = config_dir.join("_default");
-        if default_dir.is_dir() {
-            self.sources.files.extend(source::dir_files(&default_dir)?);
-        }
-        if self.sources.files.is_empty() {
+        // Step 2: the source.
+        config_dir::refuse(&project)?;
+        let Some(source) = source::project_file(&project, self.o.config_file.as_deref())? else {
             return Err(ConfigError::NotFound { dir: project });
-        }
+        };
+        let mut root = source.normalized();
+        self.source = Some(source);
         let env_file = EnvFile::load(&project, &environment, &mut self.diagnostics)?;
 
         // Steps 3 and 4: normalise, the environment's table, migrate, merge.
-        let mut root = self.sources.merged();
         environments::apply(&mut root, &environment).map_err(|e| self.locate(e, ""))?;
         self.migrate(&mut root);
         tree::merge_deep(&mut root, &tree::normalize_keys(&self.o.cli.to_tree()));
@@ -76,8 +64,8 @@ impl<'a> Loader<'a> {
 
         // Step 4, then: the themes (found and read) and their configuration below the
         // project's.
-        let themes = theme::collect(&project, &root, &environment, &mut self.diagnostics)
-            .map_err(|e| self.locate(e, ""))?;
+        let themes =
+            theme::collect(&project, &root, &environment).map_err(|e| self.locate(e, ""))?;
         if !themes.trees.is_empty() {
             merge::merge_themes(&mut root, &themes.trees);
         }
@@ -163,8 +151,9 @@ impl<'a> Loader<'a> {
                 .theme_sources
                 .iter()
                 .rev()
-                .chain(std::iter::once(&self.sources))
-                .flat_map(|s| s.files.iter().map(|f| f.path.to_path_buf()))
+                .chain(std::iter::once(&self.source))
+                .flatten()
+                .map(|s| s.path.to_path_buf())
                 .collect(),
             sites,
             disabled_languages: langs.disabled,
@@ -219,7 +208,7 @@ impl<'a> Loader<'a> {
         }
     }
 
-    /// Adds the file position of the offending key to a value error: the project's files
+    /// Adds the file position of the offending key to a value error: the project's file
     /// first, then the themes' in precedence order, and in each the environment's table first.
     pub(super) fn locate(&self, e: ConfigError, lang: &str) -> ConfigError {
         match e {
@@ -240,8 +229,9 @@ impl<'a> Loader<'a> {
                     out
                 };
                 let keys = [in_env(&in_lang), in_env(&segs), in_lang, segs];
-                let found = std::iter::once(&self.sources)
+                let found = std::iter::once(&self.source)
                     .chain(&self.theme_sources)
+                    .flatten()
                     .find_map(|s| keys.iter().find_map(|k| s.locate(k)));
                 match found {
                     Some(found) => ConfigError::Invalid {

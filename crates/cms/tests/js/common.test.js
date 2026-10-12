@@ -48,13 +48,13 @@ test("areas and edit globs", () => {
   const settings = {
     areas: [
       { kind: "content", glob: "content/**", ext: ["md", "jpg"] },
-      { kind: "config", glob: "config/_default/{params,menus,menu}.*", ext: ["toml"] },
+      { kind: "data", glob: "data/**", ext: ["yaml"] },
     ],
     deny: ["**/_content.*"],
   };
   assert.equal(areaOf(settings, "content/a.md").kind, "content");
-  assert.equal(areaOf(settings, "config/_default/params.en.toml").kind, "config");
-  for (const p of ["content/a.svg", "content/_content.md", "content/_Content.md", "content/x/_CONTENT.th.MD", "layouts/a.md", "config/_default/config.toml", "config/production/params.toml"]) {
+  assert.equal(areaOf(settings, "data/en/prices.yaml").kind, "data");
+  for (const p of ["content/a.svg", "content/_content.md", "content/_Content.md", "content/x/_CONTENT.th.MD", "layouts/a.md", "data/a.toml", "config.toml", "config/_default/params.toml"]) {
     assert.equal(areaOf(settings, p), null, p);
   }
   assert.equal(mayEdit(settings, ["**"], "content/a.md"), true);

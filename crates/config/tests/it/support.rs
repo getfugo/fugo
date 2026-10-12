@@ -65,13 +65,25 @@ pub fn materialize(case: &J, site_dir: &str) -> Result<Site, NotApplicable> {
             std::fs::write(&path, expand(content.as_str().expect("text"))).expect("write");
         }
     }
-    // Go's environment folders, in the project's configuration directory and the themes', are
-    // `[environments.<name>]` tables here.
+    // The configuration is one file here: several (`config.toml` and `config.yaml`, a `--config`
+    // list) are an error, and Go's configuration directories, the project's (`configDir`) and
+    // the themes', are folded into the configuration file.
+    let several = ssg_config::config_file_names()
+        .filter(|n| dir.join(n).is_file())
+        .count();
+    if several > 1 {
+        return Err("several configuration files");
+    }
+    if case["filename"].as_str().is_some_and(|f| f.contains(',')) {
+        return Err("a list of configuration files");
+    }
     let config_dir = case["configDir"]
         .as_str()
         .filter(|s| !s.is_empty())
         .unwrap_or("config");
-    ssg_testkit::environments::recreate_as_tables(&dir, config_dir);
+    if ssg_testkit::config_dir::fold(&dir, config_dir).is_err() {
+        return Err("a configuration directory with a file that does not parse");
+    }
     // The oracle recorded the Go program's environment variables ([`GO_ENV_PREFIX`]); the same
     // settings are read with this program's prefix (`ssg_base::ENV_PREFIX`), and none under the
     // Go names.
@@ -109,9 +121,6 @@ pub fn materialize(case: &J, site_dir: &str) -> Result<Site, NotApplicable> {
             .map(str::to_owned),
         ..CliOverrides::default()
     };
-    if let Some(d) = case["configDir"].as_str().filter(|s| !s.is_empty()) {
-        cli.config_dir = Some(d.into());
-    }
     if let Some(flags) = case["flags"].as_object() {
         for (k, v) in flags {
             let s = || expand(v.as_str().unwrap_or_default());
@@ -127,16 +136,11 @@ pub fn materialize(case: &J, site_dir: &str) -> Result<Site, NotApplicable> {
             }
         }
     }
-    let mut config_files = Vec::new();
-    if let Some(f) = case["filename"].as_str() {
-        for name in expand(f).split(',') {
-            config_files.push(PathBuf::from(name));
-        }
-    }
+    let config_file = case["filename"].as_str().map(|f| PathBuf::from(expand(f)));
     Ok(Site {
         options: LoadOptions {
             source: dir.clone(),
-            config_files,
+            config_file,
             cli,
             env,
         },

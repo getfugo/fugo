@@ -273,7 +273,7 @@ fn build(dir: tempfile::TempDir) -> Site {
     let cfg = Arc::new(
         ssg_config::load(&LoadOptions {
             source: dir.path().to_path_buf(),
-            config_files: Vec::new(),
+            config_file: None,
             cli: ssg_config::CliOverrides::default(),
             env: Vec::new(),
         })

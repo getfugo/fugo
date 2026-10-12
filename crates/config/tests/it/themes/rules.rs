@@ -161,7 +161,7 @@ fn theme_mounts_and_import_options() {
             ("own", &configured("files", "static")),
         ]
     );
-    assert!(c.themes[0].config_files.is_empty());
+    assert!(c.themes[0].config_file.is_none());
     assert_eq!(params(&c), toml("fromnomounts = true\n"));
     // `config` prints the themes (JSON and TOML).
     let json = serde_json::to_value(&c).expect("json");

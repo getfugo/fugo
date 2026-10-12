@@ -26,7 +26,6 @@ export const SETTINGS = {
   areas: [
     { kind: "content", glob: "content/**", ext: ["md", "jpg", "png"] },
     { kind: "data", glob: "data/**", ext: ["yaml", "toml", "json"] },
-    { kind: "config", glob: "config/_default/{params,menus,menu}.*", ext: ["toml", "yaml", "yml", "json"] },
   ],
   deny: ["**/_content.*"],
   maxUpload: 64 * 1024,

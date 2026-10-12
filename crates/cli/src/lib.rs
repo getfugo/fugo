@@ -94,7 +94,6 @@ impl ProjectArgs {
             themes_dir: self.themes_dir.clone(),
             theme: (!self.theme.is_empty()).then(|| self.theme.clone()),
             ignore_cache: self.ignore_cache,
-            config_dir: self.config_dir.clone(),
             ..CliOverrides::default()
         }
     }
@@ -103,7 +102,7 @@ impl ProjectArgs {
     fn load_options(&self) -> anyhow::Result<LoadOptions> {
         Ok(LoadOptions {
             source: self.source_dir()?,
-            config_files: self.config.clone(),
+            config_file: self.config.clone(),
             cli: self.overrides(),
             env: ssg_build::process_env(),
         })

@@ -37,7 +37,7 @@ pub fn session_in(dir: &Path, extra: &dyn Fn(&mut tera::Tera, &Handles)) -> Arc<
     let cfg = Arc::new(
         ssg_config::load(&LoadOptions {
             source: dir.to_path_buf(),
-            config_files: Vec::new(),
+            config_file: None,
             cli: ssg_config::CliOverrides::default(),
             env: Vec::new(),
         })

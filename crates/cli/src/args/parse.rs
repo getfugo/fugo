@@ -119,6 +119,17 @@ pub(super) fn has_short(a: &Arg, c: char) -> bool {
     a.get_short() == Some(c) || a.get_all_short_aliases().is_some_and(|v| v.contains(&c))
 }
 
+/// `--config`: one file, not the Go build's comma-separated list.
+pub(super) fn parse_config_file(s: &str) -> Result<PathBuf, String> {
+    if s.contains(',') {
+        return Err(
+            "names one file, not a list: the configuration is one file (merge the others into it)"
+                .to_owned(),
+        );
+    }
+    Ok(PathBuf::from(s))
+}
+
 pub(super) fn parse_clock(s: &str) -> Result<jiff::Timestamp, String> {
     s.parse::<jiff::Timestamp>()
         .map_err(|e| format!("not an RFC 3339 time with an offset: {e}"))

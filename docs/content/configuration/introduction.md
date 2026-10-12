@@ -1,14 +1,14 @@
 ---
 title: Introduction
-description: How fugo finds and merges its configuration — the file, the configuration directory, environments and command-line flags — and the .env file for secrets.
+description: How fugo reads its configuration — one file, its environments and command-line flags — and the .env file for secrets.
 weight: 10
 ---
 
 ## The configuration file
 
-fugo reads the first of `config.toml`, `config.yaml`, `config.yml` and `config.json` in the
-project directory (`--source`). If there are several, it warns about the others. `--config`
-names other files, comma-separated; the first wins where they disagree.
+The configuration is one file: `config.toml`, `config.yaml`, `config.yml` or `config.json` in
+the project directory (`--source`). If there are several, fugo stops with an error that names
+them: merge them into one. `--config` names another file instead (one file, not a list).
 
 ```toml {title="config.toml"}
 baseURL = "https://example.org/"
@@ -22,25 +22,22 @@ languageCode = "en-US"
 Keys are case-insensitive: `baseURL` and `baseurl` are the same. Other file names are not
 read: rename a configuration file named after another generator to `config.toml`.
 
-## Configuration directory
+## No configuration directory
 
-Settings can be split into files in `config/_default/` (or `_default/` of `--config-dir`):
+Settings are not split into files: fugo does not read a configuration directory
+(`config/_default/`, `config/production/`). When a folder of `config/` holds configuration
+files, fugo stops with an error that names the table of the configuration file each one's
+settings belong in:
 
 ```text
-config/
-└── _default/
-    ├── config.toml       root settings
-    ├── params.toml       [params]
-    ├── menus.en.toml     [languages.en.menus]
-    └── languages.toml    [languages]
+config/_default/params.toml       →  [params]
+config/_default/menus.en.toml     →  [languages.en.menus]
+config/_default/imaging.toml      →  [imaging]
+config/_default/config.toml       →  the root
+config/production/params.toml     →  [environments.production.params]
 ```
 
-A file's name says where its settings go: `params.toml` is `[params]`, `menus.en.toml` the
-English menus, `config.toml` the root.
-
-The settings of one environment go in its [`[environments.<name>]`](#environments) table, not in
-a folder of their own: fugo stops with an error at `config/production/`, or any other folder
-beside `_default/` that holds a configuration file, and names the table its settings belong in.
+The settings of one environment go in its [`[environments.<name>]`](#environments) table.
 
 ## Environments
 
@@ -76,8 +73,7 @@ the environment as `build.environment`, `build.is_production`, `build.is_develop
 ## Precedence
 
 From lowest to highest: themes (see [Themes](/configuration/themes/#configuration)), the configuration
-file, `config/_default/`, `[environments.<environment>]`, command-line flags (`--base-url`,
-`--destination`, …).
+file, `[environments.<environment>]`, command-line flags (`--base-url`, `--destination`, …).
 
 A table with `_merge = "none"` replaces the table below it instead of merging into it.
 

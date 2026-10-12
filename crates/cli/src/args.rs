@@ -2,10 +2,11 @@
 //! (`--clean-destination-dir` / `--cleanDestinationDir`, `--base-url` / `--baseURL`).
 //!
 //! As in the Go build (cobra), flags may come before the command ([`command_first`]), and the Go
-//! build's persistent flags (`-s`, `-d`, `-e`, `--config`, `--config-dir`, `--themes-dir`,
-//! `--clock`, `-q`, `-M`) are accepted by every command (`global`); the commands that do not
-//! use one ignore it. The Go build's logging and housekeeping flags (`--gc`, `--logLevel`, …)
-//! are not: they are usage errors.
+//! build's persistent flags (`-s`, `-d`, `-e`, `--config`, `--themes-dir`, `--clock`, `-q`,
+//! `-M`) are accepted by every command (`global`); the commands that do not use one ignore it.
+//! The Go build's logging and housekeeping flags (`--gc`, `--logLevel`, …) and `--configDir`
+//! are not: they are usage errors. `--config` names one file (the configuration is one file),
+//! not a comma-separated list.
 //!
 //! A boolean flag takes pflag's explicit value (`--minify=false`, `-D=1`, with Go's
 //! `strconv.ParseBool` spellings, `parse_bool`). The flags that set a configuration key
@@ -91,13 +92,10 @@ pub struct ProjectArgs {
     /// The project directory (default: the working directory).
     #[arg(short = 's', long, value_name = "DIR", global = true)]
     pub source: Option<PathBuf>,
-    /// Configuration files, relative to the source (comma-separated; the first wins). Default:
-    /// the first of `config.{toml,yaml,yml,json}`.
-    #[arg(long, value_name = "FILES", value_delimiter = ',', global = true)]
-    pub config: Vec<PathBuf>,
-    /// The configuration directory (default `config`).
-    #[arg(long, alias = "configDir", value_name = "DIR", global = true)]
-    pub config_dir: Option<PathBuf>,
+    /// The configuration file, relative to the source. Default: the project's `config.toml`,
+    /// `config.yaml`, `config.yml` or `config.json`.
+    #[arg(long, value_name = "FILE", value_parser = parse_config_file, global = true)]
+    pub config: Option<PathBuf>,
     /// The build environment (default `production`, `development` for `server`): picks the
     /// configuration's `[environments.<environment>]` table and the `.env.<environment>` file.
     #[arg(short = 'e', long, value_name = "ENV", global = true)]

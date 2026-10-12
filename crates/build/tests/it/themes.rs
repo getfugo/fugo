@@ -1,6 +1,6 @@
 //! A project built with a theme (`ssg-config`'s theme merge, `ssg-vfs`'s theme
 //! mounts): the theme's params, menus and output format take effect below the project's
-//! configuration, from `config.toml` (a `config.yaml` next to it is ignored with a warning).
+//! configuration, its one `config.toml` (a `config.yaml` next to it is an error).
 
 use ssg_build::{BuildRequest, SinkKind, build};
 
@@ -19,7 +19,6 @@ greeting = "Hello from the project"
 home = ["html", "searchindex"]
 "#,
     ),
-    ("config.yaml", "title: Ignored\n"),
     (
         "themes/demo/config.toml",
         r#"title = "Theme title (a root value: not merged)"
@@ -94,17 +93,17 @@ fn theme_params_menus_and_output_format() {
     );
     assert_eq!(text("about/index.html"), "<h1>About</h1><p>About us.</p>\n");
 
-    // config.toml is read; the config.yaml next to it is reported.
-    let warnings: Vec<String> = report
-        .diagnostics
-        .iter()
-        .filter(|d| d.id.as_deref() == Some("config-file-ignored"))
-        .map(ToString::to_string)
-        .collect();
-    assert_eq!(warnings.len(), 1, "{:?}", report.diagnostics);
+    // The configuration is one file: a config.yaml next to config.toml stops the build.
+    std::fs::write(site.join("config.yaml"), "title: Second\n").expect("config.yaml");
+    let e = build(BuildRequest {
+        source: site.clone(),
+        sink: SinkKind::Memory,
+        ..BuildRequest::default()
+    })
+    .expect_err("two configuration files");
     assert!(
-        warnings[0].contains("using config.toml; ignoring config.yaml"),
-        "{}",
-        warnings[0]
+        e.to_string()
+            .contains("several configuration files (config.toml, config.yaml)"),
+        "{e}"
     );
 }

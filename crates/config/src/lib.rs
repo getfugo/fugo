@@ -2,19 +2,17 @@
 //!
 //! One `Value`-tree pipeline, then typed structs:
 //!
-//! 1. **Bootstrap**: the environment and the config directory come from [`CliOverrides`]
-//!    (default environment `production`).
-//! 2. **Sources**: the project file (the first of `config.toml`, `config.yaml`,
-//!    `config.yml`, `config.json`, then `config.*`; the Go program's configuration file name is
-//!    not read; a warning names the others when several exist; or the explicit list), then
-//!    `config/_default/**` (file names place their content: `config.*` at the root,
-//!    `params.toml` under `params`, `menus.en.toml` under `languages.en.menus`). Other folders
-//!    of the directory (`config/production/`) are an error.
-//! 3. **Normalise** each tree ([`tree::normalize_keys`]), merge the environment's
-//!    `[environments.<name>]` table over them and migrate legacy keys
+//! 1. **Bootstrap**: the environment comes from [`CliOverrides`] (default `production`).
+//! 2. **Source**: one configuration file, the project's `config.toml`, `config.yaml`,
+//!    `config.yml` or `config.json` (several are an error; the Go program's configuration file
+//!    name is not read), or `--config`. The Go build's configuration directory
+//!    (`config/_default/`, `config/production/`) is not read: configuration files in it are an
+//!    error that names the table each one's settings go in.
+//! 3. **Normalise** the tree ([`tree::normalize_keys`]), merge the environment's
+//!    `[environments.<name>]` table over it and migrate legacy keys
 //!    ([`tree::migrate_legacy_keys`]).
-//! 4. **Merge once**: file < directory < environment table < CLI (settings never come from
-//!    the environment variables, [`env`]); then the themes
+//! 4. **Merge once**: file < environment table < CLI (settings never come from the
+//!    environment variables, [`env`]); then the themes
 //!    ([`theme`]: `theme`, `[[module.imports]]` and their themes) are read and their
 //!    configuration merged below the project's by Go's `_merge` rules ([`merge`]).
 //! 5. **Per language**: `languages.X` over the root (`params` merge deeply, `menus`,
@@ -28,6 +26,7 @@
 
 #![forbid(unsafe_code)]
 
+mod config_dir;
 pub mod de;
 pub mod duration;
 pub mod env;
@@ -100,8 +99,6 @@ pub struct CliOverrides {
     pub theme: Option<Vec<String>>,
     /// `--ignoreCache`.
     pub ignore_cache: Option<bool>,
-    /// `--configDir` (default `config`).
-    pub config_dir: Option<PathBuf>,
     /// `--noTimes`: the static copy does not copy modification times.
     pub no_times: Option<bool>,
     /// `--noChmod`: the static copy does not copy permissions.
@@ -149,10 +146,9 @@ impl CliOverrides {
 pub struct LoadOptions {
     /// The project directory (`--source`).
     pub source: PathBuf,
-    /// `--config` files, relative to `source`; the first has the highest precedence. Empty:
-    /// the first of `config.toml`, `config.yaml`, `config.yml`, `config.json`, `config.*`
-    /// ([`config_file_names`]).
-    pub config_files: Vec<PathBuf>,
+    /// `--config`: the configuration file, relative to `source`. `None`: the one of
+    /// `config.toml`, `config.yaml`, `config.yml` and `config.json` ([`config_file_names`]).
+    pub config_file: Option<PathBuf>,
     pub cli: CliOverrides,
     /// The process environment: `HOME`, `XDG_CACHE_HOME`, `TMPDIR` and `USER` for the default
     /// cache directory ([`env::is_read`]; other variables are not read).

@@ -226,7 +226,7 @@ test("save: roles and areas decide what may be written", async () => {
     ["writer@example.com", one("layouts/home.html"), 403],
     ["boss@example.com", one("layouts/home.html"), 403],
     ["boss@example.com", one("config.toml"), 403],
-    ["boss@example.com", one("config/production/params.toml"), 403],
+    ["boss@example.com", one("config/_default/params.toml"), 403],
     ["boss@example.com", one("content/books/_content.html"), 403],
     ["boss@example.com", one("content/books/_Content.md"), 403],
     ["boss@example.com", one("content/books/_CONTENT.TH.MD"), 403],
@@ -243,7 +243,7 @@ test("save: roles and areas decide what may be written", async () => {
     const r = await save(call, as, "x", changes);
     assert.equal(r.status, status, `${as} ${changes[0].path}: ${JSON.stringify(r.body)}`);
   }
-  const ok = await save(call, "boss@example.com", "settings", [{ path: "config/_default/params.toml", content: "x = 1\n" }]);
+  const ok = await save(call, "boss@example.com", "prices", [{ path: "data/prices.toml", content: "x = 1\n" }]);
   assert.equal(ok.status, 200, JSON.stringify(ok.body));
   const upload = await save(call, "writer@example.com", "almonds/honey", [
     { path: "content/almonds/honey/photo.png", content: Buffer.from([137, 80, 78, 71]).toString("base64"), encoding: "base64", base: null },

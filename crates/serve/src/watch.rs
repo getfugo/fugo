@@ -34,9 +34,10 @@ pub(crate) enum Message {
 
 /// Where configuration lives: the files it was read from (the project's and its themes', the
 /// project's `.env` files, and its `package.json` and `package-lock.json`, whose packages are
-/// installed when the configuration loads), the configuration directories (the project's `--configDir` and each
-/// theme's `config/`), and the directories whose `config.*` file is configuration even when it
-/// did not exist yet (the project's and each theme's).
+/// installed when the configuration loads), the configuration directories (the project's and
+/// each theme's `config/`, whose configuration files are an error), and the directories whose
+/// `config.*` file is configuration even when it did not exist yet (the project's and each
+/// theme's).
 #[derive(Clone, Debug)]
 pub(crate) struct ConfigPlaces {
     files: BTreeSet<PathBuf>,
@@ -46,8 +47,8 @@ pub(crate) struct ConfigPlaces {
 }
 
 impl ConfigPlaces {
-    pub(crate) fn new(cfg: &Config, config_dir: &Path) -> Self {
-        let mut dirs = vec![config_dir.to_path_buf()];
+    pub(crate) fn new(cfg: &Config) -> Self {
+        let mut dirs = vec![cfg.project_dir.join("config")];
         let mut homes = vec![cfg.project_dir.clone()];
         for t in &cfg.themes {
             dirs.push(t.dir.join("config"));
