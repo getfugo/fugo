@@ -16,9 +16,13 @@ pub enum ConfigError {
         #[source]
         source: std::io::Error,
     },
-    /// Neither a configuration file nor a configuration directory was found.
-    #[error("no configuration file (config.toml, config.yaml, config.yml or config.json) or config directory in {}", dir.display())]
+    /// No configuration file was found.
+    #[error("no configuration file (config.toml, config.yaml, config.yml or config.json) in {}", dir.display())]
     NotFound { dir: PathBuf },
+    /// A directory has several configuration files (`config.toml` and `config.yaml`): the
+    /// configuration is one file.
+    #[error("{}: several configuration files ({}); the configuration is one file: merge them into one", dir.display(), files.join(", "))]
+    SeveralFiles { dir: PathBuf, files: Vec<String> },
     /// A theme (`theme`, `[[module.imports]]`) is not in the themes directory, in the project's
     /// `_vendor` directory or at the absolute path given.
     #[error("theme {name:?} not found: {} does not exist (themes are read from themesDir, _vendor or an absolute path; remote modules are not downloaded)", dir.display())]
@@ -31,11 +35,15 @@ pub enum ConfigError {
         owner: String,
         themes_dir: PathBuf,
     },
-    /// A folder of the configuration directory other than `_default` (`config/production/`)
-    /// holds configuration files. An environment's settings are a table of the configuration,
-    /// `[environments.<name>]`.
-    #[error("{}: environment folders are not read; move its settings into the configuration file, under [environments.{environment}] (its params.toml becomes [environments.{environment}.params])", dir.display())]
-    EnvironmentFolder { dir: PathBuf, environment: String },
+    /// The folders of the configuration directory (`config/_default/`, `config/production/`)
+    /// hold configuration files. The configuration is one file: `files` (relative to `dir`) say
+    /// which table of it each one's settings belong in.
+    #[error("{}: configuration directories are not read; move the settings of its files into the configuration file: {}", dir.display(), Moves(files))]
+    ConfigDirectory {
+        dir: PathBuf,
+        /// Each file and its table (dotted; empty for the root).
+        files: Vec<(PathBuf, String)>,
+    },
     /// A file is not valid TOML, YAML or JSON.
     #[error("{position}: {message}")]
     Syntax { position: Position, message: String },
@@ -70,7 +78,8 @@ impl ConfigError {
             | Self::NotFound { .. }
             | Self::ThemeNotFound { .. }
             | Self::ThemeOutsideThemesDir { .. }
-            | Self::EnvironmentFolder { .. } => None,
+            | Self::SeveralFiles { .. }
+            | Self::ConfigDirectory { .. } => None,
         }
     }
 }
@@ -91,5 +100,29 @@ impl fmt::Display for Located<'_> {
         } else {
             write!(f, "{}: {}", self.key, self.message)
         }
+    }
+}
+
+/// `_default/params.toml under [params], _default/config.toml at its root`.
+struct Moves<'a>(&'a [(PathBuf, String)]);
+
+impl fmt::Display for Moves<'_> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        for (i, (file, table)) in self.0.iter().enumerate() {
+            if i > 0 {
+                f.write_str(", ")?;
+            }
+            let file = file
+                .components()
+                .map(|c| c.as_os_str().to_string_lossy())
+                .collect::<Vec<_>>()
+                .join("/");
+            if table.is_empty() {
+                write!(f, "{file} at its root")?;
+            } else {
+                write!(f, "{file} under [{table}]")?;
+            }
+        }
+        Ok(())
     }
 }

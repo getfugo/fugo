@@ -1,54 +1,44 @@
-//! Finding and decoding configuration files (step 2 of the A1 pipeline), and mapping a key
+//! Finding and decoding the configuration file (step 2 of the A1 pipeline), and mapping a key
 //! back to the line it was written on.
 
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
-use ssg_base::diag::{Diagnostic, Position};
+use ssg_base::diag::Position;
 use ssg_base::value::DecodeError;
 use ssg_base::{Map, Value};
 
 use crate::error::ConfigError;
 use crate::tree;
 
-/// The base names of a configuration file: `config`. In a configuration directory it places its
-/// content at the root. The Go program's configuration file name is not read.
+/// The base names of a configuration file: `config`. The Go program's configuration file name is
+/// not read.
 pub const CONFIG_BASE_NAMES: [&str; 1] = ["config"];
 
-/// The configuration file extensions, in lookup order.
+/// The configuration file extensions.
 pub const CONFIG_EXTENSIONS: [&str; 4] = ["toml", "yaml", "yml", "json"];
 
-/// The configuration file names searched in a project (or theme) directory, in lookup order;
-/// the first that exists is read.
+/// The names of a configuration file in a project (or theme) directory.
 pub fn config_file_names() -> impl Iterator<Item = String> {
     CONFIG_BASE_NAMES
         .into_iter()
         .flat_map(|base| CONFIG_EXTENSIONS.map(|ext| format!("{base}.{ext}")))
 }
 
-/// The configuration file of `dir` (the first of [`config_file_names`] that exists) and, when
-/// other names of that list exist as well, a warning naming the file read and the ones ignored.
-pub fn find_config_file(dir: &Path) -> (Option<PathBuf>, Option<Diagnostic>) {
-    let mut found = config_file_names().filter(|name| dir.join(name).is_file());
-    let Some(used) = found.next() else {
-        return (None, None);
-    };
-    let ignored: Vec<String> = found.collect();
-    let path = dir.join(&used);
-    let warning = (!ignored.is_empty()).then(|| {
-        Diagnostic::warning(format!(
-            "using {used}; ignoring {} (the first of config.toml, config.yaml, config.yml and \
-             config.json is read)",
-            ignored.join(", ")
-        ))
-        .with_id("config-file-ignored")
-        .at(Position {
-            file: Arc::from(path.as_path()),
-            line: 0,
-            col: 0,
-        })
-    });
-    (Some(path), warning)
+/// The configuration file of `dir`: the one of [`config_file_names`] that exists. Several are
+/// an error: the configuration is one file.
+pub fn find_config_file(dir: &Path) -> Result<Option<PathBuf>, ConfigError> {
+    let found: Vec<String> = config_file_names()
+        .filter(|name| dir.join(name).is_file())
+        .collect();
+    match found.as_slice() {
+        [] => Ok(None),
+        [one] => Ok(Some(dir.join(one))),
+        _ => Err(ConfigError::SeveralFiles {
+            dir: dir.to_owned(),
+            files: found,
+        }),
+    }
 }
 
 /// A configuration file format.
@@ -72,36 +62,28 @@ impl Format {
     }
 }
 
-/// A decoded configuration file and where its keys land in the configuration tree.
+/// A decoded configuration file.
 #[derive(Debug)]
 pub struct Source {
     pub path: Arc<Path>,
     format: Format,
     text: String,
-    /// The key path the file's content is placed under (`["languages", "en", "menus"]` for
-    /// `menus.en.toml`); empty for the root.
-    pub prefix: Vec<String>,
     /// The file's content as written (keys not folded).
     pub tree: Map,
 }
 
 impl Source {
     /// Reads and decodes `path`.
-    pub fn read(path: &Path, format: Format, prefix: Vec<String>) -> Result<Self, ConfigError> {
+    pub fn read(path: &Path, format: Format) -> Result<Self, ConfigError> {
         let text = std::fs::read_to_string(path).map_err(|source| ConfigError::Io {
             path: path.to_owned(),
             source,
         })?;
-        Self::parse(path, format, text, prefix)
+        Self::parse(path, format, text)
     }
 
     /// Decodes `text` as the content of `path`.
-    pub fn parse(
-        path: &Path,
-        format: Format,
-        text: String,
-        prefix: Vec<String>,
-    ) -> Result<Self, ConfigError> {
+    pub fn parse(path: &Path, format: Format, text: String) -> Result<Self, ConfigError> {
         let path: Arc<Path> = Arc::from(path);
         let decoded = if text.trim().is_empty() {
             Ok(Value::map(Map::new()))
@@ -131,32 +113,24 @@ impl Source {
             path,
             format,
             text,
-            prefix,
             tree,
         })
     }
 
-    /// The content placed at its prefix.
+    /// The content with its keys normalised ([`tree::normalize_keys`]).
     #[must_use]
-    pub fn placed(&self) -> Map {
-        let mut m = Map::new();
-        if self.prefix.is_empty() {
-            return self.tree.clone();
-        }
-        let segs: Vec<&str> = self.prefix.iter().map(String::as_str).collect();
-        tree::set_segments(&mut m, &segs, Value::map(self.tree.clone()));
-        m
+    pub fn normalized(&self) -> Map {
+        tree::normalize_keys(&self.tree)
     }
 
     /// Where the value at `key` (lower-case segments from the configuration root) is written
     /// in this file, if it is, with the key as spelled there.
     #[must_use]
     pub fn locate(&self, key: &[String]) -> Option<Located> {
-        let rest = key.strip_prefix(self.prefix.as_slice())?;
         // The key must exist in this file.
-        let mut written: Vec<String> = self.prefix.clone();
+        let mut written: Vec<String> = Vec::with_capacity(key.len());
         let mut cur: Option<&Value> = None;
-        for seg in rest {
+        for seg in key {
             let (name, v) = match cur {
                 None => lookup(&self.tree, seg)?,
                 Some(Value::Map(m)) => lookup(m, seg)?,
@@ -167,8 +141,8 @@ impl Source {
             cur = Some(v);
         }
         let offset = match self.format {
-            Format::Toml => toml_offset(&self.text, rest),
-            Format::Yaml | Format::Json => text_offset(&self.text, rest),
+            Format::Toml => toml_offset(&self.text, key),
+            Format::Yaml | Format::Json => text_offset(&self.text, key),
         };
         let (line, col) = offset.map_or((0, 0), |o| line_col(&self.text, o));
         Some(Located {
@@ -301,128 +275,42 @@ fn text_offset(text: &str, path: &[String]) -> Option<usize> {
     found
 }
 
-/// One configuration source in precedence order (a later source overrides an earlier one).
-#[derive(Debug, Default)]
-pub struct Sources {
-    pub files: Vec<Source>,
-}
-
-impl Sources {
-    /// The position of the value at `key` in the source with the highest precedence that
-    /// defines it.
-    #[must_use]
-    pub fn locate(&self, key: &[String]) -> Option<Located> {
-        self.files.iter().rev().find_map(|s| s.locate(key))
-    }
-
-    /// The merged tree of all files (not normalised).
-    #[must_use]
-    pub fn merged(&self) -> Map {
-        let mut m = Map::new();
-        for s in &self.files {
-            tree::merge_deep(&mut m, &tree::normalize_keys(&s.placed()));
-        }
-        m
-    }
-}
-
-/// The configuration file(s) of the project: the explicit list (the first file has the
-/// highest precedence), or the first of [`config_file_names`] that exists (a warning goes to
-/// `diagnostics` when there are several).
-pub fn project_files(
+/// The project's configuration file: `explicit` (`--config`, relative to the project; `custom`
+/// finds `custom.toml`, `custom.yaml`, …), else the one of [`config_file_names`] in the project
+/// directory ([`find_config_file`]).
+pub fn project_file(
     project: &Path,
-    explicit: &[PathBuf],
-    diagnostics: &mut Vec<Diagnostic>,
-) -> Result<Vec<Source>, ConfigError> {
-    if !explicit.is_empty() {
-        let mut out = Vec::with_capacity(explicit.len());
-        for f in explicit.iter().rev() {
+    explicit: Option<&Path>,
+) -> Result<Option<Source>, ConfigError> {
+    let path = match explicit {
+        Some(f) => {
             let mut path = project.join(f);
-            if !path.is_file() && Format::from_path(&path).is_none() {
-                // `--config custom` finds `custom.toml`, `custom.yaml`, …
-                if let Some(p) = ["toml", "yaml", "yml", "json"]
+            if !path.is_file()
+                && Format::from_path(&path).is_none()
+                && let Some(p) = CONFIG_EXTENSIONS
                     .iter()
                     .map(|ext| path.with_extension(ext))
                     .find(|p| p.is_file())
-                {
-                    path = p;
-                }
+            {
+                path = p;
             }
-            let format = Format::from_path(&path).unwrap_or(Format::Toml);
             if !path.is_file() {
                 return Err(ConfigError::Io {
                     path,
                     source: std::io::Error::from(std::io::ErrorKind::NotFound),
                 });
             }
-            out.push(Source::read(&path, format, Vec::new())?);
+            path
         }
-        return Ok(out);
-    }
-    let (found, warning) = find_config_file(project);
-    diagnostics.extend(warning);
-    match found {
-        Some(path) => {
-            let format = Format::from_path(&path).expect("known extension");
-            Ok(vec![Source::read(&path, format, Vec::new())?])
-        }
-        None => Ok(Vec::new()),
-    }
-}
-
-/// The files of one configuration directory (`config/_default`, `config/production`), in
-/// path order, each placed by its file name: `config.*` at the root,
-/// `params.en.*` under `languages.en.params`, `menus.en.*` under `languages.en.menus`, any
-/// other `name.*` under `name`.
-pub fn dir_files(dir: &Path) -> Result<Vec<Source>, ConfigError> {
-    let mut paths = Vec::new();
-    collect_files(dir, &mut paths)?;
-    paths.sort();
-    let mut out = Vec::new();
-    for path in paths {
-        let Some(format) = Format::from_path(&path) else {
-            continue;
-        };
-        let stem = path
-            .file_stem()
-            .and_then(|s| s.to_str())
-            .unwrap_or_default()
-            .to_ascii_lowercase();
-        out.push(Source::read(&path, format, file_prefix(&stem))?);
-    }
-    Ok(out)
-}
-
-fn file_prefix(stem: &str) -> Vec<String> {
-    let (name, lang) = match stem.split_once('.') {
-        Some((name, lang)) => (name, Some(lang)),
-        None => (stem, None),
+        None => match find_config_file(project)? {
+            Some(path) => path,
+            None => return Ok(None),
+        },
     };
-    let name = if name == "menu" { "menus" } else { name };
-    match (name, lang) {
-        (root, _) if CONFIG_BASE_NAMES.contains(&root) => Vec::new(),
-        (name, None) => vec![name.to_owned()],
-        (name, Some(lang)) => vec!["languages".to_owned(), lang.to_owned(), name.to_owned()],
-    }
+    read_file(&path).map(Some)
 }
 
-/// The files below `dir`, at any depth, into `out`.
-pub(crate) fn collect_files(dir: &Path, out: &mut Vec<PathBuf>) -> Result<(), ConfigError> {
-    let entries = std::fs::read_dir(dir).map_err(|source| ConfigError::Io {
-        path: dir.to_owned(),
-        source,
-    })?;
-    for entry in entries {
-        let entry = entry.map_err(|source| ConfigError::Io {
-            path: dir.to_owned(),
-            source,
-        })?;
-        let path = entry.path();
-        if path.is_dir() {
-            collect_files(&path, out)?;
-        } else {
-            out.push(path);
-        }
-    }
-    Ok(())
+/// Reads the configuration file `path`; its format is its extension's, else TOML.
+pub fn read_file(path: &Path) -> Result<Source, ConfigError> {
+    Source::read(path, Format::from_path(path).unwrap_or(Format::Toml))
 }

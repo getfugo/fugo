@@ -9,14 +9,14 @@
 //!   `ssg_funcs::spec::FUNCS` and call only declared kwargs.
 //! - [`registry`]: a local npm registry (package documents and tarballs over HTTP), for the
 //!   package installer's tests.
-//! - [`environments`]: the Go build's environment folders (`config/production/`) of a recorded
-//!   site recreated as `[environments.<name>]` tables.
+//! - [`config_dir`]: the Go build's configuration directories (`config/_default/`,
+//!   `config/production/`) of a recorded site folded into its one configuration file.
 //! - [`tera_value`]: a JSON value as templates see it.
 
 #![forbid(unsafe_code)]
 
+pub mod config_dir;
 pub mod contract;
-pub mod environments;
 pub mod fixture;
 pub mod registry;
 pub mod snapshot;

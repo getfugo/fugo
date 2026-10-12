@@ -67,11 +67,7 @@ pub fn config(dir: &Path, home: &Path) -> Config {
     let go_site = !dir.join("config.toml").exists() && dir.join(GO_CONFIG_FILE).exists();
     load(&LoadOptions {
         source: dir.to_owned(),
-        config_files: if go_site {
-            vec![GO_CONFIG_FILE.into()]
-        } else {
-            Vec::new()
-        },
+        config_file: go_site.then(|| GO_CONFIG_FILE.into()),
         env: vec![("HOME".into(), home.to_str().unwrap().into())],
         ..LoadOptions::default()
     })

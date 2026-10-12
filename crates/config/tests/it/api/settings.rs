@@ -42,14 +42,11 @@ fn environment_variables_are_not_settings() {
 
 #[test]
 fn cli_overrides_and_precedence() {
-    let p = Project::new(&[
-        (
-            "config.toml",
-            "baseURL = \"https://file.example/\"\ntitle = \"file\"\n\
-             [environments.staging]\ntitle = \"staging\"\n",
-        ),
-        ("config/_default/params.toml", "from = \"dir\"\n"),
-    ]);
+    let p = Project::new(&[(
+        "config.toml",
+        "baseURL = \"https://file.example/\"\ntitle = \"file\"\n\
+         [environments.staging]\ntitle = \"staging\"\n",
+    )]);
     let cli = CliOverrides {
         base_url: Some("https://cli.example/".into()),
         environment: Some("staging".into()),
@@ -67,7 +64,6 @@ fn cli_overrides_and_precedence() {
         s.title, "staging",
         "the environment's table wins over the file"
     );
-    assert_eq!(s.params.get("from"), Some(&Value::string("dir")));
     assert_eq!(s.base_url.as_str(), "https://cli.example/");
     assert_eq!(c.dirs.publish, Path::new("out"));
     assert!(c.minify.minify_output);

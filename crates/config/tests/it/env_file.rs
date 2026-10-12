@@ -29,7 +29,7 @@ fn project(env_file: Option<&str>) -> (tempfile::TempDir, Result<Config, ConfigE
     }
     let cfg = load(&LoadOptions {
         source: tmp.path().to_owned(),
-        config_files: Vec::new(),
+        config_file: None,
         cli: CliOverrides::default(),
         env: vec![(
             "XDG_CACHE_HOME".into(),
@@ -171,7 +171,7 @@ fn the_environment_s_file_wins() {
     let load = |environment: Option<&str>| {
         load(&LoadOptions {
             source: tmp.path().to_owned(),
-            config_files: Vec::new(),
+            config_file: None,
             cli: CliOverrides {
                 environment: environment.map(str::to_owned),
                 ..CliOverrides::default()

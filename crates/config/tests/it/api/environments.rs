@@ -1,5 +1,4 @@
-//! `[environments.<name>]`: the build environment's table merged over the configuration, and the
-//! folders of a configuration directory other than `_default` (an error).
+//! `[environments.<name>]`: the build environment's table merged over the configuration.
 
 use super::errors::position;
 use super::*;
@@ -66,21 +65,15 @@ fn the_environment_s_table_is_merged_over_the_configuration() {
 }
 
 #[test]
-fn the_table_wins_over_the_directory_and_flags_over_the_table() {
-    let p = Project::new(&[
-        (
-            "config.toml",
-            "title = \"file\"\n[environments.production]\ntitle = \"table\"\n\
-             baseURL = \"https://table.example/\"\n",
-        ),
-        (
-            "config/_default/config.toml",
-            "title = \"dir\"\ncopyright = \"dir\"\n",
-        ),
-    ]);
+fn the_table_wins_over_the_file_and_flags_over_the_table() {
+    let p = Project::new(&[(
+        "config.toml",
+        "title = \"file\"\ncopyright = \"file\"\n[environments.production]\ntitle = \"table\"\n\
+         baseURL = \"https://table.example/\"\n",
+    )]);
     let c = p.ok();
     assert_eq!(c.default_site().title, "table");
-    assert_eq!(c.default_site().copyright, "dir");
+    assert_eq!(c.default_site().copyright, "file");
     let cli = CliOverrides {
         base_url: Some("https://cli.example/".into()),
         ..CliOverrides::default()
@@ -155,47 +148,6 @@ fn errors_in_a_table_point_at_it() {
         assert_eq!(k, key);
         assert_eq!(position(&e).0, "config.toml");
     }
-}
-
-#[test]
-fn environment_folders_are_an_error() {
-    let p = Project::new(&[
-        ("config.toml", "title = \"x\"\n"),
-        ("config/_default/params.toml", "a = 1\n"),
-        ("config/production/params.toml", "a = 2\n"),
-    ]);
-    // In every environment: the folder's settings would be lost without a word.
-    for name in ["production", "development"] {
-        let e = p.load(env(name), &[]).expect_err("a folder");
-        assert!(
-            matches!(&e, ConfigError::EnvironmentFolder { environment, .. } if environment == "production"),
-            "{e}"
-        );
-        let msg = e.to_string();
-        assert!(
-            msg.contains("[environments.production]")
-                && msg.contains("[environments.production.params]"),
-            "{msg}"
-        );
-    }
-
-    // A folder without configuration files is no error.
-    Project::new(&[
-        ("config.toml", "title = \"x\"\n"),
-        ("config/notes/readme.txt", "notes\n"),
-    ])
-    .ok();
-
-    // A theme's folder is one too.
-    let p = Project::new(&[
-        ("config.toml", "theme = \"t\"\n"),
-        ("themes/t/config/staging/params.toml", "a = 1\n"),
-    ]);
-    let e = p.load(CliOverrides::default(), &[]).expect_err("a folder");
-    assert!(
-        matches!(&e, ConfigError::EnvironmentFolder { environment, .. } if environment == "staging"),
-        "{e}"
-    );
 }
 
 #[test]

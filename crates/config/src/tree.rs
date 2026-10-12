@@ -175,7 +175,7 @@ pub fn set_path(m: &mut Map, dotted: &str, v: Value) {
     set_segments(m, &segs, v);
 }
 
-pub(crate) fn set_segments(m: &mut Map, segs: &[&str], v: Value) {
+fn set_segments(m: &mut Map, segs: &[&str], v: Value) {
     match segs {
         [] => {}
         [last] => {

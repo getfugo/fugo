@@ -117,8 +117,8 @@ one role is required.
 : Globs of the files the role may create, change and delete, relative to the project directory:
   `["content/blog/**", "content/**/*.th.md"]`. `*` matches any part of a name, `**` any part of
   a path, `?` one character, `{a,b}` either alternative, `[abc]` one of the characters. The
-  editor writes only content, data, i18n, the `params` and `menus` files of `config/_default/`
-  and the media directory, whatever the globs say; see
+  editor writes only content, data, i18n and the media directory, never the configuration,
+  whatever the globs say; see
   [who may change what](/content-management/cms/#roles-who-may-change-what).
 
 `publish`

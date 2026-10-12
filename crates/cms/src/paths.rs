@@ -2,12 +2,11 @@
 //! project is in its git repository.
 //!
 //! Paths are project-relative with `/` separators. The areas are the project's own content,
-//! data and i18n directories, the `params` and `menus` files of `config/_default/`, and the
-//! media directory, each with the file types it may hold. Nothing else is writable whatever a
-//! role says: not the configuration files (mounts could publish `.env`), layouts, assets,
-//! content adapters (`_content.*` are templates; the Worker matches [`DENY`] against the path as
-//! the build keys it, lower case), workflows or dotfiles. HTML content files (raw pages on the
-//! editor's own origin) only with `cms.html`.
+//! data and i18n directories and the media directory, each with the file types it may hold.
+//! Nothing else is writable whatever a role says: not the configuration file (mounts could
+//! publish `.env`), layouts, assets, content adapters (`_content.*` are templates; the Worker
+//! matches [`DENY`] against the path as the build keys it, lower case), workflows or dotfiles.
+//! HTML content files (raw pages on the editor's own origin) only with `cms.html`.
 
 use std::path::{Component, Path, PathBuf};
 
@@ -25,8 +24,6 @@ pub const MEDIA_EXT: &[&str] = &[
 ];
 /// Data and translation files.
 pub const DATA_EXT: &[&str] = &["toml", "yaml", "yml", "json", "csv", "xml"];
-/// The `params` and `menus` configuration files.
-pub const CONFIG_EXT: &[&str] = &["toml", "yaml", "yml", "json"];
 /// Paths no area covers, whatever the globs say: content adapters are templates. Lower case:
 /// they are matched against the lower-cased path.
 pub const DENY: &[&str] = &["**/_content.*"];
@@ -36,7 +33,7 @@ const HTML_EXT: &[&str] = &["html", "htm"];
 /// A part of the project the CMS may write.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
 pub struct Area {
-    /// `content`, `data`, `i18n`, `config` or `media`.
+    /// `content`, `data`, `i18n` or `media`.
     pub kind: &'static str,
     /// The glob of the area's files (`content/**`).
     pub glob: String,
@@ -83,14 +80,6 @@ pub fn areas(cfg: &Config, cms: &CmsConfig) -> Result<Vec<Area>, CmsError> {
             ext: list(DATA_EXT),
         });
     }
-    out.push(Area {
-        kind: "config",
-        glob: format!(
-            "{}/_default/{{params,menus,menu}}.*",
-            escape_glob(&config_dir(cfg))
-        ),
-        ext: list(CONFIG_EXT),
-    });
     if let Some(media) = &cms.media {
         let mut roots: Vec<String> = cfg
             .dirs
@@ -147,17 +136,6 @@ pub fn content_dirs(cfg: &Config) -> Vec<String> {
         }
     }
     out
-}
-
-/// The configuration directory: the parent of the `_default/` directory the configuration was
-/// read from, else `config`.
-fn config_dir(cfg: &Config) -> String {
-    cfg.config_files
-        .iter()
-        .filter_map(|f| f.parent())
-        .filter(|d| d.file_name().is_some_and(|n| n == "_default"))
-        .find_map(|d| d.parent().and_then(|p| project_rel(cfg, p)))
-        .unwrap_or_else(|| "config".to_owned())
 }
 
 /// `path` relative to the project directory with `/` separators, if it is inside it (and not
@@ -269,16 +247,13 @@ mod tests {
 
     #[test]
     fn globs_reach_areas_by_their_literal_directories() {
-        let areas = [
-            area("content/**"),
-            area("config/_default/{params,menus,menu}.*"),
-        ];
+        let areas = [area("content/**"), area("static/images/uploads/**")];
         for ok in [
             "**",
             "*/x",
             "content/**",
             "content/blog/*.md",
-            "config/_default/params.toml",
+            "static/images/uploads/a.png",
             "{content,data}/**",
         ] {
             assert!(reaches_an_area(ok, &areas), "{ok}");
@@ -286,7 +261,8 @@ mod tests {
         for bad in [
             "layouts/**",
             "assets/js/*.js",
-            "config/production/params.toml",
+            "config/_default/params.toml",
+            "static/css/*.css",
             ".github/**",
         ] {
             assert!(!reaches_an_area(bad, &areas), "{bad}");

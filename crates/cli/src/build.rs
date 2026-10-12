@@ -19,7 +19,7 @@ pub(crate) fn request(a: &BuildArgs) -> anyhow::Result<BuildRequest> {
     Ok(BuildRequest {
         source: p.source_dir()?,
         destination: a.output.destination.clone(),
-        config_files: p.config.clone(),
+        config_file: p.config.clone(),
         cli,
         clock: p.clock,
         sink: if a.output.render_to_memory {

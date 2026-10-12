@@ -66,9 +66,12 @@ Some flags
 - Settings and the environment are not read from environment variables: `--environment` chooses
   the environment. Secrets that templates read go in the
   [`.env` files](/configuration/introduction/#the-env-file).
-- An environment's settings are a table of the configuration,
-  [`[environments.<name>]`](/configuration/introduction/#environments), not a folder of the
-  configuration directory: `config/production/` is an error.
+- The configuration is one file: a configuration directory (`config/_default/`,
+  `config/production/`) is an error that names the table each file's settings go in (an
+  environment's settings are a table,
+  [`[environments.<name>]`](/configuration/introduction/#environments)), several of
+  `config.toml`, `config.yaml`, `config.yml` and `config.json` are an error, `--config` names
+  one file and there is no `--configDir`.
 
 ## Expected output differences
 

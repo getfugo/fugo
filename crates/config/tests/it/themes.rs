@@ -17,7 +17,7 @@ mod imports;
 mod merge;
 mod rules;
 
-/// A project in a temporary directory (`site/`), loaded with an optional `--config` list.
+/// A project in a temporary directory (`site/`), loaded with an optional `--config` file.
 struct Project {
     tmp: tempfile::TempDir,
 }
@@ -37,10 +37,10 @@ impl Project {
         self.tmp.path().join("site")
     }
 
-    fn load_with(&self, config_files: &[&str]) -> Result<Config, ConfigError> {
+    fn load_with(&self, config_file: Option<&str>) -> Result<Config, ConfigError> {
         load(&LoadOptions {
             source: self.dir(),
-            config_files: config_files.iter().map(PathBuf::from).collect(),
+            config_file: config_file.map(PathBuf::from),
             env: vec![(
                 "XDG_CACHE_HOME".into(),
                 self.tmp.path().join("xdg").to_string_lossy().into_owned(),
@@ -50,7 +50,7 @@ impl Project {
     }
 
     fn load(&self) -> Result<Config, ConfigError> {
-        self.load_with(&[])
+        self.load_with(None)
     }
 
     fn ok(&self) -> Config {
@@ -74,14 +74,6 @@ fn toml(s: &str) -> Value {
 /// `params` of the default language as a TOML-comparable tree.
 fn params(c: &Config) -> Value {
     Value::map(c.default_site().params.as_map().clone())
-}
-
-fn warnings(c: &Config, id: &str) -> Vec<String> {
-    c.diagnostics
-        .iter()
-        .filter(|d| d.id.as_deref() == Some(id))
-        .map(ToString::to_string)
-        .collect()
 }
 
 // ───────────── configuration file names ─────────────

@@ -21,7 +21,7 @@ pub fn write_files(dir: &Path, files: &[(&str, &str)]) {
 pub fn load(dir: &Path, environment: &str) -> Config {
     ssg_config::load(&LoadOptions {
         source: dir.to_path_buf(),
-        config_files: Vec::new(),
+        config_file: None,
         cli: CliOverrides {
             environment: Some(environment.to_owned()),
             ..CliOverrides::default()

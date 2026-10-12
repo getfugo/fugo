@@ -1,48 +1,48 @@
-//! The configuration file names: `config.*` in the project, the config directory and themes.
+//! The configuration file: one `config.*` in the project and in each theme; several, or a
+//! configuration directory, are an error.
 
 use super::*;
 
 #[test]
-fn config_extensions_in_lookup_order() {
-    // toml, yaml, yml, json: the first that exists is read, the others are named in a warning.
+fn one_configuration_file() {
+    for name in ["config.toml", "config.yaml", "config.yml", "config.json"] {
+        let text = if name.ends_with(".json") {
+            "{\"title\": \"one\"}"
+        } else if name.ends_with(".toml") {
+            "title = \"one\"\n"
+        } else {
+            "title: one\n"
+        };
+        let p = Project::new(&[(name, text)]);
+        let c = p.ok();
+        assert_eq!(c.default_site().title, "one", "{name}");
+        let files: Vec<String> = c.config_files.iter().map(|f| p.rel(f)).collect();
+        assert_eq!(files, [name]);
+    }
+}
+
+#[test]
+fn several_configuration_files_are_an_error() {
     let p = Project::new(&[
         ("config.toml", "title = \"toml\"\n"),
         ("config.yaml", "title: yaml\n"),
-    ]);
-    let c = p.ok();
-    assert_eq!(c.default_site().title, "toml");
-    let files: Vec<String> = c.config_files.iter().map(|f| p.rel(f)).collect();
-    assert_eq!(files, ["config.toml"]);
-    let w = warnings(&c, "config-file-ignored");
-    assert_eq!(w.len(), 1, "{w:?}");
-    assert!(
-        w[0].contains("config.toml: using config.toml; ignoring config.yaml"),
-        "{}",
-        w[0]
-    );
-    let p = Project::new(&[
-        ("config.json", "{\"title\": \"config.json\"}"),
-        ("config.yaml", "title: config.yaml\n"),
-    ]);
-    let c = p.ok();
-    assert_eq!(c.default_site().title, "config.yaml");
-    assert!(warnings(&c, "config-file-ignored")[0].contains("ignoring config.json"));
-    let p = Project::new(&[
         ("config.json", "{\"title\": \"json\"}"),
-        ("config.yml", "title: yml\n"),
     ]);
-    assert_eq!(p.ok().default_site().title, "yml");
-
-    // One file: no warning.
-    let p = Project::new(&[("config.yaml", "title: only\n")]);
-    let c = p.ok();
-    assert_eq!(c.default_site().title, "only");
-    assert!(warnings(&c, "config-file-ignored").is_empty());
+    let e = p.load().expect_err("several files");
+    let ConfigError::SeveralFiles { dir, files } = &e else {
+        panic!("{e}")
+    };
+    assert_eq!(dir, &p.dir());
+    assert_eq!(files, &["config.toml", "config.yaml", "config.json"]);
+    assert!(
+        e.to_string()
+            .contains("several configuration files (config.toml, config.yaml, config.json)"),
+        "{e}"
+    );
 }
 
-/// The Go program's configuration file is not a configuration file: neither read nor named in
-/// warnings, and in a configuration directory an ordinary file that places its keys under its
-/// base name.
+/// The Go program's configuration file is not a configuration file: neither read nor counted
+/// as a second one.
 #[test]
 fn go_config_file_is_not_read() {
     let go_file = format!("{GO_CONFIG_NAME}.toml");
@@ -50,57 +50,111 @@ fn go_config_file_is_not_read() {
         ("config.toml", "title = \"config\"\n"),
         (&go_file, "title = \"go\"\n"),
     ]);
-    let c = p.ok();
-    assert_eq!(c.default_site().title, "config");
-    assert!(warnings(&c, "config-file-ignored").is_empty());
+    assert_eq!(p.ok().default_site().title, "config");
     let p = Project::new(&[(&go_file, "title = \"go\"\n")]);
     let e = p
         .load()
         .expect_err("the Go configuration file alone is no configuration");
     assert!(matches!(e, ConfigError::NotFound { .. }), "{e}");
-    let in_dir = format!("config/_default/{go_file}");
-    let p = Project::new(&[
-        ("config.toml", "title = \"t\"\n"),
-        (&in_dir, "title = \"go\"\n"),
-    ]);
-    let c = p.ok();
-    assert_eq!(c.default_site().title, "t");
-    assert!(c.raw.get(GO_CONFIG_NAME).is_some());
 }
 
 #[test]
-fn explicit_config_files_are_unchanged() {
+fn explicit_config_file() {
     let p = Project::new(&[
         ("config.toml", "title = \"config\"\n"),
-        ("site.toml", "title = \"site\"\n[params]\nfrom = \"site\"\n"),
-        ("extra.toml", "[params]\nextra = true\nfrom = \"extra\"\n"),
+        ("config.yaml", "title: yaml\n"),
+        ("site.toml", "title = \"site\"\n"),
+        ("extra.toml", "title = \"extra\"\n"),
     ]);
-    let c = p.load_with(&["site.toml"]).expect("load");
+    // `--config` names the file: the project's `config.*` are not read.
+    let c = p.load_with(Some("site.toml")).expect("load");
     assert_eq!(c.default_site().title, "site");
-    assert!(warnings(&c, "config-file-ignored").is_empty());
-    // The first file wins.
-    let c = p.load_with(&["extra", "site.toml"]).expect("load");
-    assert_eq!(
-        params(&c),
-        toml("extra = true\nfrom = \"extra\"\n"),
-        "`extra` finds extra.toml"
-    );
+    let files: Vec<String> = c.config_files.iter().map(|f| p.rel(f)).collect();
+    assert_eq!(files, ["site.toml"]);
+    // `extra` finds extra.toml.
+    let c = p.load_with(Some("extra")).expect("load");
+    assert_eq!(c.default_site().title, "extra");
+    let e = p.load_with(Some("missing.toml")).expect_err("no such file");
+    assert!(matches!(e, ConfigError::Io { .. }), "{e}");
 }
 
+/// The Go build's configuration directory is an error that says where each file's settings go:
+/// `_default/` files by their names, an environment's under `[environments.<name>]`.
 #[test]
-fn config_in_the_config_directory_is_a_root_file() {
-    let p = Project::new(&[
-        (
-            "config/_default/config.toml",
-            "title = \"dir\"\n[environments.production.params]\nq = 2\n\
-             [environments.production.languages.en]\nweight = 1\n",
-        ),
+fn a_configuration_directory_is_an_error() {
+    let files = [
+        ("config/_default/config.toml", "title = \"dir\"\n"),
         ("config/_default/params.toml", "p = 1\n"),
+        (
+            "config/_default/menu.en.toml",
+            "[[main]]\nname = \"Home\"\n",
+        ),
+        ("config/_default/Imaging.yaml", "quality: 80\n"),
+        ("config/_default/notes.txt", "not configuration\n"),
+        (
+            "config/production/config.toml",
+            "baseURL = \"https://x.example/\"\n",
+        ),
+        ("config/staging/nested/params.th.json", "{\"q\": 2}"),
+    ];
+    let want = [
+        ("_default/Imaging.yaml", "imaging"),
+        ("_default/config.toml", ""),
+        ("_default/menu.en.toml", "languages.en.menus"),
+        ("_default/params.toml", "params"),
+        ("production/config.toml", "environments.production"),
+        (
+            "staging/nested/params.th.json",
+            "environments.staging.languages.th.params",
+        ),
+    ];
+    let with_file = [&[("config.toml", "title = \"file\"\n")][..], &files[..]].concat();
+    // With a configuration file or without one (a Go project), in every environment.
+    for files in [&with_file[..], &files[..]] {
+        let p = Project::new(files);
+        let e = p.load().expect_err("a configuration directory");
+        let ConfigError::ConfigDirectory { dir, files } = &e else {
+            panic!("{e}")
+        };
+        assert_eq!(dir, &p.dir().join("config"));
+        let got: Vec<(String, &str)> = files
+            .iter()
+            .map(|(f, t)| (f.to_string_lossy().replace('\\', "/"), t.as_str()))
+            .collect();
+        let want: Vec<(String, &str)> = want.iter().map(|(f, t)| ((*f).to_owned(), *t)).collect();
+        assert_eq!(got, want);
+        let msg = e.to_string();
+        assert!(
+            msg.contains(
+                "configuration directories are not read; move the settings of its files into \
+                 the configuration file: _default/Imaging.yaml under [imaging], \
+                 _default/config.toml at its root,"
+            ),
+            "{msg}"
+        );
+    }
+
+    // The Go program's configuration file is an ordinary file there, under its base name.
+    let p = Project::new(&[
+        ("config.toml", "title = \"t\"\n"),
+        (
+            &format!("config/_default/{GO_CONFIG_NAME}.toml"),
+            "title = \"go\"\n",
+        ),
     ]);
-    let c = p.ok();
-    assert_eq!(c.default_site().title, "dir");
-    assert_eq!(params(&c), toml("p = 1\nq = 2\n"));
-    assert!(c.raw.get("config").is_none());
+    let e = p.load().expect_err("a configuration directory");
+    let ConfigError::ConfigDirectory { files, .. } = &e else {
+        panic!("{e}")
+    };
+    assert_eq!(files[0].1, GO_CONFIG_NAME);
+
+    // Folders without configuration files, and files of the directory itself, are not read.
+    let p = Project::new(&[
+        ("config.toml", "title = \"file\"\n"),
+        ("config/notes/readme.txt", "notes\n"),
+        ("config/config.toml", "title = \"dir\"\n"),
+    ]);
+    assert_eq!(p.ok().default_site().title, "file");
 }
 
 #[test]
@@ -116,47 +170,44 @@ fn no_configuration_names_config_toml() {
 }
 
 #[test]
-fn theme_configuration_file_names() {
+fn theme_configuration_file() {
     let p = Project::new(&[
         ("config.toml", "theme = \"t\"\n"),
-        (
-            "themes/t/config.toml",
-            "[params]\nfrom = \"config\"\nconfigOnly = 1\n",
-        ),
-        (
-            "themes/t/config.yaml",
-            "params:\n  from: yaml\n  yamlOnly: 1\n",
-        ),
+        ("themes/t/config.toml", "[params]\nfrom = \"config\"\n"),
         (
             &format!("themes/t/{GO_CONFIG_NAME}.toml"),
             "[params]\nfrom = \"go\"\ngoOnly = 1\n",
         ),
-        (
-            "themes/t/config/_default/config.yaml",
-            "params:\n  dir: 1\n",
-        ),
     ]);
     let c = p.ok();
+    assert_eq!(params(&c), toml("from = \"config\"\n"));
     assert_eq!(
-        params(&c),
-        toml("from = \"config\"\nconfigonly = 1\ndir = 1\n")
+        c.themes[0].config_file.as_deref(),
+        Some(p.dir().join("themes/t/config.toml").as_path())
     );
-    assert_eq!(c.themes[0].config_files.len(), 2);
-    let w = warnings(&c, "config-file-ignored");
-    assert_eq!(w.len(), 1, "{w:?}");
-    assert!(
-        w[0].contains("themes/t/config.toml: using config.toml; ignoring config.yaml"),
-        "{}",
-        w[0]
-    );
-    // Lowest precedence first: the theme's files, then the project's.
+    // Lowest precedence first: the theme's file, then the project's.
     let files: Vec<String> = c.config_files.iter().map(|f| p.rel(f)).collect();
-    assert_eq!(
-        files,
-        [
-            "themes/t/config.toml",
-            "themes/t/config/_default/config.yaml",
-            "config.toml"
-        ]
+    assert_eq!(files, ["themes/t/config.toml", "config.toml"]);
+
+    // Several files, or a configuration directory, are an error in a theme too.
+    let p = Project::new(&[
+        ("config.toml", "theme = \"t\"\n"),
+        ("themes/t/config.toml", "[params]\nfrom = \"config\"\n"),
+        ("themes/t/config.yaml", "params:\n  from: yaml\n"),
+    ]);
+    let e = p.load().expect_err("several files");
+    assert!(
+        matches!(&e, ConfigError::SeveralFiles { dir, .. } if dir.ends_with("themes/t")),
+        "{e}"
     );
+    let p = Project::new(&[
+        ("config.toml", "theme = \"t\"\n"),
+        ("themes/t/config/production/params.toml", "a = 1\n"),
+    ]);
+    let e = p.load().expect_err("a configuration directory");
+    let ConfigError::ConfigDirectory { dir, files } = &e else {
+        panic!("{e}")
+    };
+    assert!(dir.ends_with("themes/t/config"), "{}", dir.display());
+    assert_eq!(files[0].1, "environments.production.params");
 }

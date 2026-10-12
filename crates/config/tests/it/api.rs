@@ -46,7 +46,7 @@ impl Project {
         ));
         LoadOptions {
             source: self.dir(),
-            config_files: Vec::new(),
+            config_file: None,
             cli,
             env,
         }

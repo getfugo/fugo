@@ -76,9 +76,9 @@ pub struct BuildRequest {
     pub source: PathBuf,
     /// The publish directory (`--destination`); relative to `source`.
     pub destination: Option<PathBuf>,
-    /// `--config` files, relative to `source`, the first with the highest precedence (empty:
-    /// the first `config.*`).
-    pub config_files: Vec<PathBuf>,
+    /// `--config`: the configuration file, relative to `source` (`None`: the project's
+    /// `config.*`).
+    pub config_file: Option<PathBuf>,
     pub cli: CliOverrides,
     /// The build's "now" (`--clock`; `None`: the system clock).
     pub clock: Option<jiff::Timestamp>,
@@ -89,7 +89,7 @@ pub struct BuildRequest {
     /// output does not depend on it.
     pub threads: Option<usize>,
     /// A configuration the caller loaded, used instead of loading one from `source`,
-    /// `config_files`, `cli`, `destination` and the process environment (the `server` command
+    /// `config_file`, `cli`, `destination` and the process environment (the `server` command
     /// loads it once per configuration change and points the base URLs at itself).
     pub config: Option<Arc<Config>>,
     /// The `server` command: put the LiveReload script into the HTML pages (not into `build`'s
@@ -287,7 +287,7 @@ pub fn build(r: BuildRequest) -> Result<BuildReport, BuildError> {
             }
             let cfg = ssg_config::load(&LoadOptions {
                 source: r.source.clone(),
-                config_files: r.config_files,
+                config_file: r.config_file,
                 cli,
                 env: process_env(),
             })?;

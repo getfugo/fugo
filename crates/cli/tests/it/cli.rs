@@ -239,7 +239,7 @@ fn command_first_moves_the_command_before_the_flags() {
 }
 
 /// The binary takes flags before the command, and every command takes the Go build's persistent
-/// flags (`-s`, `-d`, `-e`, `--config`, `--config-dir`, `--themes-dir`, `--clock`, `-q`, `-M`).
+/// flags (`-s`, `-d`, `-e`, `--config`, `--themes-dir`, `--clock`, `-q`, `-M`).
 #[test]
 fn persistent_flags_anywhere() {
     let s = site_from("-- config.toml --\ntitle = \"T\"\n");
@@ -262,8 +262,6 @@ fn persistent_flags_anywhere() {
         &[
             "--config",
             "config.toml",
-            "--config-dir",
-            "config",
             "templates",
             "check",
             "--coverage",
@@ -282,8 +280,9 @@ fn persistent_flags_anywhere() {
     }
 }
 
-/// The Go build's logging and housekeeping flags, and the server flags that changed nothing, are
-/// usage errors; so are the camelCase spellings no Go command line used.
+/// The Go build's logging and housekeeping flags, the server flags that changed nothing,
+/// `--configDir` and a list of configuration files are usage errors; so are the camelCase
+/// spellings no Go command line used.
 #[test]
 fn removed_flags_are_usage_errors() {
     let s = site_from("-- config.toml --\ntitle = \"T\"\n");
@@ -304,10 +303,21 @@ fn removed_flags_are_usage_errors() {
         &["server", "--renderToDisk"],
         &["server", "--noHttpCache"],
         &["-v"],
+        // The configuration is one file: no configuration directory, no list of files.
+        &["--configDir", "config"],
+        &["--config-dir", "config"],
+        &["--config", "config.toml,more.toml"],
+        &["--config", "config.toml", "--config", "more.toml"],
     ] {
         let o = binary(s.path(), bad, &[]);
         assert_eq!(o.status.code(), Some(2), "{bad:?}: {}", stderr(&o));
     }
+    let o = binary(s.path(), &["--config", "config.toml,more.toml"], &[]);
+    assert!(
+        stderr(&o).contains("the configuration is one file"),
+        "{}",
+        stderr(&o)
+    );
     // The Go spellings that stay.
     for args in [
         &[APP_NAME, "--baseURL", "https://example.org/"][..],

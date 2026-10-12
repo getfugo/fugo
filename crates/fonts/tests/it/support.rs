@@ -254,7 +254,7 @@ pub fn load(toml: &str) -> Config {
     );
     ssg_config::load(&LoadOptions {
         source: dir.path().to_path_buf(),
-        config_files: Vec::new(),
+        config_file: None,
         cli: CliOverrides::default(),
         env: Vec::new(),
     })

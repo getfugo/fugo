@@ -166,9 +166,11 @@ environment variable fugo reads or sets is `FUGO_*`: the harness switches
 default `get_env` allowlist (`^FUGO_`). Settings and the environment never come from the process environment
 (2026-10-03: the `FUGO_TITLE`, `FUGO_PARAMS_X`, `FUGO_CACHEDIR` overrides and
 `FUGO_ENVIRONMENT` were removed; `--environment` chooses the environment, the harness passes
-`--cacheDir`). An environment's settings are the configuration's `[environments.<name>]` table,
-merged over the rest; a folder of the configuration directory other than `_default`
-(`config/production/`) is an error (`ssg_config` README, step 3). **The asset pipeline is Rust only** (2026-10-03, T75): no PostCSS, Babel or
+`--cacheDir`). **The configuration is one file** (2026-10-12): an environment's settings are
+its `[environments.<name>]` table, merged over the rest; a configuration directory
+(`config/_default/`, `config/production/`) is an error that names each file's table, several
+`config.*` files are an error, `--config` names one file and `--configDir` is gone; the CMS
+writes no configuration (`ssg_config` README, step 2 and deviation 12). **The asset pipeline is Rust only** (2026-10-03, T75): no PostCSS, Babel or
 Tailwind pipe, no stats file (`[build] buildStats`/`writeStats` are "no longer supported"
 warnings), and fugo runs no programs (`[security.exec]` is accepted and has no effect). `minify`
 adds vendor prefixes for the browserslist, `js_build` lowers for the browser targets,
@@ -519,8 +521,8 @@ that comments and READMEs cite.
   of a local build (Go read them from git, a cargo build gets them only from CI's variables);
   the exit code 1 of usage errors (they exit with 2) and Go's `Error: …` prefix (clap prints
   `error: …`, a failed build `ERROR …`). As in Go, flags may come before the command and every
-  command takes the persistent flags (`-s`, `-d`, `-e`, `--config`, `--configDir`, `--themesDir`,
-  `--clock`, `--quiet`, `-M`; `crates/cli/README.md`). New: a `--version` flag, printing the
+  command takes the persistent flags (`-s`, `-d`, `-e`, `--config`, `--themesDir`, `--clock`,
+  `--quiet`, `-M`; `crates/cli/README.md`; not `--configDir`: the configuration is one file). New: a `--version` flag, printing the
   `version` line. The Docker images and the docs deploy are below; `snap/snapcraft.yaml` and
   the upstream release tool's configuration were in the tree at `44529028`, but no workflow published them.
 

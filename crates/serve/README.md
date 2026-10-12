@@ -63,12 +63,12 @@ rendered to disk by default and into memory with `-M`/`--renderToMemory`.
 **Watched** (Go's `WatchFilenames` + config files): every mount of the project and its
 themes (content, layouts, assets, data, i18n, archetypes, static; `disableWatch` mounts left
 out) recursively, a mounted file through its directory, the configuration directories (the
-project's `--configDir` and each theme's `config/`) recursively, and, not recursively, the
-directories of the configuration files `Config::config_files` lists (the project's and its
-themes') and the project's and each theme's directory. **Configuration** is any of those
-files, anything below a configuration directory, and a `config.*` file in the project's or a
-theme's directory (so a new `config.toml` next to a `config.yaml` is a configuration change,
-and wins). The project's `.env` files and its `package.json` count as configuration files
+project's and each theme's `config/`, whose configuration files are an error) recursively,
+and, not recursively, the directories of the configuration files `Config::config_files` lists
+(the project's and its themes') and the project's and each theme's directory.
+**Configuration** is any of those files, anything below a configuration directory, and a
+`config.*` file in the project's or a theme's directory (so a new `config.yaml` next to a
+`config.toml` is a configuration change: an error, until one of them goes). The project's `.env` files and its `package.json` count as configuration files
 whether or not they exist yet. Each time the server loads the configuration, it runs the
 request's `BuildRequest::prepare` before it builds the `Vfs`: at the start, and on every
 configuration change. The CLI installs the project's npm packages there, so saving

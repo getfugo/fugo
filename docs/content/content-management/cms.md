@@ -254,15 +254,13 @@ Whatever a role says, the editor writes only these files:
 |---|---|
 | The content directories | Markdown (and other content formats; HTML pages only with `html = true`), and its page bundles' images, documents, audio and video |
 | `data/` and `i18n/` | TOML, YAML, JSON, CSV, XML |
-| `config/_default/params.*`, `config/_default/menus.*` | TOML, YAML, JSON |
 | The `media` directory | images, documents, audio and video |
 
-Never `config.toml` or the rest of the configuration (a mount could publish your `.env`),
-layouts, assets, content adapters (`_content.*` are templates), workflows, `wrangler.jsonc` or
-dotfiles; and never SVG, HTML, CSS or JavaScript uploads, which would run on the site's
-address. Site settings that editors should change belong in `config/_default/params.toml` and
-the menus files, which the [configuration directory](/configuration/introduction/#configuration-directory)
-merges like any other.
+Never the configuration file (a mount could publish your `.env`), layouts, assets, content
+adapters (`_content.*` are templates), workflows, `wrangler.jsonc` or dotfiles; and never SVG,
+HTML, CSS or JavaScript uploads, which would run on the site's address. Values that editors
+should change belong in [data files](/content-management/data-sources/#data-files), which
+templates read as `site.data`, rather than in the configuration's `[params]`.
 
 A role whose globs cannot match any of these files is an error at build time. Examples:
 
@@ -273,8 +271,8 @@ edit = ["content/blog/**"]
 [roles.translator]               # Thai pages of a site with index.th.md files
 edit = ["content/**/*.th.md"]
 
-[roles.settings]                 # the site's params and menus
-edit = ["config/_default/params.toml", "config/_default/menus.*.toml"]
+[roles.settings]                 # the values templates read from data/site.toml
+edit = ["data/site.toml"]
 
 [roles.owner]                    # everything the editor may write; publishes
 edit = ["**"]

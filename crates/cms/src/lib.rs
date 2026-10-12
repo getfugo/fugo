@@ -118,7 +118,7 @@ pub fn publish(
             return Err(CmsError::config(
                 format!("cms.roles.{name}.edit"),
                 format!(
-                    "{g:?} matches nothing the editor may write (content, data, i18n, the params and menus files of config/_default/, the media directory)"
+                    "{g:?} matches nothing the editor may write (content, data, i18n, the media directory)"
                 ),
             ));
         }

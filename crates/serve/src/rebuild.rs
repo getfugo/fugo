@@ -50,7 +50,6 @@ pub(crate) struct Rebuilder {
     append_port: bool,
     live_reload: Option<LiveReloadOptions>,
     target: Target,
-    config_dir: PathBuf,
     /// The listeners' ports (one per language of a multihost site).
     ports: Vec<u16>,
     cfg: Arc<Config>,
@@ -76,13 +75,6 @@ impl Rebuilder {
         shared: Arc<Shared>,
         reporter: Arc<dyn Reporter>,
     ) -> Result<Self, ServeError> {
-        let config_dir = opts.build.source.join(
-            opts.build
-                .cli
-                .config_dir
-                .as_deref()
-                .unwrap_or(Path::new("config")),
-        );
         point_at_server(
             &mut cfg,
             opts.build.cli.base_url.as_deref(),
@@ -91,7 +83,7 @@ impl Rebuilder {
         )?;
         prepare(&opts.build, &cfg)?;
         let vfs = Vfs::new(&cfg)?;
-        let (classifier, watch_set) = watching(&cfg, &vfs, &config_dir);
+        let (classifier, watch_set) = watching(&cfg, &vfs);
         Ok(Self {
             request: opts.build.clone(),
             append_port: opts.append_port,
@@ -99,7 +91,6 @@ impl Rebuilder {
             target: opts.target,
             classifier,
             watch_set,
-            config_dir,
             ports,
             cfg: Arc::new(cfg),
             vfs,
@@ -136,7 +127,7 @@ impl Rebuilder {
         )?;
         prepare(&self.request, &cfg)?;
         self.vfs = Vfs::new(&cfg)?;
-        (self.classifier, self.watch_set) = watching(&cfg, &self.vfs, &self.config_dir);
+        (self.classifier, self.watch_set) = watching(&cfg, &self.vfs);
         self.cfg = Arc::new(cfg);
         Ok(())
     }
@@ -229,7 +220,7 @@ impl Rebuilder {
                 return;
             }
         };
-        let (classifier, set) = watching(&self.cfg, &vfs, &self.config_dir);
+        let (classifier, set) = watching(&self.cfg, &vfs);
         let mut old = self.watch_set.clone();
         for e in events {
             if matches!(e.kind, EventKind::Create(_)) {
@@ -375,8 +366,8 @@ impl Rebuilder {
 }
 
 /// The event classifier and the watch set of a configuration.
-fn watching(cfg: &Config, vfs: &Vfs, config_dir: &Path) -> (Classifier, WatchSet) {
-    let places = ConfigPlaces::new(cfg, config_dir);
+fn watching(cfg: &Config, vfs: &Vfs) -> (Classifier, WatchSet) {
+    let places = ConfigPlaces::new(cfg);
     let set = WatchSet::new(vfs, &places);
     (Classifier::new(vfs, places), set)
 }
@@ -430,7 +421,7 @@ pub(crate) fn load(r: &BuildRequest) -> Result<Config, ServeError> {
     }
     Ok(ssg_config::load(&LoadOptions {
         source: r.source.clone(),
-        config_files: r.config_files.clone(),
+        config_file: r.config_file.clone(),
         cli,
         env: ssg_build::process_env(),
     })?)
