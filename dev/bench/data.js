@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791858837007,
+  "lastUpdate": 1791858840007,
   "repoUrl": "https://github.com/getfugo/fugo",
   "entries": {
     "Benchmark": [
@@ -100180,6 +100180,105 @@ window.BENCHMARK_DATA = {
           {
             "name": "BenchmarkSummaryFromHTMLWithDivider",
             "value": 69.75,
+            "unit": "ns/op"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "blackb1rd.mov@gmail.com",
+            "name": "Prachya Saechua",
+            "username": "blackb1rd"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "3cef63fb1eab8376d23f2516089aaaaeb9fa8c94",
+          "message": "images: Write the build's year for {year} in the copyright notice (#207)\n\n`[imaging] copyright` was written into images as it is, so its year had to\nbe edited by hand every January. `{year}` in it now stands for the build's\nyear:\n\n    [imaging]\n    copyright = \"© 2019–{year} by Jane Doe, all rights reserved\"\n\nThe year is that of the build's clock (`--clock`, else the system clock) in\nthe default language's time zone (`timeZone`), the year `now()` gives its\ntemplates, so a build with `--clock` stays reproducible (`Config::year`).\n`{year}` is the only placeholder: any other brace in `copyright` (`{yaer}`,\n`{Year}`, a lone `{`) is a configuration error that names it, so a typo does\nnot go into every image. The notice is written when an image is published,\nafter `[caches.images]`, so a new year processes no image again.\n\n`ImageMetadata::from_config` and `Imaging::from_config` take the year;\n`StoreConfig::from_config` and `StaticSyncOptions::from_config` take the\nbuild's clock, and `fugo server` copies changed static images with its own.\n\nCo-Authored-By: Claude Opus 5.5 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-10-13T09:22:02+07:00",
+          "tree_id": "c355c496aed4a86a9a139bc8208088d69a66d24d",
+          "url": "https://github.com/getfugo/fugo/commit/3cef63fb1eab8376d23f2516089aaaaeb9fa8c94"
+        },
+        "date": 1791858839205,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "BenchmarkSanitizeAnchorName",
+            "value": 482.06,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSanitizeAnchorNameAsciiOnly",
+            "value": 1341.48,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSanitizeAnchorNameBlackfriday",
+            "value": 593.1,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSanitizeAnchorNameString",
+            "value": 482.36,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSanitize/All_allowed",
+            "value": 221.51,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSanitize/Spaces",
+            "value": 235.47,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkRelURL",
+            "value": 350.77,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkAbsURL/relurl",
+            "value": 679.03,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkAbsURL/absurl",
+            "value": 21.2,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkTotalWords",
+            "value": 5463.26,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkStripHTML",
+            "value": 1179.68,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkParse",
+            "value": 9409.92,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkDecodeYAMLToMap",
+            "value": 15641.69,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSummaryFromHTML",
+            "value": 71.54,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSummaryFromHTMLWithDivider",
+            "value": 75.37,
             "unit": "ns/op"
           }
         ]
