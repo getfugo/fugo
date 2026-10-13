@@ -141,12 +141,13 @@ impl ExifSettings {
 }
 
 impl Imaging {
-    /// Types `[imaging]` as the config crate decoded it.
+    /// Types `[imaging]` as the config crate decoded it, for a build in `year` (the copyright
+    /// notice's `{year}`; `Config::year`).
     ///
     /// # Errors
     /// An unknown resample filter, anchor or hint, a quality outside 1–100, an invalid
     /// background colour, or invalid EXIF settings.
-    pub fn from_config(c: &ImagingConfig) -> Result<Self, ImageError> {
+    pub fn from_config(c: &ImagingConfig, year: i16) -> Result<Self, ImageError> {
         let config = |key: &'static str| move |reason: String| ImageError::Config { key, reason };
         let named = |s: &str| (!s.trim().is_empty()).then(|| s.trim().to_owned());
         let d = Self::default();
@@ -168,7 +169,7 @@ impl Imaging {
                 .ok_or_else(|| config("imaging.quality")(format!("{} is not 1–100", c.quality)))?,
             background: c.bg_color.parse()?,
             exif: ExifSettings::from_map(&c.exif)?,
-            metadata: ImageMetadata::from_config(c),
+            metadata: ImageMetadata::from_config(c, year),
         })
     }
 }

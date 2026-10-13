@@ -12,7 +12,7 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 use serde_json::Value as J;
-use ssg_base::{Idx as _, LangIdx, ResourceId};
+use ssg_base::{Clock, Idx as _, LangIdx, ResourceId};
 use ssg_resources::{ResourceStore, StoreConfig, TransformEnv};
 use ssg_vfs::Vfs;
 
@@ -125,7 +125,12 @@ fn in_dir(tmp: tempfile::TempDir, dir: PathBuf, edit: impl FnOnce(&mut Transform
     edit(&mut env);
     let store = ResourceStore::new(StoreConfig {
         transforms: Arc::new(env),
-        ..StoreConfig::from_config(&cfg, Some(Arc::new(Vfs::new(&cfg).unwrap())), None)
+        ..StoreConfig::from_config(
+            &cfg,
+            Some(Arc::new(Vfs::new(&cfg).unwrap())),
+            None,
+            Clock::system(),
+        )
     });
     Project {
         dir,

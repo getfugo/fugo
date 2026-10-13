@@ -44,9 +44,9 @@ weight: 40
   setting). See [Image metadata](#image-metadata).
 
 `copyright`, `author`, `titleFromFileName`
-: A copyright notice, an author and the file name as the title, written into every JPEG, PNG
-  and WebP image fugo publishes (fugo's own settings; they need `stripMetadata`). See
-  [Copyright notice](#copyright-notice).
+: A copyright notice (`{year}` in it is the build's year), an author and the file name as the
+  title, written into every JPEG, PNG and WebP image fugo publishes (fugo's own settings; they
+  need `stripMetadata`). See [Copyright notice](#copyright-notice).
 
 `exif.includeFields`, `exif.excludeFields`
 : Regular expressions of the EXIF tags to keep in `img | exif`. By default fugo leaves out
@@ -84,7 +84,7 @@ it publishes, the processed ones included:
 
 {{< code-toggle file=config >}}
 [imaging]
-  copyright = "© 2026 by Jane Doe, all rights reserved"
+  copyright = "© 2019–{year} by Jane Doe, all rights reserved"
   author = "Jane Doe"
   titleFromFileName = true
 {{< /code-toggle >}}
@@ -93,5 +93,12 @@ They go into the image's EXIF (`Copyright` and `Artist`, which photo application
 XMP (`dc:rights`, `dc:creator` and `dc:title`, which Google Images shows as the copyright
 notice and the creator), in place of the image's own metadata: they need `stripMetadata`.
 With `titleFromFileName`, `harbour_view.jpg` gets the title `harbour_view`, and an image
-processed from it the same. The text is written as it is: update the year yourself. Each
-setting holds at most 1000 bytes, without line breaks.
+processed from it the same. Each setting holds at most 1000 bytes, without line breaks.
+
+`{year}` in `copyright` is the year of the build: of `--clock` when it is given, else of the
+system clock, in the default language's time zone (`timeZone`), the year `now()` gives its
+templates. Built in 2027, the setting above writes `© 2019–2027 by Jane Doe, all rights
+reserved`. It is the only placeholder: any other brace in `copyright`, such as a misspelt
+`{yaer}`, is an error, so that a typo does not go into every image. The notice is written when
+an image is published, after the [image cache](/configuration/caching/), so a new year does not
+process the images again. The author is written as it is.

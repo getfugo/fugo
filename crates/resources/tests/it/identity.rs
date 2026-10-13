@@ -8,7 +8,7 @@ use std::sync::Arc;
 
 use ssg_base::diag::Position;
 use ssg_base::url::BaseUrl;
-use ssg_base::{Idx, LangIdx, Value};
+use ssg_base::{Clock, Idx, LangIdx, Value};
 use ssg_config::MediaTypes;
 use ssg_images::{ImageQueue, ImageSpec, Imaging, QrLevel};
 use ssg_resources::meta::ResourceMeta;
@@ -307,6 +307,7 @@ fn image_seam() {
         &cfg,
         Some(Arc::new(Vfs::new(&cfg).unwrap())),
         Some(Arc::clone(&queue)),
+        Clock::system(),
     ));
     let l = lang(0);
     let src = s.get_asset(l, "images/watermark.png").unwrap().unwrap();

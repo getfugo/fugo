@@ -16,7 +16,7 @@ impl Session {
     ) -> Result<Arc<Self>, RenderError> {
         let diagnostics = Arc::new(Diagnostics::new(model.config.ignore_logs.iter()));
         let cfg = &model.config;
-        let imaging = Imaging::from_config(&cfg.imaging).unwrap_or_else(|e| {
+        let imaging = Imaging::from_config(&cfg.imaging, cfg.year(o.clock)).unwrap_or_else(|e| {
             diagnostics.push(Diagnostic::error(format!("[imaging]: {e}")));
             Imaging::default()
         });
@@ -30,6 +30,7 @@ impl Session {
             cfg,
             Some(Arc::clone(&project.vfs)),
             Some(Arc::clone(&images)),
+            o.clock,
         )));
         let translations = Arc::new(i18n::load(&project.vfs, cfg)?);
         let (menus, menu_diagnostics) =

@@ -367,7 +367,7 @@ pub fn build(r: BuildRequest) -> Result<BuildReport, BuildError> {
 
     // E1.
     let memory = (r.sink == SinkKind::Memory).then(|| Arc::new(MemorySink::new()));
-    let mut sync = StaticSyncOptions::from_config(&cfg);
+    let mut sync = StaticSyncOptions::from_config(&cfg, clock);
     if let Some(clean) = r.clean_destination {
         sync.clean_destination = clean;
     }

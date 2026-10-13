@@ -22,7 +22,7 @@ fn settings(name: &str) -> ExifSettings {
     };
     let cfg: ImagingConfig =
         serde_json::from_value(json!({ "exif": exif })).expect("imaging config");
-    Imaging::from_config(&cfg).expect("imaging").exif
+    Imaging::from_config(&cfg, 2026).expect("imaging").exif
 }
 
 fn date_string(d: &Date) -> String {
