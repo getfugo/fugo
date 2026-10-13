@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791858840007,
+  "lastUpdate": 1791876412978,
   "repoUrl": "https://github.com/getfugo/fugo",
   "entries": {
     "Benchmark": [
@@ -98028,6 +98028,66 @@ window.BENCHMARK_DATA = {
           {
             "name": "10,000 generated pages: peak memory",
             "value": 571.2,
+            "unit": "MiB",
+            "extra": "10061 pages; median of 5 builds after a warm-up build"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "blackb1rd.mov@gmail.com",
+            "name": "Prachya Saechua",
+            "username": "blackb1rd"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "def28ed9643d2633f2c540358fc1d7437263d3eb",
+          "message": "site: Read each content file's last Git commit with enableGitInfo (#208)\n\n`enableGitInfo` was accepted and did nothing: `page.git_info` was always\nnone and the `:git` date source gave no date, so `lastmod` fell through\nto front matter. With it on, one `git log` of the project's repository\nper build (crates/site/src/git.rs, run alongside the content reads)\ngives each content file its last commit:\n\n- `page.git_info`: hash, abbreviated hash, subject, body (new in\n  GitInfoView), author name and email as `.mailmap` maps them, and the\n  author and commit dates in the offsets Git recorded.\n- `:git`, first in `lastmod`'s default sources: the author date, in its\n  offset as Go keeps it (`FileCtx::git_author_date` is now a `&Zoned`;\n  it was converted to UTC).\n- git runs as `[security.exec]` allows: `exec.allow` must accept it (the\n  default does), and it gets only the `exec.osEnv` variables. Its options\n  (`-z --root --no-renames --no-relative --no-show-signature\n  --encoding=UTF-8`) keep its output independent of the user's Git\n  configuration, and file names are read unquoted, so non-ASCII names\n  and names with quotes are found.\n- A shallow clone is a `git-shallow-clone` warning (its oldest commit\n  lists every file); a project outside a repository, or `git` missing or\n  refused, is `ModelError::Git`.\n- Go's `Ancestors` and `Parent` are not read.\n\nNo test site sets `enableGitInfo`, so no baseline changed. The site,\nfront matter, security and differences docs, the object reference, the\nREADME, ssg-site's README and HANDOFF say so.\n\nCo-Authored-By: Claude Opus 5.5 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-10-13T14:08:51+07:00",
+          "tree_id": "e65dd76ff18cc306546240d0f3f8df15cc8e2b7d",
+          "url": "https://github.com/getfugo/fugo/commit/def28ed9643d2633f2c540358fc1d7437263d3eb"
+        },
+        "date": 1791876409299,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "docs site: build time",
+            "value": 143.7,
+            "unit": "ms",
+            "extra": "334 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "docs site: peak memory",
+            "value": 174.4,
+            "unit": "MiB",
+            "extra": "334 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "1,000 generated pages: build time",
+            "value": 164,
+            "unit": "ms",
+            "extra": "1061 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "1,000 generated pages: peak memory",
+            "value": 151.5,
+            "unit": "MiB",
+            "extra": "1061 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "10,000 generated pages: build time",
+            "value": 2162.7,
+            "unit": "ms",
+            "extra": "10061 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "10,000 generated pages: peak memory",
+            "value": 564.5,
             "unit": "MiB",
             "extra": "10061 pages; median of 5 builds after a warm-up build"
           }
