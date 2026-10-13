@@ -188,7 +188,8 @@ pub struct ImagingConfig {
     /// Publish original images without their metadata (EXIF, XMP, IPTC, comments); fugo's own,
     /// on by default.
     pub strip_metadata: bool,
-    /// The copyright notice written into every published image (empty: none); fugo's own.
+    /// The copyright notice written into every published image (empty: none), where each
+    /// [`YEAR`](Self::YEAR) stands for the build's year; fugo's own.
     pub copyright: String,
     /// The author written into every published image (empty: none); fugo's own.
     pub author: String,
@@ -211,6 +212,18 @@ impl Default for ImagingConfig {
             author: String::new(),
             title_from_file_name: false,
         }
+    }
+}
+
+impl ImagingConfig {
+    /// The placeholder of [`copyright`](Self::copyright) for the build's year, its only one.
+    pub const YEAR: &str = "{year}";
+
+    /// The copyright notice of a build in `year`: [`copyright`](Self::copyright) with each
+    /// [`YEAR`](Self::YEAR) replaced.
+    #[must_use]
+    pub fn copyright_in(&self, year: i16) -> String {
+        self.copyright.replace(Self::YEAR, &year.to_string())
     }
 }
 

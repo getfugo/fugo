@@ -149,6 +149,7 @@ pub fn views_of(model: &Arc<Model>) -> (Arc<ResourceStore>, ViewCache) {
         &model.config,
         None,
         None,
+        Clock::system(),
     )));
     let (menus, _) = ssg_nav::build_menus(&NavSite::new(Arc::clone(model)), &model.config);
     let views = ViewCache::new(ViewInputs {

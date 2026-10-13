@@ -99,7 +99,7 @@ struct Compared {
 /// Runs a recipe and compares the result with the golden image.
 fn run(recipe: &Recipe, golden_dir: &Path) -> Result<Compared, String> {
     let imaging = match &recipe.imaging {
-        Some(c) => Imaging::from_config(c).map_err(|e| e.to_string())?,
+        Some(c) => Imaging::from_config(c, 2026).map_err(|e| e.to_string())?,
         None => Imaging::default(),
     };
     let q = ImageQueue::new(imaging, None);

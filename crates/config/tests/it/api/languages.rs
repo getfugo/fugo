@@ -32,6 +32,10 @@ weight = 4
     assert_eq!(th.language.url_prefix, "th");
     assert_eq!(th.language.code, "th-TH");
     assert_eq!(th.language.time_zone.iana_name(), Some("Asia/Bangkok"));
+    // The build's year is the default language's (UTC+7 here).
+    let clock = |t: &str| ssg_base::Clock(t.parse().expect("clock"));
+    assert_eq!(c.year(clock("2031-12-31T16:59:59Z")), 2031);
+    assert_eq!(c.year(clock("2031-12-31T17:00:00Z")), 2032);
     assert_eq!(c.site("en").expect("en").language.code, "en");
     assert_eq!(
         c.site("ar").expect("ar").language.direction,

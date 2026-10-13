@@ -16,7 +16,7 @@ use std::path::{Path, PathBuf};
 
 use rayon::prelude::*;
 use ssg_base::paths::{self, OutputPath};
-use ssg_base::{IdVec, Idx, LangIdx, Sink, Value};
+use ssg_base::{Clock, IdVec, Idx, LangIdx, Sink, Value};
 use ssg_config::Config;
 use ssg_images::{ImageFormat, ImageMetadata};
 use ssg_vfs::{Component, FileRef, NFC_NAMES, Vfs, entry_name};
@@ -53,9 +53,10 @@ impl Default for StaticSyncOptions {
 
 impl StaticSyncOptions {
     /// The options of a configuration (`noTimes`, `noChmod`, `cleanDestinationDir`, the
-    /// language directories of a multihost site, and the metadata of images of `[imaging]`).
+    /// language directories of a multihost site, and the metadata of images of `[imaging]`)
+    /// for a build at `clock` (the year of the copyright notice).
     #[must_use]
-    pub fn from_config(cfg: &Config) -> Self {
+    pub fn from_config(cfg: &Config, clock: Clock) -> Self {
         let flag = |key: &str| cfg.raw.get(key).and_then(Value::as_bool).unwrap_or(false);
         let language_dirs = cfg.multihost.then(|| {
             let mut dirs = IdVec::with_capacity(cfg.sites.len());
@@ -69,7 +70,7 @@ impl StaticSyncOptions {
             permissions: !flag("nochmod"),
             clean_destination: flag("cleandestinationdir"),
             language_dirs,
-            image_metadata: ImageMetadata::from_config(&cfg.imaging),
+            image_metadata: ImageMetadata::from_config(&cfg.imaging, cfg.year(clock)),
         }
     }
 

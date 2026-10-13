@@ -7,8 +7,8 @@ use std::sync::{Arc, Mutex};
 
 use serde_json::{Value as J, json};
 use sha2::{Digest, Sha256};
-use ssg_base::Sink;
 use ssg_base::paths::OutputPath;
+use ssg_base::{Clock, Sink};
 use ssg_config::{Config, LoadOptions, load};
 use ssg_resources::{Resource, ResourceStore, StoreConfig};
 use ssg_vfs::Vfs;
@@ -78,7 +78,12 @@ pub fn config(dir: &Path, home: &Path) -> Config {
 pub fn store(dir: &Path, home: &Path) -> ResourceStore {
     let cfg = config(dir, home);
     let vfs = Arc::new(Vfs::new(&cfg).unwrap());
-    ResourceStore::new(StoreConfig::from_config(&cfg, Some(vfs), None))
+    ResourceStore::new(StoreConfig::from_config(
+        &cfg,
+        Some(vfs),
+        None,
+        Clock::system(),
+    ))
 }
 
 /// [`store`] publishing images with their metadata, as the Go implementation does
@@ -88,7 +93,7 @@ pub fn go_store(dir: &Path, home: &Path) -> ResourceStore {
     let vfs = Arc::new(Vfs::new(&cfg).unwrap());
     ResourceStore::new(StoreConfig {
         image_metadata: ssg_images::ImageMetadata::KEEP,
-        ..StoreConfig::from_config(&cfg, Some(vfs), None)
+        ..StoreConfig::from_config(&cfg, Some(vfs), None, Clock::system())
     })
 }
 

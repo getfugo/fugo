@@ -17,7 +17,7 @@ fn read(rel: &str) -> Vec<u8> {
 fn all_tags() -> ExifSettings {
     let cfg: ImagingConfig =
         serde_json::from_value(json!({"exif": {"includeFields": ".*"}})).expect("imaging config");
-    Imaging::from_config(&cfg).expect("imaging").exif
+    Imaging::from_config(&cfg, 2026).expect("imaging").exif
 }
 
 fn contains(bytes: &[u8], needle: &[u8]) -> bool {

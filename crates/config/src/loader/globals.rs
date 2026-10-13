@@ -132,8 +132,9 @@ impl<'a> Loader<'a> {
 /// published image.
 const NOTICE_MAX: usize = 1000;
 
-/// `[imaging]`'s copyright notice, author and title: text without control characters, and
-/// only with `stripMetadata` (an image's own metadata is replaced to write them).
+/// `[imaging]`'s copyright notice, author and title: text without control characters, braces
+/// only in the copyright's `{year}`, and only with `stripMetadata` (an image's own metadata is
+/// replaced to write them).
 fn check_notice(imaging: &ImagingConfig) -> Result<(), ConfigError> {
     for (key, text) in [
         ("imaging.copyright", &imaging.copyright),
@@ -146,6 +147,16 @@ fn check_notice(imaging: &ImagingConfig) -> Result<(), ConfigError> {
             ));
         }
     }
+    // A typo such as `{yaer}` would otherwise go into every image as it is.
+    if let Some(brace) = stray_brace(&imaging.copyright) {
+        return Err(ConfigError::invalid(
+            "imaging.copyright",
+            format!(
+                "{brace:?} is not a placeholder: the only one is {}",
+                ImagingConfig::YEAR
+            ),
+        ));
+    }
     let notice =
         !imaging.copyright.is_empty() || !imaging.author.is_empty() || imaging.title_from_file_name;
     if notice && !imaging.strip_metadata {
@@ -156,4 +167,22 @@ fn check_notice(imaging: &ImagingConfig) -> Result<(), ConfigError> {
         ));
     }
     Ok(())
+}
+
+/// The first brace of `text` outside an [`ImagingConfig::YEAR`], with what it encloses: `{yaer}`,
+/// or the lone `{` or `}`.
+fn stray_brace(text: &str) -> Option<&str> {
+    let mut rest = text;
+    while let Some(i) = rest.find(['{', '}']) {
+        let tail = &rest[i..];
+        if let Some(after) = tail.strip_prefix(ImagingConfig::YEAR) {
+            rest = after;
+            continue;
+        }
+        return Some(match tail.find('}') {
+            Some(end) if tail.starts_with('{') => &tail[..=end],
+            _ => &tail[..1],
+        });
+    }
+    None
 }

@@ -50,7 +50,7 @@ use std::time::Duration;
 
 use serde::Serialize;
 use ssg_base::diag::Diagnostic;
-use ssg_base::{IdVec, Idx, LangIdx, Map, Params, Value};
+use ssg_base::{Clock, IdVec, Idx, LangIdx, Map, Params, Value};
 
 pub use env_file::EnvFile;
 pub use error::ConfigError;
@@ -223,6 +223,16 @@ impl Config {
     #[must_use]
     pub fn site(&self, key: &str) -> Option<&SiteConfig> {
         self.sites.iter().find(|s| s.language.key == key)
+    }
+
+    /// The year of `clock` in the default language's time zone (`timeZone`), the year its
+    /// `now()` gives: what `{year}` of `[imaging] copyright` stands for.
+    #[must_use]
+    pub fn year(&self, clock: Clock) -> i16 {
+        clock
+            .now()
+            .to_zoned(self.default_site().language.time_zone.clone())
+            .year()
     }
 }
 

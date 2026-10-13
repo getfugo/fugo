@@ -137,7 +137,8 @@ fn originals_without_their_metadata() {
 }
 
 /// `[imaging] copyright`, `author` and `titleFromFileName`: the bundle's photo, the static one
-/// and the processed one carry them (the processed one its source's title).
+/// and the processed one carry them (the processed one its source's title), the copyright with
+/// the year of `--clock` in the site's time zone for `{year}`.
 #[test]
 fn published_images_carry_the_notice() {
     let tmp = tempfile::tempdir().expect("tempdir");
@@ -147,8 +148,9 @@ fn published_images_carry_the_notice() {
         &[
             (
                 "config.toml".to_owned(),
-                "baseURL = \"https://example.org/\"\ntitle = \"Images\"\n[imaging]\n\
-                 copyright = \"© 2026 by A. Author\"\nauthor = \"A. Author\"\n\
+                "baseURL = \"https://example.org/\"\ntitle = \"Images\"\n\
+                 timeZone = \"Asia/Bangkok\"\n[imaging]\n\
+                 copyright = \"© 2019–{year} by A. Author\"\nauthor = \"A. Author\"\n\
                  titleFromFileName = true\n"
                     .to_owned(),
             ),
@@ -171,6 +173,8 @@ fn published_images_carry_the_notice() {
             cache_dir: Some(tmp.path().join("cache")),
             ..CliOverrides::default()
         },
+        // 2032-01-01T00:30 in Bangkok.
+        clock: Some("2031-12-31T17:30:00Z".parse().expect("clock")),
         ..BuildRequest::default()
     })
     .unwrap_or_else(|e| panic!("images build: {e}"));
@@ -201,7 +205,7 @@ fn published_images_carry_the_notice() {
         };
         assert_eq!(
             tag("Copyright").as_deref(),
-            Some("© 2026 by A. Author"),
+            Some("© 2019–2032 by A. Author"),
             "{path}"
         );
         assert_eq!(tag("Artist").as_deref(), Some("A. Author"), "{path}");

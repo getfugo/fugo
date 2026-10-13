@@ -120,20 +120,26 @@ fn toc_end_level_and_permalink_errors() {
 }
 
 /// `[imaging]`'s copyright, author and title: read with `stripMetadata` (on by default), refused
-/// without it, and refused with control characters or more than 1000 bytes.
+/// without it, and refused with control characters or more than 1000 bytes; the copyright's
+/// `{year}` is the build's year, and any other brace is refused.
 #[test]
 fn image_notice() {
     let p = Project::new(&[(
         "config.toml",
-        "[imaging]\ncopyright = \"© 2026 A\"\nauthor = \"A\"\ntitleFromFileName = true\n",
+        "[imaging]\ncopyright = \"© 2019–{year} A\"\nauthor = \"A\"\ntitleFromFileName = true\n",
     )]);
     let c = p.ok();
     assert!(c.imaging.strip_metadata);
     assert_eq!(
         (c.imaging.copyright.as_str(), c.imaging.author.as_str()),
-        ("© 2026 A", "A")
+        ("© 2019–{year} A", "A")
     );
     assert!(c.imaging.title_from_file_name);
+    let year = c.year(ssg_base::Clock(
+        "2031-12-31T23:59:59Z".parse().expect("clock"),
+    ));
+    assert_eq!(year, 2031);
+    assert_eq!(c.imaging.copyright_in(year), "© 2019–2031 A");
 
     for (config, key) in [
         (
@@ -149,6 +155,13 @@ fn image_notice() {
             &format!("[imaging]\ncopyright = \"{}\"\n", "x".repeat(1001)),
             "imaging.copyright",
         ),
+        ("[imaging]\ncopyright = \"© {Year}\"\n", "imaging.copyright"),
+        (
+            "[imaging]\ncopyright = \"© {{year}}\"\n",
+            "imaging.copyright",
+        ),
+        ("[imaging]\ncopyright = \"© {year\"\n", "imaging.copyright"),
+        ("[imaging]\ncopyright = \"© year}\"\n", "imaging.copyright"),
     ] {
         let e = Project::new(&[("config.toml", config)])
             .load(CliOverrides::default(), &[])
@@ -158,4 +171,23 @@ fn image_notice() {
         };
         assert_eq!(got, key, "{config}");
     }
+}
+
+/// A misspelt placeholder stops the build, named in the error at its line.
+#[test]
+fn image_notice_placeholder_typo() {
+    let e = Project::new(&[(
+        "config.toml",
+        "[imaging]\ncopyright = \"© 2019–{yaer} A\"\n",
+    )])
+    .load(CliOverrides::default(), &[])
+    .expect_err("typo");
+    assert_eq!(position(&e), ("config.toml".into(), 2, 1));
+    assert!(
+        e.to_string().ends_with(
+            "config.toml:2:1: imaging.copyright: \"{yaer}\" is not a placeholder: the only \
+             one is {year}"
+        ),
+        "{e}"
+    );
 }

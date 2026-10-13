@@ -13,7 +13,7 @@ use ssg_base::diag::Position;
 use ssg_base::glob::{self, GlobError, GlobOpts};
 use ssg_base::paths::{self, OutputPath, Permalink, UrlPath};
 use ssg_base::url::BaseUrl;
-use ssg_base::{IdVec, Idx, ImageOpId, LangIdx, Map, PageId, Params, ResourceId, Value};
+use ssg_base::{Clock, IdVec, Idx, ImageOpId, LangIdx, Map, PageId, Params, ResourceId, Value};
 use ssg_config::{Config, MediaType, MediaTypes};
 use ssg_images::{
     Enqueued, ImageError, ImageFormat, ImageInput, ImageMetadata, ImageQueue, QrLevel,
@@ -176,12 +176,14 @@ pub struct StoreConfig {
 }
 
 impl StoreConfig {
-    /// The store configuration of a loaded project.
+    /// The store configuration of a loaded project, for a build at `clock` (the year of the
+    /// images' copyright notice).
     #[must_use]
     pub fn from_config(
         cfg: &Config,
         vfs: Option<Arc<Vfs>>,
         images: Option<Arc<ImageQueue>>,
+        clock: Clock,
     ) -> Self {
         let languages = cfg
             .sites
@@ -201,7 +203,7 @@ impl StoreConfig {
             media_types: Arc::clone(&cfg.media_types),
             vfs,
             images,
-            image_metadata: ImageMetadata::from_config(&cfg.imaging),
+            image_metadata: ImageMetadata::from_config(&cfg.imaging, cfg.year(clock)),
             remote: RemoteConfig::from_config(cfg),
             transforms: Arc::new(TransformEnv::from_config(cfg)),
         }

@@ -39,12 +39,13 @@ impl ImageMetadata {
         title_from_file_name: false,
     };
 
-    /// The settings of `[imaging]`.
+    /// The settings of `[imaging]` for a build in `year` (`Config::year`), which `{year}` in
+    /// the copyright notice stands for.
     #[must_use]
-    pub fn from_config(c: &ImagingConfig) -> Self {
+    pub fn from_config(c: &ImagingConfig, year: i16) -> Self {
         Self {
             strip: c.strip_metadata,
-            copyright: c.copyright.clone(),
+            copyright: c.copyright_in(year),
             author: c.author.clone(),
             title_from_file_name: c.title_from_file_name,
         }
@@ -107,5 +108,16 @@ mod tests {
         };
         assert_eq!(m.notice(stem("b/harbour_view.jpg")).title, "harbour_view");
         assert_eq!(ImageMetadata::default().notice("x").title, "");
+    }
+
+    #[test]
+    fn the_copyright_takes_the_year() {
+        let c = ImagingConfig {
+            copyright: "© 2019–{year} A, {year}".to_owned(),
+            ..ImagingConfig::default()
+        };
+        let m = ImageMetadata::from_config(&c, 2031);
+        assert_eq!(m.copyright, "© 2019–2031 A, 2031");
+        assert_eq!(m.notice("x").copyright, "© 2019–2031 A, 2031");
     }
 }

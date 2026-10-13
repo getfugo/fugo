@@ -290,7 +290,12 @@ fn build(dir: tempfile::TempDir) -> Site {
         .expect("model"),
     );
     let images = Arc::new(ImageQueue::new(Imaging::default(), None));
-    let mut sc = StoreConfig::from_config(&cfg, Some(Arc::clone(&vfs)), Some(Arc::clone(&images)));
+    let mut sc = StoreConfig::from_config(
+        &cfg,
+        Some(Arc::clone(&vfs)),
+        Some(Arc::clone(&images)),
+        clock,
+    );
     sc.remote.network = false;
     sc.remote.cache_dir = None;
     let store = Arc::new(ResourceStore::new(sc));

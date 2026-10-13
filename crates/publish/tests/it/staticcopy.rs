@@ -9,6 +9,7 @@ use std::os::unix::fs::PermissionsExt;
 use std::path::Path;
 
 use serde::Deserialize;
+use ssg_base::Clock;
 use ssg_config::{LoadOptions, load};
 use ssg_publish::{StaticSyncOptions, sync_static_dir};
 use ssg_testkit::fixture::oracle;
@@ -216,7 +217,7 @@ fn staticcopy_oracle() {
                 .expect("publishDir under $ROOT"),
         );
         assert_eq!(site.join(&cfg.dirs.publish), publish, "{}", case.name);
-        let options = StaticSyncOptions::from_config(&cfg);
+        let options = StaticSyncOptions::from_config(&cfg, Clock::system());
         let vfs = Vfs::new(&cfg).unwrap();
         let count = sync_static_dir(&vfs, &publish, &options)
             .unwrap_or_else(|e| panic!("{}: {e}", case.name));
@@ -292,7 +293,7 @@ fn static_into_memory() {
     .unwrap();
     let vfs = Vfs::new(&cfg).unwrap();
     let sink = ssg_publish::MemorySink::new();
-    let mut options = StaticSyncOptions::from_config(&cfg);
+    let mut options = StaticSyncOptions::from_config(&cfg, Clock::system());
     assert_eq!(ssg_publish::sync_static(&vfs, &sink, &options).unwrap(), 18);
     assert_eq!(sink.text("/ไทย/หน้า.html").as_deref(), Some("<p>ไทย</p>\n"));
     assert!(sink.get("/.hidden/secret.txt").is_some());
@@ -343,7 +344,7 @@ fn static_images_without_their_metadata() {
         })
         .unwrap();
         let vfs = Vfs::new(&cfg).unwrap();
-        let options = StaticSyncOptions::from_config(&cfg);
+        let options = StaticSyncOptions::from_config(&cfg, Clock::system());
 
         let sink = ssg_publish::MemorySink::new();
         ssg_publish::sync_static(&vfs, &sink, &options).unwrap();

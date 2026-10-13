@@ -189,7 +189,7 @@ fn imaging_config_matches_decode_config() {
             continue;
         }
         n += 1;
-        let got = Imaging::from_config(&cfg);
+        let got = Imaging::from_config(&cfg, 2026);
         match (&got, c["res"].get("ok")) {
             (Ok(i), Some(w)) => {
                 let cfg_w = &w["cfg"];

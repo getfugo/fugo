@@ -28,6 +28,7 @@ use std::time::{Duration, Instant};
 
 use notify::EventKind;
 use notify_debouncer_full::DebouncedEvent;
+use ssg_base::Clock;
 use ssg_base::url::{BaseUrl, UrlRef};
 use ssg_build::{BuildError, BuildReport, BuildRequest, LiveReload, SinkKind};
 use ssg_config::{Config, LoadOptions};
@@ -157,7 +158,7 @@ impl Rebuilder {
         };
         let cms = report.cms.clone();
         self.shared.install(Served::new(tree, &self.cfg, cms));
-        match static_files(&self.vfs, &self.cfg) {
+        match static_files(&self.vfs, &self.sync_options()) {
             Ok(files) => self.static_files = files,
             Err(e) => self.error(&format!("listing the static files: {e}")),
         }
@@ -307,10 +308,18 @@ impl Rebuilder {
         self.reload_after_build(changes, changed.as_deref(), &report);
     }
 
+    /// How the server copies static files, as the build at this moment would (its clock: the
+    /// year of the images' copyright notice).
+    fn sync_options(&self) -> StaticSyncOptions {
+        let clock = self.request.clock.map_or_else(Clock::system, Clock);
+        StaticSyncOptions::from_config(&self.cfg, clock)
+    }
+
     /// Copies the static files below `paths` into the served tree.
     fn sync_static(&mut self, paths: &[PathBuf]) {
         let started = Instant::now();
-        let files = match static_files(&self.vfs, &self.cfg) {
+        let options = self.sync_options();
+        let files = match static_files(&self.vfs, &options) {
             Ok(f) => f,
             Err(e) => {
                 self.error(&format!("listing the static files: {e}"));
@@ -325,7 +334,6 @@ impl Rebuilder {
             .map(|(t, _)| t.clone())
             .collect();
         let tree = self.shared.served().tree.clone();
-        let options = StaticSyncOptions::from_config(&self.cfg);
         // Only files whose bytes change count (an editor saving the same bytes, a write
         // reported twice).
         let mut changed: Vec<&String> = Vec::new();
@@ -428,8 +436,7 @@ pub(crate) fn load(r: &BuildRequest) -> Result<Config, ServeError> {
 }
 
 /// The static files of a site: publish path (no leading slash) → source file.
-fn static_files(vfs: &Vfs, cfg: &Config) -> Result<BTreeMap<String, PathBuf>, VfsError> {
-    let o = StaticSyncOptions::from_config(cfg);
+fn static_files(vfs: &Vfs, o: &StaticSyncOptions) -> Result<BTreeMap<String, PathBuf>, VfsError> {
     Ok(vfs
         .walk(Component::Static)?
         .into_iter()

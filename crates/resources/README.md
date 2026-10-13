@@ -10,7 +10,7 @@ asset, remote and named-target resources, front matter `resources` metadata and 
 
 | Item | What it is |
 |---|---|
-| `ResourceStore::new(StoreConfig)` | `StoreConfig::from_config(&Config, Option<Arc<Vfs>>, Option<Arc<ImageQueue>>)`: per-language base URL and target prefix (`/<lang>` on multihost sites), media types, the assets view, the image queue, `RemoteConfig`. |
+| `ResourceStore::new(StoreConfig)` | `StoreConfig::from_config(&Config, Option<Arc<Vfs>>, Option<Arc<ImageQueue>>, Clock)`: per-language base URL and target prefix (`/<lang>` on multihost sites), media types, the assets view, the image queue, `RemoteConfig`, the images' metadata (the clock's year for the copyright's `{year}`). |
 | `Resource` | Immutable: `id`, `kind` (`Image` = processable raster, `Page`, `Text`, `Other`), `origin`, `media_type` (empty when the extension is unknown), `name`, `name_normalized`, `title`, `params`, `data`, `lang`, `target: OutputPath`, `link: UrlPath` (unescaped, without base path), `rel_permalink` (escaped, with the base path), `permalink`, `body` (`File`, `Bytes`, `PendingImage`, `Pending`), `policy` (`Eager`, `OnReference`, `Never`). `resource_type()`, `media_type_string()`, `integrity()`. |
 | `resource(id)`, `resources()`, `content(id)` | Lookup; `.Content` (reads the file, or asks the image queue). |
 | `get_asset(lang, path)`, `find_assets(lang, glob)`, `find_asset` | `resources.Get` / `Match` / `GetMatch` over the assets view. Assets are one resource per path (per language on multihost sites). |

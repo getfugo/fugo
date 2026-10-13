@@ -16,7 +16,7 @@ use std::fs;
 use std::path::Path;
 
 use serde_json::{Value as J, json};
-use ssg_base::{Idx, LangIdx, Map, Value};
+use ssg_base::{Clock, Idx, LangIdx, Map, Value};
 use ssg_resources::{RemoteOptions, ResourceStore, StoreConfig, go_keys};
 use ssg_testkit::fixture::testdata;
 
@@ -41,7 +41,7 @@ fn offline_store(tmp: &Path, import: &Path) -> ResourceStore {
     fs::create_dir_all(&site).unwrap();
     fs::write(site.join("config.toml"), SECURITY).unwrap();
     let cfg = config(&site, &tmp.join("home"));
-    let mut sc = StoreConfig::from_config(&cfg, None, None);
+    let mut sc = StoreConfig::from_config(&cfg, None, None, Clock::system());
     sc.remote.cache_dir = Some(tmp.join("cache/getresource"));
     sc.remote.import_dirs = vec![import.to_owned()];
     sc.remote.network = false;
