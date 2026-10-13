@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791829536864,
+  "lastUpdate": 1791858837007,
   "repoUrl": "https://github.com/getfugo/fugo",
   "entries": {
     "Benchmark": [
@@ -97968,6 +97968,66 @@ window.BENCHMARK_DATA = {
           {
             "name": "10,000 generated pages: peak memory",
             "value": 605.5,
+            "unit": "MiB",
+            "extra": "10061 pages; median of 5 builds after a warm-up build"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "blackb1rd.mov@gmail.com",
+            "name": "Prachya Saechua",
+            "username": "blackb1rd"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "3cef63fb1eab8376d23f2516089aaaaeb9fa8c94",
+          "message": "images: Write the build's year for {year} in the copyright notice (#207)\n\n`[imaging] copyright` was written into images as it is, so its year had to\nbe edited by hand every January. `{year}` in it now stands for the build's\nyear:\n\n    [imaging]\n    copyright = \"© 2019–{year} by Jane Doe, all rights reserved\"\n\nThe year is that of the build's clock (`--clock`, else the system clock) in\nthe default language's time zone (`timeZone`), the year `now()` gives its\ntemplates, so a build with `--clock` stays reproducible (`Config::year`).\n`{year}` is the only placeholder: any other brace in `copyright` (`{yaer}`,\n`{Year}`, a lone `{`) is a configuration error that names it, so a typo does\nnot go into every image. The notice is written when an image is published,\nafter `[caches.images]`, so a new year processes no image again.\n\n`ImageMetadata::from_config` and `Imaging::from_config` take the year;\n`StoreConfig::from_config` and `StaticSyncOptions::from_config` take the\nbuild's clock, and `fugo server` copies changed static images with its own.\n\nCo-Authored-By: Claude Opus 5.5 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-10-13T09:22:02+07:00",
+          "tree_id": "c355c496aed4a86a9a139bc8208088d69a66d24d",
+          "url": "https://github.com/getfugo/fugo/commit/3cef63fb1eab8376d23f2516089aaaaeb9fa8c94"
+        },
+        "date": 1791858832664,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "docs site: build time",
+            "value": 196.8,
+            "unit": "ms",
+            "extra": "334 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "docs site: peak memory",
+            "value": 173.7,
+            "unit": "MiB",
+            "extra": "334 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "1,000 generated pages: build time",
+            "value": 232.8,
+            "unit": "ms",
+            "extra": "1061 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "1,000 generated pages: peak memory",
+            "value": 149.4,
+            "unit": "MiB",
+            "extra": "1061 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "10,000 generated pages: build time",
+            "value": 2426.9,
+            "unit": "ms",
+            "extra": "10061 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "10,000 generated pages: peak memory",
+            "value": 571.2,
             "unit": "MiB",
             "extra": "10061 pages; median of 5 builds after a warm-up build"
           }
