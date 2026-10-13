@@ -6,6 +6,7 @@ mod docs_images;
 mod docs_shortcodes;
 mod edges;
 mod fonts;
+mod git_info;
 mod images;
 mod mini;
 mod skeleton;

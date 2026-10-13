@@ -55,6 +55,9 @@ pub enum ModelError {
     },
     #[error(transparent)]
     Data(#[from] DataError),
+    /// `enableGitInfo` is set, and the history cannot be read.
+    #[error("enableGitInfo: {0}")]
+    Git(String),
 }
 
 /// A page the build filter removed: node dates still count its dates (Go aggregates dates

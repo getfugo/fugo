@@ -45,7 +45,11 @@ translations, bundle resources, page references).
    `duplicate-content-path` warnings), read, `split_front_matter`, `decode_front_matter`,
    `capture_overrides`, the page's own `cascade`. Front matter `lang` moves a page only to an
    enabled language; `kind` is normalised; `path` re-parses the page's path. `data::load` runs
-   alongside.
+   alongside. With `enableGitInfo`, one `git log` of the project's repository (`git.rs`; run as
+   `[security.exec]` allows, alongside the reads) gives each file its last commit,
+   `SourceFile::git: Option<Arc<GitInfo>>` (`page.git_info`; its author date is the `:git`
+   date); a shallow clone is a `git-shallow-clone` warning, and a project outside a
+   repository, or no `git`, `ModelError::Git`.
 2. **Tree** (B1): kind from the override, else home, taxonomy (`/<plural>`), term (below it,
    segment-wise), section or page; pages of a disabled `page` kind are dropped. A key claimed
    twice keeps the first file and warns. Content files inside leaf bundles are

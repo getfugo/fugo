@@ -38,9 +38,9 @@ use crate::nav::{NavSite, bundle_type};
 use crate::resource::page_resources;
 use crate::scope::{HookVariant, Phase, RenderScope};
 use crate::views::{
-    ContentView, DateView, FileView, FragmentsView, LanguageView, MediaTypeView, MenuEntryView,
-    OutputFormatView, PageLink, PageRelations, PageSummaryView, SiteConfigView, SiteView,
-    SitemapView, TaxonomyView, TermEntryView, TermView, params_value,
+    ContentView, DateView, FileView, FragmentsView, GitInfoView, LanguageView, MediaTypeView,
+    MenuEntryView, OutputFormatView, PageLink, PageRelations, PageSummaryView, SiteConfigView,
+    SiteView, SitemapView, TaxonomyView, TermEntryView, TermView, params_value,
 };
 
 mod generation;

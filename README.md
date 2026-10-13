@@ -110,7 +110,7 @@ The binary is `target/release/fugo`. [DEVELOPMENT.md](DEVELOPMENT.md) describes 
 
 ## External tools
 
-None: every asset pipeline runs in process, and fugo runs no programs. It installs the npm packages of a project's `package.json` itself, for `js_build` and Sass imports. There is no PostCSS, Babel or Tailwind CSS pipeline: `minify` adds the vendor prefixes for the project's browserslist, `purge_css` purges per page, `js_build` compiles TypeScript and JSX and lowers modern JavaScript for the browser targets, and Tailwind's own CLI runs next to fugo ([docs/content/asset-pipelines/tailwind-css.md](docs/content/asset-pipelines/tailwind-css.md)).
+None: every asset pipeline runs in process, and fugo runs no programs (only `git`, when `enableGitInfo` is on). It installs the npm packages of a project's `package.json` itself, for `js_build` and Sass imports. There is no PostCSS, Babel or Tailwind CSS pipeline: `minify` adds the vendor prefixes for the project's browserslist, `purge_css` purges per page, `js_build` compiles TypeScript and JSX and lowers modern JavaScript for the browser targets, and Tailwind's own CLI runs next to fugo ([docs/content/asset-pipelines/tailwind-css.md](docs/content/asset-pipelines/tailwind-css.md)).
 
 ## Star History
 

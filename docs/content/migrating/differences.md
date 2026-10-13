@@ -24,12 +24,13 @@ Commands
 
 Node.js tools
 : No PostCSS, Babel or Tailwind CSS pipeline, and no build stats file (`buildStats`): fugo runs
-  no programs. `minify` adds vendor prefixes, `js_build` compiles TypeScript and JSX for the
+  no programs but `git`, for [`enableGitInfo`](/configuration/site/#pages). `minify` adds vendor prefixes, `js_build` compiles TypeScript and JSX for the
   browser targets, `purge_css` purges per page, and Tailwind's own CLI runs next to fugo (see
   [Tailwind CSS](/asset-pipelines/tailwind-css/)).
 
-Git information
-: `page.git_info` is always none and `:git` dates give nothing: fugo does not read Git history.
+Git ancestors
+: `page.git_info` is the file's last commit only: Go's `Ancestors` and `Parent` (the commits
+  before it) are not read.
 
 `image_colors`
 : Not implemented yet (`.Colors` in Go templates).

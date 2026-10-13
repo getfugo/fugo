@@ -47,7 +47,7 @@ is_page = "Whether the page is a regular page."
 is_node = "Whether the page is a list page (home, section, taxonomy, term)."
 is_translated = "Whether the page exists in other languages."
 file = "The source file (a [file](/reference/objects/file/) object), or none for pages without one."
-git_info = "Always none: fugo does not read Git history."
+git_info = "The last Git commit of the page's file (a [Git info](/reference/objects/git-info/) object) with [`enableGitInfo`](/configuration/site/#pages), else none."
 sitemap = "The page's sitemap settings (a [sitemap](/reference/objects/sitemap/) object)."
 language = "The page's [language](/reference/objects/language/)."
 output_formats = "`{name: output format}` in format order, e.g. `page.output_formats.rss.permalink`."
@@ -99,15 +99,21 @@ is_content_adapter = "Whether the page comes from a content adapter (`_content.h
 title = "Git info"
 order = 21
 structs = ["GitInfoView"]
-intro = "The shape of `page.git_info`, which is always none: fugo does not read Git history."
+intro = """
+`page.git_info`: the last commit of the page's file, with
+[`enableGitInfo`](/configuration/site/#pages). It is none without it, for a page without a file
+(a home page or a term without `_index.md`) and for a file Git does not know (not committed):
+`{% if page.git_info %}…{% endif %}`.
+"""
 [git_info.fields]
 hash = "The commit hash."
 abbreviated_hash = "The abbreviated commit hash."
 subject = "The commit subject."
-author_name = "The author's name."
-author_email = "The author's email address."
-author_date = "The author date."
-commit_date = "The commit date."
+body = "The commit message after the subject."
+author_name = "The author's name, as `.mailmap` maps it."
+author_email = "The author's email address, as `.mailmap` maps it."
+author_date = "The author date, in the offset Git recorded: `page.lastmod` with the default `[frontmatter]`."
+commit_date = "The commit date, in the offset Git recorded."
 
 [date]
 title = "Date"

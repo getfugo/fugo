@@ -286,7 +286,11 @@ impl Shared {
                     is_node: p.kind.is_branch() || p.kind == PageKind::NotFound,
                     is_translated: p.translations.len() > 1,
                     file: file_view(p),
-                    git_info: None,
+                    git_info: p
+                        .source
+                        .as_ref()
+                        .and_then(|s| s.git.as_deref())
+                        .map(GitInfoView::new),
                     sitemap: interner.sitemap(&m.sitemap),
                     language: languages[p.lang].clone(),
                     output_formats: output_formats(&model, &media_types, p),

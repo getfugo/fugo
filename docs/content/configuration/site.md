@@ -70,6 +70,14 @@ weight: 20
 `enableRobotsTXT`
 : Write [robots.txt](/templates/sitemap/#robotstxt).
 
+`enableGitInfo`
+: Give each page the last Git commit of its file: `page.git_info` (a
+  [Git info](/reference/objects/git-info/) object), whose author date is `page.lastmod`
+  through `:git` ([front matter dates](/configuration/front-matter/#dates)). fugo runs
+  `git log` once per build, as [`[security.exec]`](/configuration/security/) allows. Build from
+  a whole clone: in a shallow one, such as `actions/checkout` makes without `fetch-depth: 0`,
+  a file its commits do not change gets the date of its oldest commit, and the build warns.
+
 `buildDrafts`, `buildFuture`, `buildExpired`
 : Build drafts, future and expired pages (also `-D`, `-F`, `-E`).
 

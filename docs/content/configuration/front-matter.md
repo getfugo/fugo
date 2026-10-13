@@ -30,8 +30,9 @@ A front matter field name
 : The file's modification time.
 
 `:git`
-: Accepted, but fugo does not read Git history, so it gives no date: `lastmod` falls through
-  to the next source.
+: The author date of the file's last Git commit, with
+  [`enableGitInfo`](/configuration/site/#pages). Without it, or for a file Git does not know,
+  it gives no date and `lastmod` falls through to the next source.
 
 `:default` in a list stands for the default list of that date.
 

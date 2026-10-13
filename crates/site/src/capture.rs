@@ -1,10 +1,11 @@
 //! Phase A4: read every content file of the discovery, split and decode its front matter, and
 //! read the capture overrides (`kind`, `lang`, `path`) and the page's own `cascade`; list the
-//! content adapters (`_content.html`).
+//! content adapters (`_content.html`). With `enableGitInfo`, each file gets its last commit
+//! (`git`).
 //!
-//! Files are read in parallel; the result keeps the discovery order (key, then language). The
-//! pages content adapters add are captured from their `add_page` maps ([`adapter_page`]) and go
-//! after the files.
+//! Files are read in parallel, and the history alongside; the result keeps the discovery order
+//! (key, then language). The pages content adapters add are captured from their `add_page`
+//! maps ([`adapter_page`]) and go after the files.
 
 use std::path::Path;
 use std::sync::Arc;
@@ -19,6 +20,7 @@ use ssg_page::{AdapterPage, Cascade, capture_overrides};
 use ssg_pageparser::{FrontMatterFormat, decode_front_matter, split_front_matter};
 use ssg_vfs::{BundleKind, Component, ContentFile, FileRef, Parsed, PathInfo, PathParser, Vfs};
 
+use crate::git::{GitInfo, GitLog};
 use crate::{AddedResource, ModelError};
 
 /// The content file a page was read from.
@@ -37,6 +39,8 @@ pub struct SourceFile {
     pub body_offset: usize,
     /// The file's modification time (`:fileModTime`).
     pub mod_time: Option<Timestamp>,
+    /// The file's last commit, with `enableGitInfo` (`page.git_info`, `:git`).
+    pub git: Option<Arc<GitInfo>>,
 }
 
 impl SourceFile {
@@ -143,12 +147,33 @@ pub(crate) fn capture(cfg: &Config, vfs: &Vfs) -> Result<Capture, ModelError> {
         })
         .collect();
 
-    let read: Vec<Result<CapturedPage, ModelError>> = content
-        .into_par_iter()
-        .map(|f| read_page(f, &parser))
-        .collect();
+    // The history is read while the files are.
+    let (read, git) = rayon::join(
+        || -> Vec<Result<CapturedPage, ModelError>> {
+            content
+                .into_par_iter()
+                .map(|f| read_page(f, &parser))
+                .collect()
+        },
+        || cfg.enable_git_info.then(|| GitLog::load(cfg)).transpose(),
+    );
     for r in read {
         out.pages.push(r?);
+    }
+    if let Some(git) = git? {
+        if git.shallow {
+            out.diagnostics.push(
+                Diagnostic::warning(
+                    "enableGitInfo: the repository is a shallow clone, so a file none of its \
+                     commits changes gets the date of its oldest commit: clone the whole \
+                     history (`git fetch --unshallow`; actions/checkout: `fetch-depth: 0`)",
+                )
+                .with_id("git-shallow-clone"),
+            );
+        }
+        out.pages
+            .par_iter_mut()
+            .for_each(|p| p.source.git = git.file(&p.source.file.abs));
     }
     Ok(out)
 }
@@ -230,6 +255,7 @@ fn read_page(f: ContentFile, parser: &PathParser) -> Result<CapturedPage, ModelE
             text,
             body_offset,
             mod_time,
+            git: None,
         },
         params,
         cascade,
@@ -298,6 +324,7 @@ pub(crate) fn adapter_page(
             text: Arc::from(page.content.as_str()),
             body_offset: 0,
             mod_time: None,
+            git: None,
         },
         params: page.fields.clone(),
         cascade: page.cascade.clone(),
