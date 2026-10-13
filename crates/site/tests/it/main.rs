@@ -6,6 +6,7 @@ mod calls;
 mod capture;
 mod data;
 mod expected;
+mod git;
 mod golden;
 mod model;
 mod structure;

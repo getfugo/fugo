@@ -64,16 +64,34 @@ pub struct FileView {
     pub is_content_adapter: bool,
 }
 
-/// `.GitInfo` (always none: `enableGitInfo` is a COULD).
+/// `.GitInfo`: the last commit of the page's file, with `enableGitInfo` (none without it, and
+/// for pages without a file Git knows). Go's `Ancestors` and `Parent` are not read.
 #[derive(Clone, Debug, Serialize)]
 pub struct GitInfoView {
     pub hash: String,
     pub abbreviated_hash: String,
     pub subject: String,
+    pub body: String,
     pub author_name: String,
     pub author_email: String,
     pub author_date: DateView,
     pub commit_date: DateView,
+}
+
+impl GitInfoView {
+    #[must_use]
+    pub fn new(g: &ssg_site::GitInfo) -> Self {
+        Self {
+            hash: g.hash.clone(),
+            abbreviated_hash: g.abbreviated_hash.clone(),
+            subject: g.subject.clone(),
+            body: g.body.clone(),
+            author_name: g.author_name.clone(),
+            author_email: g.author_email.clone(),
+            author_date: DateView::new(&g.author_date),
+            commit_date: DateView::new(&g.commit_date),
+        }
+    }
 }
 
 #[derive(Clone, Debug, Serialize)]

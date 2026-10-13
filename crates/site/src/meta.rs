@@ -87,7 +87,7 @@ pub(crate) fn metas(
                 file: adapter.is_none().then(|| FileCtx {
                     base_filename: src.base_filename(),
                     mod_time: src.mod_time,
-                    git_author_date: None,
+                    git_author_date: src.git.as_ref().map(|g| &g.author_date),
                 }),
                 time_zone: &site.language.time_zone,
             };

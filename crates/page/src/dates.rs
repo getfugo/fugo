@@ -53,8 +53,8 @@ pub struct FileCtx<'a> {
     pub base_filename: &'a str,
     /// `:fileModTime`.
     pub mod_time: Option<Timestamp>,
-    /// `:git` (the last commit's author date).
-    pub git_author_date: Option<Timestamp>,
+    /// `:git`: the last commit's author date, in the offset Git recorded (as Go keeps it).
+    pub git_author_date: Option<&'a Zoned>,
 }
 
 /// The result of [`DateResolver::resolve`].
@@ -151,7 +151,7 @@ impl DateResolver {
                         Some(z)
                     }),
                     DateSource::FileModTime => file.and_then(|f| f.mod_time).map(utc),
-                    DateSource::Git => file.and_then(|f| f.git_author_date).map(utc),
+                    DateSource::Git => file.and_then(|f| f.git_author_date).cloned(),
                 };
                 if let Some(z) = found {
                     let key = field.key();

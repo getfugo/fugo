@@ -2,7 +2,7 @@
 //! over 8 `[frontmatter]` variants × 3 time zones × with and without a Git date; and the
 //! `[frontmatter]` and `build` option decoding (`oracle/page/frontmatter/*`).
 
-use jiff::{SignedDuration, Timestamp};
+use jiff::{SignedDuration, Zoned};
 use serde_json::{Map as JMap, Value as J, json};
 use ssg_base::{Date, Params, Value};
 use ssg_config::{DateField, DateSource, decode_front_matter};
@@ -56,8 +56,8 @@ fn run(before: &J, cfg: &DateResolver, zone: &str, git: Option<bool>) -> Run {
     let mut params = Params::fold(&m);
     let before_json = to_json(&Value::Map(m));
     let mod_time = zoned(&before["modTime"]).map(|z| z.timestamp());
-    let git_date: Option<Timestamp> = match git {
-        None => zoned(&before["gitAuthorDate"]).map(|z| z.timestamp()),
+    let git_date: Option<Zoned> = match git {
+        None => zoned(&before["gitAuthorDate"]),
         Some(false) => None,
         // The oracle's synthetic Git date is the modification time plus 36 hours, also for
         // pages without a file (Go's zero time plus 36 hours).
@@ -65,13 +65,17 @@ fn run(before: &J, cfg: &DateResolver, zone: &str, git: Option<bool>) -> Run {
             let Some(Tag::Time(t)) = Tag::of(&before["modTime"]) else {
                 panic!("modTime: {before}");
             };
-            Some(parse_time(t).timestamp() + SignedDuration::from_hours(36))
+            Some(
+                parse_time(t)
+                    .checked_add(SignedDuration::from_hours(36))
+                    .expect("in range"),
+            )
         }
     };
     let file = FileCtx {
         base_filename: s(&before["baseFilename"]),
         mod_time,
-        git_author_date: git_date,
+        git_author_date: git_date.as_ref(),
     };
     let got = cfg.resolve(&mut params, Some(&file), &time_zone(zone));
     let mut changed = JMap::new();

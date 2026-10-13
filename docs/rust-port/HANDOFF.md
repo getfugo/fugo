@@ -45,7 +45,7 @@ outputs are frozen as golden data, §9), and outputs are compared structurally.
   it generated is frozen at commit `44529028` (§9).
 - **Known deviations** from the Go implementation are listed and classified (§7); none is silent.
 - **Open:** the migrate tool (T73), the
-  remaining COULD features (T72: `:git` lastmod, Org front matter), server extras (§8).
+  remaining COULD feature (T72: Org front matter), server extras (§8).
 
 ## 1. What exists
 
@@ -172,7 +172,7 @@ its `[environments.<name>]` table, merged over the rest; a configuration directo
 `config.*` files are an error, `--config` names one file and `--configDir` is gone; the CMS
 writes no configuration (`ssg_config` README, step 2 and deviation 12). **The asset pipeline is Rust only** (2026-10-03, T75): no PostCSS, Babel or
 Tailwind pipe, no stats file (`[build] buildStats`/`writeStats` are "no longer supported"
-warnings), and fugo runs no programs (`[security.exec]` is accepted and has no effect). `minify`
+warnings), and fugo runs no programs but `git`, for `enableGitInfo` (2026-10-13, below; `[security.exec]` applies to it). `minify`
 adds vendor prefixes for the browserslist, `js_build` lowers for the browser targets,
 `purge_css` purges per page, and Tailwind sites run Tailwind's own CLI next to fugo
 (`docs/content/asset-pipelines/tailwind-css.md`). Secrets go in the project's `.env` file (`ssg_config::env_file`):
@@ -387,7 +387,7 @@ tests read them, with counts):
 ## 8. Open items
 
 - **T73**: `ssg-migrate` (Go-template → Tera converter, stub today).
-- **T72** (COULD): `:git` lastmod; Org front matter. (T74 did smartcrop, the Chroma style
+- **T72** (COULD): Org front matter (`:git` and `page.git_info` are done, 2026-10-13). (T74 did smartcrop, the Chroma style
   gallery and content adapters; the docs-live variant runs `images.Text`, `qr_code` and Dither
   unpatched. The i01/reduced patches stay as they are: they define A-D1 and A-D2.)
 - **Server** (T71 leftovers): the browser error page, `[server]` headers and redirects, fast
@@ -693,3 +693,14 @@ Follow-ups outside the repository:
   `cargo metadata` read into serde types), `tar`, `flate2` and `zip` write the archives. The golden data did not
   change: the four gates find no difference with the unchanged manifests and baselines
   (`crates/dev/README.md`). CI needs no Python; the gate tests need bash, not python3.
+- 2026-10-13: **`enableGitInfo` (T72's `:git`).** One `git log` per build (`ssg_site`'s
+  `git.rs`, alongside the content reads) gives each content file its last commit:
+  `page.git_info` (hash, abbreviated hash, subject, body, author name and email as `.mailmap`
+  maps them, author and commit dates in the offsets Git recorded) and the `:git` date, the
+  author date in its offset, as Go keeps it (first in `lastmod`'s default sources). `git` runs
+  as `[security.exec]` allows (`exec.allow` must accept it, as the default does; it gets the
+  `exec.osEnv` variables), with the options that make its output independent of the user's Git
+  configuration. Go's `Ancestors` and `Parent` are not read. A shallow clone is a
+  `git-shallow-clone` warning (its oldest commit lists every file); a project outside a
+  repository, or no `git`, is `ModelError::Git`. No test site sets `enableGitInfo`: no
+  baseline changed.

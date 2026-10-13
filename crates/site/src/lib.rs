@@ -4,7 +4,8 @@
 //!
 //! 1. **Capture** (A4, parallel over files): discovery through the `Vfs`, front matter split and
 //!    decoded into folded [`Params`], the capture overrides `kind`, `lang` and `path`, the page's
-//!    own `cascade`. `data::load` builds `.Site.Data` alongside. Content adapters
+//!    own `cascade`, and with `enableGitInfo` the file's last commit ([`GitInfo`], one `git
+//!    log` per build). `data::load` builds `.Site.Data` alongside. Content adapters
 //!    (`_content.html`) are listed, not run: [`capture_content`] returns the [`Captured`]
 //!    content, the caller runs the adapters (ssg-build renders them with a model of the
 //!    files alone) and [`assemble`] builds the model with the pages and resources they
@@ -34,6 +35,7 @@ mod capture;
 mod cascade;
 pub mod data;
 mod filter;
+mod git;
 pub mod meta;
 mod nodes;
 mod refs;
@@ -67,6 +69,7 @@ pub use assembly::*;
 pub use capture::{ContentAdapter, SourceFile};
 pub use cascade::CascadeIndex;
 pub use data::{Data, DataError};
+pub use git::GitInfo;
 pub use refs::{RefArgs, RefError, RefLink};
 pub use taxonomy::{Taxonomy, Term, WeightedPage};
 pub use tree::{PageRole, SiteTree};
