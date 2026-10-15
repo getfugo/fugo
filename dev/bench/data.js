@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1792042263871,
+  "lastUpdate": 1792070023570,
   "repoUrl": "https://github.com/getfugo/fugo",
   "entries": {
     "Benchmark": [
@@ -98148,6 +98148,66 @@ window.BENCHMARK_DATA = {
           {
             "name": "10,000 generated pages: peak memory",
             "value": 619.3,
+            "unit": "MiB",
+            "extra": "10061 pages; median of 5 builds after a warm-up build"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "blackb1rd.mov@gmail.com",
+            "name": "Prachya Saechua",
+            "username": "blackb1rd"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "edea331b0eee7b037e0636ab7d4fdbd5d8fd5c42",
+          "message": "cms: Draw the editor with Material Design 3 components (#210)\n\nThe browser editor of [cms] now draws with Google's Material Design 3\ncomponents for the web, @material/web 2.5.0 (Apache-2.0, built on\nlit), in a theme made from its accent, #2f5bd3, that follows the\nbrowser's light or dark scheme.\n\n- Buttons, text fields, selects, checkboxes, the Edit as text switch,\n  the language tabs, the terms' chips and the rich text toolbar are\n  Material components; Add a field and a table's Add… open menus.\n- The browser's prompt() and confirm() are dialogs: the title of a new\n  page, folder or section, a link's address, and moving, deleting,\n  publishing and discarding. Move to now asks before it moves, naming\n  the folder by its title.\n- What @material/web has no component for keeps its own elements,\n  drawn with the same colour roles: the bar at the top, the sidebar's\n  tree, tables, the Rich text or Markdown switch (a segmented button),\n  the toast (a snackbar), the large text editors, and the sign-in\n  buttons (as the providers' guidelines draw them). Fields that suggest\n  values stay plain inputs: a <datalist> cannot reach the input in a\n  Material field's shadow tree.\n- The page still loads nothing from elsewhere: 24 Material Symbols\n  icons are inline SVG paths (editor/icons.ts), and the system's font\n  replaces Roboto.\n- The theme (_theme.scss): the colour roles of Material Color\n  Utilities' Fidelity scheme for #2f5bd3, two custom colours (success,\n  warning), and 40 px fields.\n- cms.js grows from 241 KB to 526 KB (78 KB to 131 KB gzipped).\n- Licences: Material Web, lit, lit-element, @lit/reactive-element,\n  tslib and the Material Symbols icons in cms.js.LEGAL.txt (with the\n  full Apache-2.0 text), THIRD_PARTY/cms-editor/ and PROVENANCE.md.\n- Tests: happy-dom has no attachInternals(), throws on an input type\n  set to undefined, and rejects a cancelled animation's finished\n  promise as unhandled; ui.js makes up for the three. A Material\n  button drops a second click in the same microtask, so tests that\n  click twice wait between the clicks (press). New: a cancelled dialog\n  makes nothing; Move asks first, then saves the page at its new key.\n- Docs: the editor's look and its confirmations\n  (content-management/cms).\n\nCo-authored-by: Claude Opus 5.5 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-10-15T20:01:08+07:00",
+          "tree_id": "bb37f8337b86edb323265c5953bc7817d899182a",
+          "url": "https://github.com/getfugo/fugo/commit/edea331b0eee7b037e0636ab7d4fdbd5d8fd5c42"
+        },
+        "date": 1792070021121,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "docs site: build time",
+            "value": 197.6,
+            "unit": "ms",
+            "extra": "334 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "docs site: peak memory",
+            "value": 173.9,
+            "unit": "MiB",
+            "extra": "334 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "1,000 generated pages: build time",
+            "value": 232.9,
+            "unit": "ms",
+            "extra": "1061 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "1,000 generated pages: peak memory",
+            "value": 155.1,
+            "unit": "MiB",
+            "extra": "1061 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "10,000 generated pages: build time",
+            "value": 2110.2,
+            "unit": "ms",
+            "extra": "10061 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "10,000 generated pages: peak memory",
+            "value": 603.3,
             "unit": "MiB",
             "extra": "10061 pages; median of 5 builds after a warm-up build"
           }
