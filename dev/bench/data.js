@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1792070026033,
+  "lastUpdate": 1792072583648,
   "repoUrl": "https://github.com/getfugo/fugo",
   "entries": {
     "Benchmark": [
@@ -98208,6 +98208,66 @@ window.BENCHMARK_DATA = {
           {
             "name": "10,000 generated pages: peak memory",
             "value": 603.3,
+            "unit": "MiB",
+            "extra": "10061 pages; median of 5 builds after a warm-up build"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "blackb1rd.mov@gmail.com",
+            "name": "Prachya Saechua",
+            "username": "blackb1rd"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "94ac8116f28ebc39bbc98cdb831bb736cd1a1579",
+          "message": "dev: Install fugo with the version of its latest release tag (#211)\n\nA build from a clone (cargo install --path crates/cli) printed fugo\nv0.0.0-DEV: only CI's release builds set FUGO_BUILD_VERSION.\n\ncargo dev install runs that install, followed by its own arguments\n(--root <dir>, --features ...), named as CI names a release build:\n\n- FUGO_BUILD_VERSION is the highest release tag reachable from HEAD.\n  Pre-releases count; the Go fork's v0.x tags never do. Without a tag\n  (a shallow clone) the version stays 0.0.0-DEV, and the command says\n  so.\n- FUGO_BUILD_COMMIT is HEAD's commit and FUGO_BUILD_DATE its time in\n  UTC, so fugo version prints v<version>-<commit>: a build past a tag\n  has the tag's version and its own commit, which tells it from the\n  release.\n\nDEVELOPMENT.md, the installation page and crates/dev/README.md describe\nit; a test reads the build of a scratch repository with release, Go,\nmalformed, unreachable and pre-release tags.\n\nCo-Authored-By: Claude Opus 5.5 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-10-15T13:43:24Z",
+          "tree_id": "8592f9b9d97a2432710a66c611f0f76bd8c17ad0",
+          "url": "https://github.com/getfugo/fugo/commit/94ac8116f28ebc39bbc98cdb831bb736cd1a1579"
+        },
+        "date": 1792072581148,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "docs site: build time",
+            "value": 190.2,
+            "unit": "ms",
+            "extra": "334 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "docs site: peak memory",
+            "value": 177.8,
+            "unit": "MiB",
+            "extra": "334 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "1,000 generated pages: build time",
+            "value": 222.2,
+            "unit": "ms",
+            "extra": "1061 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "1,000 generated pages: peak memory",
+            "value": 151.3,
+            "unit": "MiB",
+            "extra": "1061 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "10,000 generated pages: build time",
+            "value": 2157.5,
+            "unit": "ms",
+            "extra": "10061 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "10,000 generated pages: peak memory",
+            "value": 598.2,
             "unit": "MiB",
             "extra": "10061 pages; median of 5 builds after a warm-up build"
           }
