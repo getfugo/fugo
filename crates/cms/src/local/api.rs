@@ -201,6 +201,16 @@ impl<'a> Api<'a> {
             .map(|_| id.to_owned()))
     }
 
+    /// The build of a draft's last save, or of the branch's last commit (`GET build`): nothing
+    /// deploys a local branch (the server serves the files checked out), so none.
+    pub(super) fn build(&self, draft: Option<&str>) -> Result<Value, HttpError> {
+        let head = match draft {
+            Some(id) => self.draft_head(Some(&Value::from(id)))?,
+            None => self.main_head()?,
+        };
+        Ok(json!({ "sha": head, "state": "none", "url": null, "log": null, "built": null }))
+    }
+
     fn draft_head(&self, id: Option<&Value>) -> Result<String, HttpError> {
         let Some(id) = id.and_then(Value::as_str).filter(|i| is_draft_id(i)) else {
             return Err(HttpError::new(400, "bad draft id"));

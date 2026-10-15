@@ -136,6 +136,18 @@ export interface Draft {
   pr: Pull | null;
 }
 
+/** The build of a draft's last save, as the API's `GET build` says: `ready` (served at `url`),
+ * `building`, `failed` (see `log`), `waiting` (not built yet; an earlier save is, at `url`), or
+ * `none` (nothing builds the draft). */
+export interface Build {
+  sha: string;
+  state: "ready" | "building" | "failed" | "waiting" | "none";
+  url: string | null;
+  log: string | null;
+  /** The commit the build at `url` is of. */
+  built: string | null;
+}
+
 export interface DraftDetail {
   id: string;
   entry: string;

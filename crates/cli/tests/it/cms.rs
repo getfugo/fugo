@@ -87,6 +87,52 @@ fn development_builds_do_not() {
 }
 
 #[test]
+fn production_builds_mark_the_element_of_each_pages_text() {
+    let dir = project();
+    for (path, text) in [
+        (
+            "layouts/single.html",
+            "<main><h1>{{ page.title }}</h1><div class=\"text\">{{ page.content }}</div></main>",
+        ),
+        // A hook that adds an anchor link to each heading: the published text is not what the
+        // editor's Markdown makes of the file.
+        (
+            "layouts/_markup/render-heading.html",
+            "<h{{ level }} id=\"{{ anchor }}\">{{ text | safe }} <a href=\"#{{ anchor }}\">#</a></h{{ level }}>",
+        ),
+        (
+            "content/posts/a.md",
+            "---\ntitle: A\n---\n## Part\n\nText.\n",
+        ),
+    ] {
+        let p = dir.path().join(path);
+        std::fs::create_dir_all(p.parent().expect("parent")).expect("mkdir");
+        std::fs::write(p, text).expect("write");
+    }
+    let o = binary(dir.path(), &["build"], &[]);
+    assert!(o.status.success(), "{}{}", stderr(&o), stdout(&o));
+    let page = std::fs::read_to_string(dir.path().join("public/posts/a/index.html")).expect("page");
+    assert!(
+        page.contains(
+            "<div class=\"text\" data-cms-body><h2 id=\"part\">Part <a href=\"#part\">#</a></h2>"
+        ),
+        "{page}"
+    );
+
+    let o = binary(
+        dir.path(),
+        &["build", "-e", "development", "-d", "dev"],
+        &[],
+    );
+    assert!(o.status.success(), "{}{}", stderr(&o), stdout(&o));
+    let page = std::fs::read_to_string(dir.path().join("dev/posts/a/index.html")).expect("page");
+    assert!(
+        !page.contains("data-cms-body"),
+        "no editor, no mark: {page}"
+    );
+}
+
+#[test]
 fn a_wrong_setting_fails_the_build() {
     let dir = project();
     std::fs::write(

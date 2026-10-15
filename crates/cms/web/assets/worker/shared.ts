@@ -105,6 +105,34 @@ export interface Pull {
   title: string;
 }
 
+/** A deployment the git host lists: a host or a CI job building and serving a commit. */
+export interface Deployment {
+  id: number;
+  /** The commit it is of. */
+  sha: string;
+}
+
+/** A deployment's last status. */
+export interface DeploymentStatus {
+  /** GitHub's: `queued`, `pending`, `in_progress`, `success`, `failure`, `error` or `inactive`. */
+  state: string;
+  /** Where the build is served (an http or https URL). */
+  url: string | null;
+  /** Its log (an http or https URL). */
+  log: string | null;
+}
+
+/** The build of a commit, as `GET build` answers. */
+export interface Build {
+  /** `ready` (served at `url`), `building`, `failed` (see `log`), `waiting` (the commit is not
+   * built yet; an earlier one of its branch is, at `url`), or `none` (nothing builds it). */
+  state: "ready" | "building" | "failed" | "waiting" | "none";
+  url: string | null;
+  log: string | null;
+  /** The commit the build at `url` is of. */
+  built: string | null;
+}
+
 export interface Comparison {
   mergeBase: string;
   files: CompareFile[];

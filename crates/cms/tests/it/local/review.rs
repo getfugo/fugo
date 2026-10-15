@@ -53,6 +53,14 @@ fn a_save_is_a_draft_until_it_is_published() {
     assert_eq!(status, 200, "{file}");
     assert_eq!(file["size"], EDITED.len());
 
+    // Nothing builds a local draft.
+    let (status, build) = s.get("build", &format!("draft={id}"));
+    assert_eq!(status, 200, "{build}");
+    assert_eq!(
+        build,
+        json!({ "sha": saved["commit"], "state": "none", "url": null, "log": null, "built": null })
+    );
+
     let (_, draft) = s.get("draft", &format!("id={id}"));
     let files: Vec<(&str, &str)> = draft["files"]
         .as_array()

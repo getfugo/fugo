@@ -1,6 +1,7 @@
 // The preview of a page inside the site's own page: the published page of its language (or of
 // another page in its folder), with the edited text and front matter (its images too) in place,
-// as you type.
+// as you type. The site's build marks the element of each page's text (`data-cms-body`, see
+// crates/cms/src/body.rs); the text goes there.
 
 import { marked } from "marked";
 import { type FrontMatter } from "../codec";
@@ -46,13 +47,55 @@ function textOf(markdown: string): string {
   return squash(new DOMParser().parseFromString(marked.parse(markdown, { async: false }), "text/html").body.textContent);
 }
 
+/** The comments a text that shares its element is put between (`data-cms-body="1..3"`). */
+const START = "cms-body";
+const END = "/cms-body";
+
 /**
- * The element of `d` that holds the page's text: the one marked `data-cms-body`, else the
- * innermost one whose text starts and ends like `text` (the text as published).
+ * Marks the element of `d` that holds the page's text `data-cms-preview="body"`: the one the
+ * site's build (or its layout) marked `data-cms-body`, else the innermost one whose text starts
+ * and ends like `text` (the text as published). A mark `data-cms-body="1..3"` says the text is
+ * the element's children 1 and 2 (elements only): they go between two comments, which
+ * `refresh` puts the text between. False when no element holds the text.
  */
-function bodyElement(d: Document, text: string): Element | null {
-  const marked = d.querySelector("[data-cms-body]");
-  if (marked || text.length < 20) return marked;
+function markBody(d: Document, text: string): boolean {
+  const mark = d.querySelector("[data-cms-body]");
+  const body = mark && fits(d, mark) ? mark : text.length < 20 ? null : guessBody(d, text);
+  body?.setAttribute("data-cms-preview", "body");
+  return body !== null;
+}
+
+/** Puts the comments around the children of `el` its mark names, if it names some: false when
+ * `el` does not have them (a page changed since it was built). */
+function fits(d: Document, el: Element): boolean {
+  const range = /^(\d+)\.\.(\d+)$/.exec(el.getAttribute("data-cms-body") ?? "");
+  if (!range) return true;
+  const [from, to] = [Number(range[1]), Number(range[2])];
+  const kids = Array.from(el.children);
+  if (from >= to || to > kids.length) return false;
+  kids[from].before(d.createComment(START));
+  kids[to - 1].after(d.createComment(END));
+  return true;
+}
+
+/** The comments of `body` that the text goes between, when it has them. */
+function marksOf(body: Element): [Node, Node] | null {
+  const comments = Array.from(body.childNodes).filter((n) => n.nodeType === 8);
+  const start = comments.find((n) => n.textContent === START);
+  const end = comments.find((n) => n.textContent === END);
+  return start && end ? [start, end] : null;
+}
+
+/** Whether `node` is in the page's text: between the comments of `body`, else in `body`. */
+function inText(body: Element, node: Node): boolean {
+  const marks = marksOf(body);
+  if (!marks) return body.contains(node);
+  // Node.DOCUMENT_POSITION_FOLLOWING (4) and PRECEDING (2).
+  return (marks[0].compareDocumentPosition(node) & 4) !== 0 && (marks[1].compareDocumentPosition(node) & 2) !== 0;
+}
+
+/** The innermost element of `d` whose text starts and ends like `text`. */
+function guessBody(d: Document, text: string): Element | null {
   const [start, end] = [text.slice(0, 40), text.slice(-40)];
   let found: Element | null = null;
   for (const el of Array.from(d.body.querySelectorAll("*"))) {
@@ -107,12 +150,12 @@ function embedsShown(d: Document, base: string): void {
  * front matter (`data-cms-field`, or text equal to a value as loaded; images of a file a value
  * names, `data-cms-image`) marked for `refresh`.
  */
-function prepare(html: string, url: string, doc: Doc): string | null {
+export function prepare(html: string, url: string, doc: Doc): string | null {
   const d = new DOMParser().parseFromString(html, "text/html");
+  // The text's element first: the build counted the scripts among its children.
+  if (!markBody(d, textOf(doc.parts.body))) return null;
   for (const el of Array.from(d.querySelectorAll("script, link[rel=preload][as=script], link[rel=modulepreload]"))) el.remove();
-  const body = bodyElement(d, textOf(doc.parts.body));
-  if (!body) return null;
-  body.setAttribute("data-cms-preview", "body");
+  const body = d.querySelector("[data-cms-preview=body]") as Element;
   for (const [key, value] of Object.entries(doc.original ?? {})) {
     if (typeof value !== "string" || squash(value).length < 4) continue;
     for (const el of Array.from(d.querySelectorAll("title, body *"))) {
@@ -120,7 +163,7 @@ function prepare(html: string, url: string, doc: Doc): string | null {
     }
     if (!isImage(value)) continue;
     for (const img of Array.from(d.querySelectorAll("img[src]"))) {
-      if (!body.contains(img) && stemOf(img.getAttribute("src") ?? "") === stemOf(value)) img.setAttribute("data-cms-image", key);
+      if (!inText(body, img) && stemOf(img.getAttribute("src") ?? "") === stemOf(value)) img.setAttribute("data-cms-image", key);
     }
   }
   const page = new URL(url, location.origin).href;
@@ -165,20 +208,33 @@ export function schedulePreview(): void {
   timer = setTimeout(refresh, 150);
 }
 
+/** Puts `html` (the text) into `body`, between its comments when it has them, else in place of
+ * what it holds; with the images from `url` and the links made absolute against `base`. */
+export function putText(body: Element, html: string, url: (src: string) => string, base: string): void {
+  const t = body.ownerDocument.createElement("template");
+  t.innerHTML = html;
+  for (const img of Array.from(t.content.querySelectorAll("img[src]"))) img.setAttribute("src", url(img.getAttribute("src") ?? ""));
+  absolutize(t.content, base);
+  const marks = marksOf(body);
+  if (!marks) {
+    body.replaceChildren(t.content);
+    return;
+  }
+  const [start, end] = marks;
+  while (start.nextSibling && start.nextSibling !== end) start.nextSibling.remove();
+  end.parentNode?.insertBefore(t.content, end);
+}
+
 /** Puts the document's text and front matter values into the shown preview. */
 function refresh(): void {
   const d = shown?.frame.contentDocument;
   if (!shown || !d) return;
   const { doc, base } = shown;
-  const body = d.querySelector("[data-cms-preview=body]");
   // Images from where the site publishes the page's files, or the browser's copy of those not
   // saved yet.
   const url = imageUrl();
-  if (body) {
-    body.innerHTML = marked.parse(doc.body, { async: false });
-    for (const img of Array.from(body.querySelectorAll("img[src]"))) img.setAttribute("src", url(img.getAttribute("src") ?? ""));
-    absolutize(body, base);
-  }
+  const body = d.querySelector("[data-cms-preview=body]");
+  if (body) putText(body, marked.parse(doc.body, { async: false }), url, base);
   const data: FrontMatter = doc.data ?? {};
   for (const el of Array.from(d.querySelectorAll("[data-cms-field]"))) {
     const value = data[el.getAttribute("data-cms-field") ?? ""];
