@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1792072586277,
+  "lastUpdate": 1792076877855,
   "repoUrl": "https://github.com/getfugo/fugo",
   "entries": {
     "Benchmark": [
@@ -98268,6 +98268,66 @@ window.BENCHMARK_DATA = {
           {
             "name": "10,000 generated pages: peak memory",
             "value": 598.2,
+            "unit": "MiB",
+            "extra": "10061 pages; median of 5 builds after a warm-up build"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "blackb1rd.mov@gmail.com",
+            "name": "Prachya Saechua",
+            "username": "blackb1rd"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "76cd8a0c80132f539f509ddc851d07fa587a30ae",
+          "message": "cms: Show images, and the keys a translation lacks, in the editor (#212)\n\nThe editor's form has a row per field; image fields show, offer and\nupload pictures; a page's images show from where the site publishes\nthem; and a translation shows the keys it has yet to give.\n\n- The front matter form has a row per key, its label beside its value\n  (above it below 60rem); a table's fields keep their grid.\n- An image field shows the picture of the file it names (a link to it\n  full size), a select of the page's images with their pictures (not\n  its other files), and Upload…, which adds an image to the page's\n  folder and chooses it. The files of a page are cards, with their\n  pictures and whole names.\n- A page's files show from where the site publishes them: with the\n  page in the file's language, the default language's for a name\n  without one. A translation looked for them below its own address,\n  where the site has no copy, so the images of its text were missing\n  from the rich text and the preview.\n- A language's file that lacks a required key, or a text another\n  language's file gives (not one value for every language), shows the\n  field empty, where the other file has it, with that file's value\n  under it and Copy. Such a page could not be saved (Title needs a\n  value) and had no field to give it in.\n- A key added to YAML front matter goes where the form has it, before\n  the next key the file has, not at the end.\n- The preview shows the picture an image field names once another is\n  chosen (a new cover), and a box in place of frames from other sites\n  (a video), which the editor's policy blocks.\n- Docs: Content management → CMS.\n\nCo-authored-by: Claude Opus 5.5 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-10-15T21:45:04+07:00",
+          "tree_id": "13d13efbe42a6c14d788925416656df64f4f40df",
+          "url": "https://github.com/getfugo/fugo/commit/76cd8a0c80132f539f509ddc851d07fa587a30ae"
+        },
+        "date": 1792076874824,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "docs site: build time",
+            "value": 194.1,
+            "unit": "ms",
+            "extra": "334 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "docs site: peak memory",
+            "value": 179.9,
+            "unit": "MiB",
+            "extra": "334 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "1,000 generated pages: build time",
+            "value": 227.7,
+            "unit": "ms",
+            "extra": "1061 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "1,000 generated pages: peak memory",
+            "value": 151.4,
+            "unit": "MiB",
+            "extra": "1061 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "10,000 generated pages: build time",
+            "value": 2405.1,
+            "unit": "ms",
+            "extra": "10061 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "10,000 generated pages: peak memory",
+            "value": 615.8,
             "unit": "MiB",
             "extra": "10061 pages; median of 5 builds after a warm-up build"
           }
