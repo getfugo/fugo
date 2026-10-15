@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1792086562705,
+  "lastUpdate": 1792086567148,
   "repoUrl": "https://github.com/getfugo/fugo",
   "entries": {
     "Benchmark": [
@@ -101293,6 +101293,105 @@ window.BENCHMARK_DATA = {
           {
             "name": "BenchmarkSummaryFromHTMLWithDivider",
             "value": 67.07,
+            "unit": "ns/op"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "blackb1rd.mov@gmail.com",
+            "name": "Prachya Saechua",
+            "username": "blackb1rd"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "43284ae39c80b3b449720045bb64d69198c45e02",
+          "message": "cms: Show the keys a page lacks as empty fields (#214)\n\nA page showed only the keys its file has; the keys other pages of its\nsection use, and those other pages have in a table, were under Add a\nfield and a table's Add…, one by one. Now they show where they belong,\nempty, like the keys a translation lacks.\n\n- A page shows every key the section's pages use, and those only the\n  settings name, that its file lacks: empty, after the keys around it\n  in another language's file, else in the section's pages. A key goes\n  into the file once it has a value; a table or a list of tables the\n  page lacks shows its keys, empty too. Hidden fields stay hidden.\n- A table shows the keys other pages have in it that it lacks, empty,\n  in place of its Add… menu.\n- A key the page lacks offers, under its empty field, another\n  language's value (Copy) or its setting's default, or the value the\n  section's pages share (Use).\n- A folder's own page still offers its pages' keys under Add a field:\n  those it should give (required ones, a text to translate) show empty.\n- Docs: Content management → CMS and Configuration → CMS.\n\nCo-Authored-By: Claude Opus 5.5 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-10-16T00:28:03+07:00",
+          "tree_id": "afd64ec373d2f4fd2ca87fd424f6299bcad8ae9b",
+          "url": "https://github.com/getfugo/fugo/commit/43284ae39c80b3b449720045bb64d69198c45e02"
+        },
+        "date": 1792086566130,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "BenchmarkSanitizeAnchorName",
+            "value": 462.99,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSanitizeAnchorNameAsciiOnly",
+            "value": 1166.22,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSanitizeAnchorNameBlackfriday",
+            "value": 580.35,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSanitizeAnchorNameString",
+            "value": 462.29,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSanitize/All_allowed",
+            "value": 220.53,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSanitize/Spaces",
+            "value": 236.77,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkRelURL",
+            "value": 330.97,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkAbsURL/relurl",
+            "value": 642.48,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkAbsURL/absurl",
+            "value": 16.62,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkTotalWords",
+            "value": 4870.32,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkStripHTML",
+            "value": 1123.52,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkParse",
+            "value": 8894.74,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkDecodeYAMLToMap",
+            "value": 13743.72,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSummaryFromHTML",
+            "value": 65.23,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSummaryFromHTMLWithDivider",
+            "value": 66.65,
             "unit": "ns/op"
           }
         ]
