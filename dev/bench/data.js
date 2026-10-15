@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1792042261093,
+  "lastUpdate": 1792042263871,
   "repoUrl": "https://github.com/getfugo/fugo",
   "entries": {
     "Benchmark": [
@@ -100498,6 +100498,105 @@ window.BENCHMARK_DATA = {
           {
             "name": "BenchmarkSummaryFromHTMLWithDivider",
             "value": 58.78,
+            "unit": "ns/op"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "blackb1rd.mov@gmail.com",
+            "name": "Prachya Saechua",
+            "username": "blackb1rd"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "eec428d45bd90cfc0b64e409d0c2537dacc1c76a",
+          "message": "images: Write a page resource's own copyright notice and author (#209)\n\nA photo by someone else, such as one from Wikimedia Commons under a\nCreative Commons licence, was published with the site's `[imaging]\ncopyright` and `author`: a false claim. An image resource's `copyright`\nand `author` params, which the page's `resources` front matter sets, are\nnow its own notice:\n\n    resources:\n      - src: salted-duck-eggs.jpg\n        params:\n          author: Takeaway\n          copyright: \"© Takeaway, CC BY-SA 3.0 (https://…)\"\n\n- They are written into the published file and into every image made\n  from it (its metadata views, processed images, fingerprints and\n  `resources.Copy` copies), in place of both of `[imaging]`'s: one the\n  resource does not set is not written, so its author never stands next\n  to the site's copyright. `titleFromFileName` is unchanged.\n- Their values follow `[imaging]`'s rules, now public in ssg-config and\n  used by its loader too (`ImagingConfig::check_copyright`,\n  `check_author`, `replace_year`, `NOTICE_MAX`, `NoticeError`): `{year}`\n  is the build's year, at most 1000 bytes, no control characters, no\n  other brace. A value that breaks them, or is not a string, stops the\n  build with `ViewError::Credit`, which names the page's content file\n  and the resource. Without `stripMetadata` they are not read.\n- One credit per file. Several pages may publish one photo: the\n  translations of a bundle share its files, or each gets a copy of them\n  (a multihost site, `[markup.goldmark] duplicateResourceFiles = true`,\n  a content file that is not Markdown), and the runs of a content\n  adapter for several languages each add a resource from the image they\n  pass. `page_resources` groups the images the pages list by what they\n  are read from (`resource/credits.rs`) and gives every resource of a\n  group the credit of the first page in language order (the default\n  content language first, then by weight; page id within a language)\n  whose view of it gives one, before any render\n  (`ResourceStore::set_credit`). A page without the metadata takes\n  nothing away, every copy carries the same notice, and a published\n  target takes the credit of the file its candidates are made from,\n  whatever the order of the renders that registered them.\n- The notice is still written when an image is published, after\n  `[caches.images]`: `ImageMetadata::original` and `::processed` take\n  the credit (`ImageMetadata::credit` reads it from the params, with the\n  build's year, which `ImageMetadata` now keeps), and\n  `ImageQueue::process` takes one per target. Changing the params\n  processes no image again; the cache's names do not change.\n- `ResourceError` moves to `store/error.rs`, so that `store.rs` stays\n  well under 500 lines. ssg-resources re-exports `Credit`, which its API\n  takes, so that ssg-view names it without an edge to ssg-images.\n\nReading these params is a deviation from the Go implementation, which\ntreats them as template data: differences.md and HANDOFF §7 record it,\nwith the values that stop the build (a YAML block folded with `>` ends\nwith a line break; `>-` does not). The imaging, page resources, image\nprocessing and content adapter docs, and the READMEs of ssg-config,\nssg-images, ssg-resources, ssg-view and ssg-build describe it. Tests in\neach of those crates cover it: ssg-view's over one shared file and over\na copy per language (`duplicateResourceFiles`, multihost, an HTML\ntranslation), the second language alone giving the credit included;\nssg-build's with a two-language term bundle whose English page alone\ngives the credit, in each of those setups, and with an adapter whose\nruns add a resource from one asset.\n\nCo-Authored-By: Claude Opus 5.5 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-10-15T12:11:38+07:00",
+          "tree_id": "7ee52376e55e0ab2b5c30f50c5df293be7dc3877",
+          "url": "https://github.com/getfugo/fugo/commit/eec428d45bd90cfc0b64e409d0c2537dacc1c76a"
+        },
+        "date": 1792042263150,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "BenchmarkSanitizeAnchorName",
+            "value": 444.85,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSanitizeAnchorNameAsciiOnly",
+            "value": 1113.79,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSanitizeAnchorNameBlackfriday",
+            "value": 556.27,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSanitizeAnchorNameString",
+            "value": 445.8,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSanitize/All_allowed",
+            "value": 196.86,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSanitize/Spaces",
+            "value": 207.76,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkRelURL",
+            "value": 332.77,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkAbsURL/relurl",
+            "value": 624.94,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkAbsURL/absurl",
+            "value": 18.79,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkTotalWords",
+            "value": 5405.84,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkStripHTML",
+            "value": 1094.44,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkParse",
+            "value": 8388.78,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkDecodeYAMLToMap",
+            "value": 12026.49,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSummaryFromHTML",
+            "value": 71.02,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSummaryFromHTMLWithDivider",
+            "value": 66.5,
             "unit": "ns/op"
           }
         ]
