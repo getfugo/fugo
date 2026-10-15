@@ -549,7 +549,7 @@ textarea {
   }
 }
 
-// A button and the menu it opens: the keys a form or a table may add.
+// A button and the menu it opens: the keys a folder's page may add.
 .add-field {
   grid-column: 1 / -1;
   position: relative;
@@ -659,8 +659,8 @@ textarea {
   }
 }
 
-// Under a key the file lacks: another language's value, to copy.
-.copy-from {
+// Under a key the file lacks: another language's value, to copy, or its default, to use.
+.offer {
   display: flex;
   align-items: center;
   gap: 8px;

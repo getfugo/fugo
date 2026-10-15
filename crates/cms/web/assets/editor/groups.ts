@@ -1,19 +1,24 @@
 // Tables in the form: the keys of a table and of each table of a list, the keys other pages have
-// in them (to add), and tables shown closed with a summary of their values.
+// in them (empty, where a table lacks them), and tables shown closed with a summary of their
+// values.
 
 import { html, nothing, type TemplateResult } from "lit-html";
+import { clone } from "../codec";
 import { field, type Setter } from "./form";
-import { childrenOf, hintOf, type Path, pathKey, startOf, summaryOf } from "./hints";
+import { childrenOf, hintOf, isEmpty, type Path, pathKey, startOf, summaryOf } from "./hints";
 import { icon } from "./icons";
-import { addMenu } from "./inputs";
+import { offer } from "./inputs";
 import { pageView } from "./pages";
 
 type Table = Record<string, unknown>;
 
-/** The fields of the table at `path`, and a menu of the keys other pages have in it. */
+/** The fields of the table at `path`, then those of the keys other pages have in it that it
+ * lacks, empty: a key goes into the table once it has a value. */
 function tableFields(table: Table, set: Setter, readOnly: boolean, path: Path): TemplateResult {
   const key = pathKey(path);
+  const has = (name: string) => Object.keys(table).some((k) => k.toLowerCase() === name.toLowerCase());
   const setKey = (k: string) => (v: unknown) => {
+    if (!has(k) && isEmpty(v)) return;
     table[k] = v;
     set(table);
   };
@@ -22,25 +27,21 @@ function tableFields(table: Table, set: Setter, readOnly: boolean, path: Path): 
     set(table);
     pageView();
   };
-  const has = (name: string) => Object.keys(table).some((k) => k.toLowerCase() === name.toLowerCase());
-  const missing = childrenOf(key).filter((c) => !has(c.name));
-  const add = (name: string) => {
-    const c = missing.find((x) => x.name === name);
-    if (!c) return;
-    table[c.name] = startOf(`${key}.${c.name}`, c.kind);
-    set(table);
-    pageView();
+  // Under a key the table lacks: its setting's default, and a button that puts it there.
+  const below = (name: string) => {
+    const d = hintOf(`${key}.${name}`).default;
+    if (readOnly || d === undefined) return nothing;
+    return offer("Default", d, "Use", () => {
+      table[name] = clone(d);
+      set(table);
+      pageView();
+    });
   };
   const shown = Object.keys(table).filter((k) => hintOf([...path, k]).widget !== "hidden");
+  const lacks = childrenOf(key).filter((c) => !has(c.name));
   return html`
     ${shown.map((k) => field(k, hintOf([...path, k]).label ?? k, table[k], setKey(k), readOnly, [...path, k], remove(k)))}
-    ${!readOnly && missing.length
-      ? addMenu(
-          "Add…",
-          missing.map((c) => ({ key: c.name, label: hintOf(`${key}.${c.name}`).label ?? c.name })),
-          add,
-        )
-      : nothing}
+    ${lacks.map((c) => field(c.name, hintOf(`${key}.${c.name}`).label ?? c.name, undefined, setKey(c.name), readOnly, [...path, c.name], null, below(c.name)))}
   `;
 }
 

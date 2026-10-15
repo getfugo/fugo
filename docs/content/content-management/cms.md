@@ -383,8 +383,10 @@ publishing or discarding a draft) ask first, in a dialog.
 - **A form for the front matter**: a row per key, its label beside its value; text, numbers,
   yes/no, dates, images, lists, nested tables and lists of tables, with the labels and inputs the
   build works out from the site's content, and the values pages share suggested as you type. Taxonomy fields (`tags`, `categories`, …) suggest
-  the terms the site uses, which keeps spellings consistent. *Add a field* offers the keys other
-  pages of the section use, and a table's *Add…* the keys other pages have in it. A value that
+  the terms the site uses, which keeps spellings consistent. The keys other pages of the section
+  use, and those other pages have in a table, show as empty fields where the page lacks them: a
+  key goes into the file once it has a value, and a key with a default offers it under its field
+  (*Use*). A folder's own page offers its pages' keys under *Add a field* instead. A value that
   is the same in every language of the page (an image, a rating) is edited once for all of
   them, and new pages start with the values the section's pages share.
   An image field shows the picture of the file it names, offers the page's images with theirs,
@@ -414,9 +416,9 @@ publishing or discarding a draft) ask first, in a dialog.
 - **Edit as text**: the whole file, front matter included, for anything the form does not show.
 - **Translations**: a tab per language, and a *+ language* button for each other language of
   the site, which adds a version in it (it starts as a copy). A language's file that lacks a
-  required key, or a text that another language's file gives (a title, a description), shows
-  the field empty, with the other language's value under it and *Copy*. A translation shows
-  the page's images from where the site publishes them, with the page of their language.
+  key another language's file gives (a title, a description) shows the field empty, with the
+  other language's value under it and *Copy*. A translation shows the page's images from where
+  the site publishes them, with the page of their language.
 - **Files of the page**: a bundle's images (with their pictures) and other files, uploads and
   deletions.
 - **New pages**: *New page* makes one in the folder shown, written the way its section's pages

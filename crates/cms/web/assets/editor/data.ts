@@ -34,7 +34,8 @@ export interface FieldHint {
   unused?: boolean;
   /** The key as pages write it, when that is not in lower case (the index's keys are). */
   name?: string;
-  /** The key's value on a new page, and when it is added. */
+  /** The key's value on a new page, and the one offered under its empty field on a page that
+   * lacks it. */
   default?: unknown;
   min?: number;
   max?: number;

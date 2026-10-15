@@ -17,6 +17,7 @@ const SITE = {
   // As the build gives them: a key with values pages share, a select of several options, a key
   // only the settings name.
   fields: {
+    weight: { label: "Weight", widget: "number", kind: "number" },
     summary: { label: "Summary", help: "One line for lists", kind: "string" },
     brand: { label: "Brand", widget: "text", kind: "string", suggestions: ["Lee", "Tom"] },
     flavours: { label: "Flavours", widget: "select", options: ["sweet", "salty"], multiple: true, kind: "list" },
@@ -44,6 +45,7 @@ const SITE = {
 const FILES = {
   "content/posts/crisps.md":
     "---\ntitle: Crisps\nsummary: Thin and salty\nbrand: Tom\nflavours:\n  - sweet\ntags:\n  - crisp\nsizes:\n  - small\n---\nThey crunch.\n",
+  "content/posts/_index.md": "---\ntitle: Posts\n---\n",
 };
 
 before(() => skip || startEditor(SITE, FILES));
@@ -99,7 +101,13 @@ test("a page: a field per key, as the settings label them", { skip }, async () =
   assert.deepEqual(chips(), ["crisp"]);
   assert.deepEqual($$("datalist#terms-tags option").map((o) => o.value), ["crisp", "sweet"]);
   assert.equal(text($(".rich-box")), "They crunch.", "the text, as rich text");
-  assert.deepEqual($$(".add-field md-menu-item").map(text), ["weight", "Rating"], "and the keys only the settings name");
+  // The keys the page lacks, empty, after its own: those of the section's pages, and those only
+  // the settings name.
+  assert.deepEqual($$(".fields > .field label").map(text).slice(-2), ["Weight", "Rating"]);
+  assert.equal($("#f-weight").value, "");
+  assert.equal($("#f-weight").type, "number");
+  assert.equal($("#f-weight").closest(".field").querySelectorAll("md-icon-button.remove").length, 0, "nothing to remove");
+  assert.equal($$(".add-field").length, 0, "nothing to add");
 });
 
 test("terms: Enter adds one and keeps the input, a chip's × removes it", { skip }, () => {
@@ -140,14 +148,10 @@ test("a select of several options: a checkbox each, the value a list", { skip },
   assert.deepEqual(boxes().map((b) => b.checked), [false, true]);
 });
 
-test("Add a field adds the key, and its menu then offers the others", { skip }, () => {
-  pick(document, "weight");
-  assert.equal($("#f-weight").type, "number");
-  assert.deepEqual($$(".add-field md-menu-item").map(text), ["Rating"]);
-});
-
 test("Save sends the page's file as typed", { skip }, async () => {
   type($("#f-title"), "Crispy");
+  // A key the page lacks goes into its file once it has a value.
+  type($("#f-weight"), "3");
   // The text as Markdown, from now on (the rich text editor has tests of its own).
   button("Markdown", $(".modes")).click();
   type($("textarea.body"), "They crunch loudly.\n");
@@ -162,7 +166,7 @@ test("Save sends the page's file as typed", { skip }, async () => {
   assert.deepEqual(body.changes.map((c) => c.path), ["content/posts/crisps.md"]);
   assert.equal(
     body.changes[0].content,
-    "---\ntitle: Crispy\nsummary: Thin and salty\nbrand: Tom\nflavours:\n  - salty\ntags:\n  - sweet\nsizes:\n  - \"\"\nweight: 0\n---\nThey crunch loudly.\n",
+    "---\ntitle: Crispy\nsummary: Thin and salty\nbrand: Tom\nflavours:\n  - salty\ntags:\n  - sweet\nsizes:\n  - \"\"\nweight: 3\n---\nThey crunch loudly.\n",
   );
 });
 
@@ -189,4 +193,13 @@ test("Preview opens beside the text, and closes", { skip }, async () => {
   await press(preview);
   assert.equal($("iframe.preview").hidden, true);
   assert.ok(!$(".body-editor").classList.contains("previewing"));
+});
+
+test("a folder's page offers its pages' keys to add, not empty", { skip }, async () => {
+  await go("#/e/posts%2F_index", () => $(".doc-head code")?.textContent.includes("posts/_index") && $("#f-title"));
+  assert.deepEqual($$(".fields > .field label").map(text), ["title"]);
+  assert.deepEqual($$(".add-field md-menu-item").map(text), ["Weight", "Rating"]);
+  pick(document, "Weight");
+  assert.equal($("#f-weight").value, "0");
+  assert.deepEqual($$(".add-field md-menu-item").map(text), ["Rating"]);
 });
