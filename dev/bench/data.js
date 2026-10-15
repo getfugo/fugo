@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1792076880846,
+  "lastUpdate": 1792085135208,
   "repoUrl": "https://github.com/getfugo/fugo",
   "entries": {
     "Benchmark": [
@@ -98328,6 +98328,66 @@ window.BENCHMARK_DATA = {
           {
             "name": "10,000 generated pages: peak memory",
             "value": 615.8,
+            "unit": "MiB",
+            "extra": "10061 pages; median of 5 builds after a warm-up build"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "blackb1rd.mov@gmail.com",
+            "name": "Prachya Saechua",
+            "username": "blackb1rd"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "9deefc25a1e96c9e22b6c03e259ebcec4492efcc",
+          "message": "cms: Mark each page's text in the build, and show a draft's build (#213)\n\nThe editor's preview puts the text being edited into the published\npage. It looked for the element that holds the text by what it says,\nso a page whose layout or hooks change the text (a heading's anchor\nlink) fell back to the bare text, without the site's layout. And no\npreview could show the page as the site builds it.\n\n- A build with [cms] marks, in each page's HTML, the element that\n  holds the page's text, found as the layout printed it:\n  data-cms-body when the element holds the text alone, or\n  data-cms-body=\"2..5\" for its children among others (a title before\n  it, a footer after). Text in an attribute, a comment, a script or a\n  template is passed over; a page that marks an element itself keeps\n  its mark. ssg-cms reads the HTML as a browser builds its tree\n  (body.rs); ssg-render gives a page's content (layout_content).\n- The preview puts the text between two comments around the marked\n  children (marked before scripts are removed, which the build counted),\n  else into the marked element, else where it guessed before.\n- GET build tells where a draft's last save is built: from the GitHub\n  deployments of its commit, which a CI job or a host that builds the\n  drafts' branches makes (ready at an address, building, failed with\n  its log, or waiting with an earlier save's build). The token needs\n  Deployments: Read; the app asks for it when installed with it. The\n  editor shows it beside the draft's badge, with a link to the page in\n  the build, and asks again while it is under way. fugo server\n  answers none.\n- Docs: Content management → CMS (with a workflow that builds drafts\n  as Cloudflare Version URLs) and Configuration → CMS.\n\nCo-Authored-By: Claude Opus 5.5 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-10-16T00:14:11+07:00",
+          "tree_id": "729d7bf91ebf939b69d764a02978cf52e1d99d75",
+          "url": "https://github.com/getfugo/fugo/commit/9deefc25a1e96c9e22b6c03e259ebcec4492efcc"
+        },
+        "date": 1792085131061,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "docs site: build time",
+            "value": 189.2,
+            "unit": "ms",
+            "extra": "334 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "docs site: peak memory",
+            "value": 174.2,
+            "unit": "MiB",
+            "extra": "334 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "1,000 generated pages: build time",
+            "value": 206.2,
+            "unit": "ms",
+            "extra": "1061 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "1,000 generated pages: peak memory",
+            "value": 153.2,
+            "unit": "MiB",
+            "extra": "1061 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "10,000 generated pages: build time",
+            "value": 2064.5,
+            "unit": "ms",
+            "extra": "10061 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "10,000 generated pages: peak memory",
+            "value": 600.2,
             "unit": "MiB",
             "extra": "10061 pages; median of 5 builds after a warm-up build"
           }
