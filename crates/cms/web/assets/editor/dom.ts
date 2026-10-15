@@ -37,6 +37,9 @@ export function drawSidebar(): void {
   reveal(nav);
 }
 
+/** What a view shows while it loads. */
+export const loading = () => html`<md-linear-progress indeterminate aria-label="Loading"></md-linear-progress><p class="muted">Loading…</p>`;
+
 let toastTimer: ReturnType<typeof setTimeout> | undefined;
 export function toast(message: string, kind: "info" | "ok" | "error" = "info"): void {
   let el = document.getElementById("toast");

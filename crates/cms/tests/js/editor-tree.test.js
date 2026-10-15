@@ -73,17 +73,17 @@ test("the start page: the sections, closed; a section of terms only has nothing 
 
 test("a toggle opens and closes a folder in place, without leaving the view", { skip }, async () => {
   await go("#/s/", () => text($("main h1")) === "Pages");
-  type($("input.filter"), "ab");
-  const filter = $("input.filter");
+  type($(".filter"), "ab");
+  const filter = $(".filter");
   toggleOf("Snacks").click();
   assert.deepEqual(tree(), ["  Pages *", "- Snacks", "  Candy", "+ Chips", "  Brands", "+ Flavors"]);
   toggleOf("Chips").click();
   assert.deepEqual(tree().slice(1, 6), ["- Snacks", "  Candy", "- Chips", "  Potato chips", "  Brands"]);
   assert.equal(location.hash, "#/s/");
-  assert.ok($("input.filter") === filter && filter.value === "ab", "the view is not drawn again");
+  assert.ok($(".filter") === filter && filter.value === "ab", "the view is not drawn again");
   toggleOf("Snacks").click();
   assert.deepEqual(tree(), ["  Pages *", "+ Snacks", "  Brands", "+ Flavors"]);
-  type($("input.filter"), "");
+  type($(".filter"), "");
 });
 
 test("the folder shown is marked, and it and the folders above it open", { skip }, async () => {

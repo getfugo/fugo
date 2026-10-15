@@ -10,7 +10,9 @@ import { type FieldHint, type Taxonomy } from "./data";
 import { valueOf } from "./dom";
 import { mapInput, objectsInput } from "./groups";
 import { hintOf, isEmpty, type Path, share, startOf } from "./hints";
-import { choicesInput, dateInput, imageInput, listInput, optionsOf, termsInput, valuesList } from "./inputs";
+import { icon } from "./icons";
+import { addMenu, choicesInput, dateInput, imageInput, listInput, optionsOf, termsInput, textInput, valuesList } from "./inputs";
+import { type MdCheckbox } from "./material";
 import { pageView } from "./pages";
 import { current, site } from "./state";
 
@@ -38,11 +40,8 @@ export function fieldsForm(data: FrontMatter, readOnly: boolean): TemplateResult
     else data[key] = value;
     if (hintOf(key).shared) share(data, key, value);
   };
-  const add = (ev: Event) => {
-    const select = ev.target as HTMLSelectElement;
-    const k = absent.find((x) => x.key === select.value);
-    // Back to "Add a field…": the list is drawn again without the key.
-    select.value = "";
+  const add = (key: string) => {
+    const k = absent.find((x) => x.key === key);
     if (!k) return;
     store(k.key, startOf(k.key, k.kind, k.default));
     pageView();
@@ -59,14 +58,11 @@ export function fieldsForm(data: FrontMatter, readOnly: boolean): TemplateResult
         (key) => field(key, hintOf(key).label ?? key, data[key], (v) => store(key, v), readOnly, [key], remove(key)),
       )}
       ${!readOnly && absent.length
-        ? html`
-            <div class="add-field">
-              <select @change=${add}>
-                <option value="">Add a field…</option>
-                ${absent.map((k) => html`<option value=${k.key}>${hintOf(k.key).label ?? k.key}</option>`)}
-              </select>
-            </div>
-          `
+        ? addMenu(
+            "Add a field",
+            absent.map((k) => ({ key: k.key, label: hintOf(k.key).label ?? k.key })),
+            add,
+          )
         : nothing}
     </div>
   `;
@@ -80,13 +76,15 @@ export function field(key: string, label: string, value: unknown, set: Setter, r
   const everyLanguage = path.length === 1 && hint.shared && current().docs.size > 1;
   return html`
     <div class=${kind === "map" || kind === "objects" ? "field wide" : "field"}>
-      <label for=${id}>
-        <span>
-          ${label}${hint.required ? html`<span class="required" title="Needs a value">*</span>` : nothing}
-          ${everyLanguage ? html`<span class="badge" title="One value for every language: a change goes to each">all languages</span>` : nothing}
-        </span>
-        ${remove && !readOnly ? html`<button class="icon" title="Remove ${key}" @click=${remove}>×</button>` : nothing}
-      </label>
+      <div class="field-head">
+        <label for=${id}>
+          <span>
+            ${label}${hint.required ? html`<span class="required" title="Needs a value">*</span>` : nothing}
+            ${everyLanguage ? html`<span class="badge" title="One value for every language: a change goes to each">all languages</span>` : nothing}
+          </span>
+        </label>
+        ${remove && !readOnly ? html`<md-icon-button class="remove" title="Remove ${key}" aria-label="Remove ${key}" @click=${remove}>${icon("close")}</md-icon-button>` : nothing}
+      </div>
       ${inputFor(kind, key, value, set, readOnly, path, hint, id)}
       ${hint.help ? html`<small class="muted">${hint.help}</small>` : nothing}
     </div>
@@ -131,16 +129,15 @@ function inputFor(kind: Kind, key: string, value: unknown, set: Setter, readOnly
       const options = [...(hint.options ?? [])];
       if (value !== null && value !== undefined && value !== "" && !options.includes(String(value))) options.unshift(String(value));
       return html`
-        <select id=${id} ?disabled=${readOnly} ?required=${required} @change=${(ev: Event) => set(valueOf(ev))}>
-          <option value="">—</option>
-          ${optionsOf(options, String(value))}
-        </select>
+        <md-outlined-select id=${id} ?disabled=${readOnly} ?required=${required} @change=${(ev: Event) => set(valueOf(ev))}>
+          ${optionsOf(["", ...options], textOf(value))}
+        </md-outlined-select>
       `;
     }
     case "image":
       return imageInput(typeof value === "string" ? value : "", set, readOnly, id);
     case "boolean":
-      return html`<input id=${id} type="checkbox" .checked=${live(Boolean(value))} ?disabled=${readOnly} @change=${(ev: Event) => set((ev.target as HTMLInputElement).checked)} />`;
+      return html`<md-checkbox id=${id} .checked=${live(Boolean(value))} ?disabled=${readOnly} @change=${(ev: Event) => set((ev.target as MdCheckbox).checked)}></md-checkbox>`;
     case "number": {
       const input = (ev: Event) => {
         const text = valueOf(ev);
@@ -150,7 +147,7 @@ function inputFor(kind: Kind, key: string, value: unknown, set: Setter, readOnly
       // Any number unless the field says its step: a value that is whole now may not stay so.
       const step = hint.step !== undefined ? String(hint.step) : "any";
       return html`
-        <input
+        <md-outlined-text-field
           id=${id}
           type="number"
           step=${step}
@@ -160,7 +157,7 @@ function inputFor(kind: Kind, key: string, value: unknown, set: Setter, readOnly
           .value=${live(textOf(value))}
           ?readonly=${readOnly}
           @input=${input}
-        />
+        ></md-outlined-text-field>
       `;
     }
     case "date":
@@ -174,16 +171,15 @@ function inputFor(kind: Kind, key: string, value: unknown, set: Setter, readOnly
     case "textarea": {
       const text = textOf(value);
       const rows = Math.min(8, 2 + Math.floor(text.length / 90));
-      return html`<textarea id=${id} rows=${rows} ?readonly=${readOnly} ?required=${required} .value=${live(text)} @input=${(ev: Event) => set(valueOf(ev))}></textarea>`;
+      return html`
+        <md-outlined-text-field id=${id} type="textarea" rows=${rows} ?readonly=${readOnly} ?required=${required} .value=${live(text)} @input=${(ev: Event) => set(valueOf(ev))}></md-outlined-text-field>
+      `;
     }
     case "text": {
       // An empty value that was null stays null.
       const input = (ev: Event) => set(value === null && valueOf(ev) === "" ? null : valueOf(ev));
-      const values = hint.suggestions?.length ? `${id}-values` : nothing;
-      return html`
-        <input id=${id} type="text" list=${values} ?required=${required} .value=${live(textOf(value))} ?readonly=${readOnly} @input=${input} />
-        ${valuesList(`${id}-values`, hint.suggestions)}
-      `;
+      const values = hint.suggestions?.length ? `${id}-values` : undefined;
+      return html`${textInput(id, textOf(value), input, readOnly, values, required)}${valuesList(`${id}-values`, hint.suggestions)}`;
     }
   }
 }

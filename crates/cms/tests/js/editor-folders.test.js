@@ -5,7 +5,7 @@
 import { before, test } from "node:test";
 import assert from "node:assert/strict";
 
-import { $, $$, go, sent, skip, startEditor, STYLE, text, type, until } from "./ui.js";
+import { $, $$, button as anyButton, choose, go, reply, sent, skip, startEditor, STYLE, text, type, until } from "./ui.js";
 
 /** An entry of the index: a page, a bundle, or a folder's own page (`<dir>/_index`). */
 function entry(key, title, { kind = key.endsWith("_index") ? "section" : "page", bundle = false } = {}) {
@@ -71,8 +71,7 @@ before(
 );
 
 const titles = () => $$("table.entries tbody td:first-child > a").map(text);
-const button = (name) => $$(".title-row button, .title-row a.button").find((b) => text(b) === name);
-const answer = (title) => (globalThis.prompt = () => title);
+const button = (name) => anyButton(name, $(".title-row"));
 
 test("the root: the sections as folders, then the pages at the top", { skip }, async () => {
   await go("#/s/", () => text($("h1") ?? { textContent: "" }) === "Pages");
@@ -105,12 +104,12 @@ test("a folder at any depth: its folders and pages, and the way back up", { skip
 
 test("the filter finds what is below the folder, and says where", { skip }, async () => {
   await go("#/s/snacks", () => text($("h1")) === "Snacks");
-  type($("input.filter"), "ruff");
+  type($(".filter"), "ruff");
   assert.deepEqual(titles(), ["Ruffles"]);
   assert.equal(text($(".where")), "in chips/potato-chips/wavy");
-  type($("input.filter"), "zzz");
+  type($(".filter"), "zzz");
   assert.equal(text($("main > p.muted")), "Nothing matches.");
-  type($("input.filter"), "");
+  type($(".filter"), "");
   assert.deepEqual(titles(), ["Chips"]);
 });
 
@@ -118,30 +117,54 @@ test("a page: crumbs to each of its folders, and Move to any of its section's", 
   await go("#/e/snacks%2Fchips%2Fpotato-chips%2Flays-classic", () => $(".doc-head code")?.textContent.includes("lays-classic"));
   assert.equal(text($(".crumbs")), "Pages / Snacks / Chips / Potato chips");
   assert.deepEqual(
-    $$("form.move option").map(text),
-    ["Move to…", "Snacks", "Chips", "Potato chips", "Wavy"],
+    $$(".move md-select-option").map(text),
+    ["Snacks", "Chips", "Potato chips", "Wavy"],
   );
+  assert.equal($(".move").label, "Move to");
+});
+
+test("Move asks first: cancelled, nothing moves; confirmed, the page is saved at its new key", { skip }, async () => {
+  sent.length = 0;
+  choose($(".move"), "snacks/chips");
+  await reply(null);
+  assert.equal(sent.length, 0, "nothing was sent");
+  assert.equal($(".move").value, "", "nothing chosen");
+  choose($(".move"), "snacks/chips");
+  const dialog = await until(() => $("md-dialog[open]"));
+  assert.equal(text(dialog.querySelector("[slot=headline]")), "Move Lays Classic to Chips?");
+  await reply();
+  await until(() => sent.length);
+  const { body } = sent[0];
+  assert.equal(body.entry, "snacks/chips/lays-classic");
+  assert.deepEqual(
+    body.changes.map((c) => `${c.delete ? "-" : "+"}${c.path}`),
+    ["-content/snacks/chips/potato-chips/lays-classic/index.md", "+content/snacks/chips/lays-classic/index.md"],
+  );
+  await until(() => text($(".crumbs")) === "Pages / Snacks / Chips");
 });
 
 test("New page refuses the name of a folder", { skip }, async () => {
   await go("#/s/snacks", () => text($("h1")) === "Snacks");
-  answer("Chips");
   button("New page").click();
+  await reply(null);
+  assert.equal(location.hash, "#/s/snacks", "cancelled: no page");
+  button("New page").click();
+  await reply("Chips");
   assert.equal(text($("#toast")), "snacks/chips exists already");
   assert.equal(location.hash, "#/s/snacks");
 });
 
 test("New folder opens the new folder; its page is saved with the first page in it", { skip }, async () => {
   await go("#/s/snacks/chips", () => text($("h1")) === "Chips");
-  answer("Extruded");
   button("New folder").click();
+  await reply("Extruded");
   await until(() => text($("h1")) === "Extruded");
   assert.equal(location.hash, "#/s/snacks/chips/extruded");
   assert.equal(text($(".title-row .badge")), "new");
   assert.equal(text($(".crumbs")), "Pages / Snacks / Chips");
 
-  answer("Cheese Puffs");
   button("New page").click();
+  await reply("Cheese Puffs");
   await until(() => $(".doc-head code")?.textContent.includes("cheese-puffs"));
   assert.equal(text($(".doc-head code")), "content/snacks/chips/extruded/cheese-puffs/index.md", "a bundle, as the section's pages");
   assert.equal(text($(".crumbs")), "Pages / Snacks / Chips / Extruded");
@@ -174,13 +197,13 @@ test("the page of a folder saved with a page is in that page's draft", { skip },
 
 test("New section: a folder at the top, its pages written like the largest section's", { skip }, async () => {
   await go("#/", () => $(".cards"));
-  answer("Recipes");
-  $$(".title-row button").find((b) => text(b) === "New section").click();
+  button("New section").click();
+  await reply("Recipes");
   await until(() => text($("h1")) === "Recipes");
   assert.equal(location.hash, "#/s/recipes");
   assert.equal(text($(".crumbs")), "Pages");
-  answer("Pad Thai");
   button("New page").click();
+  await reply("Pad Thai");
   await until(() => $(".doc-head code")?.textContent.includes("pad-thai"));
   assert.equal(text($(".doc-head code")), "content/recipes/pad-thai/index.md");
   sent.length = 0;

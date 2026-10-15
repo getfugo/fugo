@@ -1,4 +1,5 @@
-// The inputs of the form for dates, terms, several options, lists and images.
+// The inputs of the form for text, dates, terms, several options, lists and images, and the menu
+// of the keys a form or a table may add.
 
 import { html, nothing, type TemplateResult } from "lit-html";
 import { live } from "lit-html/directives/live.js";
@@ -8,6 +9,8 @@ import { valueOf } from "./dom";
 import { bundleDir } from "./files";
 import { type Setter } from "./form";
 import { isEmpty } from "./hints";
+import { icon } from "./icons";
+import { type MdCheckbox, type MdMenu, type MdOutlinedTextField } from "./material";
 import { pageView } from "./pages";
 import { current, site } from "./state";
 
@@ -15,29 +18,58 @@ import { current, site } from "./state";
 export const valuesList = (id: string, values: string[] | undefined) =>
   values?.length ? html`<datalist id=${id}>${values.map((v) => html`<option value=${v}></option>`)}</datalist>` : nothing;
 
-/** The `<option>`s of `values`, `chosen` selected (also when another was chosen before a redraw). */
-export const optionsOf = (values: string[], chosen: string) => values.map((v) => html`<option value=${v} .selected=${live(v === chosen)}>${v}</option>`);
+/** The options of a select of `values` (`""` is none, shown as —), `chosen` selected (also when
+ * another was chosen before a redraw). */
+export const optionsOf = (values: string[], chosen: string) =>
+  values.map((v) => html`<md-select-option value=${v} .selected=${live(v === chosen)}><div slot="headline">${v || "—"}</div></md-select-option>`);
+
+/**
+ * A line of text. With values to suggest (the `<datalist>` `list`), a plain input, which the
+ * Material text field cannot be: its input is in its shadow tree, out of reach of a list's id.
+ */
+export function textInput(id: string | undefined, value: string, input: (ev: Event) => void, readOnly: boolean, list?: string, required = false): TemplateResult {
+  return list
+    ? html`<input id=${id ?? nothing} class="text" type="text" list=${list} ?required=${required} .value=${live(value)} ?readonly=${readOnly} @input=${input} />`
+    : html`<md-outlined-text-field id=${id ?? nothing} ?required=${required} .value=${live(value)} ?readonly=${readOnly} @input=${input}></md-outlined-text-field>`;
+}
+
+/** A button that opens a menu of `keys` (their labels shown); `add` gets the one chosen. */
+export function addMenu(label: string, keys: { key: string; label: string }[], add: (key: string) => void): TemplateResult {
+  const toggle = (ev: Event) => {
+    const menu = (ev.currentTarget as Element).nextElementSibling as MdMenu;
+    menu.anchorElement = ev.currentTarget as HTMLElement;
+    menu.open = !menu.open;
+  };
+  return html`
+    <div class="add-field">
+      <md-text-button @click=${toggle}>${icon("add", "icon")}${label}</md-text-button>
+      <md-menu positioning="popover">
+        ${keys.map((k) => html`<md-menu-item @click=${() => add(k.key)}><div slot="headline">${k.label}</div></md-menu-item>`)}
+      </md-menu>
+    </div>
+  `;
+}
 
 export function dateInput(value: unknown, set: Setter, readOnly: boolean, id: string): TemplateResult {
   const toml = isTomlDate(value);
   const shown = toml ? value.toISOString() : typeof value === "string" ? value : "";
   const input = (ev: Event) => {
-    const el = ev.target as HTMLInputElement;
+    const el = ev.target as MdOutlinedTextField;
     if (!toml) return set(el.value);
     const d = tomlDate(el.value);
-    el.classList.toggle("invalid", !d);
+    el.error = !d;
     if (d) set(d);
   };
   // Types the time into the field, as if by hand.
   const now = (ev: Event) => {
-    const el = (ev.currentTarget as HTMLElement).previousElementSibling as HTMLInputElement;
+    const el = (ev.currentTarget as HTMLElement).previousElementSibling as MdOutlinedTextField;
     el.value = new Date().toISOString();
     el.dispatchEvent(new Event("input", { bubbles: true }));
   };
   return html`
     <span class="row">
-      <input id=${id} type="text" class="date" placeholder="2026-01-31T12:00:00Z" .value=${live(shown)} ?readonly=${readOnly} @input=${input} />
-      <button class="small" ?disabled=${readOnly} @click=${now}>Now</button>
+      <md-outlined-text-field id=${id} class="date" placeholder="2026-01-31T12:00:00Z" .value=${live(shown)} ?readonly=${readOnly} @input=${input}></md-outlined-text-field>
+      <md-text-button ?disabled=${readOnly} @click=${now}>${icon("schedule", "icon")}Now</md-text-button>
     </span>
   `;
 }
@@ -58,12 +90,15 @@ export function termsInput(taxonomy: Taxonomy, value: unknown, set: Setter, read
     input.value = "";
     if (t && !items.includes(t)) store([...items, t]);
   };
-  const chip = (t: string, i: number) => html`
-    <span class="chip">${t}${readOnly ? nothing : html`<button class="icon" title="Remove ${t}" @click=${() => store(items.filter((_, j) => j !== i))}>×</button>`}</span>
-  `;
+  // The chip would take itself out of the page; the form draws it again without it.
+  const remove = (i: number) => (ev: Event) => {
+    ev.preventDefault();
+    store(items.filter((_, j) => j !== i));
+  };
+  const chip = (t: string, i: number) => html`<md-input-chip class="chip" label=${t} remove-only ?disabled=${readOnly} @remove=${remove(i)}></md-input-chip>`;
   return html`
     <span class="terms">
-      ${items.map(chip)}
+      ${items.length ? html`<md-chip-set>${items.map(chip)}</md-chip-set>` : nothing}
       ${readOnly
         ? nothing
         : html`
@@ -80,7 +115,7 @@ export function choicesInput(options: string[], value: unknown, set: Setter, rea
   let chosen = Array.isArray(value) ? value.map(String) : isEmpty(value) ? [] : [String(value)];
   const all = [...options, ...chosen.filter((c) => !options.includes(c))];
   const toggle = (option: string) => (ev: Event) => {
-    const on = (ev.target as HTMLInputElement).checked;
+    const on = (ev.target as MdCheckbox).checked;
     chosen = on ? [...chosen, option] : chosen.filter((c) => c !== option);
     set(all.filter((o) => chosen.includes(o)));
   };
@@ -89,7 +124,7 @@ export function choicesInput(options: string[], value: unknown, set: Setter, rea
       ${all.map(
         (o, i) => html`
           <label>
-            <input type="checkbox" id=${i === 0 ? id : nothing} .checked=${live(chosen.includes(o))} ?disabled=${readOnly} @change=${toggle(o)} />
+            <md-checkbox id=${i === 0 ? id : nothing} .checked=${live(chosen.includes(o))} ?disabled=${readOnly} @change=${toggle(o)}></md-checkbox>
             ${o}
           </label>
         `,
@@ -100,7 +135,6 @@ export function choicesInput(options: string[], value: unknown, set: Setter, rea
 
 export function listInput(value: unknown[], set: Setter, readOnly: boolean, id: string, suggestions?: string[]): TemplateResult {
   const items = [...value];
-  const values = suggestions?.length ? `${id}-values` : nothing;
   const change = (next: unknown[]) => {
     set(next);
     pageView();
@@ -111,16 +145,17 @@ export function listInput(value: unknown[], set: Setter, readOnly: boolean, id: 
     items[i] = typeof value[i] === "number" && text.trim() !== "" && !Number.isNaN(Number(text)) ? Number(text) : text;
     set([...items]);
   };
+  const values = suggestions?.length ? `${id}-values` : undefined;
   const row = (item: unknown, i: number) => html`
     <div class="row">
-      <input id=${i === 0 ? id : nothing} type="text" list=${values} .value=${live(item === null ? "" : String(item))} ?readonly=${readOnly} @input=${edit(i)} />
-      ${readOnly ? nothing : html`<button class="icon" title="Remove" @click=${() => change(items.filter((_, j) => j !== i))}>×</button>`}
+      ${textInput(i === 0 ? id : undefined, item === null ? "" : String(item), edit(i), readOnly, values)}
+      ${readOnly ? nothing : html`<md-icon-button class="remove" title="Remove" aria-label="Remove" @click=${() => change(items.filter((_, j) => j !== i))}>${icon("close")}</md-icon-button>`}
     </div>
   `;
   return html`
     <div class="list">
       ${items.map(row)}
-      ${readOnly ? nothing : html`<button class="small" @click=${() => change([...items, ""])}>Add</button>`}
+      ${readOnly ? nothing : html`<md-text-button @click=${() => change([...items, ""])}>${icon("add", "icon")}Add</md-text-button>`}
       ${valuesList(`${id}-values`, suggestions)}
     </div>
   `;
@@ -130,10 +165,9 @@ export function imageInput(value: string, set: Setter, readOnly: boolean, id: st
   const names = imageChoices();
   return html`
     <span class="row">
-      <select id=${id} ?disabled=${readOnly} @change=${(ev: Event) => set(valueOf(ev))}>
-        <option value="">—</option>
-        ${optionsOf(value && !names.includes(value) ? [value, ...names] : names, value)}
-      </select>
+      <md-outlined-select id=${id} ?disabled=${readOnly} @change=${(ev: Event) => set(valueOf(ev))}>
+        ${optionsOf(["", ...(value && !names.includes(value) ? [value, ...names] : names)], value)}
+      </md-outlined-select>
       <small class="muted">Upload files below to add choices.</small>
     </span>
   `;

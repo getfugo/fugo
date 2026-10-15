@@ -48,14 +48,57 @@ export async function startEditor(site, files, more = {}, { url = "https://examp
   const { Window } = await import(pathToFileURL(join(modules, "happy-dom/lib/index.js")).href);
   window = new Window({ url });
   document = window.document;
-  // The editor and lit-html use the browser's globals.
-  for (const k of ["document", "location", "Event", "KeyboardEvent", "FormData", "DOMParser", "Node", "HTMLElement"]) {
+  // The editor, lit-html and the Material components use the browser's globals: the window's
+  // classes (node's own events would not reach happy-dom's listeners), where node has none or its
+  // own.
+  const own = ["document", "location", "Event", "CustomEvent", "KeyboardEvent", "MouseEvent", "PointerEvent", "FocusEvent", "InputEvent", "SubmitEvent", "FormData", "DOMParser", "Node", "HTMLElement"];
+  for (const k of [...own, ...Object.getOwnPropertyNames(window).filter((k) => /^[A-Z]/.test(k) && !(k in globalThis))]) {
     Object.defineProperty(globalThis, k, { value: window[k], configurable: true, writable: true });
   }
-  Object.assign(globalThis, { window, fetch, confirm: () => true, prompt: () => "Honey Butter" });
+  Object.defineProperty(globalThis, "customElements", { value: window.customElements, configurable: true, writable: true });
+  shimMissing(window);
+  Object.assign(globalThis, { window, fetch });
   document.body.innerHTML = `<div id="app" class="loading">Loading the editor…</div>`;
   await import("../../assets/admin/cms.js");
   await until(ready);
+}
+
+/**
+ * Where happy-dom differs from a browser in what the Material components use:
+ * - `attachInternals()`, which it lacks (capricorn86/happy-dom#1419): here internals that keep
+ *   what the controls give them but join no form;
+ * - an input's `type` set to `undefined`, which a browser takes as text and happy-dom throws on
+ *   (a text field sets it before its own type is known);
+ * - an animation cancelled: the browser rejects its `finished` promise as handled (Web Animations,
+ *   "cancel an animation"), happy-dom as unhandled, which fails the test that clicked a ripple.
+ */
+function shimMissing(window) {
+  class Internals {
+    constructor() {
+      Object.assign(this, { states: new Set(), form: null, labels: [], validity: { valid: true }, validationMessage: "", willValidate: true });
+    }
+    setFormValue(value) {
+      this.value = value;
+    }
+    setValidity(flags = {}, message = "") {
+      this.validity = { ...flags, valid: !Object.values(flags).some(Boolean) };
+      this.validationMessage = message;
+    }
+    checkValidity() {
+      return this.validity.valid;
+    }
+    reportValidity() {
+      return this.validity.valid;
+    }
+  }
+  window.HTMLElement.prototype.attachInternals = () => new Internals();
+  const type = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "type");
+  Object.defineProperty(window.HTMLInputElement.prototype, "type", { ...type, set: function (v) { type.set.call(this, String(v)); } });
+  const cancel = window.Animation.prototype.cancel;
+  window.Animation.prototype.cancel = function () {
+    this.finished?.catch(() => {});
+    return cancel.call(this);
+  };
 }
 
 /** Waits (a second at most) until `ready` is true, and returns what it returns. */
@@ -91,4 +134,34 @@ export function type(input, value) {
 export function choose(select, value) {
   select.value = value;
   select.dispatchEvent(new window.Event("change", { bubbles: true }));
+}
+
+const BUTTONS = "button, md-filled-button, md-filled-tonal-button, md-outlined-button, md-text-button, md-icon-button";
+
+/** The button (plain or Material) in `scope` whose text, or label, is `name`. */
+export const button = (name, scope = document) =>
+  [...scope.querySelectorAll(BUTTONS)].find((b) => text(b) === name || b.getAttribute("aria-label") === name);
+
+/** Clicks `el` and lets the click's work settle. A Material button takes a second click in the
+ * same microtask for the copy of the first it makes itself, and drops it: clicks by hand are
+ * apart, and so are these. */
+export async function press(el) {
+  el.click();
+  await new Promise((r) => setTimeout(r));
+}
+
+/** Answers the dialog the editor shows: types `value` into its field, if it has one, and clicks its
+ * button that answers yes; `null` cancels it. Resolves once it is gone. */
+export async function reply(value) {
+  const dialog = await until(() => $("md-dialog[open]"));
+  if (typeof value === "string") type(dialog.querySelector("md-outlined-text-field"), value);
+  dialog.querySelector(value === null ? ".no" : ".yes").click();
+  await until(() => !dialog.isConnected);
+}
+
+/** Chooses `label` in the menu of the add button in `scope` (Add a field, Add…). */
+export function pick(scope, label) {
+  const item = [...scope.querySelectorAll(".add-field md-menu-item")].find((i) => text(i) === label);
+  assert.ok(item, `no ${label} in the menu`);
+  item.click();
 }

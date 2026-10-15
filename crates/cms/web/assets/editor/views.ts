@@ -7,18 +7,22 @@ import { askNewFolder, mayAddFolder } from "./create";
 import { type Section } from "./data";
 import { show, toast } from "./dom";
 import { draftList } from "./drafts";
+import { icon } from "./icons";
 import { drafts, me, site, taxonomyOf } from "./state";
 
+/** The bar at the top: the site's name, then the drafts, the site, and who is signed in. */
 export function header(): TemplateResult {
   return html`
     <header>
       <a class="brand" href="#/">${site.title}</a>
-      <a class="site" href=${site.site_url} target="_blank" rel="noopener">View site ↗</a>
-      <a class="licences" href="cms.js.LEGAL.txt" target="_blank" title="The licences of the libraries this editor uses">Licences</a>
       <span class="spacer"></span>
-      ${me.workflow === "review" ? html`<a href="#/drafts" class="drafts-link">Drafts (${drafts.length})</a>` : nothing}
+      ${me.workflow === "review" ? html`<md-text-button class="drafts-link" href="#/drafts">Drafts (${drafts.length})</md-text-button>` : nothing}
+      <md-text-button class="site" href=${site.site_url} target="_blank" trailing-icon>View site${icon("open_in_new", "icon")}</md-text-button>
       <span class="user" title="Roles: ${me.roles.join(", ")}">${me.email}</span>
-      ${me.login === "local" ? nothing : html`<button class="subtle small" @click=${() => signOut(me.login).catch((e) => toast(messageOf(e), "error"))}>Sign out</button>`}
+      ${me.login === "local"
+        ? nothing
+        : html`<md-text-button class="sign-out" @click=${() => signOut(me.login).catch((e) => toast(messageOf(e), "error"))}>Sign out</md-text-button>`}
+      <a class="licences" href="cms.js.LEGAL.txt" target="_blank" title="The licences of the libraries this editor uses">Licences</a>
     </header>
   `;
 }
@@ -40,12 +44,15 @@ export function home(): void {
     ${mine.length ? html`<h2>Your drafts</h2>${draftList(mine)}` : nothing}
     <div class="title-row">
       <h2>Sections</h2>
-      ${mayAddFolder("") ? html`<button @click=${() => askNewFolder("")}>New section</button>` : nothing}
+      ${mayAddFolder("") ? html`<md-outlined-button @click=${() => askNewFolder("")}>${icon("add", "icon")}New section</md-outlined-button>` : nothing}
     </div>
     <div class="cards">
       ${site.sections.map(
         (s) => html`
-          <a class="card" href="#/s/${encodeURIComponent(s.key)}"><strong>${s.title}</strong><span class="muted">${sizeOf(s)}</span></a>
+          <a class="card" href="#/s/${encodeURIComponent(s.key)}">
+            <md-focus-ring></md-focus-ring><md-ripple></md-ripple>
+            <strong>${s.title}</strong><span class="muted">${sizeOf(s)}</span>
+          </a>
         `,
       )}
     </div>

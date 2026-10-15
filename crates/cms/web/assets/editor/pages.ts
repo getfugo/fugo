@@ -8,10 +8,12 @@ import { api, ApiError, messageOf } from "./api";
 import { crumbs, listedIn } from "./browse";
 import { addTranslation, deletePage, discard, movePage, publish, save } from "./changes";
 import { type Doc } from "./data";
-import { show, toast, valueOf } from "./dom";
+import { loading, show, toast, valueOf } from "./dom";
 import { bodyEditor, filesPanel } from "./files";
 import { foldersOf } from "./folders";
 import { fieldsForm } from "./form";
+import { icon } from "./icons";
+import { type MdOutlinedSelect, type MdSwitch } from "./material";
 import { schedulePreview } from "./preview";
 import { allEntries, canEdit, current, draftOf, langName, me, pending, sectionFor, setPage, site } from "./state";
 import { notFound } from "./views";
@@ -39,7 +41,7 @@ export function docText(doc: Doc): string {
 export async function openPage(key: string): Promise<void> {
   const entry = site.entries.find((e) => e.key === key) ?? pending.get(key);
   if (!entry) return notFound();
-  show(html`<p class="muted">Loading…</p>`);
+  show(loading());
   const draft = (entry.savedWith ? draftOf(entry.savedWith) : null) ?? draftOf(key);
   const docs = new Map<string, Doc>();
   try {
@@ -84,25 +86,28 @@ export function pageView(): void {
       ${draft ? html`<a class="badge pending" href="#/d/${draft.id}">has a draft</a>` : nothing}
     </div>
     <div class="tabs">
-      ${[...docs.keys()].map((lang) => html`<button class=${lang === p.lang ? "tab active" : "tab"} @click=${() => openLang(lang)}>${langName(lang)}</button>`)}
-      ${missing.map((l) => html`<button class="tab add" title="Add a ${l.name} version" @click=${() => addTranslation(l.key)}>+ ${l.name}</button>`)}
+      <md-tabs aria-label="Languages">
+        ${[...docs.keys()].map((lang) => html`<md-primary-tab class="tab" ?active=${lang === p.lang} @click=${() => openLang(lang)}>${langName(lang)}</md-primary-tab>`)}
+      </md-tabs>
+      ${missing.map((l) => html`<md-text-button class="add" title="Add a ${l.name} version" @click=${() => addTranslation(l.key)}>${icon("add", "icon")}${l.name}</md-text-button>`)}
     </div>
     ${doc ? docEditor(doc) : html`<p class="muted">This page has no file in this language yet.</p>`}
     ${entry.bundle || site.media ? filesPanel() : nothing}
     <div class="actions sticky">
       ${editable
-        ? html`<button class="primary" @click=${save}>${me.workflow === "review" ? "Save draft" : "Save and publish"}</button>`
+        ? html`<md-filled-button class="primary" @click=${save}>${me.workflow === "review" ? "Save draft" : "Save and publish"}</md-filled-button>`
         : html`<span class="muted">You may not change this page.</span>`}
-      ${draft && me.publish ? html`<button @click=${() => publish(draft.id)}>Publish draft</button>` : nothing}
-      ${draft ? html`<button class="danger" @click=${() => discard(draft.id)}>Discard draft</button>` : nothing}
+      ${draft && me.publish ? html`<md-filled-tonal-button @click=${() => publish(draft.id)}>${icon("publish", "icon")}Publish draft</md-filled-tonal-button>` : nothing}
+      ${draft ? html`<md-outlined-button class="danger" @click=${() => discard(draft.id)}>Discard draft</md-outlined-button>` : nothing}
+      <span class="spacer"></span>
       ${editable ? moveControl() : nothing}
-      ${editable && !entry.isNew ? html`<button class="danger subtle" @click=${deletePage}>Delete page</button>` : nothing}
+      ${editable && !entry.isNew ? html`<md-text-button class="danger" @click=${deletePage}>${icon("delete", "icon")}Delete page</md-text-button>` : nothing}
     </div>
   `);
 }
 
 /** Moving a saved page to another folder of its section, at any depth (none in a section without
- * folders). */
+ * folders): to the folder chosen, once the move is confirmed. */
 function moveControl(): TemplateResult | typeof nothing {
   const { entry } = current();
   if (entry.kind !== "page" || entry.isNew || !entry.section) return nothing;
@@ -110,21 +115,23 @@ function moveControl(): TemplateResult | typeof nothing {
   const folders = foldersOf(section, allEntries());
   if (folders.length === 0) return nothing;
   const here = entry.key.includes("/") ? entry.key.slice(0, entry.key.lastIndexOf("/")) : "";
-  const submit = (ev: Event) => {
-    ev.preventDefault();
-    const folder = new FormData(ev.currentTarget as HTMLFormElement).get("folder");
-    if (folder !== null) void movePage(String(folder));
+  const change = (ev: Event) => {
+    const select = ev.target as MdOutlinedSelect;
+    const folder = select.value;
+    // Back to none: a move that is not confirmed leaves nothing chosen.
+    select.reset();
+    if (folder) void movePage(folder);
   };
   return html`
-    <form class="move" @submit=${submit}>
-      <select name="folder" required aria-label="Move to">
-        <option value="" disabled selected>Move to…</option>
-        ${[{ key: section.key, title: section.title, depth: 0 }, ...folders].map(
-          (f) => html`<option value=${f.key} ?disabled=${f.key === here}>${"  ".repeat(f.depth)}${f.title}</option>`,
-        )}
-      </select>
-      <button type="submit">Move</button>
-    </form>
+    <md-outlined-select class="move" label="Move to" @change=${change}>
+      ${[{ key: section.key, title: section.title, depth: 0 }, ...folders].map(
+        (f) => html`
+          <md-select-option value=${f.key} ?disabled=${f.key === here}>
+            <div slot="headline" style="padding-inline-start: ${f.depth}rem">${f.title}</div>
+          </md-select-option>
+        `,
+      )}
+    </md-outlined-select>
   `;
 }
 
@@ -136,12 +143,11 @@ function docEditor(doc: Doc): TemplateResult {
       ${readOnly ? html`<span class="badge">read only</span>` : nothing}
       <span class="spacer"></span>
       <label class="toggle">
-        <input
-          type="checkbox"
-          .checked=${live(doc.raw)}
+        <md-switch
+          .selected=${live(doc.raw)}
           ?disabled=${readOnly || (doc.error !== null && doc.raw)}
-          @change=${(ev: Event) => toggleRaw(doc, (ev.target as HTMLInputElement).checked)}
-        />
+          @change=${(ev: Event) => toggleRaw(doc, (ev.target as MdSwitch).selected)}
+        ></md-switch>
         Edit as text
       </label>
     </div>

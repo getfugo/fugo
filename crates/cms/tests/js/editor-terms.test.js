@@ -97,11 +97,11 @@ test("in a hierarchical taxonomy, a term with terms below it stays a folder", { 
 
 test("the filter finds terms as pages, and says where they are", { skip }, async () => {
   await go("#/s/", () => text($("h1")) === "Pages" && $("table.entries"));
-  type($("input.filter"), "ched");
+  type($(".filter"), "ched");
   assert.deepEqual(rows(), [["Cheddar", "#/e/flavors%2Fcheese%2Fcheddar%2F_index", "in flavors/cheese"]]);
-  type($("input.filter"), "index");
+  type($(".filter"), "index");
   assert.deepEqual(rows(), [], "not by the name of their file");
-  type($("input.filter"), "");
+  type($(".filter"), "");
 });
 
 test("a folder that is not a term stays one, even with nothing in it", { skip }, async () => {

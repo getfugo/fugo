@@ -3,6 +3,7 @@
 
 import { clone, create, type FrontMatter, join } from "../codec";
 import { type Doc, type Entry, type Section } from "./data";
+import { askText } from "./dialogs";
 import { toast } from "./dom";
 import { allFolders, folderHref, folderTitle, joinDir, parentDir, placeOf } from "./folders";
 import { taxonomies } from "./form";
@@ -44,14 +45,14 @@ export const mayAddPage = (dir: string) => canEdit(pagePath(dir, "new-page"));
 export const mayAddFolder = (dir: string) => canEdit(folderPath(joinDir(dir, "new-folder")));
 
 /** Asks for the title of a new page in the folder `dir`, and makes it. */
-export function askNewPage(dir: string): void {
-  const title = prompt(`Title of the new page in ${folderTitle(dir, allEntries())}:`)?.trim();
+export async function askNewPage(dir: string): Promise<void> {
+  const title = (await askText(`New page in ${folderTitle(dir, allEntries())}`, "Title", "Create"))?.trim();
   if (title) newPage(dir, title);
 }
 
 /** Asks for the title of a new folder in the folder `dir` (at the root: a section), and makes it. */
-export function askNewFolder(dir: string): void {
-  const title = prompt(dir ? `Title of the new folder in ${folderTitle(dir, allEntries())}:` : "Title of the new section:")?.trim();
+export async function askNewFolder(dir: string): Promise<void> {
+  const title = (await askText(dir ? `New folder in ${folderTitle(dir, allEntries())}` : "New section", "Title", "Create"))?.trim();
   if (title) newFolder(dir, title);
 }
 

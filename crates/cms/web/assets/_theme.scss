@@ -1,0 +1,134 @@
+// The editor's Material Design 3 theme, which the components (@material/web) and cms.scss read:
+// - the colour roles of a light and a dark scheme, made from one colour, the editor's accent
+//   #2f5bd3, by Material Color Utilities 0.4.0 (its Fidelity scheme, which keeps that colour as
+//   the primary container), and two custom colours harmonised with it (success, warning);
+// - the typefaces: the system's, as the editor's page loads no font;
+// - the components' sizes, denser than Material's: 40 px fields, as high as the buttons beside
+//   them, in a form of many.
+
+$light: (
+  primary: #0041ba,
+  on-primary: #ffffff,
+  primary-container: #2f5bd3,
+  on-primary-container: #dbe1ff,
+  secondary: #4f5c8b,
+  on-secondary: #ffffff,
+  secondary-container: #bdcaff,
+  on-secondary-container: #475482,
+  tertiary: #833400,
+  on-tertiary: #ffffff,
+  tertiary-container: #a94600,
+  on-tertiary-container: #ffdbcb,
+  error: #ba1a1a,
+  on-error: #ffffff,
+  error-container: #ffdad6,
+  on-error-container: #93000a,
+  surface: #faf8ff,
+  on-surface: #1a1b23,
+  surface-variant: #e0e1f2,
+  on-surface-variant: #434654,
+  outline: #747685,
+  outline-variant: #c4c5d6,
+  inverse-surface: #2f3038,
+  inverse-on-surface: #f0f0fa,
+  inverse-primary: #b5c4ff,
+  surface-dim: #d9d9e3,
+  surface-bright: #faf8ff,
+  surface-container-lowest: #ffffff,
+  surface-container-low: #f3f3fd,
+  surface-container: #ededf7,
+  surface-container-high: #e8e7f2,
+  surface-container-highest: #e2e1ec,
+  shadow: #000000,
+  scrim: #000000,
+);
+
+$dark: (
+  primary: #b5c4ff,
+  on-primary: #00287c,
+  primary-container: #2f5bd3,
+  on-primary-container: #dbe1ff,
+  secondary: #b7c5f9,
+  on-secondary: #202e59,
+  secondary-container: #3a4774,
+  on-secondary-container: #a9b6ea,
+  tertiary: #ffb692,
+  on-tertiary: #562000,
+  tertiary-container: #a94600,
+  on-tertiary-container: #ffdbcb,
+  error: #ffb4ab,
+  on-error: #690005,
+  error-container: #93000a,
+  on-error-container: #ffdad6,
+  surface: #11131a,
+  on-surface: #e2e1ec,
+  surface-variant: #434654,
+  on-surface-variant: #c4c5d6,
+  outline: #8e909f,
+  outline-variant: #434654,
+  inverse-surface: #e2e1ec,
+  inverse-on-surface: #2f3038,
+  inverse-primary: #2755cd,
+  surface-dim: #11131a,
+  surface-bright: #373941,
+  surface-container-lowest: #0c0e15,
+  surface-container-low: #1a1b23,
+  surface-container: #1e1f27,
+  surface-container-high: #282a31,
+  surface-container-highest: #33343c,
+  shadow: #000000,
+  scrim: #000000,
+);
+
+// Custom colours: what was added (and a toast that went well), and a warning.
+$light-custom: (
+  success: #006c4c,
+  on-success: #ffffff,
+  success-container: #89f8c6,
+  on-success-container: #002114,
+  warning-container: #ffdbc8,
+  on-warning-container: #321300,
+);
+
+$dark-custom: (
+  success: #6cdbab,
+  on-success: #003826,
+  success-container: #005138,
+  on-success-container: #89f8c6,
+  warning-container: #743400,
+  on-warning-container: #ffdbc8,
+);
+
+@mixin scheme($roles, $custom) {
+  @each $name, $value in $roles {
+    --md-sys-color-#{$name}: #{$value};
+  }
+  @each $name, $value in $custom {
+    --md-custom-color-#{$name}: #{$value};
+  }
+}
+
+$typeface: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+
+:root {
+  @include scheme($light, $light-custom);
+  color-scheme: light dark;
+  --md-ref-typeface-brand: #{$typeface};
+  --md-ref-typeface-plain: #{$typeface};
+
+  // Fields 40 px high: 24 px of text and 8 px above and below it.
+  --md-outlined-text-field-top-space: 8px;
+  --md-outlined-text-field-bottom-space: 8px;
+  --md-outlined-field-top-space: 8px;
+  --md-outlined-field-bottom-space: 8px;
+  --md-outlined-text-field-input-text-size: 0.9375rem;
+  --md-outlined-select-text-field-input-text-size: 0.9375rem;
+  --md-menu-item-one-line-container-height: 44px;
+  --md-menu-item-label-text-size: 0.9375rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    @include scheme($dark, $dark-custom);
+  }
+}

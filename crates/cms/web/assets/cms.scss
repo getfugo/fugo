@@ -1,41 +1,64 @@
-// The CMS editor's styles. Colours are custom properties (they change with the colour scheme at
-// run time); sizes and fonts are Sass variables.
+// The CMS editor's styles, in Material Design 3: the theme (colour roles, typefaces, the sizes of
+// the components) is _theme.scss; this lays out the editor and draws what @material/web has no
+// component for (the bar at the top, the sidebar's tree, tables, the rich text editor, the toast)
+// with the same roles. Colours are custom properties (they change with the colour scheme at run
+// time); sizes and fonts are Sass variables.
+
+@use "theme";
 
 $mono: ui-monospace, SFMono-Regular, Menlo, monospace;
-$radius: 6px;
-$radius-large: 8px;
-$header-height: 3rem;
-$sidebar-width: 15rem;
+$header-height: 4rem;
+$sidebar-width: 17rem;
 $narrow: 720px;
+// Material's shapes: fields and small parts, cards, dialogs and sheets.
+$corner-small: 4px;
+$corner-medium: 12px;
+$corner-large: 16px;
 
-@mixin colours($bg, $panel, $text, $muted, $line, $accent, $accent-text, $danger, $ok, $warn-bg, $add, $del) {
-  --bg: #{$bg};
-  --panel: #{$panel};
-  --text: #{$text};
-  --muted: #{$muted};
-  --line: #{$line};
-  --accent: #{$accent};
-  --accent-text: #{$accent-text};
-  --danger: #{$danger};
-  --ok: #{$ok};
-  --warn-bg: #{$warn-bg};
-  --add: #{$add};
-  --del: #{$del};
+/** The colour role `name` of the scheme (`on-surface`, `primary`, …). */
+@function c($name) {
+  @return var(--md-sys-color-#{$name});
 }
 
-:root {
-  @include colours(#ffffff, #f6f7f9, #1d2025, #646b75, #dde1e6, #2f5bd3, #ffffff, #b42318, #1e7a3c, #fff4e0, #e6f6ea, #fde8e6);
-  color-scheme: light dark;
+/** A custom colour of the theme (`success-container`, …). */
+@function custom($name) {
+  @return var(--md-custom-color-#{$name});
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    @include colours(#15171b, #1d2026, #e6e8eb, #9aa1ab, #2e333b, #7a9cff, #0d1220, #ff8a80, #7bd88f, #3a2e14, #183a22, #43201d);
-  }
+/** A state layer: `$colour` at the opacity Material gives hovering. */
+@function hover($colour) {
+  @return color-mix(in srgb, #{$colour} 8%, transparent);
 }
 
 @mixin mono($size: 13px) {
   font: #{$size}/1.5 $mono;
+}
+
+// A plain input, drawn as Material's outlined text field (for those that list values to suggest,
+// which the Material field cannot).
+@mixin outlined-field {
+  font: inherit;
+  font-size: 0.9375rem;
+  line-height: 24px;
+  color: c(on-surface);
+  background: transparent;
+  border: 1px solid c(outline);
+  border-radius: $corner-small;
+  padding: 7px 15px;
+
+  &:hover {
+    border-color: c(on-surface);
+  }
+
+  &:focus {
+    outline: none;
+    border-color: c(primary);
+    box-shadow: inset 0 0 0 1px c(primary);
+  }
+
+  &::placeholder {
+    color: c(on-surface-variant);
+  }
 }
 
 * {
@@ -44,13 +67,14 @@ $narrow: 720px;
 
 body {
   margin: 0;
-  background: var(--bg);
-  color: var(--text);
-  font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+  background: c(surface);
+  color: c(on-surface);
+  font: 14px/20px theme.$typeface;
+  letter-spacing: 0.0156rem;
 }
 
 a {
-  color: var(--accent);
+  color: c(primary);
 }
 
 code {
@@ -59,46 +83,61 @@ code {
 
 .loading {
   padding: 2rem;
-  color: var(--muted);
+  color: c(on-surface-variant);
 }
 
 .muted {
-  color: var(--muted);
+  color: c(on-surface-variant);
 }
 
 .warn {
-  background: var(--warn-bg);
-  padding: 0.6rem 0.8rem;
-  border-radius: $radius;
+  background: custom(warning-container);
+  color: custom(on-warning-container);
+  padding: 12px 16px;
+  border-radius: $corner-medium;
 }
 
 .spacer {
   flex: 1;
 }
 
+md-linear-progress {
+  width: 100%;
+}
+
 // ── Layout ──
 
+// Material's small top app bar: the site's name, then its actions.
 header {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  padding: 0.6rem 1rem;
-  border-bottom: 1px solid var(--line);
-  background: var(--panel);
+  gap: 4px;
+  height: $header-height;
+  padding: 0 12px 0 20px;
+  background: c(surface-container);
   position: sticky;
   top: 0;
   z-index: 2;
 
   .brand {
-    font-weight: 700;
-    color: var(--text);
+    font-size: 1.375rem;
+    line-height: 28px;
+    color: c(on-surface);
     text-decoration: none;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
-  .user,
+  .user {
+    color: c(on-surface-variant);
+    padding: 0 8px;
+  }
+
   .licences {
-    color: var(--muted);
-    font-size: 13px;
+    color: c(on-surface-variant);
+    font-size: 12px;
+    padding: 0 8px;
   }
 }
 
@@ -108,20 +147,20 @@ header {
   min-height: calc(100vh - #{$header-height});
 }
 
+// Material's navigation drawer: the sections, and the tree of their folders.
 .sidebar {
-  border-right: 1px solid var(--line);
-  padding: 0.5rem 0;
+  background: c(surface-container-low);
+  padding: 12px;
   overflow-y: auto;
   max-height: calc(100vh - #{$header-height});
   position: sticky;
   top: $header-height;
 
   h2 {
-    font-size: 12px;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: var(--muted);
-    margin: 0.5rem 1rem;
+    font-size: 14px;
+    font-weight: 500;
+    color: c(on-surface-variant);
+    margin: 8px 16px 12px;
   }
 
   ul {
@@ -135,11 +174,13 @@ header {
   .node {
     display: flex;
     align-items: center;
-    padding: 0 1rem 0 calc(0.25rem + var(--depth, 0) * 0.85rem);
+    min-height: 40px;
+    padding: 0 4px 0 calc(4px + var(--depth, 0) * 16px);
+    border-radius: 20px;
 
-    &:hover,
     &.active {
-      background: var(--line);
+      background: c(secondary-container);
+      color: c(on-secondary-container);
     }
   }
 
@@ -148,26 +189,20 @@ header {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 1.25rem;
-    height: 1.25rem;
+    width: 28px;
+    height: 28px;
     padding: 0;
     border: 0;
-    border-radius: $radius;
+    border-radius: 50%;
     background: none;
-    color: var(--muted);
+    color: c(on-surface-variant);
 
-    svg {
-      width: 0.85rem;
-      height: 0.85rem;
-      fill: none;
-      stroke: currentColor;
-      stroke-width: 1.6;
-      stroke-linecap: round;
-      stroke-linejoin: round;
-      transition: transform 0.1s;
+    md-icon {
+      --md-icon-size: 20px;
+      transition: transform 0.15s;
     }
 
-    &[aria-expanded="true"] svg {
+    &[aria-expanded="true"] md-icon {
       transform: rotate(90deg);
     }
   }
@@ -176,19 +211,30 @@ header {
     cursor: pointer;
 
     &:hover {
-      color: var(--text);
+      background: hover(c(on-surface));
+      color: c(on-surface);
+    }
+
+    &:focus-visible {
+      outline: 3px solid c(secondary);
     }
   }
 
   a {
+    position: relative;
     flex: 1;
     min-width: 0;
     display: flex;
+    align-items: center;
     justify-content: space-between;
-    gap: 0.5rem;
-    padding: 0.25rem 0 0.25rem 0.15rem;
-    color: var(--text);
+    gap: 8px;
+    min-height: 40px;
+    padding: 0 12px 0 4px;
+    border-radius: 20px;
+    color: inherit;
+    font-weight: 500;
     text-decoration: none;
+    outline: none;
   }
 
   .name {
@@ -198,355 +244,492 @@ header {
   }
 
   .count {
-    color: var(--muted);
+    color: c(on-surface-variant);
     font-size: 12px;
+  }
+
+  .active .count {
+    color: inherit;
   }
 }
 
 main {
-  padding: 1rem 1.5rem 5rem;
+  padding: 24px 32px 5rem;
   min-width: 0;
 }
 
 h1 {
-  font-size: 1.5rem;
-  margin: 0.2rem 0 0.8rem;
+  font-size: 1.75rem;
+  line-height: 36px;
+  font-weight: 400;
+  margin: 4px 0 16px;
 }
 
 h2 {
-  font-size: 1.1rem;
-  margin: 1.5rem 0 0.5rem;
+  font-size: 1rem;
+  line-height: 24px;
+  font-weight: 500;
+  margin: 28px 0 8px;
 }
 
+// A title and the actions beside it.
 .title-row {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 8px 12px;
   flex-wrap: wrap;
+  margin: 4px 0 16px;
+
+  > h1,
+  > h2 {
+    margin: 0 4px 0 0;
+  }
+
+  &:has(> h2) {
+    margin: 28px 0 12px;
+  }
 }
 
 .crumbs {
-  color: var(--muted);
-  font-size: 13px;
+  color: c(on-surface-variant);
+  margin-bottom: 4px;
+
+  a {
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
 }
 
 // ── Lists of pages and drafts ──
 
+// Material's outlined cards.
 .cards {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr));
-  gap: 0.6rem;
+  grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr));
+  gap: 12px;
 }
 
 .card {
+  position: relative;
   display: flex;
   flex-direction: column;
-  padding: 0.7rem 0.9rem;
-  border: 1px solid var(--line);
-  border-radius: $radius-large;
+  gap: 4px;
+  padding: 16px;
+  border: 1px solid c(outline-variant);
+  border-radius: $corner-medium;
   text-decoration: none;
-  color: var(--text);
-  background: var(--panel);
+  color: c(on-surface);
+  background: c(surface);
+  outline: none;
+
+  strong {
+    font-size: 1rem;
+    line-height: 24px;
+    font-weight: 500;
+  }
 }
 
 .filter {
   width: 100%;
-  max-width: 28rem;
-  margin: 0.3rem 0 0.8rem;
-}
-
-// Moving a page: the folder it goes to, Move.
-.move {
-  display: inline-flex;
-  gap: 0.4rem;
+  max-width: 30rem;
+  margin: 8px 0 16px;
 }
 
 table.entries {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
+  border: 1px solid c(outline-variant);
+  border-radius: $corner-medium;
+  overflow: hidden;
 
   td,
   th {
     text-align: left;
-    padding: 0.35rem 0.5rem;
-    border-bottom: 1px solid var(--line);
+    padding: 12px 16px;
+    border-bottom: 1px solid c(outline-variant);
     vertical-align: top;
   }
 
-  // A folder: its icon and title, then the pages below it.
-  tr.folder > td:first-child > a {
-    font-weight: 600;
+  th {
+    font-size: 12px;
+    font-weight: 500;
+    color: c(on-surface-variant);
+    padding-block: 10px;
   }
 
-  .folder-icon {
-    width: 1em;
-    height: 1em;
-    margin-right: 0.35rem;
-    vertical-align: -0.125em;
-    fill: none;
-    stroke: currentColor;
-    stroke-linejoin: round;
+  tr:last-child td {
+    border-bottom: none;
+  }
+
+  tbody tr:hover {
+    background: c(surface-container-low);
+  }
+
+  td:first-child > a {
+    color: c(on-surface);
+    font-weight: 500;
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
+  // A folder: its icon and title, then the pages below it.
+  tr.folder md-icon {
+    --md-icon-size: 20px;
+    color: c(on-surface-variant);
+    vertical-align: -5px;
+    margin-right: 12px;
+  }
+
+  td:first-child > .muted {
+    margin-left: 8px;
   }
 
   // Where a match of the filter is, below the folder shown.
-  .where {
+  td:first-child > .where {
     display: block;
+    margin-left: 0;
   }
 }
 
+// A label beside a title or in a list: a language, a draft, a change's kind.
 .badge {
   display: inline-block;
   font-size: 11px;
-  padding: 0 0.4rem;
-  border-radius: 999px;
-  border: 1px solid var(--line);
-  margin-right: 0.25rem;
-  color: var(--muted);
+  line-height: 16px;
+  font-weight: 500;
+  padding: 1px 7px;
+  border-radius: 8px;
+  border: 1px solid c(outline-variant);
+  margin-right: 4px;
+  color: c(on-surface-variant);
   text-decoration: none;
+  white-space: nowrap;
 
-  &.draft {
-    border-style: dashed;
+  &.lang {
+    background: c(secondary-container);
+    color: c(on-secondary-container);
+    border-color: transparent;
   }
 
-  @each $name, $colour in (pending: var(--accent), added: var(--ok), removed: var(--danger)) {
-    &.#{$name} {
-      border-color: $colour;
-      color: $colour;
-    }
+  &.lang.draft {
+    background: none;
+    border: 1px dashed c(outline);
+  }
+
+  &.pending {
+    background: color-mix(in srgb, #{c(primary)} 12%, transparent);
+    color: c(primary);
+    border-color: transparent;
+  }
+
+  &.added {
+    background: custom(success-container);
+    color: custom(on-success-container);
+    border-color: transparent;
+  }
+
+  &.removed {
+    background: c(error-container);
+    color: c(on-error-container);
+    border-color: transparent;
   }
 }
 
 // ── Controls ──
 
-button,
-.button {
-  font: inherit;
-  padding: 0.35rem 0.8rem;
-  border: 1px solid var(--line);
-  border-radius: $radius;
-  background: var(--panel);
-  color: var(--text);
-  cursor: pointer;
-  text-decoration: none;
-  display: inline-block;
-
-  &:hover {
-    border-color: var(--muted);
-  }
+// The Material buttons of a change that is hard to undo: in the error colour.
+md-outlined-button.danger {
+  --md-outlined-button-label-text-color: #{c(error)};
+  --md-outlined-button-hover-label-text-color: #{c(error)};
+  --md-outlined-button-focus-label-text-color: #{c(error)};
+  --md-outlined-button-pressed-label-text-color: #{c(error)};
+  --md-outlined-button-hover-state-layer-color: #{c(error)};
+  --md-outlined-button-pressed-state-layer-color: #{c(error)};
+  --md-outlined-button-outline-color: #{c(error)};
 }
 
-button {
-  &.primary {
-    background: var(--accent);
-    color: var(--accent-text);
-    border-color: var(--accent);
-  }
-
-  &.danger {
-    color: var(--danger);
-  }
-
-  &.subtle {
-    border-color: transparent;
-    background: none;
-  }
-
-  &.small {
-    padding: 0.1rem 0.5rem;
-    font-size: 13px;
-  }
-
-  &.icon {
-    border: none;
-    background: none;
-    padding: 0 0.3rem;
-    color: var(--muted);
-    font-size: 15px;
-    line-height: 1;
-  }
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: default;
-  }
+md-text-button.danger {
+  --md-text-button-label-text-color: #{c(error)};
+  --md-text-button-hover-label-text-color: #{c(error)};
+  --md-text-button-focus-label-text-color: #{c(error)};
+  --md-text-button-pressed-label-text-color: #{c(error)};
+  --md-text-button-hover-state-layer-color: #{c(error)};
+  --md-text-button-pressed-state-layer-color: #{c(error)};
+  --md-text-button-icon-color: #{c(error)};
+  --md-text-button-hover-icon-color: #{c(error)};
+  --md-text-button-focus-icon-color: #{c(error)};
+  --md-text-button-pressed-icon-color: #{c(error)};
 }
 
-input,
-select,
-textarea {
-  font: inherit;
-  color: var(--text);
-  background: var(--bg);
-  border: 1px solid var(--line);
-  border-radius: $radius;
-  padding: 0.3rem 0.5rem;
-
-  &:focus {
-    outline: 2px solid var(--accent);
-    outline-offset: -1px;
-  }
+// A small × that removes a field, a row, a file.
+md-icon-button.remove {
+  --md-icon-button-icon-size: 18px;
+  --md-icon-button-state-layer-width: 32px;
+  --md-icon-button-state-layer-height: 32px;
+  width: 32px;
+  height: 32px;
+  flex: none;
 }
 
-input.invalid {
-  border-color: var(--danger);
+input.text {
+  @include outlined-field;
 }
 
 textarea {
+  @include outlined-field;
   width: 100%;
   resize: vertical;
+  border-radius: $corner-medium;
 
   &.raw,
   &.body {
     @include mono;
+    padding: 12px 16px;
   }
+}
+
+// Rich text or Markdown: Material's segmented button, its chosen segment marked.
+.modes {
+  display: inline-flex;
+
+  button {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    height: 32px;
+    padding: 0 12px;
+    font: inherit;
+    font-weight: 500;
+    color: c(on-surface);
+    background: none;
+    border: 1px solid c(outline);
+    cursor: pointer;
+
+    &:first-child {
+      border-radius: 16px 0 0 16px;
+    }
+
+    &:last-child {
+      border-radius: 0 16px 16px 0;
+      margin-left: -1px;
+    }
+
+    &:hover {
+      background: hover(c(on-surface));
+    }
+
+    &.active {
+      background: c(secondary-container);
+      color: c(on-secondary-container);
+    }
+
+    &:focus-visible {
+      outline: 3px solid c(secondary);
+      outline-offset: 2px;
+      position: relative;
+    }
+
+    md-icon {
+      --md-icon-size: 18px;
+    }
+  }
+}
+
+// A button and the menu it opens: the keys a form or a table may add.
+.add-field {
+  grid-column: 1 / -1;
+  position: relative;
 }
 
 // ── The page editor ──
 
 .tabs {
   display: flex;
-  gap: 0.3rem;
+  align-items: center;
   flex-wrap: wrap;
-  border-bottom: 1px solid var(--line);
-  margin-bottom: 1rem;
-}
+  gap: 8px;
+  border-bottom: 1px solid c(surface-variant);
+  margin-bottom: 16px;
 
-.tab {
-  border: 1px solid transparent;
-  border-bottom: none;
-  border-radius: $radius $radius 0 0;
-  background: none;
-
-  &.active {
-    border-color: var(--line);
-    background: var(--bg);
-    position: relative;
-    top: 1px;
+  md-tabs {
+    --md-divider-thickness: 0;
   }
 
-  &.add {
-    color: var(--muted);
+  md-primary-tab {
+    flex: none;
+    padding: 0 8px;
   }
 }
 
 .doc-head {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
-  margin: 0.4rem 0;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  margin: 8px 0;
+  min-height: 40px;
+
+  > code {
+    color: c(on-surface-variant);
+  }
+
+  > strong {
+    font-size: 1rem;
+    font-weight: 500;
+  }
 }
 
 .toggle {
-  font-size: 13px;
-  color: var(--muted);
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  font-weight: 500;
+  color: c(on-surface-variant);
+  cursor: pointer;
 }
 
 .fields {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
-  gap: 0.6rem 1.2rem;
-  margin-bottom: 1rem;
+  gap: 16px 24px;
+  margin: 16px 0 24px;
 }
 
 .field {
   display: flex;
   flex-direction: column;
-  gap: 0.2rem;
+  gap: 4px;
   min-width: 0;
 
   &.wide {
     grid-column: 1 / -1;
   }
 
-  > label {
-    font-size: 13px;
-    font-weight: 600;
-    display: flex;
-    justify-content: space-between;
+  > md-outlined-text-field,
+  > md-outlined-select,
+  > input.text {
+    width: 100%;
   }
 
-  input[type="text"],
-  input[type="number"],
-  select {
-    width: 100%;
+  > small {
+    font-size: 12px;
+    line-height: 16px;
+    padding: 0 16px;
+  }
+}
+
+// A field's label, and the button that removes the field.
+.field-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 32px;
+
+  label {
+    font-weight: 500;
+    color: c(on-surface-variant);
   }
 }
 
 .row {
   display: flex;
-  gap: 0.4rem;
+  gap: 8px;
   align-items: center;
 
-  input {
+  > md-outlined-text-field,
+  > md-outlined-select,
+  > input.text {
     flex: 1;
     min-width: 0;
   }
 }
 
-// A closed table: its summary, and its fields when opened.
+// A table: Material's outlined card, or closed with a summary of its values.
+details.group,
+fieldset.group {
+  border: 1px solid c(outline-variant);
+  border-radius: $corner-medium;
+  margin: 0;
+}
+
 details.group {
-  border: 1px solid var(--line);
-  border-radius: $radius-large;
-  padding: 0.4rem 0.8rem;
+  padding: 8px 16px;
 
   > summary {
     cursor: pointer;
-    font-size: 13px;
-    color: var(--muted);
+    min-height: 32px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: c(on-surface-variant);
+
+    md-icon-button {
+      margin-left: auto;
+    }
   }
 
   &[open] > summary {
-    margin-bottom: 0.5rem;
+    margin-bottom: 8px;
   }
+}
+
+fieldset.group {
+  padding: 8px 16px 16px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  gap: 12px 16px;
 }
 
 .group-fields {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
-  gap: 0.5rem 1rem;
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  gap: 12px 16px;
+  padding-bottom: 8px;
 }
 
 .required {
-  color: var(--danger);
-  margin-left: 0.15rem;
+  color: c(error);
+  margin-left: 2px;
 }
 
-.fields :invalid {
-  border-color: var(--danger);
-}
-
-fieldset.group {
-  border: 1px solid var(--line);
-  border-radius: $radius-large;
-  padding: 0.5rem 0.8rem 0.8rem;
-  margin: 0;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
-  gap: 0.5rem 1rem;
+input.text:invalid {
+  border-color: c(error);
 }
 
 .objects {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 8px;
   align-items: flex-start;
 
   > fieldset,
   > details {
     width: 100%;
-    box-sizing: border-box;
   }
 }
 
 legend {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 4px;
   font-size: 12px;
-  color: var(--muted);
+  font-weight: 500;
+  color: c(on-surface-variant);
 }
 
 .list {
   display: flex;
   flex-direction: column;
-  gap: 0.3rem;
+  gap: 8px;
   align-items: flex-start;
 
   .row {
@@ -558,64 +741,56 @@ legend {
 .choices {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.3rem 1rem;
+  gap: 4px 20px;
 
   label {
     display: inline-flex;
     align-items: center;
-    gap: 0.3rem;
+    gap: 8px;
+    min-height: 40px;
+    cursor: pointer;
   }
 }
 
+// A taxonomy's terms: input chips, and an input for the next term, in one outlined box.
 .terms {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.3rem;
+  gap: 8px;
   align-items: center;
-  border: 1px solid var(--line);
-  border-radius: $radius;
-  padding: 0.25rem;
+  min-height: 40px;
+  border: 1px solid c(outline);
+  border-radius: $corner-small;
+  padding: 3px 4px;
+
+  &:hover {
+    border-color: c(on-surface);
+  }
+
+  &:focus-within {
+    border-color: c(primary);
+    box-shadow: inset 0 0 0 1px c(primary);
+  }
+
+  // The chips flow with the input after them.
+  md-chip-set {
+    display: contents;
+  }
 
   input {
-    border: none;
     flex: 1;
-    min-width: 8rem;
-  }
-}
+    min-width: 6rem;
+    font: inherit;
+    font-size: 0.9375rem;
+    line-height: 24px;
+    color: c(on-surface);
+    border: none;
+    outline: none;
+    background: none;
+    padding: 4px 11px;
 
-.chip {
-  background: var(--panel);
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  padding: 0 0.2rem 0 0.6rem;
-  font-size: 13px;
-}
-
-.add-field {
-  grid-column: 1 / -1;
-}
-
-// Rich text or Markdown: two buttons as one control.
-.modes {
-  display: inline-flex;
-
-  button {
-    border-radius: 0;
-
-    &:first-child {
-      border-radius: $radius 0 0 $radius;
-    }
-
-    &:last-child {
-      border-radius: 0 $radius $radius 0;
-      margin-left: -1px;
-    }
-
-    &.active {
-      background: var(--bg);
-      border-color: var(--accent);
-      color: var(--accent);
-      position: relative;
+    &::placeholder {
+      color: c(on-surface-variant);
     }
   }
 }
@@ -625,13 +800,13 @@ legend {
 .rich {
   display: flex;
   flex-direction: column;
-  border: 1px solid var(--line);
-  border-radius: $radius;
-  background: var(--bg);
+  border: 1px solid c(outline);
+  border-radius: $corner-medium;
+  background: c(surface);
 
   &:focus-within {
-    outline: 2px solid var(--accent);
-    outline-offset: -1px;
+    border-color: c(primary);
+    box-shadow: inset 0 0 0 1px c(primary);
   }
 }
 
@@ -639,21 +814,30 @@ legend {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.25rem;
-  padding: 0.35rem;
-  border-bottom: 1px solid var(--line);
-  background: var(--panel);
-  border-radius: $radius $radius 0 0;
+  gap: 2px;
+  padding: 4px 8px;
+  border-bottom: 1px solid c(outline-variant);
+  background: c(surface-container-low);
+  border-radius: $corner-medium $corner-medium 0 0;
 
-  select {
-    padding: 0.1rem 0.3rem;
-    font-size: 13px;
+  md-outlined-select {
+    --md-outlined-field-top-space: 4px;
+    --md-outlined-field-bottom-space: 4px;
+    min-width: 11rem;
+    margin-right: 8px;
   }
 
-  button[aria-pressed="true"],
-  button[aria-expanded="true"] {
-    border-color: var(--accent);
-    color: var(--accent);
+  md-icon-button {
+    --md-icon-button-icon-size: 20px;
+    border-radius: 50%;
+
+    &[selected] {
+      background: c(secondary-container);
+      --md-icon-button-selected-icon-color: #{c(on-secondary-container)};
+      --md-icon-button-selected-hover-icon-color: #{c(on-secondary-container)};
+      --md-icon-button-selected-focus-icon-color: #{c(on-secondary-container)};
+      --md-icon-button-selected-pressed-icon-color: #{c(on-secondary-container)};
+    }
   }
 }
 
@@ -661,13 +845,14 @@ legend {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.4rem;
-  padding: 0.4rem;
-  border-bottom: 1px solid var(--line);
+  gap: 8px;
+  padding: 8px;
+  border-bottom: 1px solid c(outline-variant);
 
-  input {
-    font-size: 13px;
-    padding: 0.15rem 0.4rem;
+  > input.text,
+  > md-outlined-text-field {
+    flex: 1;
+    min-width: 12rem;
   }
 }
 
@@ -676,7 +861,8 @@ legend {
   flex: 1;
   min-height: 22rem;
   overflow: auto;
-  padding: 0.6rem 1rem;
+  padding: 12px 20px;
+  font-size: 15px;
   line-height: 1.6;
   outline: none;
   overflow-wrap: break-word;
@@ -693,6 +879,7 @@ legend {
   h6 {
     margin: 1.2rem 0 0.5rem;
     line-height: 1.3;
+    font-weight: 500;
   }
 
   h1 {
@@ -723,23 +910,23 @@ legend {
   }
 
   blockquote {
-    border-left: 3px solid var(--line);
+    border-left: 3px solid c(outline-variant);
     padding-left: 0.8rem;
     margin-left: 0;
-    color: var(--muted);
+    color: c(on-surface-variant);
   }
 
   pre {
     @include mono;
-    background: var(--panel);
-    border-radius: $radius;
+    background: c(surface-container);
+    border-radius: $corner-small;
     padding: 0.5rem 0.7rem;
     overflow-x: auto;
     white-space: pre-wrap;
   }
 
   :not(pre) > code {
-    background: var(--panel);
+    background: c(surface-container);
     border-radius: 3px;
     padding: 0.05rem 0.25rem;
   }
@@ -755,34 +942,35 @@ legend {
 
   th,
   td {
-    border: 1px solid var(--line);
+    border: 1px solid c(outline-variant);
     padding: 0.2rem 0.5rem;
   }
 
   hr {
     border: none;
-    border-top: 1px solid var(--line);
+    border-top: 1px solid c(outline-variant);
     margin: 1rem 0;
   }
 
   li > input[type="checkbox"] {
     margin: 0 0.3rem 0 0;
+    accent-color: c(primary);
   }
 }
 
 // Source the editor shows as such: raw HTML, a shortcode, a link definition (edited as text).
 .md-raw {
   margin: 0 0 0.8rem;
-  border: 1px dashed var(--line);
-  border-radius: $radius;
-  background: var(--panel);
+  border: 1px dashed c(outline);
+  border-radius: $corner-small;
+  background: c(surface-container-low);
 
   &::before {
     content: attr(data-md-raw);
     display: block;
     padding: 0.15rem 0.6rem 0;
     font-size: 11px;
-    color: var(--muted);
+    color: c(on-surface-variant);
   }
 
   [data-md-source] {
@@ -795,8 +983,8 @@ legend {
 
 .md-tag {
   @include mono(12px);
-  color: var(--muted);
-  background: var(--panel);
+  color: c(on-surface-variant);
+  background: c(surface-container);
   border-radius: 3px;
   padding: 0 0.2rem;
 }
@@ -805,7 +993,7 @@ legend {
 .body-editor.previewing {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 0.6rem;
+  gap: 12px;
 
   > .doc-head {
     grid-column: 1 / -1;
@@ -829,123 +1017,155 @@ legend {
 iframe.preview {
   width: 100%;
   height: 32rem;
-  border: 1px solid var(--line);
-  border-radius: $radius;
+  border: 1px solid c(outline-variant);
+  border-radius: $corner-medium;
   background: #fff;
 }
 
 .files {
-  margin-top: 1.5rem;
+  margin-top: 24px;
 }
 
 .file-list {
   list-style: none;
   padding: 0;
   margin: 0;
-  columns: 2 18rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
+  gap: 0 24px;
 
   li {
-    padding: 0.1rem 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 36px;
 
     &.deleted code {
       text-decoration: line-through;
-      color: var(--muted);
+      color: c(on-surface-variant);
     }
 
     &.new code {
-      color: var(--ok);
+      color: custom(success);
     }
   }
 }
 
+// The page's actions, along the bottom of the window while it scrolls: Material's bottom app bar.
 .actions {
   display: flex;
-  gap: 0.6rem;
+  align-items: center;
+  gap: 8px 12px;
   flex-wrap: wrap;
-  margin-top: 1.5rem;
+  margin-top: 24px;
 
   &.sticky {
     position: sticky;
     bottom: 0;
-    background: var(--bg);
-    padding: 0.8rem 0;
-    border-top: 1px solid var(--line);
+    z-index: 1;
+    margin: 32px -32px 0;
+    padding: 12px 32px;
+    background: c(surface-container);
+  }
+
+  .move {
+    min-width: 13rem;
   }
 }
 
 // ── Drafts ──
 
 details.change {
-  border: 1px solid var(--line);
-  border-radius: $radius;
-  margin: 0.4rem 0;
-  padding: 0.3rem 0.6rem;
+  border: 1px solid c(outline-variant);
+  border-radius: $corner-medium;
+  margin: 8px 0;
+  padding: 8px 16px;
+
+  > summary {
+    cursor: pointer;
+  }
 }
 
 pre.diff {
   overflow-x: auto;
-  margin: 0.4rem 0;
+  margin: 8px 0;
   @include mono(12px);
 
   .add {
-    background: var(--add);
+    background: color-mix(in srgb, #{custom(success-container)} 50%, transparent);
     display: block;
   }
 
   .del {
-    background: var(--del);
+    background: color-mix(in srgb, #{c(error-container)} 60%, transparent);
     display: block;
   }
 
   .hunk {
-    color: var(--muted);
+    color: c(on-surface-variant);
+  }
+}
+
+// ── Dialogs ──
+
+md-dialog {
+  max-width: min(36rem, calc(100vw - 32px));
+
+  md-outlined-text-field {
+    width: 100%;
+    min-width: min(24rem, calc(100vw - 96px));
+  }
+
+  p {
+    margin: 0 0 8px;
+  }
+
+  // A change that is hard to undo: its button in the error colour.
+  &.danger .yes {
+    --md-filled-button-container-color: #{c(error)};
+    --md-filled-button-label-text-color: #{c(on-error)};
+    --md-filled-button-hover-label-text-color: #{c(on-error)};
+    --md-filled-button-focus-label-text-color: #{c(on-error)};
+    --md-filled-button-pressed-label-text-color: #{c(on-error)};
   }
 }
 
 // ── Signing in ──
 
-// The page before the editor starts: a card in the middle of the window, raised from the page
-// (lighter than it in both schemes).
+// The page before the editor starts: a card in the middle of the window.
 .gate {
-  --page: var(--panel);
-  --card: var(--bg);
   min-height: 100vh;
   min-height: 100dvh;
   display: grid;
   place-items: center;
-  padding: 1.5rem 1rem;
-  background: var(--page);
-
-  @media (prefers-color-scheme: dark) {
-    --page: var(--bg);
-    --card: var(--panel);
-  }
+  padding: 24px 16px;
+  background: c(surface-container);
 }
 
 .gate-card {
   width: 100%;
-  max-width: 22rem;
-  padding: 2rem 1.75rem 1.5rem;
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  background: var(--card);
+  max-width: 24rem;
+  padding: 40px 32px 28px;
+  border-radius: 28px;
+  background: c(surface-container-lowest);
   box-shadow:
-    0 1px 2px rgb(0 0 0 / 0.04),
-    0 12px 32px rgb(0 0 0 / 0.08);
+    0 1px 2px rgb(0 0 0 / 0.08),
+    0 2px 6px 2px rgb(0 0 0 / 0.05);
   text-align: center;
 
   h1 {
-    margin: 0.9rem 0 0.2rem;
-    font-size: 1.4rem;
+    margin: 16px 0 4px;
+    font-size: 1.5rem;
+    line-height: 32px;
     overflow-wrap: anywhere;
   }
 
   > p {
-    margin: 0 0 1.5rem;
+    margin: 0 0 24px;
   }
 
   .warn {
-    margin-top: 1rem;
+    margin-top: 16px;
     text-align: left;
   }
 }
@@ -954,80 +1174,90 @@ pre.diff {
 .monogram {
   display: inline-grid;
   place-items: center;
-  width: 3rem;
-  height: 3rem;
-  border-radius: 12px;
-  background: var(--accent);
-  color: var(--accent-text);
-  font-size: 1.5rem;
-  font-weight: 700;
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: $corner-large;
+  background: c(primary-container);
+  color: c(on-primary-container);
+  font-size: 1.75rem;
+  font-weight: 500;
   line-height: 1;
 }
 
-// A button for each way to sign in, as wide as the card.
+// A button for each way to sign in, as wide as the card: outlined and round, as the providers'
+// guidelines for sign-in buttons allow, with their marks.
 .sign-in {
   display: flex;
   flex-direction: column;
-  gap: 0.6rem;
+  gap: 12px;
 }
 
 .button.provider {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.65rem;
-  padding: 0.6rem 1rem;
-  background: var(--card);
+  gap: 12px;
+  height: 40px;
+  padding: 0 16px;
+  border: 1px solid c(outline);
+  border-radius: 20px;
+  background: c(surface-container-lowest);
+  color: c(on-surface);
   font-weight: 500;
-  transition:
-    background-color 0.15s,
-    border-color 0.15s;
+  text-decoration: none;
+  transition: background-color 0.15s;
 
   &:hover {
-    background: var(--page);
+    background: hover(c(on-surface));
   }
 
   &:focus-visible {
-    outline: 2px solid var(--accent);
+    outline: 3px solid c(secondary);
     outline-offset: 2px;
   }
 
   svg {
-    width: 1.15rem;
-    height: 1.15rem;
+    width: 18px;
+    height: 18px;
     flex: none;
   }
 }
 
 .gate-card .fine {
-  margin: 1.25rem 0 0;
-  font-size: 13px;
-  color: var(--muted);
+  margin: 20px 0 0;
+  font-size: 12px;
+  line-height: 16px;
+  color: c(on-surface-variant);
   text-wrap: balance;
 }
 
 // ── Messages ──
 
+// Material's snackbar, at the bottom of the window.
 .toast {
   position: fixed;
-  right: 1rem;
-  bottom: 1rem;
-  max-width: 32rem;
-  padding: 0.7rem 1rem;
-  border-radius: $radius-large;
-  background: var(--text);
-  color: var(--bg);
-  box-shadow: 0 4px 16px rgb(0 0 0 / 0.2);
+  left: 50%;
+  bottom: 16px;
+  transform: translateX(-50%);
+  width: max-content;
+  max-width: min(36rem, calc(100vw - 32px));
+  padding: 14px 16px;
+  border-radius: $corner-small;
+  background: c(inverse-surface);
+  color: c(inverse-on-surface);
+  box-shadow:
+    0 1px 3px rgb(0 0 0 / 0.3),
+    0 4px 8px 3px rgb(0 0 0 / 0.15);
   z-index: 5;
 
   &.error {
-    background: var(--danger);
-    color: #fff;
+    background: c(error-container);
+    color: c(on-error-container);
   }
 
   &.ok {
-    background: var(--ok);
-    color: #fff;
+    background: custom(success-container);
+    color: custom(on-success-container);
   }
 
   &.hidden {
@@ -1036,6 +1266,14 @@ pre.diff {
 }
 
 @media (max-width: $narrow) {
+  header {
+    padding-left: 16px;
+
+    .user {
+      display: none;
+    }
+  }
+
   .layout {
     grid-template-columns: 1fr;
   }
@@ -1044,11 +1282,14 @@ pre.diff {
   .sidebar {
     position: static;
     max-height: 45vh;
-    border-right: none;
-    border-bottom: 1px solid var(--line);
   }
 
   main {
-    padding: 1rem;
+    padding: 16px 16px 5rem;
+  }
+
+  .actions.sticky {
+    margin-inline: -16px;
+    padding-inline: 16px;
   }
 }

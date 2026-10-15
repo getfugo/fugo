@@ -7,6 +7,7 @@ import { askNewFolder, askNewPage, mayAddFolder, mayAddPage } from "./create";
 import { type Entry } from "./data";
 import { show, valueOf } from "./dom";
 import { allFolders, filledFolders, folderHref, folderTitle, ownFolder, parentDir, placeOf } from "./folders";
+import { icon } from "./icons";
 import { allEntries, draftOf, taxonomyOf } from "./state";
 import { holds, notFound } from "./views";
 
@@ -74,21 +75,24 @@ export function folderView(dir: string): void {
     <div class="title-row">
       <h1>${title}</h1>
       ${own?.isNew ? html`<span class="badge pending">new</span>` : nothing}
-      ${mayAddPage(dir) ? html`<button class="primary" @click=${() => askNewPage(dir)}>New page</button>` : nothing}
-      ${mayAddFolder(dir) ? html`<button @click=${() => askNewFolder(dir)}>${dir ? "New folder" : "New section"}</button>` : nothing}
-      ${own ? html`<a class="button" href="#/e/${encodeURIComponent(own.key)}">${dir ? "Edit folder page" : "Edit home page"}</a>` : nothing}
+      <span class="spacer"></span>
+      ${own ? html`<md-text-button href="#/e/${encodeURIComponent(own.key)}">${dir ? "Edit folder page" : "Edit home page"}</md-text-button>` : nothing}
+      ${mayAddFolder(dir) ? html`<md-outlined-button @click=${() => askNewFolder(dir)}>${icon("add", "icon")}${dir ? "New folder" : "New section"}</md-outlined-button>` : nothing}
+      ${mayAddPage(dir) ? html`<md-filled-button @click=${() => askNewPage(dir)}>${icon("add", "icon")}New page</md-filled-button>` : nothing}
     </div>
     ${own?.isNew ? html`<p class="muted">A new folder: its page is saved with the first page you save in it, or on its own.</p>` : nothing}
-    <input
+    <md-outlined-text-field
       type="search"
       class="filter"
+      aria-label="Filter"
       placeholder="Filter by title or path, in this folder and below"
       .value=${state.filter}
       @input=${(ev: Event) => {
         state.filter = valueOf(ev);
         folderView(dir);
       }}
-    />
+      >${icon("search", "leading-icon")}</md-outlined-text-field
+    >
     <table class="entries">
       <thead>
         <tr><th>Title</th><th>Languages</th><th></th></tr>
@@ -121,7 +125,7 @@ function folderRow(key: string, title: string, where: string, entries: Entry[]):
   return html`
     <tr class="folder">
       <td>
-        <a href=${folderHref(key)}><svg class="folder-icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M1.5 3.5h4.5l1.5 1.5h7v7.5h-13z" /></svg>${title}</a>
+        <a href=${folderHref(key)}>${icon("folder")}${title}</a>
         <span class="muted">${holds(key, pages, terms)}</span>
         ${where ? html`<small class="muted where">in ${where}</small>` : nothing}
       </td>
