@@ -13,12 +13,13 @@ The repository's tools, one binary: `cargo dev <command>` (the alias of `.cargo/
 | `licence-check [-v]` | the licences of the dependency graph against `deny.toml` | CI's Lint job |
 | `notices <triple> <file>` | `THIRD_PARTY_NOTICES.txt`: the licences of the crates linked into `fugo` for a target | CI's Build job |
 | `package <binary> <triple> <out-dir> [<notices>]` | the release archive (`.tar.gz`, `.zip` for Windows) and its `.sha256` | CI's Build job |
+| `install [<cargo install args>…]` | installs `fugo` from the checkout (`cargo install --path crates/cli --locked`) named as a release build: the version of the latest release tag reachable from `HEAD`, `HEAD`'s commit and its date | by hand (DEVELOPMENT.md, "CI and releases") |
 | `file-length` | fails when a file of code is longer than 500 lines (AGENTS.md) | CI's Lint job |
 | `bench <binary> <results.json> [--runs <n>] [--go <binary>]` | build time and peak memory of the docs site and generated sites, fugo's and the Go implementation's (DEVELOPMENT.md, "Benchmarks") | CI's Benchmark job |
 
 The module documentation has the details (`src/sites.rs`, `src/manifest.rs`, `src/structdiff.rs`,
-`src/selftest.rs`, `src/licence.rs`, `src/notices.rs`, `src/package.rs`, `src/file_length.rs`,
-`src/bench.rs`). Release versions are
+`src/selftest.rs`, `src/licence.rs`, `src/notices.rs`, `src/package.rs`, `src/install.rs`,
+`src/file_length.rs`, `src/bench.rs`). Release versions are
 `tools/dev/version.sh` (POSIX sh: `bump.yml` and `image.yml` run it without a Rust toolchain).
 
 ## How it is built
@@ -49,5 +50,5 @@ hold no difference, so none of the first implementation's fingerprints was kept.
 `cargo test -p ssg-dev`: the page and feed scans, the URL and path normalisation, txtar and the
 JSON text (`tests/it/extract.rs`); structdiff's self-test, `patches.json` against the Tera
 patch files, the changes files and the baselines (each written back as it was read), the sites
-(`tests/it/harness.rs`); the SPDX expressions, `version.sh` (in a scratch git repository) and
-the archives of `package` (`tests/it/release.rs`).
+(`tests/it/harness.rs`); the SPDX expressions, `version.sh` and the build `install` names (in a scratch git
+repository), and the archives of `package` (`tests/it/release.rs`).
