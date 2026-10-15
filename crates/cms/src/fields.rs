@@ -28,7 +28,8 @@ pub struct Field {
     pub multiple: bool,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub help: Option<String>,
-    /// The key's value on a new page, and when it is added to a page.
+    /// The key's value on a new page, and the one offered under its empty field on a page that
+    /// lacks it.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub default: Option<serde_json::Value>,
     /// The smallest and the largest number, and the step between numbers.

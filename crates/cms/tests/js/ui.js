@@ -159,7 +159,7 @@ export async function reply(value) {
   await until(() => !dialog.isConnected);
 }
 
-/** Chooses `label` in the menu of the add button in `scope` (Add a field, Add…). */
+/** Chooses `label` in the menu of the add button in `scope` (a folder page's Add a field). */
 export function pick(scope, label) {
   const item = [...scope.querySelectorAll(".add-field md-menu-item")].find((i) => text(i) === label);
   assert.ok(item, `no ${label} in the menu`);

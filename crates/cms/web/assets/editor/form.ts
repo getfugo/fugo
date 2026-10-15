@@ -1,6 +1,6 @@
 // The front matter form: a field per key, with the input its field (`hints.ts`) and its value
-// call for. The inputs for dates, terms and lists are in `inputs.ts`, images in `images.ts`,
-// tables in `groups.ts`.
+// call for, and the keys the page lacks, empty. The inputs for dates, terms and lists are in
+// `inputs.ts`, images in `images.ts`, tables in `groups.ts`.
 
 import { html, nothing, type TemplateResult } from "lit-html";
 import { live } from "lit-html/directives/live.js";
@@ -12,7 +12,7 @@ import { mapInput, objectsInput } from "./groups";
 import { hintOf, isEmpty, type Path, share, startOf } from "./hints";
 import { icon } from "./icons";
 import { imageInput } from "./images";
-import { addMenu, choicesInput, dateInput, listInput, optionsOf, termsInput, textInput, valuesList } from "./inputs";
+import { addMenu, choicesInput, dateInput, listInput, offer, optionsOf, termsInput, textInput, valuesList } from "./inputs";
 import { type MdCheckbox } from "./material";
 import { pageView } from "./pages";
 import { current, langName, site } from "./state";
@@ -35,7 +35,9 @@ export function fieldsForm(data: FrontMatter, readOnly: boolean): TemplateResult
     .filter(([key, h]) => h.unused && h.widget !== "hidden" && !key.includes("."))
     .map(([key, h]) => ({ key: h.name ?? key, kind: h.kind ?? "string", default: undefined as unknown }));
   const has = (key: string) => Object.keys(data).some((x) => same(x, key));
-  const absent = [...(section?.keys ?? []), ...configured].filter((k, i, all) => !has(k.key) && all.findIndex((x) => same(x.key, k.key)) === i);
+  const absent = [...(section?.keys ?? []), ...configured].filter(
+    (k, i, all) => !has(k.key) && hintOf(k.key).widget !== "hidden" && all.findIndex((x) => same(x.key, k.key)) === i,
+  );
   // The other languages' files of the page, the default language's first, and the value the
   // first of them that gives one gives a key.
   const others = [...p.docs.entries()]
@@ -48,20 +50,24 @@ export function fieldsForm(data: FrontMatter, readOnly: boolean): TemplateResult
     }
     return null;
   };
-  // Keys the file lacks and should give, shown empty: those the settings require (on a page of a
-  // section whose pages use them, as the checks before saving count them), and the text each
-  // language gives its own of that another language's file has (a title to translate).
+  // The keys the file lacks, shown empty: on a page, all of them. The keys of a section with
+  // pages are its pages', so a folder's page shows only those it should give, and offers the
+  // others to add: those the settings require (as the checks before saving count them), and the
+  // text each language gives its own of that another language's file has (a title to translate).
+  const folder = p.entry.kind !== "page" && (section?.count ?? 0) > 0;
   const missing = absent.filter((k) => {
     const h = hintOf(k.key);
     const text = h.widget === "text" || h.widget === "textarea";
-    return h.widget !== "hidden" && ((h.required && inSection(k.key)) || (text && !h.shared && sourceOf(k.key) !== null));
+    return !folder || (h.required && inSection(k.key)) || (text && !h.shared && sourceOf(k.key) !== null);
   });
-  // A key the file lacks goes where the other language's file has it: before the first of the
-  // keys after it there that this file has (a key that file lacks too goes first).
-  const order = Object.keys(others[0]?.data ?? {}).map((k) => k.toLowerCase());
+  // A key the file lacks goes where the other language's file has it, else where the section's
+  // pages have it: before the first of the keys after it there that this file has.
+  const order = [...Object.keys(others[0]?.data ?? {}), ...(section?.keys ?? []).map((k) => k.key), ...configured.map((k) => k.key)].map((k) =>
+    k.toLowerCase(),
+  );
   const placeOf = (key: string, keys: string[]) => {
     const i = order.indexOf(key.toLowerCase());
-    if (i < 0) return 0;
+    if (i < 0) return keys.length;
     const at = keys.findIndex((k) => order.indexOf(k.toLowerCase()) > i);
     return at < 0 ? keys.length : at;
   };
@@ -81,22 +87,19 @@ export function fieldsForm(data: FrontMatter, readOnly: boolean): TemplateResult
     Object.assign(data, Object.fromEntries(entries));
     if (hintOf(key).shared) share(data, key, value);
   };
-  // Under a key the file lacks: another language's value, and a button that copies it here.
-  const copyFrom = (key: string) => {
-    const from = sourceOf(key);
-    if (!from || readOnly) return nothing;
-    const v = from.value;
-    const shown = typeof v === "string" || typeof v === "number" || isTomlDate(v) ? String(v) : "";
-    const copy = () => {
-      fill(key)(clone(v));
+  // Under a key the file lacks: another language's value, else the value a new page starts with
+  // (its setting's default, or the value every page of the section gives it), and a button that
+  // puts it here.
+  const below = (k: (typeof absent)[number]) => {
+    const from = sourceOf(k.key);
+    const d = hintOf(k.key).default ?? k.default;
+    if (readOnly || (!from && d === undefined)) return nothing;
+    const v = from ? from.value : d;
+    const put = () => {
+      fill(k.key)(clone(v));
       pageView();
     };
-    return html`
-      <div class="copy-from">
-        <span class="muted" title=${shown}>${langName(from.lang)}${shown ? `: ${shown}` : ""}</span>
-        <md-text-button @click=${copy}>Copy</md-text-button>
-      </div>
-    `;
+    return from ? offer(langName(from.lang), v, "Copy", put) : offer("Default", v, "Use", put);
   };
   const add = (key: string) => {
     const k = absent.find((x) => x.key === key);
@@ -109,19 +112,19 @@ export function fieldsForm(data: FrontMatter, readOnly: boolean): TemplateResult
     pageView();
   };
   const keys = Object.keys(data).filter((key) => hintOf(key).widget !== "hidden");
-  const rows = keys.map((key) => ({ key, missing: false }));
+  const rows: { key: string; lacks?: (typeof absent)[number] }[] = keys.map((key) => ({ key }));
   // From the last place to the first, so that each place stays where it was.
-  const places = missing.map((k) => ({ key: k.key, at: placeOf(k.key, keys), rank: order.indexOf(k.key.toLowerCase()) }));
-  for (const m of places.sort((a, b) => b.at - a.at || b.rank - a.rank)) rows.splice(m.at, 0, { key: m.key, missing: true });
+  const places = missing.map((k) => ({ k, at: placeOf(k.key, keys), rank: order.indexOf(k.key.toLowerCase()) }));
+  for (const m of places.sort((a, b) => b.at - a.at || b.rank - a.rank)) rows.splice(m.at, 0, { key: m.k.key, lacks: m.k });
   const more = absent.filter((k) => !missing.includes(k));
   return html`
     <div class="fields">
       ${repeat(
         rows,
         (row) => row.key,
-        ({ key, missing }) =>
-          missing
-            ? field(key, hintOf(key).label ?? key, undefined, fill(key), readOnly, [key], null, copyFrom(key))
+        ({ key, lacks }) =>
+          lacks
+            ? field(key, hintOf(key).label ?? key, undefined, fill(key), readOnly, [key], null, below(lacks))
             : field(key, hintOf(key).label ?? key, data[key], (v) => store(key, v), readOnly, [key], remove(key)),
       )}
       ${!readOnly && more.length
@@ -176,7 +179,7 @@ type Kind = "terms" | "choices" | "select" | "image" | "boolean" | "number" | "d
 function kindOf(key: string, value: unknown, path: Path, hint: FieldHint): Kind {
   const widget = hint.widget;
   const top = path.length === 1;
-  if (top && taxonomies().has(key.toLowerCase()) && (typeof value === "string" || Array.isArray(value) || value === null)) return "terms";
+  if (top && taxonomies().has(key.toLowerCase()) && (typeof value === "string" || Array.isArray(value) || value === null || value === undefined)) return "terms";
   if (widget === "select" || hint.options?.length) {
     if (hint.multiple || Array.isArray(value)) return "choices";
     if (widget === "select" || typeof value !== "object") return "select";
@@ -188,6 +191,8 @@ function kindOf(key: string, value: unknown, path: Path, hint: FieldHint): Kind 
   if (Array.isArray(value)) return value.length && value.every(isPlainObject) ? "objects" : "list";
   if (widget === "list" && isEmpty(value)) return "list";
   if (isPlainObject(value)) return "map";
+  // A key the page lacks: a table or a list of tables when other pages give it one.
+  if (value === undefined && (hint.kind === "map" || hint.kind === "objects")) return hint.kind;
   const text = textOf(value);
   return widget === "textarea" || text.length > 90 || text.includes("\n") ? "textarea" : "text";
 }
@@ -239,11 +244,11 @@ function inputFor(kind: Kind, key: string, value: unknown, set: Setter, readOnly
     case "date":
       return dateInput(value, set, readOnly, id);
     case "objects":
-      return objectsInput(key, value as Record<string, unknown>[], set, readOnly, path);
+      return objectsInput(key, Array.isArray(value) ? value : [], set, readOnly, path);
     case "list":
       return listInput(Array.isArray(value) ? value : [], set, readOnly, id, hint.suggestions);
     case "map":
-      return mapInput(value as Record<string, unknown>, set, readOnly, path);
+      return mapInput(isPlainObject(value) ? value : {}, set, readOnly, path);
     case "textarea": {
       const text = textOf(value);
       const rows = Math.min(8, 2 + Math.floor(text.length / 90));

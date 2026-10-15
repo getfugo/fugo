@@ -136,8 +136,8 @@ key inside its tables, so most sites need no settings:
 - the values pages share, which the editor suggests as you type (a brand, a type, an author; not
   the values that name one page, like `title` or `slug`). Taxonomy keys suggest the terms the
   site uses;
-- the keys of a table across all pages: a page whose `nutrition` table lacks `fat` can add it
-  under the table's *Add…*;
+- the keys of a table across all pages: a page whose `nutrition` table lacks `fat` shows it
+  empty in the table;
 - whether a key's value is one for every language: when nine in ten of the pages that have the
   key in several languages, at least, give it the same value in each (an image, a rating, a
   date; the order of a table's keys and empty values do not count), an edit in one language
@@ -149,7 +149,7 @@ key inside its tables, so most sites need no settings:
 `[cms.fields.<key>]` changes a field (the key matched ignoring case; a key inside a table by its
 path, `"nutrition.fat.total"`, the keys of a list's tables below the list's key), setting by
 setting: what you leave out stays as the build works it out. A key that no page has yet, with
-settings, is offered under *Add a field* in every section (inside a table, under its *Add…*).
+settings, shows as an empty field on the pages of every section (inside a table, in the table).
 `fugo cms fields` prints every field as the build gives it to the editor, as these settings:
 copy the ones you want to change.
 
@@ -199,8 +199,9 @@ widget = "hidden"
   key whose pages hold lists is one already. Needs `options`.
 
 `default`
-: The key's value on a new page (and when it is added to a page), over the value its section's
-  pages share. With `widget = "hidden"`, a value new pages get without showing it.
+: The key's value on a new page, over the value its section's pages share; a page without the
+  key offers it under its empty field (*Use*). With `widget = "hidden"`, a value new pages get
+  without showing it.
 
 `min`, `max`, `step`
 : The bounds of a number and the step between numbers. The editor does not save a number out of

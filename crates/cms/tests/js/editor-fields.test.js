@@ -1,11 +1,11 @@
 // The fields of the editor's form (assets/admin/cms.js) that the build works out across pages, in
-// happy-dom against a fake API (ui.js): the keys inside tables, closed tables, values one for
-// every language, defaults of new pages, and the checks before saving.
+// happy-dom against a fake API (ui.js): the keys inside tables, closed tables, the keys a page
+// lacks, values one for every language, defaults, and the checks before saving.
 
 import { before, test } from "node:test";
 import assert from "node:assert/strict";
 
-import { $, $$, button, go, pick, press, reply, sent, skip, startEditor, STYLE, text, type, until, window } from "./ui.js";
+import { $, $$, button, go, press, reply, sent, skip, startEditor, STYLE, text, type, until, window } from "./ui.js";
 
 const SITE = {
   title: "Snacks",
@@ -49,6 +49,7 @@ const SITE = {
         { key: "type", kind: "string", default: "snack" },
         { key: "rating", kind: "number" },
         { key: "author", kind: "string" },
+        { key: "nutrition", kind: "map" },
       ],
     },
   ],
@@ -78,6 +79,19 @@ before(() => skip || startEditor(SITE, FILES));
 const openA = () => go("#/e/snacks%2Fa", () => $(".doc-head code")?.textContent.includes("snacks/a") && $("#f-rating"));
 const tab = (name) => $$(".tabs .tab").find((b) => text(b) === name);
 
+/** The open file as text: Edit as text on, and off again. */
+function asText() {
+  const toggle = $(".doc-head .toggle md-switch");
+  const flip = (on) => {
+    toggle.selected = on;
+    toggle.dispatchEvent(new window.Event("change", { bubbles: true }));
+  };
+  flip(true);
+  const raw = $("textarea.raw").value;
+  flip(false);
+  return raw;
+}
+
 test("a closed table shows a summary of its values, and its fields when opened", { skip }, async () => {
   await openA();
   const table = $("#f-nutrition-calories").closest("details");
@@ -88,16 +102,38 @@ test("a closed table shows a summary of its values, and its fields when opened",
   assert.ok(text(item).startsWith("Parts 1: Rice: 60%"), text(item));
 });
 
-test("a table offers the keys other pages have in it, as their settings label them", { skip }, () => {
+test("a table shows the keys other pages have in it, as their settings label them; those it lacks empty", { skip }, () => {
   assert.equal(text($("#f-nutrition-fat-total").closest(".field").querySelector("label > span")), "Total fat (g)");
   assert.equal($("#f-nutrition-fat-total").getAttribute("min"), "0");
   assert.equal($("#f-nutrition-fat-total").getAttribute("step"), "any", "a whole number now may not stay so");
-  const table = $("#f-nutrition-fat-total").closest("fieldset");
-  assert.equal(text(table.querySelector(".add-field md-text-button")), "Add…");
-  assert.deepEqual([...table.querySelectorAll(".add-field md-menu-item")].map(text), ["Saturated"]);
-  pick(table, "Saturated");
-  assert.equal($("#f-nutrition-fat-saturated").value, "0");
-  assert.ok(!$("#f-nutrition-fat-total").closest("fieldset").querySelector(".add-field"));
+  const saturated = $("#f-nutrition-fat-saturated");
+  assert.equal(text(saturated.closest(".field").querySelector("label > span")), "Saturated");
+  assert.equal(saturated.value, "");
+  assert.equal(saturated.closest(".field").querySelectorAll("md-icon-button.remove").length, 0, "nothing to remove");
+  assert.equal($$(".add-field").length, 0, "nothing to add");
+  type(saturated, "2");
+  assert.match(asText(), /\n  fat:\n    total: 9\n    saturated: 2\n/, "it goes into the table with a value");
+});
+
+test("a key the page lacks offers its default, to use", { skip }, async () => {
+  const author = () => $("#f-author").closest(".field");
+  assert.equal($("#f-author").value, "");
+  assert.equal(text(author().querySelector(".offer")), "Default: Kitchen Use");
+  await press(button("Use", author()));
+  assert.equal($("#f-author").value, "Kitchen");
+  assert.equal(author().querySelectorAll(".offer").length, 0);
+  assert.match(asText(), /\nauthor: Kitchen\n/);
+});
+
+test("a table the page lacks shows its keys empty, and goes into the file with a value", { skip }, async () => {
+  tab("Thai").click();
+  await until(() => $(".doc-head code")?.textContent.includes("a.th.md"));
+  assert.equal($("#f-nutrition-calories").value, "");
+  assert.equal($("#f-nutrition-fat-total").value, "", "and a table in it");
+  type($("#f-nutrition-fat-total"), "8");
+  assert.match(asText(), /\nimage: a\.jpg\nnutrition:\n  fat:\n    total: 8\n---\n/);
+  tab("English").click();
+  await until(() => $(".doc-head code")?.textContent.includes("a.en.md"));
 });
 
 test("a value one for every language goes to each language's file", { skip }, async () => {

@@ -1,5 +1,5 @@
-// The inputs of the form for text, dates, terms, several options and lists, and the menu of the
-// keys a form or a table may add (images: `images.ts`).
+// The inputs of the form for text, dates, terms, several options and lists, the menu of the keys
+// a folder's page may add, and the value offered under an empty field (images: `images.ts`).
 
 import { html, nothing, type TemplateResult } from "lit-html";
 import { live } from "lit-html/directives/live.js";
@@ -44,6 +44,18 @@ export function addMenu(label: string, keys: { key: string; label: string }[], a
       <md-menu positioning="popover">
         ${keys.map((k) => html`<md-menu-item @click=${() => add(k.key)}><div slot="headline">${k.label}</div></md-menu-item>`)}
       </md-menu>
+    </div>
+  `;
+}
+
+/** Under an empty field: a value for it, `from` where it comes (another language, its default),
+ * and the button `label` that `put`s it there. */
+export function offer(from: string, value: unknown, label: string, put: () => void): TemplateResult {
+  const shown = typeof value === "string" || typeof value === "number" || typeof value === "boolean" || isTomlDate(value) ? String(value) : "";
+  return html`
+    <div class="offer">
+      <span class="muted" title=${shown}>${from}${shown ? `: ${shown}` : ""}</span>
+      <md-text-button @click=${put}>${label}</md-text-button>
     </div>
   `;
 }

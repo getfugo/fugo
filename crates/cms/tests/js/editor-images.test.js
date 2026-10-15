@@ -127,13 +127,14 @@ test("a translation shows the page's images from where the site publishes them: 
   assert.equal(img.getAttribute("src"), "https://example.org/snacks/crisps/open.jpg", "not below /th/");
 });
 
-test("a translation shows the keys it lacks: required ones, and text another language has, to copy", { skip }, async () => {
+test("a translation shows the keys it lacks, with the value another language has, to copy", { skip }, async () => {
   const labels = $$(".fields > .field label").map(text);
-  assert.deepEqual(labels, ["Title*", "Description", "Date* all languages", "Image all languages"], "in the other language's order");
+  assert.deepEqual(labels, ["Title*", "Description", "Author all languages", "Date* all languages", "Image all languages"], "in the other language's order");
   assert.equal($("#f-title").value, "");
-  const copyRow = (id) => $(id).closest(".field").querySelector(".copy-from");
+  const copyRow = (id) => $(id).closest(".field").querySelector(".offer");
   assert.equal(text(copyRow("#f-title")), "English: Crisps Copy");
-  assert.ok(!$$(".add-field md-menu-item").map(text).includes("Title"), "not offered to add as well");
+  assert.equal(text(copyRow("#f-author")), "English: Ann Copy");
+  assert.equal($$(".add-field").length, 0, "nothing to add");
   assert.equal($$(".fields > .field").filter((f) => f.querySelector("md-icon-button.remove")).length, 1, "nothing to remove but the image");
 
   await press(button("Copy", copyRow("#f-title")));
