@@ -1,18 +1,16 @@
-// The inputs of the form for text, dates, terms, several options, lists and images, and the menu
-// of the keys a form or a table may add.
+// The inputs of the form for text, dates, terms, several options and lists, and the menu of the
+// keys a form or a table may add (images: `images.ts`).
 
 import { html, nothing, type TemplateResult } from "lit-html";
 import { live } from "lit-html/directives/live.js";
 import { isTomlDate, tomlDate } from "../codec";
 import { type Taxonomy } from "./data";
 import { valueOf } from "./dom";
-import { bundleDir } from "./files";
 import { type Setter } from "./form";
 import { isEmpty } from "./hints";
 import { icon } from "./icons";
 import { type MdCheckbox, type MdMenu, type MdOutlinedTextField } from "./material";
 import { pageView } from "./pages";
-import { current, site } from "./state";
 
 /** The values pages share for a key, as a `<datalist>` for inputs to suggest them (`list=`). */
 export const valuesList = (id: string, values: string[] | undefined) =>
@@ -159,37 +157,4 @@ export function listInput(value: unknown[], set: Setter, readOnly: boolean, id: 
       ${valuesList(`${id}-values`, suggestions)}
     </div>
   `;
-}
-
-export function imageInput(value: string, set: Setter, readOnly: boolean, id: string): TemplateResult {
-  const names = imageChoices();
-  return html`
-    <span class="row">
-      <md-outlined-select id=${id} ?disabled=${readOnly} @change=${(ev: Event) => set(valueOf(ev))}>
-        ${optionsOf(["", ...(value && !names.includes(value) ? [value, ...names] : names)], value)}
-      </md-outlined-select>
-      <small class="muted">Upload files below to add choices.</small>
-    </span>
-  `;
-}
-
-/** What an image field may name: the bundle's files (relative to the bundle), and files of the
- * media directory (as `media_ref` names them). */
-export function imageChoices(): string[] {
-  const p = current();
-  const out: string[] = [];
-  if (p.entry.bundle) {
-    const dir = bundleDir();
-    for (const f of [...p.entry.resources, ...p.uploads.map((u) => u.path)]) {
-      if (f.startsWith(`${dir}/`) && !p.deletes.has(f)) out.push(f.slice(dir.length + 1));
-    }
-  }
-  const media = site.media;
-  const ref = site.media_ref;
-  if (media && ref !== null) {
-    for (const u of p.uploads) {
-      if (u.path.startsWith(`${media}/`)) out.push(ref + u.path.slice(media.length + 1));
-    }
-  }
-  return out;
 }

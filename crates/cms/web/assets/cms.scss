@@ -595,11 +595,77 @@ textarea {
   cursor: pointer;
 }
 
+// The front matter: a row per field, its label beside its value (above it on narrow screens).
+// The fields of a table are in a grid of their own.
 .fields {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
-  gap: 16px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 64rem;
   margin: 16px 0 24px;
+
+  > .field {
+    display: grid;
+    grid-template-columns: 12rem minmax(0, 1fr) 40px;
+    gap: 4px 16px;
+    align-items: start;
+
+    > .field-head {
+      display: contents;
+
+      // As high as a field's line: in line with its text.
+      label {
+        grid-column: 1;
+        grid-row: 1;
+        padding-top: 10px;
+        line-height: 20px;
+      }
+
+      .remove {
+        grid-column: 3;
+        grid-row: 1;
+      }
+    }
+
+    > :not(.field-head) {
+      grid-column: 2;
+    }
+  }
+
+  @media (max-width: 60rem) {
+    > .field {
+      grid-template-columns: minmax(0, 1fr) 40px;
+
+      > .field-head label {
+        padding-top: 0;
+        align-self: center;
+      }
+
+      > .field-head .remove {
+        grid-column: 2;
+      }
+
+      > :not(.field-head) {
+        grid-column: 1 / -1;
+      }
+    }
+  }
+}
+
+// Under a key the file lacks: another language's value, to copy.
+.copy-from {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding-left: 16px;
+  font-size: 12px;
+
+  > span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
 }
 
 .field {
@@ -1022,31 +1088,118 @@ iframe.preview {
   background: #fff;
 }
 
+// The picture of an image (or a frame for a file that has none): its icon until it loads, and
+// when it does not (a file the site does not publish yet).
+.thumb {
+  position: relative;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border-radius: $corner-small;
+  background: c(surface-container-high);
+  color: c(on-surface-variant);
+
+  > img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  &.missing > img {
+    display: none;
+  }
+
+  .ext {
+    @include mono(12px);
+    text-transform: uppercase;
+  }
+}
+
+// An image field: the picture of the file chosen, the select, the upload (in line with the label).
+.image-input {
+  display: flex;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+
+  > .thumb {
+    flex: none;
+    width: 72px;
+    height: 72px;
+  }
+
+  > md-outlined-select {
+    flex: 1;
+    min-width: 12rem;
+  }
+}
+
+.option-thumb {
+  width: 40px;
+  height: 40px;
+  object-fit: cover;
+  border-radius: $corner-small;
+}
+
 .files {
   margin-top: 24px;
 }
 
+// The files of a page: a card each, its picture above its name.
 .file-list {
   list-style: none;
   padding: 0;
   margin: 0;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
-  gap: 0 24px;
+  grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+  gap: 12px;
 
   li {
     display: flex;
-    align-items: center;
-    gap: 8px;
-    min-height: 36px;
+    flex-direction: column;
+    min-width: 0;
+    border: 1px solid c(outline-variant);
+    border-radius: $corner-medium;
+    overflow: hidden;
 
-    &.deleted code {
-      text-decoration: line-through;
-      color: c(on-surface-variant);
+    > .thumb {
+      aspect-ratio: 4 / 3;
+      border-radius: 0;
+    }
+
+    &.deleted {
+      > .thumb {
+        opacity: 0.38;
+      }
+
+      code {
+        text-decoration: line-through;
+        color: c(on-surface-variant);
+      }
     }
 
     &.new code {
       color: custom(success);
+    }
+  }
+
+  .file-name {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    min-height: 40px;
+    padding-left: 12px;
+
+    // Whole, on more lines: names of one page often differ only at their end.
+    > code {
+      flex: 1;
+      min-width: 0;
+      padding-block: 6px;
+      overflow-wrap: anywhere;
+      font-size: 12px;
+      line-height: 16px;
     }
   }
 }

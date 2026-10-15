@@ -1,9 +1,11 @@
 // The preview of a page inside the site's own page: the published page of its language (or of
-// another page in its folder), with the edited text and front matter in place, as you type.
+// another page in its folder), with the edited text and front matter (its images too) in place,
+// as you type.
 
 import { marked } from "marked";
 import { type FrontMatter } from "../codec";
 import { type Doc, type Entry } from "./data";
+import { imageUrl, isImage } from "./images";
 import { current, pending, site } from "./state";
 
 /**
@@ -74,10 +76,36 @@ function absolutize(root: ParentNode, base: string): void {
   }
 }
 
+/** The name of the image file at `src` without its extension, and without the suffix of a copy
+ * the site made of it (`photo_hu_1a2b3c4d5e6f7a8b.webp` is `photo`). */
+const stemOf = (src: string) =>
+  decodeURIComponent(src.split(/[?#]/)[0].split("/").pop() ?? "")
+    .replace(/\.[^.]*$/, "")
+    .replace(/_hu_?[0-9a-f]{8,}.*$/, "");
+
+/** In place of the frames of other sites (a video), which the editor's policy does not load:
+ * a box that says what they show. */
+function embedsShown(d: Document, base: string): void {
+  for (const frame of Array.from(d.querySelectorAll("iframe[src]"))) {
+    let from: URL;
+    try {
+      from = new URL(frame.getAttribute("src") ?? "", base);
+    } catch {
+      continue;
+    }
+    if (from.origin === location.origin) continue;
+    const box = d.createElement("div");
+    box.setAttribute("style", "display:grid;place-items:center;aspect-ratio:16/9;max-width:100%;padding:1rem;box-sizing:border-box;background:#eee;color:#555;border-radius:8px;font:14px/1.4 system-ui,sans-serif;text-align:center");
+    box.textContent = `Embedded from ${from.host}: not shown in the preview`;
+    frame.replaceWith(box);
+  }
+}
+
 /**
  * The page at `url` (`html`) prepared to show `doc`: without scripts, with absolute URLs (the
  * editor's policy allows no `<base>`), its text's element and the elements that show `doc`'s
- * front matter (`data-cms-field`, or text equal to a value as loaded) marked for `refresh`.
+ * front matter (`data-cms-field`, or text equal to a value as loaded; images of a file a value
+ * names, `data-cms-image`) marked for `refresh`.
  */
 function prepare(html: string, url: string, doc: Doc): string | null {
   const d = new DOMParser().parseFromString(html, "text/html");
@@ -90,8 +118,14 @@ function prepare(html: string, url: string, doc: Doc): string | null {
     for (const el of Array.from(d.querySelectorAll("title, body *"))) {
       if (el.children.length === 0 && squash(el.textContent) === squash(value)) el.setAttribute("data-cms-field", key);
     }
+    if (!isImage(value)) continue;
+    for (const img of Array.from(d.querySelectorAll("img[src]"))) {
+      if (!body.contains(img) && stemOf(img.getAttribute("src") ?? "") === stemOf(value)) img.setAttribute("data-cms-image", key);
+    }
   }
-  absolutize(d, new URL(url, location.origin).href);
+  const page = new URL(url, location.origin).href;
+  absolutize(d, page);
+  embedsShown(d, page);
   return `<!doctype html>${d.documentElement.outerHTML}`;
 }
 
@@ -137,23 +171,37 @@ function refresh(): void {
   if (!shown || !d) return;
   const { doc, base } = shown;
   const body = d.querySelector("[data-cms-preview=body]");
+  // Images from where the site publishes the page's files, or the browser's copy of those not
+  // saved yet.
+  const url = imageUrl();
   if (body) {
     body.innerHTML = marked.parse(doc.body, { async: false });
+    for (const img of Array.from(body.querySelectorAll("img[src]"))) img.setAttribute("src", url(img.getAttribute("src") ?? ""));
     absolutize(body, base);
-    // Files uploaded but not saved yet show from the browser's copy.
-    for (const img of Array.from(body.querySelectorAll("img[src]"))) {
-      const upload = current().uploads.find((u) => img.getAttribute("src")?.endsWith(`/${u.path.split("/").pop()}`));
-      if (upload) img.setAttribute("src", `data:${mimeOf(upload.path)};base64,${upload.content}`);
-    }
   }
   const data: FrontMatter = doc.data ?? {};
   for (const el of Array.from(d.querySelectorAll("[data-cms-field]"))) {
     const value = data[el.getAttribute("data-cms-field") ?? ""];
     if (typeof value === "string" || typeof value === "number") el.textContent = String(value);
   }
-}
-
-export function mimeOf(path: string): string {
-  const ext = path.split(".").pop()?.toLowerCase() ?? "";
-  return { jpg: "image/jpeg", jpeg: "image/jpeg", png: "image/png", gif: "image/gif", webp: "image/webp", svg: "image/svg+xml", avif: "image/avif" }[ext] ?? "application/octet-stream";
+  // A file chosen in place of the one the page was published with: the file itself, not the
+  // copies the site made of the other (`srcset`, of the image and of its `<picture>`'s sources),
+  // until the first is chosen again.
+  for (const img of Array.from(d.querySelectorAll("img[data-cms-image]"))) {
+    const key = img.getAttribute("data-cms-image") ?? "";
+    const value = data[key];
+    const sets = [img, ...Array.from(img.closest("picture")?.querySelectorAll("source") ?? [])];
+    if (!img.hasAttribute("data-cms-src")) {
+      if (value === doc.original?.[key]) continue;
+      img.setAttribute("data-cms-src", img.getAttribute("src") ?? "");
+      for (const el of sets) el.setAttribute("data-cms-srcset", el.getAttribute("srcset") ?? "");
+    }
+    const changed = value !== doc.original?.[key] && typeof value === "string" && value !== "";
+    img.setAttribute("src", changed ? url(value) : (img.getAttribute("data-cms-src") ?? ""));
+    for (const el of sets) {
+      const srcset = changed ? "" : (el.getAttribute("data-cms-srcset") ?? "");
+      if (srcset) el.setAttribute("srcset", srcset);
+      else el.removeAttribute("srcset");
+    }
+  }
 }

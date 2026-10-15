@@ -119,11 +119,19 @@ export function encode(parts: Parts, original: FrontMatter, data: FrontMatter): 
     case "yaml": {
       const doc = parts.format === "yaml" ? YAML.parseDocument(parts.front) : null;
       if (doc && YAML.isMap(doc.contents)) {
+        const map = doc.contents;
         for (const key of Object.keys(original)) {
           if (!(key in data)) doc.delete(key);
         }
-        for (const [key, value] of Object.entries(data)) {
-          if (!equal(original[key], value)) doc.set(key, value);
+        const keys = Object.keys(data);
+        for (const [i, key] of keys.entries()) {
+          const value = data[key];
+          if (equal(original[key], value)) continue;
+          // A new key goes where `data` has it: before the next of its keys the file has.
+          const next = Object.hasOwn(original, key) ? undefined : keys.slice(i + 1).find((k) => doc.has(k));
+          const at = next === undefined ? -1 : map.items.findIndex((pair) => YAML.isScalar(pair.key) && String(pair.key.value) === next);
+          if (at < 0) doc.set(key, value);
+          else map.items.splice(at, 0, doc.createPair(key, value));
         }
         out.front = keepUnchanged(parts.front, doc.toString({ lineWidth: 0 }), original, data);
       } else {

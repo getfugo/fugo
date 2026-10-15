@@ -325,13 +325,15 @@ publishing or discarding a draft) ask first, in a dialog.
 - **A tree of folders** in the sidebar: the sections, with their folders below them at any
   depth, which open and close in place. The folder shown, or the one whose list has the page
   shown, is marked, and the folders above it open.
-- **A form for the front matter**: text, numbers, yes/no, dates, lists, nested tables and lists
-  of tables, with the labels and inputs the build works out from the site's content, and the
-  values pages share suggested as you type. Taxonomy fields (`tags`, `categories`, …) suggest
+- **A form for the front matter**: a row per key, its label beside its value; text, numbers,
+  yes/no, dates, images, lists, nested tables and lists of tables, with the labels and inputs the
+  build works out from the site's content, and the values pages share suggested as you type. Taxonomy fields (`tags`, `categories`, …) suggest
   the terms the site uses, which keeps spellings consistent. *Add a field* offers the keys other
   pages of the section use, and a table's *Add…* the keys other pages have in it. A value that
   is the same in every language of the page (an image, a rating) is edited once for all of
   them, and new pages start with the values the section's pages share.
+  An image field shows the picture of the file it names, offers the page's images with theirs,
+  and *Upload…* adds an image to the page's folder and chooses it.
   [Field settings](/configuration/cms/#fields) change labels, help text and inputs, and add
   choice lists (one choice or several), defaults, number bounds, required values and closed
   tables with a summary.
@@ -346,14 +348,19 @@ publishing or discarding a draft) ask first, in a dialog.
   that were edited: the others keep their text exactly, with the blank lines between them.
 - **A preview** of the text inside the site's own page: the published page of its language (for
   a new page, another page of its folder) with the edited text and front matter in place,
-  updated as you type. The editor finds the element that holds a page's text and the elements
-  that show a front matter value as published; where it cannot, mark them in the site's
-  templates with `data-cms-body` and `data-cms-field="<key>"`. Shortcodes, scripts and files from
-  other sites (fonts or styles from a CDN) are left out.
+  updated as you type, a picture whose file an image field names (a cover) included. The editor
+  finds the element that holds a page's text and the elements that show a front matter value as
+  published; where it cannot, mark them in the site's templates with `data-cms-body` and
+  `data-cms-field="<key>"`. Shortcodes, scripts and files from other sites (fonts or styles from
+  a CDN, an embedded video) are left out.
 - **Edit as text**: the whole file, front matter included, for anything the form does not show.
 - **Translations**: a tab per language, and a *+ language* button for each other language of
-  the site, which adds a version in it (it starts as a copy).
-- **Files of the page**: a bundle's images and other files, uploads and deletions.
+  the site, which adds a version in it (it starts as a copy). A language's file that lacks a
+  required key, or a text that another language's file gives (a title, a description), shows
+  the field empty, with the other language's value under it and *Copy*. A translation shows
+  the page's images from where the site publishes them, with the page of their language.
+- **Files of the page**: a bundle's images (with their pictures) and other files, uploads and
+  deletions.
 - **New pages**: *New page* makes one in the folder shown, written the way its section's pages
   are: as bundles or single files, with the section's front matter format and language
   suffixes.

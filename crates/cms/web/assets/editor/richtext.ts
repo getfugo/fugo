@@ -8,12 +8,10 @@ import { ref } from "lit-html/directives/ref.js";
 import { type Doc } from "./data";
 import { askText } from "./dialogs";
 import { icon, type IconName } from "./icons";
-import { imageChoices } from "./inputs";
-import { type Drawn, drawMarkdown, emptyParagraph, esc, type ImageUrl, pastedHtml, writeMarkdown } from "./markdown";
+import { imageChoices, imageUrl } from "./images";
+import { type Drawn, drawMarkdown, emptyParagraph, esc, pastedHtml, writeMarkdown } from "./markdown";
 import { type MdIconButton, type MdOutlinedSelect, type MdOutlinedTextField } from "./material";
 import { pageView } from "./pages";
-import { mimeOf } from "./preview";
-import { current, site } from "./state";
 import { isBlock } from "./tomarkdown";
 
 /** The boxes drawn: the document each shows, as drawn, and its text since. */
@@ -77,24 +75,6 @@ function input(ev: Event): void {
   // Somewhere to type after a list, a table or a code block at the end.
   if (box.lastElementChild?.tagName !== "P") box.append(emptyParagraph());
   shown.doc.body = shown.body = writeMarkdown(box, shown.drawn);
-}
-
-/** The URL of the images of the open page's text: its own uploads, else as the site serves
- * them, relative to the page. */
-function imageUrl(): ImageUrl {
-  const p = current();
-  const own = p.entry.files.find((f) => f.lang === p.lang)?.url ?? "/";
-  const base = new URL(new URL(site.site_url).pathname.replace(/\/$/, "") + own, location.origin).href;
-  return (src) => {
-    const name = src.split("/").pop();
-    const upload = p.uploads.find((u) => u.path.split("/").pop() === name);
-    if (upload) return `data:${mimeOf(upload.path)};base64,${upload.content}`;
-    try {
-      return new URL(src, base).href;
-    } catch {
-      return src;
-    }
-  };
 }
 
 let ready = false;
