@@ -1,5 +1,5 @@
 // The body editor (rich text, or Markdown) with its preview, and the files of a page bundle
-// (uploads).
+// (uploads), each with its picture.
 
 import { html, nothing, type TemplateResult } from "lit-html";
 import { live } from "lit-html/directives/live.js";
@@ -8,6 +8,7 @@ import { bytesToBase64, extensionOf } from "../common";
 import { type Doc } from "./data";
 import { toast, valueOf } from "./dom";
 import { icon } from "./icons";
+import { imageUrl, isImage, thumbnail, uploadDir } from "./images";
 import { pageView } from "./pages";
 import { hidePreview, schedulePreview, showPreview } from "./preview";
 import { richEditor } from "./richtext";
@@ -87,18 +88,19 @@ const picker = createRef<HTMLInputElement>();
 
 export function filesPanel(): TemplateResult | typeof nothing {
   const p = current();
-  const dir = p.entry.bundle ? bundleDir() : site.media;
+  const dir = uploadDir();
   if (!dir) return nothing;
   const files = p.entry.bundle ? [...p.entry.resources] : [];
   const waiting = p.uploads.map((u) => u.path);
   const allowed = canEdit(`${dir}/upload.jpg`);
+  const url = imageUrl();
   const pick = () => {
     const input = picker.value;
     if (!input?.files) return;
     const chosen = Array.from(input.files);
     // So that choosing the same files again is a change too.
     input.value = "";
-    void upload(chosen, dir);
+    void upload(chosen, dir).then(pageView);
   };
   const remove = (f: string) => {
     if (waiting.includes(f)) p.uploads = p.uploads.filter((u) => u.path !== f);
@@ -115,25 +117,31 @@ export function filesPanel(): TemplateResult | typeof nothing {
       </div>
       <p class="muted">${p.entry.bundle ? `In ${dir}/` : `Into ${dir}/ (name them as ${site.media_ref ?? `${dir}/`}…)`}</p>
       <ul class="file-list">
-        ${[...files, ...waiting].map(
-          (f) => html`
+        ${[...files, ...waiting].map((f) => {
+          const name = f.slice(dir.length + 1);
+          return html`
             <li class=${p.deletes.has(f) ? "deleted" : waiting.includes(f) ? "new" : nothing}>
-              <code>${f.slice(dir.length + 1)}</code>
-              ${waiting.includes(f) ? html`<span class="badge">not saved</span>` : nothing}
-              ${canEdit(f) && !p.deletes.has(f)
-                ? html`<md-icon-button class="remove" title="Delete" aria-label="Delete ${f.slice(dir.length + 1)}" @click=${() => remove(f)}>${icon("close")}</md-icon-button>`
-                : nothing}
+              ${isImage(f) ? thumbnail(url(name), name) : html`<span class="thumb empty"><span class="ext">${extensionOf(f) || "file"}</span></span>`}
+              <span class="file-name">
+                <code title=${name}>${name}</code>
+                ${waiting.includes(f) ? html`<span class="badge">not saved</span>` : nothing}
+                ${canEdit(f) && !p.deletes.has(f)
+                  ? html`<md-icon-button class="remove" title="Delete" aria-label="Delete ${name}" @click=${() => remove(f)}>${icon("close")}</md-icon-button>`
+                  : nothing}
+              </span>
             </li>
-          `,
-        )}
+          `;
+        })}
       </ul>
     </section>
   `;
 }
 
-async function upload(files: File[], dir: string): Promise<void> {
+/** Adds `files` to the open page's uploads, into `dir`: those it may; the paths of those added. */
+export async function upload(files: File[], dir: string): Promise<string[]> {
   const p = current();
   const limit = site.max_upload;
+  const added: string[] = [];
   for (const file of files) {
     const name = file.name.normalize("NFC").replace(/[\\/]/g, "-").replace(/^\.+/, "");
     const path = `${dir}/${name}`;
@@ -152,6 +160,7 @@ async function upload(files: File[], dir: string): Promise<void> {
     const content = bytesToBase64(new Uint8Array(await file.arrayBuffer()));
     p.uploads = p.uploads.filter((u) => u.path !== path);
     p.uploads.push({ path, content });
+    added.push(path);
   }
-  pageView();
+  return added;
 }

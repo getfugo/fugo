@@ -76,6 +76,13 @@ Body **text**.
   assert.deepEqual(decode(split(out)), data);
 });
 
+test("YAML: a key the file did not have goes where the data has it", () => {
+  const parts = split("---\ndate: 2020-01-02\nimage: a.jpg\n---\nBody\n");
+  const original = decode(parts);
+  const data = { title: "First", date: original.date, summary: "Between", image: "a.jpg", last: 1 };
+  assert.equal(join(encode(parts, original, data)), "---\ntitle: First\ndate: 2020-01-02\nsummary: Between\nimage: a.jpg\nlast: 1\n---\nBody\n");
+});
+
 test("YAML: keys that did not change keep their text, folded lines included", () => {
   const text = `---
 title: Old

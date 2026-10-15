@@ -1,20 +1,21 @@
 // The front matter form: a field per key, with the input its field (`hints.ts`) and its value
-// call for. The inputs for dates, terms, lists and images are in `inputs.ts`, tables in
-// `groups.ts`.
+// call for. The inputs for dates, terms and lists are in `inputs.ts`, images in `images.ts`,
+// tables in `groups.ts`.
 
 import { html, nothing, type TemplateResult } from "lit-html";
 import { live } from "lit-html/directives/live.js";
 import { repeat } from "lit-html/directives/repeat.js";
-import { type FrontMatter, isTomlDate } from "../codec";
+import { clone, type FrontMatter, isTomlDate } from "../codec";
 import { type FieldHint, type Taxonomy } from "./data";
 import { valueOf } from "./dom";
 import { mapInput, objectsInput } from "./groups";
 import { hintOf, isEmpty, type Path, share, startOf } from "./hints";
 import { icon } from "./icons";
-import { addMenu, choicesInput, dateInput, imageInput, listInput, optionsOf, termsInput, textInput, valuesList } from "./inputs";
+import { imageInput } from "./images";
+import { addMenu, choicesInput, dateInput, listInput, optionsOf, termsInput, textInput, valuesList } from "./inputs";
 import { type MdCheckbox } from "./material";
 import { pageView } from "./pages";
-import { current, site } from "./state";
+import { current, langName, site } from "./state";
 
 export const taxonomies = () => new Map(site.taxonomies.map((t) => [t.plural.toLowerCase(), t]));
 const DATE_KEYS = new Set(["date", "publishdate", "pubdate", "published", "lastmod", "modified", "expirydate", "unpublishdate"]);
@@ -25,20 +26,77 @@ const looksLikeDate = (v: unknown) =>
 export type Setter = (value: unknown) => void;
 
 export function fieldsForm(data: FrontMatter, readOnly: boolean): TemplateResult {
-  const section = site.sections.find((s) => s.key === current().entry.section);
+  const p = current();
+  const section = site.sections.find((s) => s.key === p.entry.section);
+  const same = (a: string, b: string) => a.toLowerCase() === b.toLowerCase();
+  const inSection = (key: string) => section?.keys.some((k) => same(k.key, key)) ?? false;
   // The keys other pages of the section use, and those only the settings name.
   const configured = Object.entries(site.fields ?? {})
     .filter(([key, h]) => h.unused && h.widget !== "hidden" && !key.includes("."))
     .map(([key, h]) => ({ key: h.name ?? key, kind: h.kind ?? "string", default: undefined as unknown }));
-  const has = (key: string) => Object.keys(data).some((x) => x.toLowerCase() === key.toLowerCase());
-  const absent = [...(section?.keys ?? []), ...configured].filter(
-    (k, i, all) => !has(k.key) && all.findIndex((x) => x.key.toLowerCase() === k.key.toLowerCase()) === i,
-  );
+  const has = (key: string) => Object.keys(data).some((x) => same(x, key));
+  const absent = [...(section?.keys ?? []), ...configured].filter((k, i, all) => !has(k.key) && all.findIndex((x) => same(x.key, k.key)) === i);
+  // The other languages' files of the page, the default language's first, and the value the
+  // first of them that gives one gives a key.
+  const others = [...p.docs.entries()]
+    .sort(([a], [b]) => Number(b === site.default_language) - Number(a === site.default_language))
+    .flatMap(([lang, d]) => (d.data && d.data !== data ? [{ lang, data: d.data }] : []));
+  const sourceOf = (key: string) => {
+    for (const o of others) {
+      const k = Object.keys(o.data).find((x) => same(x, key));
+      if (k !== undefined && !isEmpty(o.data[k])) return { lang: o.lang, value: o.data[k] };
+    }
+    return null;
+  };
+  // Keys the file lacks and should give, shown empty: those the settings require (on a page of a
+  // section whose pages use them, as the checks before saving count them), and the text each
+  // language gives its own of that another language's file has (a title to translate).
+  const missing = absent.filter((k) => {
+    const h = hintOf(k.key);
+    const text = h.widget === "text" || h.widget === "textarea";
+    return h.widget !== "hidden" && ((h.required && inSection(k.key)) || (text && !h.shared && sourceOf(k.key) !== null));
+  });
+  // A key the file lacks goes where the other language's file has it: before the first of the
+  // keys after it there that this file has (a key that file lacks too goes first).
+  const order = Object.keys(others[0]?.data ?? {}).map((k) => k.toLowerCase());
+  const placeOf = (key: string, keys: string[]) => {
+    const i = order.indexOf(key.toLowerCase());
+    if (i < 0) return 0;
+    const at = keys.findIndex((k) => order.indexOf(k.toLowerCase()) > i);
+    return at < 0 ? keys.length : at;
+  };
   // A key whose value is one for every language goes to each language's file.
   const store = (key: string, value: unknown) => {
     if (value === undefined) delete data[key];
     else data[key] = value;
     if (hintOf(key).shared) share(data, key, value);
+  };
+  // A key the file lacks goes into it, in its place, once it has a value.
+  const fill = (key: string) => (value: unknown) => {
+    if (has(key)) return store(key, value);
+    if (isEmpty(value)) return;
+    const entries = Object.entries(data);
+    entries.splice(placeOf(key, Object.keys(data)), 0, [key, value]);
+    for (const k of Object.keys(data)) delete data[k];
+    Object.assign(data, Object.fromEntries(entries));
+    if (hintOf(key).shared) share(data, key, value);
+  };
+  // Under a key the file lacks: another language's value, and a button that copies it here.
+  const copyFrom = (key: string) => {
+    const from = sourceOf(key);
+    if (!from || readOnly) return nothing;
+    const v = from.value;
+    const shown = typeof v === "string" || typeof v === "number" || isTomlDate(v) ? String(v) : "";
+    const copy = () => {
+      fill(key)(clone(v));
+      pageView();
+    };
+    return html`
+      <div class="copy-from">
+        <span class="muted" title=${shown}>${langName(from.lang)}${shown ? `: ${shown}` : ""}</span>
+        <md-text-button @click=${copy}>Copy</md-text-button>
+      </div>
+    `;
   };
   const add = (key: string) => {
     const k = absent.find((x) => x.key === key);
@@ -50,17 +108,26 @@ export function fieldsForm(data: FrontMatter, readOnly: boolean): TemplateResult
     store(key, undefined);
     pageView();
   };
+  const keys = Object.keys(data).filter((key) => hintOf(key).widget !== "hidden");
+  const rows = keys.map((key) => ({ key, missing: false }));
+  // From the last place to the first, so that each place stays where it was.
+  const places = missing.map((k) => ({ key: k.key, at: placeOf(k.key, keys), rank: order.indexOf(k.key.toLowerCase()) }));
+  for (const m of places.sort((a, b) => b.at - a.at || b.rank - a.rank)) rows.splice(m.at, 0, { key: m.key, missing: true });
+  const more = absent.filter((k) => !missing.includes(k));
   return html`
     <div class="fields">
       ${repeat(
-        Object.keys(data).filter((key) => hintOf(key).widget !== "hidden"),
-        (key) => key,
-        (key) => field(key, hintOf(key).label ?? key, data[key], (v) => store(key, v), readOnly, [key], remove(key)),
+        rows,
+        (row) => row.key,
+        ({ key, missing }) =>
+          missing
+            ? field(key, hintOf(key).label ?? key, undefined, fill(key), readOnly, [key], null, copyFrom(key))
+            : field(key, hintOf(key).label ?? key, data[key], (v) => store(key, v), readOnly, [key], remove(key)),
       )}
-      ${!readOnly && absent.length
+      ${!readOnly && more.length
         ? addMenu(
             "Add a field",
-            absent.map((k) => ({ key: k.key, label: hintOf(k.key).label ?? k.key })),
+            more.map((k) => ({ key: k.key, label: hintOf(k.key).label ?? k.key })),
             add,
           )
         : nothing}
@@ -68,8 +135,17 @@ export function fieldsForm(data: FrontMatter, readOnly: boolean): TemplateResult
   `;
 }
 
-/** One field: a label and the input for `value`. */
-export function field(key: string, label: string, value: unknown, set: Setter, readOnly: boolean, path: Path, remove: (() => void) | null): TemplateResult {
+/** One field: a label and the input for `value`, and `below` it. */
+export function field(
+  key: string,
+  label: string,
+  value: unknown,
+  set: Setter,
+  readOnly: boolean,
+  path: Path,
+  remove: (() => void) | null,
+  below: TemplateResult | typeof nothing = nothing,
+): TemplateResult {
   const id = `f-${path.join("-")}`.replace(/[^A-Za-z0-9_-]/g, "_");
   const hint = hintOf(path);
   const kind = kindOf(key, value, path, hint);
@@ -86,7 +162,7 @@ export function field(key: string, label: string, value: unknown, set: Setter, r
         ${remove && !readOnly ? html`<md-icon-button class="remove" title="Remove ${key}" aria-label="Remove ${key}" @click=${remove}>${icon("close")}</md-icon-button>` : nothing}
       </div>
       ${inputFor(kind, key, value, set, readOnly, path, hint, id)}
-      ${hint.help ? html`<small class="muted">${hint.help}</small>` : nothing}
+      ${hint.help ? html`<small class="muted">${hint.help}</small>` : nothing}${below}
     </div>
   `;
 }
