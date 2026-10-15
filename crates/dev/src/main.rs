@@ -5,14 +5,14 @@ use std::process::ExitCode;
 
 use clap::{Parser, Subcommand};
 use ssg_dev::{
-    Fail, bench, file_length, licence, manifest, notices, package, ratchet, selftest, sites,
-    structdiff,
+    Fail, bench, file_length, install, licence, manifest, notices, package, ratchet, selftest,
+    sites, structdiff,
 };
 
 #[derive(Parser)]
 #[command(
     name = "ssg-dev",
-    about = "The repository's tools: test sites, build manifests, structdiff, licences, release archives and file lengths"
+    about = "The repository's tools: test sites, build manifests, structdiff, licences, release archives, local installs and file lengths"
 )]
 struct Cli {
     #[command(subcommand)]
@@ -80,6 +80,12 @@ enum Command {
         out_dir: PathBuf,
         /// The licence notices (THIRD_PARTY_NOTICES.txt in the archive)
         notices: Option<PathBuf>,
+    },
+    /// Installs fugo from this checkout (cargo install) with the version of its latest release tag
+    Install {
+        /// Arguments for cargo install (--root <DIR>, --features …)
+        #[arg(trailing_var_arg = true, allow_hyphen_values = true)]
+        cargo_args: Vec<String>,
     },
 }
 
@@ -194,6 +200,7 @@ fn run(cli: Cli) -> Result<i32, Fail> {
             package::run(&binary, &target, &out_dir, notices.as_deref())?;
             Ok(0)
         }
+        Command::Install { cargo_args } => install::run(&cargo_args),
     }
 }
 

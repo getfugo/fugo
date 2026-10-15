@@ -116,8 +116,17 @@ cd fugo
 cargo build --release --locked -p ssg-cli
 ```
 
-The binary is `target/release/fugo`. See [Development](/contribute/development/) for the
-workspace and its tests.
+The binary is `target/release/fugo`. To install it into Cargo's `bin` directory instead
+(`~/.cargo/bin`; `cargo dev install --root <dir>` installs into `<dir>/bin`), named after the
+latest release the clone contains, run:
+
+```sh
+cargo dev install
+```
+
+`fugo version` then prints that release's version and the commit you built, e.g.
+`fugo v1.2.3-<commit> linux/amd64 BuildDate=<date>`. See
+[Development](/contribute/development/) for the workspace and its tests.
 
 ## npm packages
 

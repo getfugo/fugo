@@ -1,11 +1,11 @@
-//! The release tools: the SPDX expressions of the licence check, tools/dev/version.sh, and the
-//! archives of `package`.
+//! The release tools: the SPDX expressions of the licence check, tools/dev/version.sh, the
+//! build `install` names, and the archives of `package`.
 
 use std::collections::HashSet;
 use std::path::Path;
 use std::process::Command;
 
-use ssg_dev::{licence, package, root};
+use ssg_dev::{install, licence, package, root};
 
 #[test]
 fn spdx_expressions() {
@@ -68,6 +68,7 @@ fn git(dir: &Path, args: &[&str]) {
         ])
         .args(args)
         .current_dir(dir)
+        .env("GIT_COMMITTER_DATE", "2024-01-02T03:04:05+07:00")
         .output()
         .expect("git runs")
         .status
@@ -122,6 +123,63 @@ fn release_versions() {
         assert!(!version(d, &["tag", bad]).1, "{bad:?}");
     }
     assert!(!version(d, &["next", "huge"]).1);
+}
+
+#[test]
+fn install_builds() {
+    let tmp = tempfile::tempdir().expect("a temporary directory");
+    let d = tmp.path();
+    git(d, &["init", "-q"]);
+    git(d, &["commit", "-q", "--allow-empty", "-m", "init"]);
+    let read = || install::Build::read(d).expect("a git checkout");
+    let build = read();
+    assert_eq!(build.version, None, "no release tag yet");
+    assert_eq!(
+        build.date, "2024-01-01T20:04:05Z",
+        "the commit's time in UTC"
+    );
+    for t in [
+        "v0.148.2",
+        "v1.0.0",
+        "v1.9.9",
+        "v1.10.0",
+        "v01.0.0",
+        "v1.2.3+meta",
+        "vx",
+    ] {
+        git(d, &["tag", t]);
+    }
+    let version = || read().version;
+    assert_eq!(
+        version().as_deref(),
+        Some("1.10.0"),
+        "versions compare as numbers"
+    );
+    git(d, &["checkout", "-q", "-b", "side"]);
+    git(d, &["commit", "-q", "--allow-empty", "-m", "side"]);
+    git(d, &["tag", "v9.0.0"]);
+    git(d, &["checkout", "-q", "-"]);
+    assert_eq!(
+        version().as_deref(),
+        Some("1.10.0"),
+        "a tag not reachable from HEAD does not count"
+    );
+    git(d, &["commit", "-q", "--allow-empty", "-m", "rc"]);
+    git(d, &["tag", "v1.11.0-rc.1"]);
+    let at_tag = read();
+    assert_eq!(
+        at_tag.version.as_deref(),
+        Some("1.11.0-rc.1"),
+        "pre-releases count"
+    );
+    git(d, &["commit", "-q", "--allow-empty", "-m", "past the tag"]);
+    let past = read();
+    assert_eq!(
+        past.version, at_tag.version,
+        "a build past a tag has its version"
+    );
+    assert_ne!(past.commit, at_tag.commit, "and HEAD's commit");
+    assert!(past.commit.len() == 40 && past.commit.bytes().all(|b| b.is_ascii_hexdigit()));
 }
 
 #[test]

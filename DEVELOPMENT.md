@@ -277,7 +277,12 @@ clone may still have them) never counts.
    container image (below).
 
 A local build gets a release's version the same way: `FUGO_BUILD_VERSION=1.2.3 cargo build
---release --locked -p ssg-cli`.
+--release --locked -p ssg-cli`. `cargo dev install` installs `fugo` from the checkout with the
+version git gives it: `cargo install --path crates/cli --locked` (then the command's arguments,
+e.g. `--root ~/.local`) with `FUGO_BUILD_VERSION` the latest release tag reachable from `HEAD`
+(pre-releases count; none in a shallow clone without tags, and the build is `0.0.0-DEV`),
+`FUGO_BUILD_COMMIT` `HEAD`'s commit and `FUGO_BUILD_DATE` its time. A build past a tag has the
+tag's version and its own commit, `fugo v<version>-<commit> …`, which tells it from the release.
 
 Re-running the workflow (or its failed jobs) for a tag replaces the assets of the release an
 earlier run created, and publishes it if that run stopped before (`gh release create` makes a
