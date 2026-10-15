@@ -16,7 +16,8 @@ use ssg_base::url::BaseUrl;
 use ssg_base::{Clock, IdVec, Idx, ImageOpId, LangIdx, Map, PageId, Params, ResourceId, Value};
 use ssg_config::{Config, MediaType, MediaTypes};
 use ssg_images::{
-    Enqueued, ImageError, ImageFormat, ImageInput, ImageMetadata, ImageQueue, QrLevel,
+    Credit, CreditError, Enqueued, ImageError, ImageFormat, ImageInput, ImageMetadata, ImageQueue,
+    QrLevel,
 };
 use ssg_vfs::{Component, Vfs, VfsError};
 use xxhash_rust::xxh3::xxh3_64;
@@ -27,9 +28,12 @@ use crate::remote::{RemoteConfig, RemoteState};
 
 mod assets;
 mod create;
+mod credit;
+mod error;
 mod kinds;
 mod transform;
 
+pub use error::*;
 pub use kinds::*;
 
 /// A resource: immutable once registered.
@@ -87,63 +91,6 @@ impl Resource {
     #[must_use]
     pub fn integrity(&self) -> Option<&str> {
         self.data.get("Integrity").and_then(Value::as_str)
-    }
-}
-
-/// Why a resource could not be made, read or published.
-#[derive(Debug, thiserror::Error)]
-pub enum ResourceError {
-    #[error("{path}: {source}")]
-    Io { path: PathBuf, source: io::Error },
-    #[error(transparent)]
-    Vfs(#[from] VfsError),
-    #[error(transparent)]
-    Glob(#[from] GlobError),
-    #[error(transparent)]
-    Image(#[from] ImageError),
-    #[error("unsupported hash algorithm {0:?}: use md5, sha256, sha384 or sha512")]
-    UnsupportedHash(String),
-    /// Two calls in one language made different resources for one target path.
-    #[error(
-        "{target} is created twice in one language with different inputs: at {first} and at {second}"
-    )]
-    TargetConflict {
-        target: OutputPath,
-        first: CallSite,
-        second: CallSite,
-    },
-    #[error(
-        "resources to concatenate must have one media type: {first} is {first_type:?}, {other} is {other_type:?}"
-    )]
-    MixedMediaTypes {
-        first: String,
-        first_type: String,
-        other: String,
-        other_type: String,
-    },
-    #[error("an empty target path")]
-    EmptyTarget,
-    #[error("resource metadata entry {index}: {reason}")]
-    Metadata { index: usize, reason: String },
-    #[error("{0}: the image has no pixels to read (not a file or a processed image)")]
-    NotAnImage(String),
-    #[error("writing {path}: {source}")]
-    Write { path: OutputPath, source: io::Error },
-    /// A transform (`to_css`, `js_build`, …) failed.
-    #[error("{resource}: {transform}: {source}")]
-    Pipe {
-        resource: String,
-        transform: &'static str,
-        source: Box<PipeError>,
-    },
-}
-
-impl ResourceError {
-    fn io(path: impl Into<PathBuf>, source: io::Error) -> Self {
-        Self::Io {
-            path: path.into(),
-            source,
-        }
     }
 }
 
@@ -315,6 +262,8 @@ pub struct ResourceStore {
     /// The results of `execute_as_template`: template output whose URLs publish resources.
     template_outputs: Mutex<BTreeSet<ResourceId>>,
     pub(crate) published: Mutex<BTreeSet<OutputPath>>,
+    /// The credits of files ([`set_credit`](Self::set_credit)).
+    credits: Mutex<BTreeMap<ResourceId, Credit>>,
     pub(crate) remote: RemoteState,
     pub(crate) pipes: PipeState,
 }
@@ -341,6 +290,7 @@ impl ResourceStore {
             marked: Mutex::new(BTreeSet::new()),
             template_outputs: Mutex::new(BTreeSet::new()),
             published: Mutex::new(BTreeSet::new()),
+            credits: Mutex::new(BTreeMap::new()),
             remote: RemoteState::default(),
             pipes: PipeState::default(),
         }

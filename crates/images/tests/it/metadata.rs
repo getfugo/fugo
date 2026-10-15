@@ -1,7 +1,8 @@
 //! `strip_metadata`: original JPEG, PNG and WebP files without EXIF, XMP, IPTC, comments and
 //! text, with the same pixels, colour profile and orientation; `rewrite_metadata` (`notice`):
-//! with a title, an author and a copyright notice instead.
+//! with a title, an author and a copyright notice instead; an image's own (`credit`).
 
+mod credit;
 mod notice;
 
 use serde_json::json;

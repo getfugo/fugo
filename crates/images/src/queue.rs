@@ -25,6 +25,7 @@ use crate::exif;
 use crate::filter::{ImageFilter, ImageInput, MemoryImage};
 use crate::font::{FontData, FontId};
 use crate::format::ImageFormat;
+use crate::metadata::Credit;
 use crate::pixels;
 use crate::plan::{InputInfo, InputRef, Plan, Step};
 use crate::settings::Imaging;

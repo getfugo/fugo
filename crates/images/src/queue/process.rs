@@ -130,8 +130,11 @@ impl ImageQueue {
         s
     }
 
-    /// Processes the wanted operations in parallel and writes each result to its target.
-    /// Must be called outside any render (build phase E6).
+    /// Processes the wanted operations in parallel and writes each result to its target,
+    /// with the notice of `[imaging]`
+    /// ([`ImageMetadata::processed`](crate::ImageMetadata::processed)), the copyright and
+    /// author of its credit instead for a target `credits` gives one (its source's own). Must
+    /// be called outside any render (build phase E6).
     ///
     /// # Errors
     /// The first failure in target order: processing (see [`ImageQueue::encoded`]) or
@@ -139,6 +142,7 @@ impl ImageQueue {
     pub fn process(
         &self,
         wanted: &BTreeMap<OutputPath, ImageOpId>,
+        credits: &BTreeMap<OutputPath, Credit>,
         sink: &dyn Sink,
     ) -> Result<(), ImageError> {
         let mut ids: Vec<ImageOpId> = wanted.values().copied().collect();
@@ -163,8 +167,10 @@ impl ImageQueue {
                 return Err(self.for_target(target, *id, e));
             }
             if let Some(Ok(bytes)) = results.get(id) {
-                // The notice goes in here, not into the cache: it is the site's, not the image's.
-                let stamped = self.imaging.metadata.processed(bytes, target.as_str());
+                // The notice goes in here, not into the cache: it is the site's or its
+                // source's, not the image's.
+                let metadata = &self.imaging.metadata;
+                let stamped = metadata.processed(bytes, target.as_str(), credits.get(target));
                 sink.write(target, stamped.as_deref().unwrap_or(bytes))
                     .map_err(|e| ImageError::io(target.as_str(), e))?;
             }

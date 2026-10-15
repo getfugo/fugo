@@ -64,6 +64,12 @@ Some flags
 - Images published as they are (page resources, assets, static files) lose their metadata:
   EXIF with the GPS position, XMP, IPTC and comments. `[imaging] stripMetadata = false` keeps
   it; see [Image metadata](/configuration/imaging/#image-metadata).
+- An image resource's `copyright` and `author` params are not only template data: they are
+  written into the image, and into the images processed from it, in place of `[imaging]`'s. A
+  value that is not text, has a line break (in YAML, wrap a long one with `>-`, not `>`), has
+  a brace other than `{year}` or is longer than 1000 bytes stops the build.
+  `[imaging] stripMetadata = false` turns this off; see
+  [Copyright notice](/configuration/imaging/#copyright-notice).
 - Settings and the environment are not read from environment variables: `--environment` chooses
   the environment. Secrets that templates read go in the
   [`.env` files](/configuration/introduction/#the-env-file).

@@ -12,9 +12,11 @@ use crate::duration::{self, SignedDuration};
 use crate::error::ConfigError;
 
 mod caches;
+mod notice;
 mod security;
 
 pub use caches::*;
+pub use notice::*;
 pub use security::*;
 
 /// The project's component directories, as configured (relative to the project directory
@@ -189,9 +191,11 @@ pub struct ImagingConfig {
     /// on by default.
     pub strip_metadata: bool,
     /// The copyright notice written into every published image (empty: none), where each
-    /// [`YEAR`](Self::YEAR) stands for the build's year; fugo's own.
+    /// [`YEAR`](Self::YEAR) stands for the build's year, unless the image has a notice of its
+    /// own (a page resource's `copyright` or `author` param); fugo's own.
     pub copyright: String,
-    /// The author written into every published image (empty: none); fugo's own.
+    /// The author written into every published image (empty: none), unless the image has a
+    /// notice of its own; fugo's own.
     pub author: String,
     /// Write an image's file name, without its extension, as its title; fugo's own.
     pub title_from_file_name: bool,
@@ -216,14 +220,15 @@ impl Default for ImagingConfig {
 }
 
 impl ImagingConfig {
-    /// The placeholder of [`copyright`](Self::copyright) for the build's year, its only one.
+    /// The placeholder of the build's year in a copyright notice ([`copyright`](Self::copyright)
+    /// or an image's own), its only one.
     pub const YEAR: &str = "{year}";
 
     /// The copyright notice of a build in `year`: [`copyright`](Self::copyright) with each
     /// [`YEAR`](Self::YEAR) replaced.
     #[must_use]
     pub fn copyright_in(&self, year: i16) -> String {
-        self.copyright.replace(Self::YEAR, &year.to_string())
+        Self::replace_year(&self.copyright, year)
     }
 }
 

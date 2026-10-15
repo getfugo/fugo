@@ -41,3 +41,6 @@ pub use store::{
     AdapterResource, Body, BundleResource, CallSite, HashAlgo, LangTarget, Origin, PublishPolicy,
     QrOptions, Resource, ResourceError, ResourceKind, ResourceStore, StoreConfig, qr_target,
 };
+
+/// The copyright notice and author an image gives itself ([`ResourceStore::set_credit`]).
+pub use ssg_images::Credit;

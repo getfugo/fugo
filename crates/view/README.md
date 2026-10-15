@@ -59,8 +59,18 @@ impl ViewGeneration {
 bytes, name, title and params)
 (publish policy from the model: eager, on reference; bundled content pages `Never`) and
 applies the page's `resources` front matter (`apply_meta`; files re-sorted by type and name
-when renamed, bundled pages after them as `page` resources with `page_id`). `resource_view(store,
-id)` is the value of any store resource; `post_processed_view(store, id)` of `post_process`.
+when renamed, bundled pages after them as `page` resources with `page_id`). It reads each
+page's credit of each image (its `copyright` and `author` params, `ResourceStore::params_credit`;
+a value that cannot be written is `ViewError::Credit`, naming the page's content file and the
+resource), and gives one credit per file (`resource::credits`): every store resource read
+from one source gets the credit of the first page, in language order (`LangIdx`: the default
+content language first, then by weight; page id within a language), that gives one
+(`set_credit`). One source: a bundle file and the copies of it that translations get (multihost
+sites, `duplicateResourceFiles`, a content file that is not Markdown); the file or the bytes of
+the resource a content adapter passed, which its runs for several languages share. A page
+without the metadata takes nothing away, and the copies of a photo carry one credit.
+`resource_view(store, id)` is the value of any store resource; `post_processed_view(store, id)`
+of `post_process`.
 
 **Pending transforms (T42's "for the template layer").** A pending result's links, name and
 media type are final, so its view is built without computing it. A `fingerprint` of a pending
@@ -102,6 +112,12 @@ thread-locals: the scope is the context value `__nh`. Content adapters (`_conten
   snapshots (`tests/it/snapshots`).
 - `state`: pagination recorder (first call, identical re-call, conflict with both positions),
   page-store transactions, deferred registry. `scope`: the scope through a Tera render.
+- `credits`: the credit of a file two languages publish, as one copy they share or as a copy
+  each (`duplicateResourceFiles`, multihost, an HTML translation): the first language's that
+  gives one, on every copy, whatever the order of the pages, a translation key's sharing
+  included; and the errors of values that cannot be written, naming the page's file and the
+  resource (a YAML block folded with `>` among them: it ends with a line break; `>-` does
+  not).
 - `memory::real_sites` (ignored): `FUGO_SITES=<dir>[:<dir>…] cargo test -p ssg-view
   real_sites -- --ignored --nocapture` with sites from `cargo dev sites make`:
   every page's full value in the Meta and two Full generations has every key, lists share

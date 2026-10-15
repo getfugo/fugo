@@ -8,16 +8,18 @@
 //! information. It writes an EXIF block with the orientation, the author and the copyright, and
 //! an XMP packet with the title, the author and the copyright ([`Notice`]); [`strip_metadata`]
 //! writes only the orientation. [`ImageMetadata`] is what a build does with the images it
-//! publishes.
+//! publishes, and [`Credit`] the copyright notice and author an image gives itself.
 
 use exif::{In, Reader, Tag};
 
+mod credit;
 mod jpeg;
 mod notice;
 mod png;
 mod published;
 mod webp;
 
+pub use credit::{Credit, CreditError};
 pub use notice::Notice;
 pub use published::ImageMetadata;
 
