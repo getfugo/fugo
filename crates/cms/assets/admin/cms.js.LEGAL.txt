@@ -80,12 +80,6 @@
 * SPDX-License-Identifier: BSD-3-Clause
 */
 
-/**
-* @license
-* Copyright 2021 Google LLC
-* SPDX-License-Identifier: BSD-3-Clause
-*/
-
 /*! The browser editor of the site generator's [cms]. It bundles yaml, smol-toml, marked, lit
 * (lit-html, lit-element, @lit/reactive-element), Material Web with tslib, and the paths of
 * Material Symbols icons; these are their licence notices. */

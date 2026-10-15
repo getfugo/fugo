@@ -26,6 +26,7 @@
 
 #![forbid(unsafe_code)]
 
+pub mod body;
 pub mod config;
 pub mod fields;
 pub mod index;

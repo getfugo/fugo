@@ -15,7 +15,8 @@
 //!
 //! The jobs render on the render pool; each winning output goes straight to
 //! `Publisher::emit` from its worker (the publisher's stats and URL tokens are sorted sets,
-//! and no two published outputs share a path). Errors are reported in job order.
+//! and no two published outputs share a path). Errors are reported in job order. In a build
+//! with the editor, a page's HTML first has the element of its text marked (`cms::mark_body`).
 
 use std::collections::BTreeMap;
 
@@ -27,7 +28,7 @@ use ssg_publish::{Emitted, Publisher};
 use ssg_render::{Job, JobOrder, Session};
 
 use crate::structure::Recorder;
-use crate::{BuildError, BuildReport, Collision, RenderPool};
+use crate::{BuildError, BuildReport, Collision, RenderPool, cms};
 
 /// Which kind of job wrote a file: on a collision a page beats an alias.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
@@ -171,6 +172,7 @@ pub(crate) fn run(
     mut structure: Option<&mut Recorder>,
 ) -> Result<(), BuildError> {
     let planned = plan(session, jobs, written)?;
+    let mark = cms::in_build(&session.model().config);
     let results: Vec<Result<(usize, bool), BuildError>> = pool.run(|| {
         planned
             .par_iter()
@@ -183,9 +185,15 @@ pub(crate) fn run(
                 let mut published = 0;
                 let alias = Class::of(p.job) == Class::Alias;
                 for o in outputs {
+                    let text = match *p.job {
+                        Job::Page { page, format } if mark && o.is_html => {
+                            cms::mark_body(session, page, format, o.text)
+                        }
+                        _ => o.text,
+                    };
                     let emitted = publisher.emit(ssg_publish::Output {
                         path: o.path,
-                        text: o.text,
+                        text,
                         format: o.format,
                         lang: o.lang,
                         alias,

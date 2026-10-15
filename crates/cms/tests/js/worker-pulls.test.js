@@ -135,7 +135,7 @@ test("draft ids that are not branches under cms/ are refused", async () => {
   assert.equal(thai.status, 404, "a Decap CMS slug in Thai is an id");
 });
 
-test("GitHub App: the token may open pull requests when the installation may", async () => {
+test("GitHub App: the token may open pull requests, and read deployments, when the installation may", async () => {
   const { privateKey, publicKey } = generateKeyPairSync("rsa", {
     modulusLength: 2048,
     privateKeyEncoding: { type: "pkcs1", format: "pem" },
@@ -144,6 +144,8 @@ test("GitHub App: the token may open pull requests when the installation may", a
   for (const [permissions, granted] of [
     [{ contents: "write" }, { contents: "write" }],
     [{ contents: "write", pull_requests: "write", workflows: "write" }, { contents: "write", pull_requests: "write" }],
+    [{ contents: "write", deployments: "read" }, { contents: "write", deployments: "read" }],
+    [{ contents: "write", deployments: "write" }, { contents: "write", deployments: "read" }],
   ]) {
     const { call, gh } = setup({ env: { CMS_GITHUB_TOKEN: "", CMS_GITHUB_APP_ID: "123", CMS_GITHUB_APP_KEY: privateKey } });
     gh.allowApp(123, publicKey, 77, permissions);

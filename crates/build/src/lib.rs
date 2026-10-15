@@ -448,7 +448,7 @@ pub fn build(r: BuildRequest) -> Result<BuildReport, BuildError> {
 
     // E6b: after the site, so the editor replaces any output at its path. The pages' URLs are
     // only for a build with the editor.
-    let urls = if cfg.raw.get("cms").is_some() {
+    let urls = if cms::in_build(&cfg) {
         cms::content_urls(&cfg, session.model())
     } else {
         std::collections::BTreeMap::new()

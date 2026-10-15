@@ -169,6 +169,14 @@ impl Session {
             })
     }
 
+    /// The content (`page.content`) the layouts of `page` in `format` print, once phase C1
+    /// rendered it: `None` for a page without content (or before C1).
+    #[must_use]
+    pub fn layout_content(&self, page: PageId, format: FormatId) -> Option<&RenderedContent> {
+        let v = self.known_variant(HookVariant::Format(format));
+        self.contents.get()?.get(&v)?.get(page)?.as_deref()
+    }
+
     pub(super) fn permalink(&self, page: PageId, format: FormatId) -> Result<String, RenderError> {
         outputs(&self.model.pages[page])
             .find(|o| o.format == format)

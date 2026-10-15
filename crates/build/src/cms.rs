@@ -1,9 +1,26 @@
-//! What the content editor gets from the build: the URL of each content file's page.
+//! What the content editor gets from the build: the URL of each content file's page, and in
+//! each page the mark of the element that holds its text.
 
 use std::collections::BTreeMap;
 
+use ssg_base::{FormatId, PageId};
 use ssg_config::Config;
+use ssg_render::Session;
 use ssg_site::Model;
+
+/// Whether the build writes the editor (`[cms]`).
+pub(crate) fn in_build(cfg: &Config) -> bool {
+    cfg.raw.get("cms").is_some()
+}
+
+/// `text`, the output of `page` in HTML format `format`, with the element that holds the page's
+/// text marked for the editor's preview ([`ssg_cms::body`]).
+pub(crate) fn mark_body(session: &Session, page: PageId, format: FormatId, text: String) -> String {
+    session
+        .layout_content(page, format)
+        .and_then(|c| ssg_cms::body::mark_body(&text, &c.html))
+        .unwrap_or(text)
+}
 
 /// The URL path of the page of each content file the build rendered (its link in its first
 /// format, below the site's root: `/posts/hello/`, `/th/posts/hello/`), by the file's path in the

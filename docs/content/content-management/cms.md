@@ -98,7 +98,8 @@ Serve the site and the API from one Worker with
 `run_worker_first` runs the Worker for the API only; every other request is a static file,
 which costs nothing and does not count against the free plan's daily requests. The site lives
 at its own domain only, the one people sign in at, so keep the Worker's `workers.dev` and
-preview addresses off. Build and deploy with
+preview addresses off (unless your CI [builds the drafts](#the-draft-as-the-site-builds-it)
+there). Build and deploy with
 [Cloudflare Workers](/host-and-deploy/cloudflare-workers/).
 
 ### 3. Sign in with GitHub or Google
@@ -173,9 +174,11 @@ The Worker commits with one credential, stored as a Worker secret; editors need 
 account.
 
 - **A GitHub App** (recommended: not tied to a person, and its tokens expire after an hour).
-  Create an app with the repository permissions *Contents: Read and write* and *Pull requests:
+  Create an app with the repository permissions *Contents: Read and write*, *Pull requests:
   Read and write* (for the drafts' [pull requests](#drafts-and-publishing); without it there are
-  none) and nothing else, install it on the repository only, and generate a private key:
+  none) and *Deployments: Read* (for the [drafts' builds](#the-draft-as-the-site-builds-it);
+  without it the editor shows none) and nothing else, install it on the repository only, and
+  generate a private key:
 
   ```sh
   npx wrangler secret put CMS_GITHUB_APP_ID      # the app's ID
@@ -183,7 +186,7 @@ account.
   ```
 
 - **A fine-grained personal access token**, for the repository only, with *Contents: Read and
-  write* and *Pull requests: Read and write*:
+  write*, *Pull requests: Read and write* and *Deployments: Read*:
 
   ```sh
   npx wrangler secret put CMS_GITHUB_TOKEN
@@ -302,6 +305,58 @@ the draft's changes, and changes to different lines of a file are both kept. Onl
 changed the same lines does publishing stop and name the files: open the page, redo the change,
 and discard the draft. *Discard* deletes a draft: anyone may discard their own, publishers any.
 
+### The draft as the site builds it
+
+The [preview](#the-editor) shows a page as you type, with the editor's Markdown. To see a draft
+exactly as the site builds it (its render hooks, shortcodes and images included), let your CI
+build and deploy each draft's branch on every save, and say where on GitHub, as a
+[deployment](https://docs.github.com/en/actions/managing-workflow-runs-and-deployments/managing-deployments/managing-environments-for-deployment):
+a job with an `environment` whose `url` is the draft's address. The editor asks GitHub about
+the deployments of the draft's last save and shows, beside the page's *has a draft*:
+*Building the draft…*, then *Draft built*, a link to the page in that build (or *The draft's
+build failed*, a link to its log); *Not built yet* while the last save waits for its build,
+with a link to the build of an earlier save. Without such deployments, it shows nothing.
+
+With Cloudflare Workers, upload each draft as a version with an alias, which serves it at an
+address of its own (a
+[Version URL](https://developers.cloudflare.com/workers/versions-and-deployments/version-urls/#aliased-version-urls)):
+
+```yaml {title=".github/workflows/drafts.yml"}
+on:
+  push:
+    branches: ["cms/**"]
+jobs:
+  draft:
+    runs-on: ubuntu-latest
+    environment:
+      name: drafts
+      url: ${{ steps.address.outputs.url }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: address
+        run: |
+          # The branch as an alias (cms/post-1a2b3c4d is cms-post-1a2b3c4d): lowercase letters,
+          # digits and dashes, short enough for a DNS label with the Worker's name ("site").
+          alias=$(echo "$GITHUB_REF_NAME" | tr 'A-Z/' 'a-z-' | tr -cd 'a-z0-9-' | cut -c1-40 | sed 's/-*$//')
+          echo "alias=$alias" >> "$GITHUB_OUTPUT"
+          echo "url=https://$alias-site.you.workers.dev/" >> "$GITHUB_OUTPUT"   # you: your workers.dev subdomain
+      - run: |
+          V=1.4.0
+          curl -sL https://github.com/getfugo/fugo/releases/download/v$V/fugo_${V}_linux-amd64.tar.gz | tar -xz fugo
+          ./fugo build --minify -b "${{ steps.address.outputs.url }}"
+      - uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          command: versions upload --preview-alias ${{ steps.address.outputs.alias }}
+```
+
+Version URLs need `"preview_urls": true` in `wrangler.jsonc`, and anyone who has the address can
+read a draft there: put them behind
+[Cloudflare Access](https://developers.cloudflare.com/workers/versions-and-deployments/version-urls/#manage-access-to-version-urls).
+The build uses the draft's address as `baseURL` (`-b`), so its links stay on the draft. Other
+hosts that build branches and report deployments to GitHub (Cloudflare Pages, Netlify, Vercel)
+need no workflow of their own.
+
 With `workflow = "direct"`, every save is a commit to your branch, and there are no drafts.
 
 A save that changes a file someone else changed since you opened it is refused too; reload the
@@ -348,11 +403,14 @@ publishing or discarding a draft) ask first, in a dialog.
   that were edited: the others keep their text exactly, with the blank lines between them.
 - **A preview** of the text inside the site's own page: the published page of its language (for
   a new page, another page of its folder) with the edited text and front matter in place,
-  updated as you type, a picture whose file an image field names (a cover) included. The editor
-  finds the element that holds a page's text and the elements that show a front matter value as
-  published; where it cannot, mark them in the site's templates with `data-cms-body` and
+  updated as you type, a picture whose file an image field names (a cover) included. The build
+  marks the element that holds each page's text (`data-cms-body`), so the text goes where the
+  layout put it, whatever its render hooks add to the text; the editor finds the elements that
+  show a front matter value as published. Where they cannot be found (a layout that changes the
+  text before printing it), mark them in the site's templates with `data-cms-body` and
   `data-cms-field="<key>"`. Shortcodes, scripts and files from other sites (fonts or styles from
-  a CDN, an embedded video) are left out.
+  a CDN, an embedded video) are left out; for the page exactly as the site builds it, see
+  [the draft as the site builds it](#the-draft-as-the-site-builds-it).
 - **Edit as text**: the whole file, front matter included, for anything the form does not show.
 - **Translations**: a tab per language, and a *+ language* button for each other language of
   the site, which adds a version in it (it starts as a copy). A language's file that lacks a
@@ -442,11 +500,10 @@ try it (in an `[environments.staging.cms]` table, built with `-e staging`, for e
   gain backslashes (`\*`) where a character would otherwise start Markdown, and a list it
   rewrites uses the text's first bullet. Markdown it cannot show (footnotes, attributes such as
   `{#id}`, definition lists) stays as text, as written; edit it in Markdown if you prefer.
-- The preview renders the text with the editor's Markdown, not the site's render hooks. For the
-  page exactly as the site builds it, build the draft branch in
-  CI and upload it as a preview version (`npx wrangler versions upload --preview-alias <draft>`):
-  that needs `preview_urls`, and Cloudflare Access on the preview URLs (the Worker's settings),
-  or anyone can read the drafts there.
+- The preview renders the text with the editor's Markdown, not the site's render hooks or
+  shortcodes. For the page exactly as the site builds it, let your CI build the drafts
+  ([the draft as the site builds it](#the-draft-as-the-site-builds-it)): it is there once the
+  build of the last save is done.
 
 ## Security notes
 

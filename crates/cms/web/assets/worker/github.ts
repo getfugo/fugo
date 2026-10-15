@@ -1,8 +1,8 @@
 // Git hosts. A host has the methods of `GitHub`: head, branchesWithHeads, read, blobIds,
-// commitFiles, commitTree, compare, mergeInto, deleteBranch, openPulls, openPull, comment. Paths
-// are project-relative; the host adds `git.dir`.
+// commitFiles, commitTree, compare, mergeInto, deleteBranch, openPulls, openPull, comment,
+// deployments, deploymentStatus. Paths are project-relative; the host adds `git.dir`.
 
-import { type Author, type Change, type Comparison, type Fetch, GitError, HttpError, type Json, type Pull, Race, type Settings, type TreeEntry, USER_AGENT } from "./shared";
+import { type Author, type Change, type Comparison, type Deployment, type DeploymentStatus, type Fetch, GitError, HttpError, type Json, type Pull, Race, type Settings, type TreeEntry, USER_AGENT } from "./shared";
 
 const encodeSegments = (p: string) => p.split("/").map(encodeURIComponent).join("/");
 
@@ -316,5 +316,29 @@ export class GitHub {
 
   async comment(pull: number, body: string): Promise<void> {
     await this.api("POST", `/issues/${pull}/comments`, { body });
+  }
+
+  /** The newest `count` deployments of commit `sha`, or of branch `ref`, newest first. */
+  async deployments(of: { sha: string } | { ref: string }, count: number): Promise<Deployment[]> {
+    const filter = "sha" in of ? `sha=${encodeURIComponent(of.sha)}` : `ref=${encodeURIComponent(of.ref)}`;
+    const list: Json[] = await this.api("GET", `/deployments?${filter}&per_page=${count}`);
+    return list.map((d) => ({ id: Number(d.id), sha: String(d.sha) }));
+  }
+
+  /** The last status of deployment `id`, or null before it has one. */
+  async deploymentStatus(id: number): Promise<DeploymentStatus | null> {
+    const [last]: Json[] = await this.api("GET", `/deployments/${id}/statuses?per_page=1`);
+    if (!last) return null;
+    return { state: String(last.state), url: webUrl(last.environment_url), log: webUrl(last.log_url) ?? webUrl(last.target_url) };
+  }
+}
+
+/** `u` when it is an http or https URL (what a deployment says goes into the editor's links). */
+function webUrl(u: unknown): string | null {
+  if (typeof u !== "string" || u === "") return null;
+  try {
+    return ["http:", "https:"].includes(new URL(u).protocol) ? u : null;
+  } catch {
+    return null;
   }
 }

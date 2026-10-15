@@ -245,11 +245,13 @@ repository:
 
 `CMS_GITHUB_APP_ID`, `CMS_GITHUB_APP_KEY`
 : A GitHub App's ID and private key (PEM), the app installed on the repository with *Contents:
-  Read and write*, and *Pull requests: Read and write* for the drafts' pull requests.
+  Read and write*, *Pull requests: Read and write* for the drafts' pull requests, and
+  *Deployments: Read* for the
+  [drafts' builds](/content-management/cms/#the-draft-as-the-site-builds-it).
 
 `CMS_GITHUB_TOKEN`
-: Instead of an app: a fine-grained token for the repository with *Contents: Read and write*
-  and *Pull requests: Read and write*.
+: Instead of an app: a fine-grained token for the repository with *Contents: Read and write*,
+  *Pull requests: Read and write* and *Deployments: Read*.
 
 `CMS_DEV_USER`
 : For `wrangler dev` only (in `.dev.vars`): the email that requests to `localhost` sign in as,

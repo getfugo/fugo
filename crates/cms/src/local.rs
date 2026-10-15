@@ -10,7 +10,8 @@
 //!   made from it, as on the git host; there are no pull requests. Saving with workflow
 //!   `direct`, and publishing, commit onto it and move the checkout with it (a fast-forward,
 //!   which refuses to overwrite uncommitted changes of the same files), and the server
-//!   rebuilds the site from the files. Nothing is pushed.
+//!   rebuilds the site from the files. Nothing is pushed, and nothing deploys a draft: its
+//!   build (`GET build`) is none.
 //! - **Safety:** the API answers only requests from this computer (a loopback connection)
 //!   to `localhost`, `127.0.0.1` or `[::1]` (the `Host` header: no DNS rebinding), and a POST
 //!   only from the editor's own page (`Origin`), as JSON. Writes are made one at a time.
@@ -196,6 +197,7 @@ impl Editor {
             ("GET", "file") => api.file(param("path").as_deref(), param("draft").as_deref())?,
             ("GET", "drafts") => api.drafts()?,
             ("GET", "draft") => api.draft(param("id").as_deref())?,
+            ("GET", "build") => api.build(param("draft").as_deref())?,
             ("POST", "save") => api.save(&body)?,
             ("POST", "publish") => api.publish(&body)?,
             ("POST", "discard") => api.discard(&body)?,

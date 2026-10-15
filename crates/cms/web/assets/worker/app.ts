@@ -46,6 +46,8 @@ export async function appToken(
   // installation has is refused).
   const permissions: Record<string, string> = { contents: "write" };
   if (installation.permissions?.pull_requests === "write") permissions.pull_requests = "write";
+  // The deployments of the drafts' builds, when the app may read them.
+  if (installation.permissions?.deployments) permissions.deployments = "read";
   const token = await call("POST", `/app/installations/${installation.id}/access_tokens`, {
     repositories: [repo.split("/")[1]],
     permissions,

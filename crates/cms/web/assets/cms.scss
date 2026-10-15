@@ -412,6 +412,13 @@ table.entries {
   text-decoration: none;
   white-space: nowrap;
 
+  // A badge that links elsewhere (a draft's build).
+  md-icon {
+    --md-icon-size: 12px;
+    margin-left: 2px;
+    vertical-align: -2px;
+  }
+
   &.lang {
     background: c(secondary-container);
     color: c(on-secondary-container);

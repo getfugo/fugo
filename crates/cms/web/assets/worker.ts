@@ -21,6 +21,9 @@
 // merges the branch into a draft whose files it changed since, then copies the draft's files
 // onto the branch in one commit and deletes the draft. Decap CMS's drafts
 // (`cms/<collection>/<slug>`) are drafts too. Workflow `direct`: a save commits to the branch.
+// `GET build` tells where a draft's last save (or the branch) is built and served: from the
+// deployments the git host lists for its commit, which a host or a CI job that builds the
+// branch makes (GitHub's deployments; the credential needs *Deployments: Read*).
 
 import { AccessKeys } from "./worker/access";
 import { Api } from "./worker/api";
@@ -121,6 +124,8 @@ export function createWorker(settings: Settings, options: WorkerOptions = {}) {
         return api.drafts();
       case "GET draft":
         return api.draft(url.searchParams.get("id"));
+      case "GET build":
+        return api.build(url.searchParams.get("draft"));
       case "POST save":
         return api.save(body);
       case "POST publish":

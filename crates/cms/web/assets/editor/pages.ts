@@ -6,6 +6,7 @@ import { clone, decode, encode, join, split } from "../codec";
 import { base64ToText } from "../common";
 import { api, ApiError, messageOf } from "./api";
 import { crumbs, listedIn } from "./browse";
+import { buildStatus } from "./builds";
 import { addTranslation, deletePage, discard, movePage, publish, save } from "./changes";
 import { type Doc } from "./data";
 import { loading, show, toast, valueOf } from "./dom";
@@ -83,7 +84,7 @@ export function pageView(): void {
     <div class="crumbs">${crumbs(listedIn(entry.key))}</div>
     <div class="title-row">
       <h1>${title}</h1>
-      ${draft ? html`<a class="badge pending" href="#/d/${draft.id}">has a draft</a>` : nothing}
+      ${draft ? html`<a class="badge pending" href="#/d/${draft.id}">has a draft</a>` : nothing}${buildStatus(draft)}
     </div>
     <div class="tabs">
       <md-tabs aria-label="Languages">

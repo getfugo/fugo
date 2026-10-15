@@ -1,6 +1,6 @@
 // An in-memory GitHub for the Worker's tests: the REST calls and GraphQL queries the Worker
 // makes, with git semantics (snapshots as trees, fast-forward ref updates, merge bases, merges:
-// fake-github-merge.js), and pull requests.
+// fake-github-merge.js), pull requests, and deployments.
 
 import { createHash, createVerify } from "node:crypto";
 import { mergeTrees } from "./fake-github-merge.js";
@@ -33,6 +33,10 @@ export class FakeGitHub {
     /** Whether the token may read and write pull requests (else 403, as for a token with
      * Contents only). */
     this.pullAccess = true;
+    /** Deployments: `{id, sha, ref, environment, statuses}` (statuses oldest first). */
+    this.deploys = [];
+    /** Whether the token may read deployments. */
+    this.deployAccess = true;
     const tree = this.putTree(new Map(Object.entries(files).map(([p, t]) => [p, this.putBlob(Buffer.from(t))])));
     this.refs.set(branch, this.putCommit({ tree, parents: [], message: "init", author: { name: "dev", email: "dev@example.com" } }));
   }
@@ -124,6 +128,14 @@ export class FakeGitHub {
     return this.pulls.find((p) => p.head === head && p.state === "open");
   }
 
+  /** A deployment of `ref`'s head (or of commit `sha`), as a host or a CI job makes one, with
+   * `statuses` as GitHub gives them (`{state, environment_url, log_url}`), oldest first. */
+  deploy(ref, statuses = [], { sha = this.refs.get(ref) ?? ref, environment = "Preview" } = {}) {
+    const d = { id: this.deploys.length + 1, sha, ref, environment, statuses: [...statuses] };
+    this.deploys.push(d);
+    return d;
+  }
+
   /** Lets a GitHub App with `appId` and the public key `publicPem` mint tokens, with the
    * installation's `permissions`. */
   allowApp(appId, publicPem, installation = 77, permissions = { contents: "write" }) {
@@ -165,7 +177,9 @@ export class FakeGitHub {
     if (this.app && url.pathname === `/app/installations/${this.app.installation}/access_tokens`) {
       if (!this.checkAppJwt(auth)) return jsonResponse(401, { message: "Bad credentials" });
       const asked = Object.entries(body.permissions ?? {});
-      if (body.permissions?.contents !== "write" || asked.some(([k, v]) => this.app.permissions[k] !== v)) {
+      // A permission the installation has, or less of it (read of one it may write).
+      const covered = (k, v) => this.app.permissions[k] === v || (v === "read" && this.app.permissions[k] === "write");
+      if (body.permissions?.contents !== "write" || asked.some(([k, v]) => !covered(k, v))) {
         return jsonResponse(422, { message: "The permissions requested are not granted to this installation." });
       }
       this.app.issued++;
@@ -203,6 +217,7 @@ export class FakeGitHub {
       return jsonResponse(204);
     }
     if (/^\/(pulls|issues)(\/|$)/.test(path)) return this.pullsApi(method, path, url.searchParams, body);
+    if (/^\/deployments(\/|$)/.test(path)) return this.deploymentsApi(method, path, url.searchParams);
     if (method === "GET" && (m = path.match(/^\/git\/commits\/([0-9a-f]+)$/))) {
       const c = this.commits.get(m[1]);
       if (!c) return jsonResponse(404, { message: "Not Found" });
@@ -323,6 +338,23 @@ export class FakeGitHub {
       pull.comments.push(body.body);
       return jsonResponse(201, { id: pull.comments.length });
     }
+    return jsonResponse(404, { message: `fake: no ${method} ${path}` });
+  }
+
+  /** The deployments' REST calls the Worker makes (it only reads them). */
+  deploymentsApi(method, path, query) {
+    if (!this.deployAccess) return jsonResponse(403, { message: "Resource not accessible by integration" });
+    const count = Number(query.get("per_page") ?? 30);
+    let m;
+    if (method === "GET" && path === "/deployments") {
+      const list = this.deploys
+        .filter((d) => (!query.has("sha") || d.sha === query.get("sha")) && (!query.has("ref") || d.ref === query.get("ref")))
+        .reverse()
+        .slice(0, count);
+      return jsonResponse(200, list.map((d) => ({ id: d.id, sha: d.sha, ref: d.ref, environment: d.environment })));
+    }
+    const d = (m = path.match(/^\/deployments\/(\d+)\/statuses$/)) && this.deploys[Number(m[1]) - 1];
+    if (method === "GET" && d) return jsonResponse(200, [...d.statuses].reverse().slice(0, count));
     return jsonResponse(404, { message: `fake: no ${method} ${path}` });
   }
 

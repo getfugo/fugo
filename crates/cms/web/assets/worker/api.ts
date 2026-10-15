@@ -4,7 +4,11 @@
 
 import { areaOf, base64Size, cleanPath, commitMessage, mayEdit, parseTrailers } from "../common";
 import { GitHub } from "./github";
-import { type Author, type Body, type Change, type CompareFile, type Comparison, DRAFTS, GitError, HttpError, LABEL, MAX_CHANGES, MAX_PATCH, type Pull, Race, type Settings, type TreeEntry, type User } from "./shared";
+import { type Author, type Body, type Build, type Change, type CompareFile, type Comparison, type Deployment, type DeploymentStatus, DRAFTS, GitError, HttpError, LABEL, MAX_CHANGES, MAX_PATCH, type Pull, Race, type Settings, type TreeEntry, type User } from "./shared";
+
+/** The deployments of a commit (or a branch) a build is looked for among, newest first. */
+const DEPLOYMENTS = 5;
+const NO_BUILD: Build = { state: "none", url: null, log: null, built: null };
 
 export class Api {
   constructor(
@@ -224,6 +228,44 @@ export class Api {
     }
   }
 
+  /** The build of a draft's last save (`draft`), or of the branch's last commit, as the
+   * deployments the git host lists for that commit say (a host or a CI job that builds the
+   * draft's branch makes them): `none` when nothing deploys the branch, or the token may not
+   * read deployments. */
+  async build(draft: string | null) {
+    const head = draft === null ? await this.mainHead() : await this.draftHead(draft);
+    const ref = draft === null ? this.s.git.branch : DRAFTS + draft;
+    const found = await this.hostMay(() => this.buildOf(head, ref));
+    return { sha: head, ...(found ?? NO_BUILD) };
+  }
+
+  private async buildOf(head: string, ref: string): Promise<Build> {
+    const ofHead = await this.git.deployments({ sha: head }, DEPLOYMENTS);
+    if (ofHead.length > 0) {
+      const d = await this.served(ofHead, false);
+      if (!d) return { ...NO_BUILD, state: "building", built: head };
+      return { state: buildState(d.status.state), url: d.status.url, log: d.status.log, built: head };
+    }
+    const earlier = await this.git.deployments({ ref }, DEPLOYMENTS);
+    if (earlier.length === 0) return NO_BUILD;
+    const d = await this.served(earlier, true);
+    return { state: "waiting", url: d?.status.url ?? null, log: null, built: d?.sha ?? null };
+  }
+
+  /** Of `list` (newest first), with its last status: the newest served somewhere (with a URL;
+   * `built`: and built), else (not `built`) the newest with a status. A commit can have
+   * deployments that serve nothing (a CI job's environment for its secrets). */
+  private async served(list: Deployment[], built: boolean): Promise<{ sha: string; status: DeploymentStatus } | null> {
+    let newest: { sha: string; status: DeploymentStatus } | null = null;
+    for (const d of list) {
+      const status = await this.git.deploymentStatus(d.id);
+      if (!status) continue;
+      if (status.url && (!built || buildState(status.state) === "ready")) return { sha: d.sha, status };
+      if (!built) newest ??= { sha: d.sha, status };
+    }
+    return newest;
+  }
+
   /** Deletes a draft: a publisher's, or one whose saves are all the user's. */
   async discard(body: Body) {
     const id = body.id;
@@ -293,6 +335,13 @@ export class Api {
     const [then, nowIds] = await Promise.all([this.git.blobIds(cmp.mergeBase, paths), this.git.blobIds(main, paths)]);
     return paths.filter((p) => then[p] !== nowIds[p]);
   }
+}
+
+/** What a deployment's state (GitHub's) says of its build. */
+function buildState(state: string): Build["state"] {
+  if (state === "success" || state === "inactive") return "ready";
+  if (state === "failure" || state === "error") return "failed";
+  return "building";
 }
 
 /** A changed file's path, and its previous path when it moved. */
