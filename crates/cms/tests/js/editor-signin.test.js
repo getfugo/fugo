@@ -46,7 +46,7 @@ test("signing in, and out", { skip }, async () => {
   document.body.innerHTML = `<div id="app" class="loading">Loading the editor…</div>`;
   const { start } = await import("../../assets/admin/cms.js");
   await start();
-  const button = await until(() => $$("header button").find((b) => text(b) === "Sign out"));
+  const button = await until(() => $("header .sign-out"));
   let reloaded = false;
   window.location.reload = () => {
     reloaded = true;

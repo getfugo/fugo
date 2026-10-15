@@ -7,6 +7,7 @@ import { createRef, ref } from "lit-html/directives/ref.js";
 import { bytesToBase64, extensionOf } from "../common";
 import { type Doc } from "./data";
 import { toast, valueOf } from "./dom";
+import { icon } from "./icons";
 import { pageView } from "./pages";
 import { hidePreview, schedulePreview, showPreview } from "./preview";
 import { richEditor } from "./richtext";
@@ -51,19 +52,21 @@ export function bodyEditor(doc: Doc, readOnly: boolean): TemplateResult {
     doc.body = valueOf(ev);
     schedulePreview();
   };
+  // Rich text or Markdown: two buttons as one, Material's segmented button (which @material/web
+  // has no component for), the chosen one marked.
+  const segment = (m: Mode, label: string) => html`
+    <button class=${mode === m ? "active" : nothing} aria-pressed=${mode === m} @click=${choose(m)}>${mode === m ? icon("check") : nothing}${label}</button>
+  `;
   // The frame is sandboxed without scripts (the text may hold any HTML), on the editor's
   // origin so that the preview updates in place as you type.
   return html`
     <div class=${open ? "body-editor previewing" : "body-editor"}>
       <div class="doc-head">
         <strong>Text</strong>
-        <span class="modes" role="group" aria-label="Edit the text">
-          <button class=${rich ? "small active" : "small"} aria-pressed=${rich} @click=${choose("rich")}>Rich text</button>
-          <button class=${rich ? "small" : "small active"} aria-pressed=${!rich} @click=${choose("markdown")}>Markdown</button>
-        </span>
+        <span class="modes" role="group" aria-label="Edit the text">${segment("rich", "Rich text")}${segment("markdown", "Markdown")}</span>
         <span class="spacer"></span>
         <small class="muted">${rich ? "HTML and shortcodes show as their source" : "The preview shows it in the site's own page, without shortcodes"}</small>
-        <button class="small" @click=${toggle}>${open ? "Close preview" : "Preview"}</button>
+        <md-text-button @click=${toggle}>${icon(open ? "visibility_off" : "visibility", "icon")}${open ? "Close preview" : "Preview"}</md-text-button>
       </div>
       ${rich
         ? richEditor(doc, readOnly)
@@ -107,7 +110,7 @@ export function filesPanel(): TemplateResult | typeof nothing {
       <div class="doc-head">
         <strong>${p.entry.bundle ? "Files of this page" : "Uploads"}</strong>
         <span class="spacer"></span>
-        ${allowed ? html`<button class="small" @click=${() => picker.value?.click()}>Upload…</button>` : nothing}
+        ${allowed ? html`<md-outlined-button @click=${() => picker.value?.click()}>${icon("upload", "icon")}Upload…</md-outlined-button>` : nothing}
         <input ${ref(picker)} type="file" multiple accept=${site.upload_types.map((t) => `.${t}`).join(",")} hidden @change=${pick} />
       </div>
       <p class="muted">${p.entry.bundle ? `In ${dir}/` : `Into ${dir}/ (name them as ${site.media_ref ?? `${dir}/`}…)`}</p>
@@ -117,7 +120,9 @@ export function filesPanel(): TemplateResult | typeof nothing {
             <li class=${p.deletes.has(f) ? "deleted" : waiting.includes(f) ? "new" : nothing}>
               <code>${f.slice(dir.length + 1)}</code>
               ${waiting.includes(f) ? html`<span class="badge">not saved</span>` : nothing}
-              ${canEdit(f) && !p.deletes.has(f) ? html`<button class="icon" title="Delete" @click=${() => remove(f)}>×</button>` : nothing}
+              ${canEdit(f) && !p.deletes.has(f)
+                ? html`<md-icon-button class="remove" title="Delete" aria-label="Delete ${f.slice(dir.length + 1)}" @click=${() => remove(f)}>${icon("close")}</md-icon-button>`
+                : nothing}
             </li>
           `,
         )}

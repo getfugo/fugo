@@ -5,7 +5,7 @@
 import { before, test } from "node:test";
 import assert from "node:assert/strict";
 
-import { $, $$, document, go, sent, skip, startEditor, STYLE, text, until, window } from "./ui.js";
+import { $, $$, button, document, go, press, sent, skip, startEditor, STYLE, text, until, window } from "./ui.js";
 
 const SITE = {
   title: "Snacks",
@@ -233,8 +233,11 @@ test("a page's text opens as rich text, with a toolbar", { skip }, async () => {
   assert.equal($(".rich-box").getAttribute("contenteditable"), "true");
   assert.deepEqual($$(".rich-box > *").map((el) => el.tagName), ["P", "DIV", "P"]);
   assert.equal(text($(".rich-box .md-raw")), "<!-- more -->");
-  assert.deepEqual($$(".toolbar button").map(text), ["B", "I", "S", "</>", "Link", "• List", "1. List", "Image", "―"]);
-  assert.deepEqual($$(".toolbar select option").map(text), ["Paragraph", "Heading 1", "Heading 2", "Heading 3", "Heading 4", "Quote", "Code block"]);
+  assert.deepEqual(
+    $$(".toolbar md-icon-button").map((b) => b.getAttribute("aria-label")),
+    ["Bold", "Italic", "Strikethrough", "Code", "Link (Ctrl+K)", "Bulleted list", "Numbered list", "Image", "Horizontal rule"],
+  );
+  assert.deepEqual($$(".toolbar md-select-option").map(text), ["Paragraph", "Heading 1", "Heading 2", "Heading 3", "Heading 4", "Quote", "Code block"]);
 });
 
 test("Markdown shows the text as typed in rich text, and rich text draws what is typed there", { skip }, () => {
@@ -252,13 +255,14 @@ test("Markdown shows the text as typed in rich text, and rich text draws what is
   assert.equal(window.localStorage.getItem("cms-text-mode"), "rich");
 });
 
-test("the image button opens a form with the page's files", { skip }, () => {
-  const button = $$(".toolbar button").find((b) => text(b) === "Image");
-  button.click();
+test("the image button opens a form with the page's files", { skip }, async () => {
+  const image = button("Image", $(".toolbar"));
+  await press(image);
   assert.ok($(".image-form input[name=src]"));
-  assert.equal(button.getAttribute("aria-expanded"), "true");
-  $$(".image-form button").find((b) => text(b) === "Cancel").click();
+  assert.equal(image.selected, true);
+  await press(button("Cancel", $(".image-form")));
   assert.equal($$(".image-form").length, 0);
+  assert.equal(image.selected, false);
 });
 
 test("what is typed in rich text is saved", { skip }, async () => {

@@ -4,7 +4,8 @@ import { html, nothing, type TemplateResult } from "lit-html";
 import { api, messageOf } from "./api";
 import { discard, publish } from "./changes";
 import { type Draft, type DraftDetail, type Pull } from "./data";
-import { show, toast } from "./dom";
+import { loading, show, toast } from "./dom";
+import { icon } from "./icons";
 import { drafts, me, pending, site } from "./state";
 
 export function draftList(list: Draft[]): TemplateResult {
@@ -35,7 +36,7 @@ export function draftsView(): void {
 }
 
 export async function draftView(id: string): Promise<void> {
-  show(html`<p class="muted">Loading…</p>`);
+  show(loading());
   let d: DraftDetail;
   try {
     d = await api<DraftDetail>("GET", "draft", { id });
@@ -65,9 +66,9 @@ export async function draftView(id: string): Promise<void> {
       ${d.commits.map((c) => html`<li><span class="muted">${c.author?.email ?? ""}</span> — ${c.subject}</li>`)}
     </ul>
     <div class="actions">
-      ${known ? html`<a class="button" href="#/e/${encodeURIComponent(d.entry)}">Open the page</a>` : nothing}
-      ${me.publish ? html`<button class="primary" @click=${() => publish(id)}>Publish</button>` : nothing}
-      <button class="danger" @click=${() => discard(id)}>Discard</button>
+      ${me.publish ? html`<md-filled-button class="primary" @click=${() => publish(id)}>${icon("publish", "icon")}Publish</md-filled-button>` : nothing}
+      <md-outlined-button class="danger" @click=${() => discard(id)}>Discard</md-outlined-button>
+      ${known ? html`<md-text-button href="#/e/${encodeURIComponent(d.entry)}">Open the page</md-text-button>` : nothing}
     </div>
   `);
 }

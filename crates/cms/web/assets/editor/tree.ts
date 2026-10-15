@@ -8,6 +8,7 @@ import { listedIn, termFolders } from "./browse";
 import { type Entry } from "./data";
 import { drawSidebar } from "./dom";
 import { allFolders, folderHref, folderTitle, parentDir } from "./folders";
+import { icon } from "./icons";
 import { allEntries, site } from "./state";
 import { holds } from "./views";
 
@@ -82,10 +83,11 @@ export function sidebar(): TemplateResult {
         <div class="node${here ? " active" : ""}" style="--depth: ${depth}">
           ${below.length
             ? html`<button class="twisty" aria-expanded=${open ? "true" : "false"} aria-label=${node.title} title=${open ? "Close" : "Open"} @click=${toggle}>
-                <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6 3.5l4.5 4.5-4.5 4.5" /></svg>
+                ${icon("chevron_right")}
               </button>`
             : html`<span class="twisty"></span>`}
           <a href=${folderHref(node.key)} class=${here ? "active" : nothing} aria-current=${here ? "page" : nothing} title=${size ?? node.title}>
+            <md-focus-ring></md-focus-ring><md-ripple></md-ripple>
             <span class="name">${node.title}</span>${count === undefined ? nothing : html`<span class="count">${count}</span>`}
           </a>
         </div>

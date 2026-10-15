@@ -4,6 +4,8 @@
 import { html, nothing, type TemplateResult } from "lit-html";
 import { field, type Setter } from "./form";
 import { childrenOf, hintOf, type Path, pathKey, startOf, summaryOf } from "./hints";
+import { icon } from "./icons";
+import { addMenu } from "./inputs";
 import { pageView } from "./pages";
 
 type Table = Record<string, unknown>;
@@ -22,11 +24,8 @@ function tableFields(table: Table, set: Setter, readOnly: boolean, path: Path): 
   };
   const has = (name: string) => Object.keys(table).some((k) => k.toLowerCase() === name.toLowerCase());
   const missing = childrenOf(key).filter((c) => !has(c.name));
-  const add = (ev: Event) => {
-    const select = ev.target as HTMLSelectElement;
-    const c = missing.find((x) => x.name === select.value);
-    // Back to "Add…": the menu is drawn again without the key.
-    select.value = "";
+  const add = (name: string) => {
+    const c = missing.find((x) => x.name === name);
     if (!c) return;
     table[c.name] = startOf(`${key}.${c.name}`, c.kind);
     set(table);
@@ -36,14 +35,11 @@ function tableFields(table: Table, set: Setter, readOnly: boolean, path: Path): 
   return html`
     ${shown.map((k) => field(k, hintOf([...path, k]).label ?? k, table[k], setKey(k), readOnly, [...path, k], remove(k)))}
     ${!readOnly && missing.length
-      ? html`
-          <div class="add-field">
-            <select @change=${add}>
-              <option value="">Add…</option>
-              ${missing.map((c) => html`<option value=${c.name}>${hintOf(`${key}.${c.name}`).label ?? c.name}</option>`)}
-            </select>
-          </div>
-        `
+      ? addMenu(
+          "Add…",
+          missing.map((c) => ({ key: c.name, label: hintOf(`${key}.${c.name}`).label ?? c.name })),
+          add,
+        )
       : nothing}
   `;
 }
@@ -80,7 +76,8 @@ export function objectsInput(key: string, items: Table[], set: Setter, readOnly:
     );
     change();
   };
-  const removeButton = (i: number) => (readOnly ? nothing : html`<button class="icon" title="Remove" @click=${remove(i)}>×</button>`);
+  const removeButton = (i: number) =>
+    readOnly ? nothing : html`<md-icon-button class="remove" title="Remove" aria-label="Remove" @click=${remove(i)}>${icon("close")}</md-icon-button>`;
   const item = (table: Table, i: number) => {
     const fields = tableFields(table, () => set(items), readOnly, [...path, i]);
     return hint.collapsed
@@ -95,7 +92,7 @@ export function objectsInput(key: string, items: Table[], set: Setter, readOnly:
   return html`
     <div class="group objects">
       ${items.map(item)}
-      ${readOnly ? nothing : html`<button class="small" @click=${add}>Add ${label}</button>`}
+      ${readOnly ? nothing : html`<md-text-button @click=${add}>${icon("add", "icon")}Add ${label}</md-text-button>`}
     </div>
   `;
 }

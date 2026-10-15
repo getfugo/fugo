@@ -309,6 +309,12 @@ page and redo your change.
 
 ## The editor
 
+The editor is drawn in Material Design 3, with Google's components for the web
+([`@material/web`](https://github.com/material-components/material-web)), and follows the
+browser's light or dark scheme. It loads nothing from other sites: its icons are inline, and
+it uses the system's font. Changes that are hard to undo (deleting a page, moving it,
+publishing or discarding a draft) ask first, in a dialog.
+
 - **Pages by folder**, at any depth: a section lists its folders, then its pages, with their
   languages and drafts, and each folder lists its own the same way. The crumbs above a folder
   or a page lead back up to *Pages*, the top, whose folders are the sections. The filter finds
@@ -345,7 +351,8 @@ page and redo your change.
   templates with `data-cms-body` and `data-cms-field="<key>"`. Shortcodes, scripts and files from
   other sites (fonts or styles from a CDN) are left out.
 - **Edit as text**: the whole file, front matter included, for anything the form does not show.
-- **Translations**: a tab per language, and *+ language* to add one (it starts as a copy).
+- **Translations**: a tab per language, and a *+ language* button for each other language of
+  the site, which adds a version in it (it starts as a copy).
 - **Files of the page**: a bundle's images and other files, uploads and deletions.
 - **New pages**: *New page* makes one in the folder shown, written the way its section's pages
   are: as bundles or single files, with the section's front matter format and language
@@ -356,7 +363,8 @@ page and redo your change.
   *New section* (on the start page, or at the top) makes a folder at the top: a new section,
   whose pages are written like those of the largest section.
 - **Moving a page** to another folder of its section, at any depth, with all its files
-  (translations, images, everything in its bundle). Each language's file keeps the URL its page
+  (translations, images, everything in its bundle): *Move to* lists the folders, and the move
+  happens once you confirm it. Each language's file keeps the URL its page
   had in `aliases`, so that old links still work. A move saves the page like an edit: in a
   draft, with `workflow = "review"`.
 

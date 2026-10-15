@@ -6,8 +6,11 @@
 import { html, nothing, type TemplateResult } from "lit-html";
 import { ref } from "lit-html/directives/ref.js";
 import { type Doc } from "./data";
+import { askText } from "./dialogs";
+import { icon, type IconName } from "./icons";
 import { imageChoices } from "./inputs";
 import { type Drawn, drawMarkdown, emptyParagraph, esc, type ImageUrl, pastedHtml, writeMarkdown } from "./markdown";
+import { type MdIconButton, type MdOutlinedSelect, type MdOutlinedTextField } from "./material";
 import { pageView } from "./pages";
 import { mimeOf } from "./preview";
 import { current, site } from "./state";
@@ -147,18 +150,19 @@ function closestIn(box: Element, selector: string): Element | null {
 function showState(box: Element): void {
   const bar = box.parentElement?.querySelector(".toolbar");
   if (!bar) return;
-  for (const b of Array.from(bar.querySelectorAll<HTMLElement>("button[data-state]"))) {
+  for (const b of Array.from(bar.querySelectorAll<MdIconButton>("md-icon-button[data-state]"))) {
     let on = false;
     try {
       on = document.queryCommandState(b.dataset.state ?? "");
     } catch {
       // A browser without the command.
     }
-    b.setAttribute("aria-pressed", String(on));
+    b.selected = on;
   }
   const code = closestIn(box, "code");
-  bar.querySelector("button[data-code]")?.setAttribute("aria-pressed", String(code !== null && !code.closest("pre")));
-  const select = bar.querySelector<HTMLSelectElement>("select.block-type");
+  const codeButton = bar.querySelector<MdIconButton>("md-icon-button[data-code]");
+  if (codeButton) codeButton.selected = code !== null && !code.closest("pre");
+  const select = bar.querySelector<MdOutlinedSelect>("md-outlined-select.block-type");
   if (select) select.value = blockType(box);
 }
 
@@ -172,16 +176,19 @@ function blockType(box: Element): string {
 function toolbar(doc: Doc): TemplateResult {
   // The buttons keep the focus (and the selection) in the box.
   const keep = (ev: Event) => {
-    if ((ev.target as Element).closest("button")) ev.preventDefault();
+    if ((ev.target as Element).closest("md-icon-button")) ev.preventDefault();
   };
+  // A button pressed shows the state at the selection after its command, not its own toggle.
   const run = (f: (box: HTMLElement) => void) => (ev: Event) => {
     const box = boxOf(ev.currentTarget as Element);
-    if (box) f(box);
+    if (!box) return;
+    f(box);
+    showState(box);
   };
-  const button = (label: string, title: string, f: (box: HTMLElement) => void, state?: string) =>
-    html`<button type="button" class="small" title=${title} aria-label=${title} data-state=${state ?? nothing} @click=${run(f)}>${label}</button>`;
+  const button = (name: IconName, title: string, f: (box: HTMLElement) => void, state?: string) =>
+    html`<md-icon-button ?toggle=${state !== undefined} title=${title} aria-label=${title} data-state=${state ?? nothing} @click=${run(f)}>${icon(name)}</md-icon-button>`;
   const changeType = (ev: Event) => {
-    const select = ev.target as HTMLSelectElement;
+    const select = ev.target as MdOutlinedSelect;
     const box = boxOf(select);
     if (box) setBlockType(box, select.value);
   };
@@ -191,18 +198,18 @@ function toolbar(doc: Doc): TemplateResult {
   };
   return html`
     <div class="toolbar" role="toolbar" aria-label="Formatting" @mousedown=${keep}>
-      <select class="block-type" aria-label="Paragraph style" @change=${changeType}>
-        ${BLOCK_TYPES.map(([tag, label]) => html`<option value=${tag}>${label}</option>`)}
-      </select>
-      ${button("B", "Bold", (box) => exec(box, "bold"), "bold")}
-      ${button("I", "Italic", (box) => exec(box, "italic"), "italic")}
-      ${button("S", "Strikethrough", (box) => exec(box, "strikeThrough"), "strikeThrough")}
-      <button type="button" class="small" title="Code" aria-label="Code" data-code @click=${run(toggleCode)}>&lt;/&gt;</button>
-      ${button("Link", "Link (Ctrl+K)", link)}
-      ${button("• List", "Bulleted list", (box) => exec(box, "insertUnorderedList"), "insertUnorderedList")}
-      ${button("1. List", "Numbered list", (box) => exec(box, "insertOrderedList"), "insertOrderedList")}
-      <button type="button" class="small" title="Image" aria-label="Image" aria-expanded=${imaging === doc} @click=${imageForm}>Image</button>
-      ${button("―", "Horizontal rule", (box) => exec(box, "insertHorizontalRule"))}
+      <md-outlined-select class="block-type" aria-label="Paragraph style" @change=${changeType}>
+        ${BLOCK_TYPES.map(([tag, label], i) => html`<md-select-option value=${tag} ?selected=${i === 0}><div slot="headline">${label}</div></md-select-option>`)}
+      </md-outlined-select>
+      ${button("format_bold", "Bold", (box) => exec(box, "bold"), "bold")}
+      ${button("format_italic", "Italic", (box) => exec(box, "italic"), "italic")}
+      ${button("format_strikethrough", "Strikethrough", (box) => exec(box, "strikeThrough"), "strikeThrough")}
+      <md-icon-button toggle title="Code" aria-label="Code" data-code @click=${run(toggleCode)}>${icon("code")}</md-icon-button>
+      ${button("link", "Link (Ctrl+K)", (box) => void link(box))}
+      ${button("format_list_bulleted", "Bulleted list", (box) => exec(box, "insertUnorderedList"), "insertUnorderedList")}
+      ${button("format_list_numbered", "Numbered list", (box) => exec(box, "insertOrderedList"), "insertOrderedList")}
+      <md-icon-button toggle title="Image" aria-label="Image" .selected=${imaging === doc} @click=${imageForm}>${icon("image")}</md-icon-button>
+      ${button("horizontal_rule", "Horizontal rule", (box) => exec(box, "insertHorizontalRule"))}
     </div>
     ${imaging === doc ? imagePanel() : nothing}
   `;
@@ -282,12 +289,12 @@ function toggleCode(box: HTMLElement): void {
 }
 
 /** A link on the selected text, or the link at the selection changed or removed. */
-function link(box: HTMLElement): void {
+async function link(box: HTMLElement): Promise<void> {
   const a = closestIn(box, "a");
   const sel = document.getSelection();
-  // The prompt takes the focus, and the selection with it.
+  // The dialog takes the focus, and the selection with it.
   const at = sel?.rangeCount ? sel.getRangeAt(0).cloneRange() : undefined;
-  const url = prompt("Link to (empty for none):", a?.getAttribute("href") ?? "https://");
+  const url = await askText(a ? "Change the link" : "Link", "Address (empty for none)", "OK", a?.getAttribute("href") ?? "https://");
   if (url === null) return;
   const href = url.trim();
   if (a) {
@@ -309,13 +316,14 @@ function link(box: HTMLElement): void {
 /** The form for an image: one of the page's files (or any address) and its description. */
 function imagePanel(): TemplateResult {
   const choices = imageChoices();
+  // From the form's own fields: its description is a Material text field, outside its form data
+  // in a browser without form-associated elements.
   const insert = (ev: Event) => {
     ev.preventDefault();
-    const form = ev.currentTarget as HTMLFormElement;
-    const data = new FormData(form);
-    const src = String(data.get("src") ?? "").trim();
-    const alt = String(data.get("alt") ?? "").trim();
-    const box = boxOf(form);
+    const form = (ev.currentTarget as Element).closest("form");
+    const src = form?.querySelector<HTMLInputElement>("input[name=src]")?.value.trim() ?? "";
+    const alt = form?.querySelector<MdOutlinedTextField>("md-outlined-text-field[name=alt]")?.value.trim() ?? "";
+    const box = form && boxOf(form);
     if (!src || !box) return;
     exec(box, "insertHTML", `<img src="${esc(imageUrl()(src))}" data-md-src="${esc(src)}" alt="${esc(alt)}">`);
     imaging = null;
@@ -325,13 +333,16 @@ function imagePanel(): TemplateResult {
     imaging = null;
     pageView();
   };
+  const enter = (ev: KeyboardEvent) => {
+    if (ev.key === "Enter") insert(ev);
+  };
   return html`
     <form class="image-form" @submit=${insert}>
-      <input name="src" required list="rich-images" placeholder=${choices[0] ?? "photo.jpg"} aria-label="Image file" />
+      <input class="text" name="src" required list="rich-images" placeholder=${choices[0] ?? "photo.jpg"} aria-label="Image file" />
       <datalist id="rich-images">${choices.map((c) => html`<option value=${c}></option>`)}</datalist>
-      <input name="alt" placeholder="Description" aria-label="Description" />
-      <button type="submit" class="small primary">Insert</button>
-      <button type="button" class="small" @click=${close}>Cancel</button>
+      <md-outlined-text-field name="alt" placeholder="Description" aria-label="Description" @keydown=${enter}></md-outlined-text-field>
+      <md-filled-button @click=${insert}>Insert</md-filled-button>
+      <md-text-button @click=${close}>Cancel</md-text-button>
       ${choices.length ? nothing : html`<small class="muted">Upload images under the page's files to choose them here.</small>`}
     </form>
   `;
@@ -349,7 +360,7 @@ function keydown(ev: KeyboardEvent): void {
     exec(box, "insertLineBreak");
   } else if ((ev.ctrlKey || ev.metaKey) && ev.key.toLowerCase() === "k") {
     ev.preventDefault();
-    link(box);
+    void link(box);
   }
 }
 

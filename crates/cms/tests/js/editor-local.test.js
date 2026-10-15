@@ -25,7 +25,7 @@ const ME = { email: "ann@example.org", roles: ["owner"], edit: ["**"], publish: 
 
 test("on this computer, nobody signs in or out", { skip }, async () => {
   await startEditor(SITE, {}, { me: () => ME });
-  assert.equal($$("header button").filter((b) => text(b) === "Sign out").length, 0);
+  assert.equal($$("header .sign-out").length, 0);
   assert.deepEqual($$("header .user").map(text), ["ann@example.org"]);
   const page = text(document.body);
   assert.ok(page.includes("Editing the git repository on this computer as ann@example.org (owner)."), page);

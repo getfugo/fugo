@@ -5,12 +5,13 @@ import { create, join } from "../codec";
 import { api, ApiError, messageOf } from "./api";
 import { keepNewFolders, newFolderDocs, pathFor } from "./create";
 import { type Change, type EntryFile } from "./data";
+import { askYes } from "./dialogs";
 import { toast } from "./dom";
-import { movedPath } from "./folders";
+import { folderTitle, movedPath } from "./folders";
 import { problems } from "./hints";
 import { docText, makeDoc, openPage, pageView } from "./pages";
 import { route } from "./route";
-import { canEdit, current, loadDrafts, pending, sectionFor, site } from "./state";
+import { allEntries, canEdit, current, loadDrafts, pending, sectionFor, site } from "./state";
 
 /**
  * Moves the open page into `folder` (its section's own, or one below it), with all its files.
@@ -51,7 +52,8 @@ export async function movePage(folder: string): Promise<void> {
     toast("You may not move every file of this page", "error");
     return;
   }
-  if (!confirm(`Move ${entry.title} to ${folder || "the top"}? Its URL changes; the old one keeps working.`)) return;
+  const where = folder ? folderTitle(folder, allEntries()) : "the top";
+  if (!(await askYes(`Move ${entry.title} to ${where}?`, "Its URL changes; the old one keeps working.", "Move"))) return;
   try {
     const title = p.docs.get(site.default_language)?.data?.title ?? entry.title;
     // The save is the page's at its new key, in the draft it was opened from (in review).
@@ -102,7 +104,7 @@ export async function deletePage(): Promise<void> {
     toast("You may not delete every file of this page", "error");
     return;
   }
-  if (!confirm(`Delete ${p.entry.title} (${paths.length} files)?`)) return;
+  if (!(await askYes(`Delete ${p.entry.title}?`, `${paths.length === 1 ? "Its file is" : `Its ${paths.length} files are`} deleted.`, "Delete", true))) return;
   const sha = new Map([...p.docs.values()].map((d) => [d.path, d.sha]));
   await send(paths.map((f): Change => (sha.has(f) ? { path: f, delete: true, base: sha.get(f) } : { path: f, delete: true })));
 }
@@ -169,7 +171,7 @@ async function send(changes: Change[]): Promise<void> {
 }
 
 export async function publish(id: string): Promise<void> {
-  if (!confirm("Publish this draft to the site?")) return;
+  if (!(await askYes("Publish this draft?", "Its changes go to the site.", "Publish"))) return;
   try {
     const res = await api<{ published: boolean; kept?: boolean }>("POST", "publish", null, { id });
     toast(
@@ -189,7 +191,7 @@ export async function publish(id: string): Promise<void> {
 }
 
 export async function discard(id: string): Promise<void> {
-  if (!confirm("Discard this draft? Its changes are lost.")) return;
+  if (!(await askYes("Discard this draft?", "Its changes are lost.", "Discard", true))) return;
   try {
     await api("POST", "discard", null, { id });
     toast("Draft discarded", "ok");

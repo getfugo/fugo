@@ -5,7 +5,7 @@
 import { before, test } from "node:test";
 import assert from "node:assert/strict";
 
-import { $, $$, choose, go, sent, skip, startEditor, STYLE, text, type, until, window } from "./ui.js";
+import { $, $$, button, go, pick, press, reply, sent, skip, startEditor, STYLE, text, type, until, window } from "./ui.js";
 
 const SITE = {
   title: "Snacks",
@@ -92,9 +92,10 @@ test("a table offers the keys other pages have in it, as their settings label th
   assert.equal(text($("#f-nutrition-fat-total").closest(".field").querySelector("label > span")), "Total fat (g)");
   assert.equal($("#f-nutrition-fat-total").getAttribute("min"), "0");
   assert.equal($("#f-nutrition-fat-total").getAttribute("step"), "any", "a whole number now may not stay so");
-  const add = $("#f-nutrition-fat-total").closest("fieldset").querySelector(".add-field select");
-  assert.deepEqual([...add.options].map(text), ["Add…", "Saturated"]);
-  choose(add, "saturated");
+  const table = $("#f-nutrition-fat-total").closest("fieldset");
+  assert.equal(text(table.querySelector(".add-field md-text-button")), "Add…");
+  assert.deepEqual([...table.querySelectorAll(".add-field md-menu-item")].map(text), ["Saturated"]);
+  pick(table, "Saturated");
   assert.equal($("#f-nutrition-fat-saturated").value, "0");
   assert.ok(!$("#f-nutrition-fat-total").closest("fieldset").querySelector(".add-field"));
 });
@@ -119,10 +120,10 @@ test("Save checks the values: required ones, and numbers within their bounds", {
   await openA();
   sent.length = 0;
   type($("#f-rating"), "9");
-  $(".actions .primary").click();
+  await press($(".actions .primary"));
   assert.match(text($("#toast")), /^Not saved: English: Rating is above 5; Thai: Rating is above 5$/);
   type($("#f-rating"), "");
-  $(".actions .primary").click();
+  await press($(".actions .primary"));
   assert.match(text($("#toast")), /Rating needs a value/);
   await new Promise((r) => setTimeout(r, 30));
   assert.equal(sent.length, 0, "nothing was sent");
@@ -130,12 +131,13 @@ test("Save checks the values: required ones, and numbers within their bounds", {
 
 test("a new page starts with its section's values and the settings' defaults", { skip }, async () => {
   await go("#/s/snacks", () => $("table.entries"));
-  $$(".title-row button").find((b) => text(b) === "New page").click();
+  button("New page").click();
+  await reply("Honey Butter");
   await until(() => $(".doc-head code")?.textContent.includes("snacks/honey-butter"));
   assert.equal($("#f-author").value, "Kitchen");
   assert.equal($$("#f-type").length, 0, "a hidden key is not shown…");
-  const raw = $(".doc-head .toggle input");
-  raw.checked = true;
+  const raw = $(".doc-head .toggle md-switch");
+  raw.selected = true;
   raw.dispatchEvent(new window.Event("change", { bubbles: true }));
   assert.match($("textarea.raw").value, /\ntype: snack\n/, "…but kept");
 });

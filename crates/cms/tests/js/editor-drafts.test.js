@@ -5,7 +5,7 @@
 import { before, test } from "node:test";
 import assert from "node:assert/strict";
 
-import { $, $$, go, sent, skip, startEditor, STYLE, text, type, until } from "./ui.js";
+import { $, $$, button, go, sent, skip, startEditor, STYLE, text, type, until } from "./ui.js";
 
 const SITE = {
   title: "Snacks",
@@ -68,13 +68,13 @@ test("a draft of Decap CMS opens at its id, with its pull request", { skip }, as
   assert.equal(text($("h1")), PULL.title);
   assert.equal($(`a[href="${PULL.url}"]`)?.getAttribute("target"), "_blank");
   assert.deepEqual($$(".change code").map(text), ["content/cake/tokyo-hiyoko/index.en.md"]);
-  assert.ok(!$(`.actions a[href^="#/e/"]`), "no page to open: Decap CMS's drafts name none");
+  assert.equal($$(`.actions [href^="#/e/"]`).length, 0, "no page to open: Decap CMS's drafts name none");
 });
 
 test("a draft whose files the site changed says publishing merges them, and may be published", { skip }, async () => {
   await go(`#/d/${STALE.id}`, () => $(".warn"));
   assert.match(text($(".warn")), /^The site changed content\/posts\/crisps\.en\.md since this draft was made: publishing brings those changes into the draft first\./);
-  const publish = $$(".actions button").find((b) => text(b) === "Publish");
+  const publish = button("Publish", $(".actions"));
   assert.ok(publish && !publish.disabled, "Publish is not disabled");
 });
 
