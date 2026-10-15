@@ -191,3 +191,59 @@ fn image_notice_placeholder_typo() {
         "{e}"
     );
 }
+
+/// The checks of `[imaging]`'s copyright notice and author, public for an image's own (a page
+/// resource's params): the same texts pass and fail, with the same reasons.
+#[test]
+fn image_notice_checks() {
+    use ssg_config::{ImagingConfig, NoticeError};
+
+    let copyright =
+        "© 2019–{year} A, CC BY-SA 4.0 (https://creativecommons.org/licenses/by-sa/4.0/)";
+    assert_eq!(ImagingConfig::check_copyright(copyright), Ok(()));
+    assert_eq!(
+        ImagingConfig::replace_year(copyright, 2031),
+        "© 2019–2031 A, CC BY-SA 4.0 (https://creativecommons.org/licenses/by-sa/4.0/)"
+    );
+    assert_eq!(ImagingConfig::check_author("A. Author & Co"), Ok(()));
+    let long = "x".repeat(ImagingConfig::NOTICE_MAX + 1);
+    for text in ["A\nB", "A\tB", long.as_str()] {
+        assert_eq!(
+            ImagingConfig::check_author(text),
+            Err(NoticeError::Text),
+            "{text}"
+        );
+        assert_eq!(
+            ImagingConfig::check_copyright(text),
+            Err(NoticeError::Text),
+            "{text}"
+        );
+    }
+    assert_eq!(
+        ImagingConfig::check_author(&"x".repeat(ImagingConfig::NOTICE_MAX)),
+        Ok(())
+    );
+    // Braces are the copyright's placeholder only; an author is written as it is.
+    for (text, brace) in [
+        ("© {yaer} A", "{yaer}"),
+        ("© {Year}", "{Year}"),
+        ("© {{year}}", "{{year}"),
+        ("© {year", "{"),
+        ("© year}", "}"),
+    ] {
+        assert_eq!(
+            ImagingConfig::check_copyright(text),
+            Err(NoticeError::Placeholder(brace.to_owned())),
+            "{text}"
+        );
+        assert_eq!(ImagingConfig::check_author(text), Ok(()), "{text}");
+    }
+    assert_eq!(
+        NoticeError::Placeholder("{yaer}".to_owned()).to_string(),
+        "\"{yaer}\" is not a placeholder: the only one is {year}"
+    );
+    assert_eq!(
+        NoticeError::Text.to_string(),
+        "must be at most 1000 bytes of text without control characters"
+    );
+}

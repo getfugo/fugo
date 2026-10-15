@@ -21,11 +21,12 @@ gift's resize and Go's JPEG decoder for that).
 | `qr_png`, `qr_modules`, `QrLevel`, `QrModules` | `images.QR`: the PNG of a QR code, byte-identical to the Go implementation's (`rsc.io/qr`); the symbol's modules. Naming and publishing are `ssg-resources`' (`ResourceStore::qr_code`). |
 | `ImageInput` | What an operation or an overlay/mask reads: `File(path)`, `Op(ImageOpId)` or `Memory(MemoryImage)`, bytes the queue holds (a remote image, a QR code; `add_memory(name, bytes)`); a string, an integer or `{"memory": …, "name": …}` in template maps. |
 | `Imaging` | `[imaging]` typed: `Imaging::from_config(&ssg_config::ImagingConfig, year)`, `year` the build's (`Config::year`) for the copyright's `{year}`. |
-| `ImageQueue` | `new(imaging, cache)`; `enqueue(input, spec, filters) -> Enqueued` (metadata only: name, size, format, at once); `process(&BTreeMap<OutputPath, ImageOpId>, &dyn Sink)` (rayon, build phase E6); `encoded(id)` (on demand); `get`, `len`; `add_font(bytes) -> FontId` (fonts of text filters, validated, by content); `add_memory(name, bytes) -> ImageInput` (an image that is not a file; the results keep `name`'s stem). `process` runs in stages: the operations the wanted ones read first, each result once. |
+| `ImageQueue` | `new(imaging, cache)`; `enqueue(input, spec, filters) -> Enqueued` (metadata only: name, size, format, at once); `process(&BTreeMap<OutputPath, ImageOpId>, &BTreeMap<OutputPath, Credit>, &dyn Sink)` (rayon, build phase E6; a target's credit in place of `[imaging]`'s copyright and author); `encoded(id)` (on demand); `get`, `len`; `add_font(bytes) -> FontId` (fonts of text filters, validated, by content); `add_memory(name, bytes) -> ImageInput` (an image that is not a file; the results keep `name`'s stem). `process` runs in stages: the operations the wanted ones read first, each result once. |
 | `Enqueued` | `id`, `file_name` (`<stem>_hu_<16 hex>.<ext>`), `width`, `height`, `format`. |
 | `ImageCache` | `[caches.images]`: `ImageCache::from_config(&FileCache)`; entries are read while younger than `maxAge` (never with `maxAge = 0` / `--ignoreCache`). |
 | `exif::read`, `exif::orientation`, `Exif` | `.Exif`: date (`DateTimeOriginal`, wall clock), position, tags filtered by `[imaging.exif]`. |
 | `strip_metadata`, `rewrite_metadata`, `Notice`, `ImageMetadata` | `[imaging] stripMetadata` (fugo's own, on by default): a JPEG, PNG or WebP file without EXIF, XMP, IPTC, comments, text chunks, vendor data and what follows the image, rewritten without decoding; the colour profile and colour information stay, and the orientation. `rewrite_metadata` writes a `Notice` in their place (`[imaging] copyright`, `author`, `titleFromFileName`): EXIF `Artist` and `Copyright` with the orientation, and an XMP packet (`dc:title`, `dc:creator`, `dc:rights`); a simple WebP file gets a `VP8X` header for them. `ImageMetadata::from_config(&ImagingConfig, year)` takes the settings, `{year}` of the copyright replaced with the build's year; `ImageMetadata::original` (used by `ssg-resources` and `ssg-publish`) and `::processed` (the queue's writes to the sink; the cache keeps the encoder's bytes, so a new year processes nothing again) apply them. |
+| `Credit`, `CreditError` | An image's own copyright notice and author, a page resource's `copyright` and `author` params: `ImageMetadata::credit(&Params)` reads them (`None` when neither is set, or without `stripMetadata`), with `[imaging]`'s rules (`ImagingConfig::check_copyright`, `check_author`: text, at most 1000 bytes, no control characters, braces only in `{year}`, which is the build's year). `original(bytes, name, credit)` and `processed(bytes, name, credit)` write a credit's copyright and author in place of both of `[imaging]`'s (an empty one is not written); the title stays the file name's. |
 | `resize_size`, `fit_size`, `cover_size`, `crop_rect`, `rotated_size` | The size maths, public for callers that need a size without queueing. |
 | `jpeg::encode`, `jpeg::Pixels`, `jpeg::YCbCr` | Go's `jpeg.Encode`: RGB(A), grey or planar YCbCr pixels at a quality (1–100, clamped) → baseline JPEG, 4:2:0 or one grey component. |
 
@@ -175,7 +176,9 @@ tests compare against the Go implementation's golden QR images and `TestQR`'s co
   files, the orientation alone kept of their EXIF; every JPEG, PNG and WebP file of `testdata/`
   decodes to the same pixels after stripping, and stripping twice changes nothing.
   `metadata::notice`: the notice's EXIF and XMP in each format (simple lossy and lossless WebP
-  files made extended), and every decodable image of `testdata/` with it.
+  files made extended), and every decodable image of `testdata/` with it. `metadata::credit`:
+  credits read from params and checked, written into originals and, per target, into processed
+  images (the cache keeps none).
 
 The T01 manifest format (`testdata/golden/images/manifest.json`):
 

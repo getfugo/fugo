@@ -158,7 +158,8 @@ fn process_writes_only_wanted_results() {
     ]
     .into_iter()
     .collect();
-    q.process(&wanted, &sink).expect("process");
+    q.process(&wanted, &BTreeMap::new(), &sink)
+        .expect("process");
     let files = sink.files.lock().expect("lock");
     assert_eq!(files.len(), 3, "intermediates (a, wm) are not published");
     for (path, id) in &wanted {
@@ -327,7 +328,8 @@ fn identical_bytes_keep_their_own_names() {
             .into_iter()
             .map(|e| (OutputPath::new(&e.file_name), e.id))
             .collect();
-        q.process(&wanted, &sink).expect("process");
+        q.process(&wanted, &BTreeMap::new(), &sink)
+            .expect("process");
         assert_eq!(sink.files.lock().expect("lock").len(), 4);
         (f.file_name, s.file_name, fc.file_name, sc.file_name)
     };
@@ -393,7 +395,8 @@ fn images_in_memory_are_processed() {
     ]
     .into_iter()
     .collect();
-    q.process(&wanted, &sink).expect("process");
+    q.process(&wanted, &BTreeMap::new(), &sink)
+        .expect("process");
     let files = sink.files.lock().expect("lock");
     assert_eq!(
         decode(&files[&OutputPath::new(&from_memory.file_name)]).dimensions(),

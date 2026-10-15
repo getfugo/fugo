@@ -12,7 +12,8 @@
 //!
 //! [`strip_metadata`] removes the metadata of a JPEG, PNG or WebP file without decoding it, and
 //! [`rewrite_metadata`] writes a [`Notice`] (title, author, copyright) in its place
-//! (`[imaging] stripMetadata`, `copyright`, `author`, `titleFromFileName`).
+//! (`[imaging] stripMetadata`, `copyright`, `author`, `titleFromFileName`, or an image's own
+//! [`Credit`]).
 
 #![forbid(unsafe_code)]
 
@@ -47,7 +48,7 @@ pub use exif::Exif;
 pub use filter::{ImageFilter, ImageInput, MAX_PADDING, MemoryImage, PaddingSpec};
 pub use font::FontId;
 pub use format::ImageFormat;
-pub use metadata::{ImageMetadata, Notice, rewrite_metadata, strip_metadata};
+pub use metadata::{Credit, CreditError, ImageMetadata, Notice, rewrite_metadata, strip_metadata};
 pub use plan::{Size, cover_size, crop_rect, fit_size, resize_size, rotated_size};
 pub use qr::{QrLevel, QrModules, qr_modules, qr_png};
 pub use queue::{Enqueued, ImageCache, ImageQueue};

@@ -70,6 +70,16 @@ pub enum ViewError {
         #[source]
         source: ResourceError,
     },
+    /// A `copyright` or `author` param of a page's image that cannot be written into it.
+    #[error("{page}: resource {resource:?}: {source}")]
+    Credit {
+        /// The page's content file (its path when it has none).
+        page: String,
+        /// The resource's name in the bundle.
+        resource: String,
+        #[source]
+        source: Box<ResourceError>,
+    },
 }
 
 /// Generation-independent values and the model, shared by every generation.

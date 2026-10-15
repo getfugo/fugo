@@ -10,10 +10,19 @@
 //! patched in phase E5 (T42's recommendation).
 //! [`post_processed_view`] is the view of an explicit `post_process`: every field that is only
 //! known in E5 is a placeholder.
+//!
+//! **Credits.** An image's `copyright` and `author` params, its page's `resources` metadata
+//! applied, are its credit: the store writes them into the published file and every image made
+//! from it, in place of `[imaging]`'s ([`ResourceStore::set_credit`]). A file several pages
+//! publish (the translations of a bundle share its files or get a copy each; the runs of a
+//! content adapter for several languages add a resource from one file) takes the credit of the
+//! first of them in language order (the default content language first, then by weight; the
+//! lowest page id first within a language) whose view of it gives one, and so do all its
+//! copies: a page that gives none, or comes later, never takes away another's.
 
 use std::sync::Arc;
 
-use ssg_base::{PageId, ResourceId, Value};
+use ssg_base::{LangIdx, PageId, ResourceId, Value};
 use ssg_config::media::MediaType;
 use ssg_page::ResourceMetaRule;
 use ssg_resources::meta::ResourceMeta;
@@ -21,10 +30,14 @@ use ssg_resources::{
     AdapterResource, Body, BundleResource, Origin, PpField, PublishPolicy, Resource, ResourceError,
     ResourceKind, ResourceStore, Transform,
 };
-use ssg_site::{AddedBody, AddedContent, AddedResource, Model};
+use ssg_site::{AddedBody, AddedContent, AddedResource, Model, Page};
 
 use crate::cache::ViewError;
 use crate::views::{MediaTypeView, ResourceDataView, ResourceView, params_value};
+
+mod credits;
+
+use credits::Credits;
 
 /// Whether `r` is a `fingerprint` whose input is not computed yet (provisional links, no
 /// integrity).
@@ -122,15 +135,18 @@ pub struct PageResource {
 /// `.Resources` of every page: the model's bundle files registered in `store` (a bundled
 /// content page is registered too, never published, and viewed as a `page` resource), with the
 /// page's `resources` front matter applied; files re-sorted by type and name when metadata
-/// renamed them, bundled pages after them.
+/// renamed them, bundled pages after them. The images' credits are given to the store (see
+/// the module docs).
 ///
 /// # Errors
-/// Invalid `resources` front matter ([`ViewError::Resources`]).
+/// Invalid `resources` front matter ([`ViewError::Resources`]), or an image's `copyright` or
+/// `author` param that cannot be written into it ([`ViewError::Credit`]).
 pub fn page_resources(
     model: &Model,
     store: &ResourceStore,
 ) -> Result<Vec<Vec<PageResource>>, ViewError> {
     let mut registered: Vec<Option<ResourceId>> = vec![None; model.bundle_resources.len()];
+    let mut credits = Credits::default();
     let mut out = Vec::with_capacity(model.pages.len());
     for p in &model.pages {
         if p.resources.is_empty() {
@@ -176,6 +192,14 @@ pub fn page_resources(
                 Some(q) => pages.push(page_resource(model, store, sid, q, &meta)),
                 None => {
                     let id = store.apply_meta(sid, &meta);
+                    let credit = store
+                        .params_credit(id)
+                        .map_err(|source| ViewError::Credit {
+                            page: page_file(p),
+                            resource: br.name.clone(),
+                            source: Box::new(source),
+                        })?;
+                    credits.add(store, sid, (p.lang, p.id), credit);
                     files.push(PageResource {
                         id,
                         view: resource_view(store, id),
@@ -191,14 +215,22 @@ pub fn page_resources(
         files.extend(pages);
         out.push(files);
     }
+    credits.give(store);
     Ok(out)
+}
+
+/// The page as an error names it: its content file, else its path.
+fn page_file(p: &Page) -> String {
+    p.source
+        .as_ref()
+        .map_or_else(|| p.path(), |s| s.file.abs.display().to_string())
 }
 
 /// The store's description of a resource a content adapter added, named `name` below the
 /// link directory `dir` of its page.
 fn adapter_resource(
     a: &AddedResource,
-    lang: ssg_base::LangIdx,
+    lang: LangIdx,
     name: String,
     dir: String,
     policy: PublishPolicy,

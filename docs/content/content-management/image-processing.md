@@ -147,5 +147,6 @@ The [`qr` shortcode](/content-management/shortcodes/#qr) does the same in conten
 
 `[imaging]` sets the defaults: `quality`, `resampleFilter`, `anchor`, `bgColor`, `hint`,
 `[imaging.exif]` what EXIF data is read, `stripMetadata` (on by default) that published
-originals lose their metadata, and `copyright`, `author` and `titleFromFileName` what every
-published image carries instead. See [Imaging](/configuration/imaging/).
+originals lose their metadata, and `copyright`, `author` and `titleFromFileName` what published
+images carry instead, unless a page resource gives its own copyright and author. See
+[Imaging](/configuration/imaging/).

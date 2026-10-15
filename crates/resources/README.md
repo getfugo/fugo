@@ -16,7 +16,7 @@ asset, remote and named-target resources, front matter `resources` metadata and 
 | `get_asset(lang, path)`, `find_assets(lang, glob)`, `find_asset` | `resources.Get` / `Match` / `GetMatch` over the assets view. Assets are one resource per path (per language on multihost sites). |
 | `register_bundle(&BundleResource)` | A page bundle file (`lang`, `file`, `name` relative to the bundle, link `dir`, `policy`); one resource per target. |
 | `register_adapter_resource(&AdapterResource)` | A page resource a content adapter added (`add_resource`): its `body` (text bytes, or the file or bytes of a resource it passed), media type, `name`/`dir` as for a bundle file or the passed resource's own `place` (target and link), display name, title, params; a new resource per call. |
-| `from_string`, `from_template_output`, `concat`, `copy` (target, …, `&CallSite`) | Resources that name a target path. `CallSite { lang, position }`. `template_outputs()` (T36): the ids `from_template_output` made, whose text the build scans for URL tokens. |
+| `from_string`, `from_template_output`, `concat`, `copy` (target, …, `&CallSite`) | Resources that name a target path (a copy carries its source's credit). `CallSite { lang, position }`. `template_outputs()` (T36): the ids `from_template_output` made, whose text the build scans for URL tokens. |
 | `qr_code(text, &QrOptions, &CallSite)`, `QrOptions`, `qr_target` | `images.QR` (T72a): the PNG of `ssg_images::qr_png` (the Go implementation's bytes) as a named target at Go's path, `<targetDir>/qr_<hex>.png` with the hex of `hashing.HashStringHex(text, {Level, Scale, TargetDir})` (`gohash`, checked against Go's `TestQR`); `QrOptions` defaults to medium, 4, no directory. |
 | `transform(id, Transform)` | A pipe (see [Pipes](#pipes-t42)); memoized per `(id, transform)`. `fingerprint` (md5, sha256, sha384, sha512; `HashAlgo::from_str`, `""` = sha256): `.<hex>` before the extension, `Data.Integrity` = SRI. |
 | `realize(id)` | Computes a pending transform result (its record is replaced; the id stays). |
@@ -25,6 +25,7 @@ asset, remote and named-target resources, front matter `resources` metadata and 
 | `meta::ResourceMeta::parse(&Value)`, `apply_meta(id, &meta)` | Front matter `resources` metadata; a new resource (same target and content) only when name, title or params change. |
 | `meta::{get, get_match, matches, by_type}` over `impl Named` | `.Resources.Get/GetMatch/Match/ByType` (bundle pages implement `Named` too). |
 | `image_input(id)`, `register_image(from, &Enqueued)`, `image_size(&Resource)` | The seam to `ssg-images`: what `ImageQueue::enqueue` reads (the file, the operation, or the bytes of a remote image or QR code, which the queue then holds: `ImageQueue::add_memory`), the resource of a queued operation (sibling target `<stem>_hu_<hash>.<ext>` named after its own source, `Body::PendingImage`), and `.Width`/`.Height` (planned size of a processed image, else the source's header, cached per file). The store never decodes pixels. |
+| `params_credit(id)`, `set_credit(id, Credit)`, `credit(id)` | An image's own copyright notice and author (`Credit`, re-exported from `ssg-images`): what an image resource's `copyright` and `author` params give (`ImageMetadata::credit`; `ResourceError::Credit` for a value `[imaging]` would refuse), the credit of a file (the views choose it: the first page in language order that gives one, for every resource read from the same source, the copies of a bundle file that translations get included), and the credit a resource is published with: its file's, through metadata views, transforms and processed images (a copy gets its source's). |
 | `mark_published(id)` | The `publish` filter. |
 | `publish(tokens, &dyn Sink) -> PublishStats` | See below. `resolve_token(token)` for diagnostics. |
 | `get_remote(lang, url, &RemoteOptions)` | `resources.GetRemote`; `Ok(None)` for a 404. `RemoteOptions::from_map(Option<&Map>)`; `RemoteError`; `cache_key`, `go_keys`. |
@@ -91,7 +92,12 @@ batch. The other images (bundle files, assets, remote images, their copies and f
 are written with the metadata `StoreConfig::image_metadata` gives them (`[imaging]
 stripMetadata`, on by default: none of their own; `copyright`, `author`, `titleFromFileName`;
 `ImageMetadata::original`); their `.content`, and so `exif`, fingerprints
-and `Data.Integrity`, are the source's.
+and `Data.Integrity`, are the source's. An image made from a file with a credit
+(`set_credit`), the file itself included, has the credit's copyright and author instead of
+`[imaging]`'s, processed ones too (`ImageQueue::process` takes them per target). The credit of a
+target is that of the first file, by id, its candidates are made from: files get their
+credits before any render, so two views' registrations of one processed image, in either
+order, give the same.
 
 ## GetRemote and the getresource cache
 
@@ -149,6 +155,7 @@ Listed with their reasons in `expected_diffs.toml` (the tests read it):
 | `fingerprint` | `oracle/resources/transform` (fingerprint chains, SRI, copy) | 144 equal to Go, 28 sha1 errors, 52 copy conflicts |
 | `remote` | `oracle/resource-transformers/getremote` (key vectors, 48 calls from the Go build's cache, 51 YouTube entries) | 48 + 48 + 51 |
 | `identity`, `publish` | — | named targets, concat, metadata, image seam, multihost, token forms, images without their metadata |
+| `credits` | — | an image's credit read from its params and checked; published with the file and its metadata views, processed images (one operation through two views included), copies and fingerprints; other images with `[imaging]`'s notice |
 | `identity::qr_codes`, `gohash` unit test | Go's `TestQR` (8 option maps: file names; bytes via `ssg-images`) | names, bytes, sizes, identity, publishing, multihost |
 | `pipes::tocss` | `oracle/resource-transformers/tocss` (LibSass on t16site) + the reconstruction's SCSS | 31: 16 equal (normalised), 15 accepted; reconstruction compiled, slash division checked; explicit-extension `@import`/`@use` found in `includePaths` (relative imports of the found file, import-only files, the indented syntax) |
 | `pipes::jsbuild` | `oracle/resource-transformers/jsbuild` (t16site, docs) | 62 + 6: media types, data, links (fingerprints normalised), `Data.Integrity`'s algorithm, errors at Go's positions, published files; what the scripts do is compared in `ssg-jsbuild` |

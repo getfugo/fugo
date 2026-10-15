@@ -319,7 +319,10 @@ string); deterministic winners for URL collisions; newer CLDR collation; no v1 s
 functions inside components need `page=` or `@__nh`; `build.version` is fugo's version; the
 template object is `build` and the environment variables are `FUGO_*` (below); original JPEG,
 PNG and WebP images are published without their metadata unless `[imaging] stripMetadata =
-false` (`ssg_images::strip_metadata`).
+false` (`ssg_images::strip_metadata`), and an image resource's `copyright` and `author` params
+are written into it and the images made from it in place of `[imaging]`'s, a value that is
+not text or that `[imaging]` would refuse (a line break, a brace other than `{year}`, over
+1000 bytes) stopping the build (`ssg_images::Credit`).
 
 Allowed output differences (REWRITE_PLAN.md §7.3): minifier bytes, highlight span structure,
 typographic characters vs entities, CSS/JS bundle bytes, term-collision winners, the order of

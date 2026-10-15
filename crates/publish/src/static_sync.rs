@@ -75,7 +75,8 @@ impl StaticSyncOptions {
     }
 
     /// The bytes of the static file `src` as they are published: an image's with the metadata
-    /// [`image_metadata`](Self::image_metadata) gives it.
+    /// [`image_metadata`](Self::image_metadata) gives it, `[imaging]`'s notice included (a
+    /// static file has no params to give its own).
     ///
     /// # Errors
     /// An unreadable file.
@@ -88,7 +89,10 @@ impl StaticSyncOptions {
             .is_some();
         let name = src.file_name().and_then(std::ffi::OsStr::to_str);
         match name.filter(|_| image) {
-            Some(name) => Ok(self.image_metadata.original(&bytes, name).unwrap_or(bytes)),
+            Some(name) => Ok(self
+                .image_metadata
+                .original(&bytes, name, None)
+                .unwrap_or(bytes)),
             None => Ok(bytes),
         }
     }

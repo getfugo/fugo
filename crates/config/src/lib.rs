@@ -56,7 +56,7 @@ pub use env_file::EnvFile;
 pub use error::ConfigError;
 pub use global::{
     BuildConfig, CachesConfig, ContentFilter, Dirs, ImagingConfig, MinifyConfig, MountConfig,
-    PrivacyConfig, SecurityPolicy,
+    NoticeError, PrivacyConfig, SecurityPolicy,
 };
 pub use markup::MarkupConfig;
 pub use media::{ContentTypes, MediaType, MediaTypes};

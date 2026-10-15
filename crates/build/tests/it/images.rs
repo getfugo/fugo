@@ -11,6 +11,8 @@ use ssg_testkit::fixture::testdata;
 
 use crate::support::{files_below, write_files};
 
+mod credits;
+
 const SINGLE: &str = r#"{% set pic = page.resources | get_resource(name="pic.jpg") -%}
 {% set small = pic | resize(width=100) -%}
 {% set unused = pic | resize(width=50) -%}

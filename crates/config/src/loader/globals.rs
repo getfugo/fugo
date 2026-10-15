@@ -128,35 +128,14 @@ impl<'a> Loader<'a> {
     }
 }
 
-/// The longest copyright notice or author `[imaging]` takes, in bytes: they go into every
-/// published image.
-const NOTICE_MAX: usize = 1000;
-
-/// `[imaging]`'s copyright notice, author and title: text without control characters, braces
-/// only in the copyright's `{year}`, and only with `stripMetadata` (an image's own metadata is
-/// replaced to write them).
+/// `[imaging]`'s copyright notice, author and title: text [`ImagingConfig::check_copyright`] and
+/// [`ImagingConfig::check_author`] accept, and only with `stripMetadata` (an image's own
+/// metadata is replaced to write them).
 fn check_notice(imaging: &ImagingConfig) -> Result<(), ConfigError> {
-    for (key, text) in [
-        ("imaging.copyright", &imaging.copyright),
-        ("imaging.author", &imaging.author),
-    ] {
-        if text.len() > NOTICE_MAX || text.chars().any(char::is_control) {
-            return Err(ConfigError::invalid(
-                key,
-                format!("must be at most {NOTICE_MAX} bytes of text without control characters"),
-            ));
-        }
-    }
-    // A typo such as `{yaer}` would otherwise go into every image as it is.
-    if let Some(brace) = stray_brace(&imaging.copyright) {
-        return Err(ConfigError::invalid(
-            "imaging.copyright",
-            format!(
-                "{brace:?} is not a placeholder: the only one is {}",
-                ImagingConfig::YEAR
-            ),
-        ));
-    }
+    ImagingConfig::check_copyright(&imaging.copyright)
+        .map_err(|e| ConfigError::invalid("imaging.copyright", e))?;
+    ImagingConfig::check_author(&imaging.author)
+        .map_err(|e| ConfigError::invalid("imaging.author", e))?;
     let notice =
         !imaging.copyright.is_empty() || !imaging.author.is_empty() || imaging.title_from_file_name;
     if notice && !imaging.strip_metadata {
@@ -167,22 +146,4 @@ fn check_notice(imaging: &ImagingConfig) -> Result<(), ConfigError> {
         ));
     }
     Ok(())
-}
-
-/// The first brace of `text` outside an [`ImagingConfig::YEAR`], with what it encloses: `{yaer}`,
-/// or the lone `{` or `}`.
-fn stray_brace(text: &str) -> Option<&str> {
-    let mut rest = text;
-    while let Some(i) = rest.find(['{', '}']) {
-        let tail = &rest[i..];
-        if let Some(after) = tail.strip_prefix(ImagingConfig::YEAR) {
-            rest = after;
-            continue;
-        }
-        return Some(match tail.find('}') {
-            Some(end) if tail.starts_with('{') => &tail[..=end],
-            _ => &tail[..1],
-        });
-    }
-    None
 }

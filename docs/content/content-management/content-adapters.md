@@ -48,7 +48,10 @@ in the section, in taxonomies, feeds and the sitemap.
 ```
 
 `content.value` is a string, or a resource (which keeps its own URL). Resources at a page's
-path belong to that page: `page.resources` and image processing see them.
+path belong to that page: `page.resources` and image processing see them. `name`, `title` and
+`params` are the resource's, as front matter
+[metadata](/content-management/page-resources/#metadata) gives them: an image's `copyright`
+and `author` params are its own [copyright notice](/configuration/imaging/#copyright-notice).
 
 ## What an adapter can read
 

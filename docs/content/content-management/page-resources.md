@@ -70,6 +70,10 @@ title = "My trip"
 counts the matches of the entry. Read them as `img.title` and `img.params.credit`; a renamed
 resource is found by its new name: `get_resource(name="header")`.
 
+Two params mean something to fugo: an image's `copyright` and `author` are written into it,
+and into the images processed from it, in place of the site's notice (see
+[Copyright notice](/configuration/imaging/#copyright-notice)).
+
 ## Publishing
 
 A resource is published when a template asks for its link, and a processed image when its

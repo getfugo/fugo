@@ -15,6 +15,7 @@ use std::sync::Arc;
 use ssg_base::paths::OutputPath;
 use ssg_base::url::{Component, unescape};
 use ssg_base::{Idx as _, ImageOpId, ResourceId, Sink};
+use ssg_images::Credit;
 
 use crate::store::{
     Body, Origin, PublishPolicy, Resource, ResourceError, ResourceKind, ResourceStore, lock,
@@ -183,8 +184,13 @@ impl ResourceStore {
     }
 
     /// The bytes `r` is published with: its content, an image's (not processed) with the
-    /// metadata [`image_metadata`](crate::StoreConfig::image_metadata) gives it.
-    fn published_content(&self, r: &Resource) -> Result<Arc<[u8]>, ResourceError> {
+    /// metadata [`image_metadata`](crate::StoreConfig::image_metadata) gives it, `credit`'s
+    /// copyright and author in place of `[imaging]`'s when it has one.
+    fn published_content(
+        &self,
+        r: &Resource,
+        credit: Option<&Credit>,
+    ) -> Result<Arc<[u8]>, ResourceError> {
         let bytes = self.content(r.id)?;
         if r.kind != ResourceKind::Image {
             return Ok(bytes);
@@ -192,7 +198,7 @@ impl ResourceStore {
         Ok(self
             .cfg
             .image_metadata
-            .original(&bytes, &r.name)
+            .original(&bytes, &r.name, credit)
             .map_or(bytes, Into::into))
     }
 
@@ -211,7 +217,8 @@ impl ResourceStore {
     /// (except [`PublishPolicy::Never`]). Targets are written once, in path order; processed
     /// images are produced by the [`ImageQueue`](ssg_images::ImageQueue) (in parallel), the
     /// others get the metadata [`image_metadata`](crate::StoreConfig::image_metadata) gives
-    /// them.
+    /// them. An image made from a file with a credit ([`set_credit`](Self::set_credit))
+    /// carries its copyright and author.
     /// Call it outside any render; calling it again publishes only what is new.
     ///
     /// # Errors
@@ -251,7 +258,8 @@ impl ResourceStore {
                 candidates.entry(r.target.clone()).or_default().push(r);
             }
         }
-        let by_target: BTreeMap<OutputPath, &Resource> = candidates
+        // An image's credit: that of the file the target's candidates are made from.
+        let by_target: BTreeMap<OutputPath, (&Resource, Option<Credit>)> = candidates
             .into_iter()
             .map(|(target, rs)| {
                 let sources: BTreeSet<ResourceId> = rs
@@ -263,20 +271,27 @@ impl ResourceStore {
                     .copied()
                     .find(|r| !sources.contains(&r.id))
                     .unwrap_or(rs[0]);
-                (target, winner)
+                let credit = (winner.kind == ResourceKind::Image)
+                    .then(|| self.credit_at(&rs))
+                    .flatten();
+                (target, (winner, credit))
             })
             .collect();
         let mut published = lock(&self.published);
         let mut images: BTreeMap<OutputPath, ImageOpId> = BTreeMap::new();
-        for (target, r) in by_target {
+        let mut credits: BTreeMap<OutputPath, Credit> = BTreeMap::new();
+        for (target, (r, credit)) in by_target {
             if published.contains(&target) {
                 continue;
             }
             if let Body::PendingImage(op) = r.body {
+                if let Some(credit) = credit {
+                    credits.insert(target.clone(), credit);
+                }
                 images.insert(target, op);
                 continue;
             }
-            let bytes = self.published_content(r)?;
+            let bytes = self.published_content(r, credit.as_ref())?;
             sink.write(&target, &bytes)
                 .map_err(|source| ResourceError::Write {
                     path: target.clone(),
@@ -295,7 +310,7 @@ impl ResourceStore {
             if r.policy == PublishPolicy::Never || published.contains(&r.target) {
                 continue;
             }
-            let bytes = self.published_content(&r)?;
+            let bytes = self.published_content(&r, self.credit(id).as_ref())?;
             sink.write(&r.target, &bytes)
                 .map_err(|source| ResourceError::Write {
                     path: r.target.clone(),
@@ -314,7 +329,7 @@ impl ResourceStore {
                         .unwrap_or_default(),
                 )
             })?;
-            queue.process(&images, sink)?;
+            queue.process(&images, &credits, sink)?;
             stats.images = images.len();
             stats.files += images.len();
             published.extend(images.into_keys());

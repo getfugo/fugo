@@ -155,8 +155,8 @@ impl ResourceStore {
         })
     }
 
-    /// `resources.Copy`: `id` published at `target` as well (media type, name, title, params
-    /// and data unchanged).
+    /// `resources.Copy`: `id` published at `target` as well (media type, name, title, params,
+    /// data and credit unchanged).
     ///
     /// # Errors
     /// An empty target, or a conflicting earlier call in the same language.
@@ -168,7 +168,11 @@ impl ResourceStore {
     ) -> Result<ResourceId, ResourceError> {
         let src = self.resource(id);
         let input = u64::from(id.raw()) ^ 0x636f_7079_0000_0000;
-        self.claim(target, input, call, |out, link| {
+        // Whether the claim makes a copy of `id` (another language's claim of `target` may
+        // have made one of another resource).
+        let mut made = false;
+        let copy = self.claim(target, input, call, |out, link| {
+            made = true;
             Ok(NewResource {
                 origin: Origin::Named,
                 media_type: src.media_type.clone(),
@@ -184,7 +188,11 @@ impl ResourceStore {
                 policy: PublishPolicy::OnReference,
                 kind: Some(src.kind),
             })
-        })
+        })?;
+        if made {
+            self.copy_credit(id, copy);
+        }
+        Ok(copy)
     }
 
     /// `images.QR`: the PNG of the QR code of `text` (see [`ssg_images::qr_png`], equal to
