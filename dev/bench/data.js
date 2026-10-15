@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1792072583648,
+  "lastUpdate": 1792072586277,
   "repoUrl": "https://github.com/getfugo/fugo",
   "entries": {
     "Benchmark": [
@@ -100816,6 +100816,105 @@ window.BENCHMARK_DATA = {
           {
             "name": "BenchmarkSummaryFromHTMLWithDivider",
             "value": 77.51,
+            "unit": "ns/op"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "blackb1rd.mov@gmail.com",
+            "name": "Prachya Saechua",
+            "username": "blackb1rd"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "94ac8116f28ebc39bbc98cdb831bb736cd1a1579",
+          "message": "dev: Install fugo with the version of its latest release tag (#211)\n\nA build from a clone (cargo install --path crates/cli) printed fugo\nv0.0.0-DEV: only CI's release builds set FUGO_BUILD_VERSION.\n\ncargo dev install runs that install, followed by its own arguments\n(--root <dir>, --features ...), named as CI names a release build:\n\n- FUGO_BUILD_VERSION is the highest release tag reachable from HEAD.\n  Pre-releases count; the Go fork's v0.x tags never do. Without a tag\n  (a shallow clone) the version stays 0.0.0-DEV, and the command says\n  so.\n- FUGO_BUILD_COMMIT is HEAD's commit and FUGO_BUILD_DATE its time in\n  UTC, so fugo version prints v<version>-<commit>: a build past a tag\n  has the tag's version and its own commit, which tells it from the\n  release.\n\nDEVELOPMENT.md, the installation page and crates/dev/README.md describe\nit; a test reads the build of a scratch repository with release, Go,\nmalformed, unreachable and pre-release tags.\n\nCo-Authored-By: Claude Opus 5.5 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-10-15T13:43:24Z",
+          "tree_id": "8592f9b9d97a2432710a66c611f0f76bd8c17ad0",
+          "url": "https://github.com/getfugo/fugo/commit/94ac8116f28ebc39bbc98cdb831bb736cd1a1579"
+        },
+        "date": 1792072585634,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "BenchmarkSanitizeAnchorName",
+            "value": 480.9,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSanitizeAnchorNameAsciiOnly",
+            "value": 1321.08,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSanitizeAnchorNameBlackfriday",
+            "value": 593.34,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSanitizeAnchorNameString",
+            "value": 480.97,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSanitize/All_allowed",
+            "value": 220.9,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSanitize/Spaces",
+            "value": 235.22,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkRelURL",
+            "value": 369.88,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkAbsURL/relurl",
+            "value": 709.58,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkAbsURL/absurl",
+            "value": 22.11,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkTotalWords",
+            "value": 5138.89,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkStripHTML",
+            "value": 1164.9,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkParse",
+            "value": 9376.96,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkDecodeYAMLToMap",
+            "value": 14996.23,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSummaryFromHTML",
+            "value": 70.31,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSummaryFromHTMLWithDivider",
+            "value": 76.93,
             "unit": "ns/op"
           }
         ]
