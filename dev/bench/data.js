@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1792085138152,
+  "lastUpdate": 1792086562705,
   "repoUrl": "https://github.com/getfugo/fugo",
   "entries": {
     "Benchmark": [
@@ -98388,6 +98388,66 @@ window.BENCHMARK_DATA = {
           {
             "name": "10,000 generated pages: peak memory",
             "value": 600.2,
+            "unit": "MiB",
+            "extra": "10061 pages; median of 5 builds after a warm-up build"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "blackb1rd.mov@gmail.com",
+            "name": "Prachya Saechua",
+            "username": "blackb1rd"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "43284ae39c80b3b449720045bb64d69198c45e02",
+          "message": "cms: Show the keys a page lacks as empty fields (#214)\n\nA page showed only the keys its file has; the keys other pages of its\nsection use, and those other pages have in a table, were under Add a\nfield and a table's Add…, one by one. Now they show where they belong,\nempty, like the keys a translation lacks.\n\n- A page shows every key the section's pages use, and those only the\n  settings name, that its file lacks: empty, after the keys around it\n  in another language's file, else in the section's pages. A key goes\n  into the file once it has a value; a table or a list of tables the\n  page lacks shows its keys, empty too. Hidden fields stay hidden.\n- A table shows the keys other pages have in it that it lacks, empty,\n  in place of its Add… menu.\n- A key the page lacks offers, under its empty field, another\n  language's value (Copy) or its setting's default, or the value the\n  section's pages share (Use).\n- A folder's own page still offers its pages' keys under Add a field:\n  those it should give (required ones, a text to translate) show empty.\n- Docs: Content management → CMS and Configuration → CMS.\n\nCo-Authored-By: Claude Opus 5.5 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-10-16T00:28:03+07:00",
+          "tree_id": "afd64ec373d2f4fd2ca87fd424f6299bcad8ae9b",
+          "url": "https://github.com/getfugo/fugo/commit/43284ae39c80b3b449720045bb64d69198c45e02"
+        },
+        "date": 1792086559016,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "docs site: build time",
+            "value": 187.3,
+            "unit": "ms",
+            "extra": "334 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "docs site: peak memory",
+            "value": 173.8,
+            "unit": "MiB",
+            "extra": "334 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "1,000 generated pages: build time",
+            "value": 215.1,
+            "unit": "ms",
+            "extra": "1061 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "1,000 generated pages: peak memory",
+            "value": 153.2,
+            "unit": "MiB",
+            "extra": "1061 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "10,000 generated pages: build time",
+            "value": 2227.2,
+            "unit": "ms",
+            "extra": "10061 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "10,000 generated pages: peak memory",
+            "value": 619.3,
             "unit": "MiB",
             "extra": "10061 pages; median of 5 builds after a warm-up build"
           }
