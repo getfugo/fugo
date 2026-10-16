@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1792086567148,
+  "lastUpdate": 1792152195960,
   "repoUrl": "https://github.com/getfugo/fugo",
   "entries": {
     "Benchmark": [
@@ -98448,6 +98448,66 @@ window.BENCHMARK_DATA = {
           {
             "name": "10,000 generated pages: peak memory",
             "value": 619.3,
+            "unit": "MiB",
+            "extra": "10061 pages; median of 5 builds after a warm-up build"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "blackb1rd.mov@gmail.com",
+            "name": "Prachya Saechua",
+            "username": "blackb1rd"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "68670d1e6c068291e83c8bb05b567b7322943a7e",
+          "message": "cms: Set the editor's fields of many keys with a pattern of keys (#215)\n\nA setting of [cms.fields] named one key, so the keys of a table that\nshare their settings (every score of a rating, 0 to 5) each needed a\nsection of their own, and a key a page adds later had none.\n\n- A key of [cms.fields] with *, ?, […] or {…,…} is a pattern of keys,\n  matched ignoring case: * is any part of one key, ** any part of the\n  path, across keys (\"rating.*\" matches rating.taste, not\n  rating.taste.note; \"nutrition.**.total\" matches\n  nutrition.fat.saturated.total). Its settings go to every key it\n  matches, the keys of the content and those other settings name.\n- Where several match a key, the longer pattern's settings go over the\n  shorter's, and the key's own over them, setting by setting. A\n  pattern names no key of its own, in the index or in fugo cms fields.\n- The configuration's check rejects a pattern that is not a glob,\n  naming its setting.\n- ssg-base: glob::Separator::Dot, for which * and ? do not match a dot.\n- Docs: Configuration → CMS.\n\nCo-Authored-By: Claude Opus 5.5 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-10-16T18:44:53+07:00",
+          "tree_id": "3199a6e9aea60887020ec917fb630cc312179895",
+          "url": "https://github.com/getfugo/fugo/commit/68670d1e6c068291e83c8bb05b567b7322943a7e"
+        },
+        "date": 1792152193187,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "docs site: build time",
+            "value": 197.1,
+            "unit": "ms",
+            "extra": "334 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "docs site: peak memory",
+            "value": 174.1,
+            "unit": "MiB",
+            "extra": "334 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "1,000 generated pages: build time",
+            "value": 228.8,
+            "unit": "ms",
+            "extra": "1061 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "1,000 generated pages: peak memory",
+            "value": 155.4,
+            "unit": "MiB",
+            "extra": "1061 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "10,000 generated pages: build time",
+            "value": 2368.9,
+            "unit": "ms",
+            "extra": "10061 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "10,000 generated pages: peak memory",
+            "value": 621.4,
             "unit": "MiB",
             "extra": "10061 pages; median of 5 builds after a warm-up build"
           }
