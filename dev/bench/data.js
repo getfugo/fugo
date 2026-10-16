@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1792152195960,
+  "lastUpdate": 1792152198663,
   "repoUrl": "https://github.com/getfugo/fugo",
   "entries": {
     "Benchmark": [
@@ -101452,6 +101452,105 @@ window.BENCHMARK_DATA = {
           {
             "name": "BenchmarkSummaryFromHTMLWithDivider",
             "value": 66.65,
+            "unit": "ns/op"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "blackb1rd.mov@gmail.com",
+            "name": "Prachya Saechua",
+            "username": "blackb1rd"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "68670d1e6c068291e83c8bb05b567b7322943a7e",
+          "message": "cms: Set the editor's fields of many keys with a pattern of keys (#215)\n\nA setting of [cms.fields] named one key, so the keys of a table that\nshare their settings (every score of a rating, 0 to 5) each needed a\nsection of their own, and a key a page adds later had none.\n\n- A key of [cms.fields] with *, ?, […] or {…,…} is a pattern of keys,\n  matched ignoring case: * is any part of one key, ** any part of the\n  path, across keys (\"rating.*\" matches rating.taste, not\n  rating.taste.note; \"nutrition.**.total\" matches\n  nutrition.fat.saturated.total). Its settings go to every key it\n  matches, the keys of the content and those other settings name.\n- Where several match a key, the longer pattern's settings go over the\n  shorter's, and the key's own over them, setting by setting. A\n  pattern names no key of its own, in the index or in fugo cms fields.\n- The configuration's check rejects a pattern that is not a glob,\n  naming its setting.\n- ssg-base: glob::Separator::Dot, for which * and ? do not match a dot.\n- Docs: Configuration → CMS.\n\nCo-Authored-By: Claude Opus 5.5 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-10-16T18:44:53+07:00",
+          "tree_id": "3199a6e9aea60887020ec917fb630cc312179895",
+          "url": "https://github.com/getfugo/fugo/commit/68670d1e6c068291e83c8bb05b567b7322943a7e"
+        },
+        "date": 1792152197821,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "BenchmarkSanitizeAnchorName",
+            "value": 481.54,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSanitizeAnchorNameAsciiOnly",
+            "value": 1350.6,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSanitizeAnchorNameBlackfriday",
+            "value": 593.87,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSanitizeAnchorNameString",
+            "value": 481.52,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSanitize/All_allowed",
+            "value": 221.25,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSanitize/Spaces",
+            "value": 238,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkRelURL",
+            "value": 356.73,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkAbsURL/relurl",
+            "value": 662.79,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkAbsURL/absurl",
+            "value": 22.15,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkTotalWords",
+            "value": 5128.85,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkStripHTML",
+            "value": 1155.42,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkParse",
+            "value": 9528.46,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkDecodeYAMLToMap",
+            "value": 15730.24,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSummaryFromHTML",
+            "value": 70.4,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSummaryFromHTMLWithDivider",
+            "value": 77.2,
             "unit": "ns/op"
           }
         ]
