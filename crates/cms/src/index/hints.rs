@@ -3,12 +3,12 @@
 //! it out from the content: a label from the key, a widget from the kind of its values and from
 //! its name, the short values pages share (to suggest), and whether a page's languages all give
 //! it the same value (to edit once for all of them). The settings of `[cms.fields]` go over it,
-//! setting by setting.
+//! setting by setting: the key's own, and those of the patterns of keys that match it.
 
 use std::hash::{DefaultHasher, Hash, Hasher};
 
 use super::*;
-use crate::fields::{Hint, Widget};
+use crate::fields::{Hint, Settings, Widget};
 
 /// Longer values are not suggested: they are sentences, not names.
 const SHORT: usize = 80;
@@ -118,12 +118,14 @@ impl Keys {
     }
 
     /// The fields of the keys, with the settings `fields` over them, and the fields of the keys
-    /// only the settings name; `taxonomies` are the taxonomies' plurals, lower-cased.
+    /// only the settings name (a pattern names none); `taxonomies` are the taxonomies' plurals,
+    /// lower-cased.
     pub(super) fn hints(
         self,
         fields: &BTreeMap<String, Field>,
         taxonomies: &BTreeSet<String>,
     ) -> BTreeMap<String, Hint> {
+        let settings = Settings::new(fields);
         let mut out: BTreeMap<String, Hint> = BTreeMap::new();
         for (key, s) in self.stats {
             let top = !key.contains('.');
@@ -134,7 +136,7 @@ impl Keys {
             if top && !own && s.same_in_every_language() {
                 field.shared = Some(true);
             }
-            let field = with_settings(field, fields.get(&key), kind);
+            let field = with_settings(field, settings.of(&key).as_ref(), kind);
             // Fixed options, a taxonomy's terms and the values of one page leave nothing to suggest.
             let suggests = !taxonomy
                 && field.options.is_empty()
@@ -151,27 +153,27 @@ impl Keys {
             };
             out.insert(key, hint);
         }
-        for (key, set) in fields {
-            let key = key.to_lowercase();
-            if out.contains_key(&key) {
+        for key in settings.keys() {
+            if out.contains_key(key) {
                 continue;
             }
             // A key the settings name keys below is a table.
             let below = format!("{key}.");
-            let table = fields.keys().any(|k| k.to_lowercase().starts_with(&below));
-            let kind = if table { "map" } else { kind_by_settings(set) };
+            let table = settings.keys().any(|k| k.starts_with(&below));
+            let set = settings.of(key).unwrap_or_default();
+            let kind = if table { "map" } else { kind_by_settings(&set) };
             let named = Field {
-                label: Some(label_of(key.rsplit('.').next().unwrap_or(&key))),
+                label: Some(label_of(key.rsplit('.').next().unwrap_or(key))),
                 ..Field::default()
             };
             let hint = Hint {
-                field: with_settings(named, Some(set), kind),
+                field: with_settings(named, Some(&set), kind),
                 kind,
                 suggestions: Vec::new(),
                 unused: true,
                 name: None,
             };
-            out.insert(key, hint);
+            out.insert(key.to_owned(), hint);
         }
         out
     }

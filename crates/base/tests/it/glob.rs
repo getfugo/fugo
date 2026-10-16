@@ -169,3 +169,20 @@ fn go_patterns() {
     assert!(glob::compile("[a-", GlobOpts::default()).is_err());
     assert!(glob::compile("[b-a]", GlobOpts::default()).is_err());
 }
+
+#[test]
+fn dot_separates_the_keys_of_a_path() {
+    let g = |p: &str| {
+        let o = GlobOpts {
+            case: Case::Fold,
+            separator: Separator::Dot,
+        };
+        glob::compile(p, o).unwrap()
+    };
+    assert!(g("rating.*").is_match("rating.Sweet"));
+    assert!(!g("rating.*").is_match("rating.sweet.note"));
+    assert!(!g("rating.?").is_match("rating.ab"));
+    assert!(g("nutrition.**.total").is_match("nutrition.fat.saturated.total"));
+    assert!(!g("nutrition.**.total").is_match("nutrition.total"));
+    assert!(g("*/*").is_match("a/b"), "a slash is an ordinary character");
+}

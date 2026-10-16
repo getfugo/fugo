@@ -209,6 +209,10 @@ fn errors_name_the_setting() {
             "cms.fields.rating.min",
         ),
         (
+            &cms_toml("[cms.fields.\"rating.[z-a]\"]\nmin = 0"),
+            "cms.fields.rating.[z-a]",
+        ),
+        (
             &cms_toml("")
                 .replace("main", "x")
                 .replace("[cms.git]\n", "[cms.git]\nbranch = \"a..b\"\n"),

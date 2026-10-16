@@ -4,7 +4,7 @@
 //!
 //! | pattern | matches |
 //! |---|---|
-//! | `*` | any run of characters except `/` |
+//! | `*` | any run of characters except `/` (the [`Separator`]) |
 //! | `**` | any run of characters, `/` included (anywhere, not only as a whole segment) |
 //! | `?` | one character except `/` |
 //! | `[abc]`, `[!abc]` | one character in (not in) the list; `\` escapes inside the list |
@@ -30,12 +30,15 @@ pub enum Case {
     Sensitive,
 }
 
-/// Whether `/` separates path segments.
+/// The character that separates segments, which `*` and `?` do not match.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub enum Separator {
     /// `*` and `?` do not match `/` (Go's globs).
     #[default]
     Slash,
+    /// `*` and `?` do not match `.`: a path of keys, `nutrition.fat.total` (gobwas/glob takes
+    /// any separators; Go's globs use only `/`).
+    Dot,
     /// No separator: `*` matches any string.
     None,
 }
@@ -235,10 +238,12 @@ fn emit(seq: &[Node], separator: Separator, re: &mut String) {
             Node::Literal(c) => re.push_str(&regex::escape(c.encode_utf8(&mut [0; 4]))),
             Node::Any => re.push_str(match separator {
                 Separator::Slash => "[^/]*",
+                Separator::Dot => "[^.]*",
                 Separator::None => ".*",
             }),
             Node::Single => re.push_str(match separator {
                 Separator::Slash => "[^/]",
+                Separator::Dot => "[^.]",
                 Separator::None => ".",
             }),
             Node::Super => re.push_str(".*"),
