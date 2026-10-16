@@ -171,7 +171,7 @@ rolldown_common = "=1.2.12"
 rolldown_error = "=1.2.12"
 rolldown_plugin = "=1.2.12"
 rolldown_sourcemap = "=1.2.12"
-oxc = { version = "=0.152.0", features = ["codegen", "semantic", "ast_visit", "transformer"] }
+oxc = { version = "=0.153.0", features = ["codegen", "semantic", "ast_visit", "transformer"] }
 oxc_sourcemap = "=9.0.0"
 quick-xml = "0.42"    # XML/SVG minifier tokens (T26); already locked through plist
 
