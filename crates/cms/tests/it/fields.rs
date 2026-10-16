@@ -1,6 +1,7 @@
 //! The editor's fields in the index: what the build works out from the content, with the
 //! settings of `[cms.fields]` over it. The keys inside tables are in `fields/tables.rs`, what
-//! the languages of a page and the pages of a section share in `fields/pages.rs`.
+//! the languages of a page and the pages of a section share in `fields/pages.rs`, the patterns of
+//! keys in `fields/patterns.rs`.
 
 use std::collections::BTreeMap;
 
@@ -9,6 +10,7 @@ use serde_json::{Value, json};
 use crate::support::{cms_toml, load, write_files};
 
 mod pages;
+mod patterns;
 mod tables;
 
 /// The index of a site with `files` (and `config.toml` of `CONFIG` with `settings`).

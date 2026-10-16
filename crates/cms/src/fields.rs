@@ -1,7 +1,7 @@
 //! The editor's fields: the settings of `[cms.fields.<key>]` (`<key>` may be a key inside tables,
-//! `nutrition.fat`), the field of every key as the index gives it to the editor (what the build
-//! works out from the content, `index::hints`, with the settings over it), and `fugo cms fields`,
-//! which prints those fields as settings to change.
+//! `nutrition.fat`, or a pattern of keys, `rating.*`), the field of every key as the index gives
+//! it to the editor (what the build works out from the content, `index::hints`, with the settings
+//! over it), and `fugo cms fields`, which prints those fields as settings to change.
 
 use std::collections::BTreeMap;
 use std::fmt::Write as _;
@@ -12,6 +12,9 @@ use ssg_config::Config;
 use crate::CmsError;
 use crate::config::CmsConfig;
 use crate::index;
+
+mod patterns;
+pub(crate) use patterns::Settings;
 
 /// How the editor shows a front matter key (`[cms.fields.<key>]`).
 #[derive(Clone, Debug, Default, PartialEq, Eq, Deserialize, Serialize)]
@@ -88,10 +91,15 @@ pub struct Hint {
     pub name: Option<String>,
 }
 
-/// The `[cms.fields]` settings, checked: a multiple select needs options to choose from, and
-/// `min` is not above `max`.
+/// The `[cms.fields]` settings, checked: a pattern of keys is a glob, a multiple select needs
+/// options to choose from, and `min` is not above `max`.
 pub(crate) fn check(fields: BTreeMap<String, Field>) -> Result<BTreeMap<String, Field>, CmsError> {
     for (key, f) in &fields {
+        if patterns::is_pattern(key)
+            && let Err(e) = patterns::compile(key)
+        {
+            return Err(CmsError::config(format!("cms.fields.{key}"), e.to_string()));
+        }
         if f.multiple && f.options.is_empty() {
             return Err(CmsError::config(
                 format!("cms.fields.{key}.multiple"),
@@ -116,7 +124,8 @@ const HEADER: &str = "\
 # key, a widget from its values and its name, whether its value is the same in every language,
 # with the settings of [cms.fields] over them. Copy the ones you want to change into the
 # configuration (as [cms.fields.<key>] in a configuration file, as [fields.<key>] in the cms.toml
-# of a configuration directory); a setting you leave out stays as the build works it out.
+# of a configuration directory); a setting you leave out stays as the build works it out, and a
+# pattern of keys ([cms.fields.\"rating.*\"]) changes every key it matches.
 #
 # widget: text, textarea, number, boolean, date, select (with options; multiple = true for a list
 # of them), list, image (a file of the page or an upload) or hidden (not shown, kept). A table (a

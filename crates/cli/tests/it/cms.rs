@@ -247,7 +247,7 @@ fn cms_fields_prints_the_fields_the_build_gives_the_editor() {
         (
             "config.toml",
             &format!(
-                "{SITE}{CMS}[environments.production.cms.fields.description]\nlabel = \"Short text\"\nhelp = \"One \\\"line\\\"\"\n[environments.production.cms.fields.flavours]\noptions = [\"sweet\", \"salty\"]\nmultiple = true\n"
+                "{SITE}{CMS}[environments.production.cms.fields.description]\nlabel = \"Short text\"\nhelp = \"One \\\"line\\\"\"\n[environments.production.cms.fields.flavours]\noptions = [\"sweet\", \"salty\"]\nmultiple = true\n[environments.production.cms.fields.\"rating.*\"]\nmax = 5\n"
             ),
         ),
     ];
@@ -262,8 +262,8 @@ fn cms_fields_prints_the_fields_the_build_gives_the_editor() {
         "[cms.fields.draft]\n# yes or no; in posts\nlabel = \"Draft\"\nwidget = \"boolean\"\n",
         "[cms.fields.image_preview]\n# text; in posts\nlabel = \"Image preview\"\nwidget = \"image\"\n",
         "[cms.fields.rating]\n# a table; in posts\nlabel = \"Rating\"\n\n",
-        // A key inside a table, by its path.
-        "[cms.fields.\"rating.taste\"]\n# a number; in posts\nlabel = \"Taste\"\nwidget = \"number\"\n",
+        // A key inside a table, by its path; the pattern "rating.*" reaches it.
+        "[cms.fields.\"rating.taste\"]\n# a number; in posts\nlabel = \"Taste\"\nwidget = \"number\"\nmax = 5\n",
         "[cms.fields.whenseen]\n# text; in posts\nlabel = \"When seen\"\nwidget = \"text\"\n",
         // The configuration's settings go over what the build works out, one by one.
         "[cms.fields.description]\n# text; in posts\nlabel = \"Short text\"\nwidget = \"textarea\"\nhelp = \"One \\\"line\\\"\"\n",
@@ -272,6 +272,10 @@ fn cms_fields_prints_the_fields_the_build_gives_the_editor() {
     ] {
         assert!(out.contains(want), "{want}\nnot in:\n{out}");
     }
+    assert!(
+        !out.contains("\n[cms.fields.\"rating.*\"]\n"),
+        "a pattern names no key:\n{out}"
+    );
 
     let none = tempfile::tempdir().expect("tempdir");
     std::fs::write(

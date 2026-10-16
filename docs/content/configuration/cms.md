@@ -181,6 +181,26 @@ default = "The kitchen"
 widget = "hidden"
 ```
 
+A key with `*`, `?`, `[…]` or `{…,…}` is a pattern of keys, whose settings go to every key it
+matches: `*` is any part of one key, `**` any part of the path, across keys (`"scores.*"`
+matches `scores.taste`, not `scores.taste.note`; `"nutrition.**.percentage"` matches
+`nutrition.fat.saturated.percentage`). Where several match a key, the longer pattern's settings
+go over the shorter's, and the key's own over them, setting by setting. A pattern names no key
+of its own: it changes the keys of the content and those other settings name.
+
+```toml
+[cms.fields."scores.*"]                          # every score: scores.taste, scores.crunch…
+min = 0
+max = 5
+step = 1
+
+[cms.fields."scores.taste"]
+label = "Taste"                                  # and 0 to 5, from the pattern
+
+[cms.fields."nutrition.**.percentage"]
+label = "% Daily Value"
+```
+
 `label`
 : The field's label. Default: the key, in words.
 
