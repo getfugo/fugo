@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1792340536537,
+  "lastUpdate": 1792340539278,
   "repoUrl": "https://github.com/getfugo/fugo",
   "entries": {
     "Benchmark": [
@@ -101611,6 +101611,105 @@ window.BENCHMARK_DATA = {
           {
             "name": "BenchmarkSummaryFromHTMLWithDivider",
             "value": 77.2,
+            "unit": "ns/op"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "blackb1rd.mov@gmail.com",
+            "name": "Prachya Saechua",
+            "username": "blackb1rd"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "30d937ae52d370f6dc9cac246870ea9aa19466af",
+          "message": "site: Write a multilingual site's sitemaps at the root with [sitemap] root (#216)\n\nA multilingual site's sitemaps are in their language's directory, the\ndefault language's too: /en/sitemap.xml lists the English pages at the\nroot (/about/), but a sitemap may list only the URLs below its own\ndirectory (the sitemap protocol), so search engines may skip them;\nGoogle takes them only from a sitemap submitted in Search Console.\n\n- [sitemap] root = true (fugo's own setting) writes every language's\n  sitemap at the publish root, named after filename with the language's\n  key before the extension (/sitemap-en.xml, /sitemap-fr.xml), where it\n  may list any page of the site. The index, /sitemap.xml, lists them\n  (site.sitemap_abs_url follows). A site without an index (one language\n  at the root, or multihost) is unchanged.\n- The default is as before (Go's): no site changes without the setting.\n- Docs: Templates → Sitemaps and robots.txt, \"Multilingual sites\".\n\nCo-Authored-By: Claude Opus 5.5 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-10-18T23:11:18+07:00",
+          "tree_id": "8b7ca61c647772d71443bf448744e5f60fb57d1a",
+          "url": "https://github.com/getfugo/fugo/commit/30d937ae52d370f6dc9cac246870ea9aa19466af"
+        },
+        "date": 1792340538458,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "BenchmarkSanitizeAnchorName",
+            "value": 465.87,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSanitizeAnchorNameAsciiOnly",
+            "value": 1165.81,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSanitizeAnchorNameBlackfriday",
+            "value": 581.09,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSanitizeAnchorNameString",
+            "value": 463.56,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSanitize/All_allowed",
+            "value": 206.27,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSanitize/Spaces",
+            "value": 216.41,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkRelURL",
+            "value": 333.92,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkAbsURL/relurl",
+            "value": 625.53,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkAbsURL/absurl",
+            "value": 21.03,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkTotalWords",
+            "value": 5516.48,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkStripHTML",
+            "value": 1160.74,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkParse",
+            "value": 8680.8,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkDecodeYAMLToMap",
+            "value": 12479.68,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSummaryFromHTML",
+            "value": 76.91,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSummaryFromHTMLWithDivider",
+            "value": 69.22,
             "unit": "ns/op"
           }
         ]
