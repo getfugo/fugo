@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1792152198663,
+  "lastUpdate": 1792340536537,
   "repoUrl": "https://github.com/getfugo/fugo",
   "entries": {
     "Benchmark": [
@@ -98508,6 +98508,66 @@ window.BENCHMARK_DATA = {
           {
             "name": "10,000 generated pages: peak memory",
             "value": 621.4,
+            "unit": "MiB",
+            "extra": "10061 pages; median of 5 builds after a warm-up build"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "blackb1rd.mov@gmail.com",
+            "name": "Prachya Saechua",
+            "username": "blackb1rd"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "30d937ae52d370f6dc9cac246870ea9aa19466af",
+          "message": "site: Write a multilingual site's sitemaps at the root with [sitemap] root (#216)\n\nA multilingual site's sitemaps are in their language's directory, the\ndefault language's too: /en/sitemap.xml lists the English pages at the\nroot (/about/), but a sitemap may list only the URLs below its own\ndirectory (the sitemap protocol), so search engines may skip them;\nGoogle takes them only from a sitemap submitted in Search Console.\n\n- [sitemap] root = true (fugo's own setting) writes every language's\n  sitemap at the publish root, named after filename with the language's\n  key before the extension (/sitemap-en.xml, /sitemap-fr.xml), where it\n  may list any page of the site. The index, /sitemap.xml, lists them\n  (site.sitemap_abs_url follows). A site without an index (one language\n  at the root, or multihost) is unchanged.\n- The default is as before (Go's): no site changes without the setting.\n- Docs: Templates → Sitemaps and robots.txt, \"Multilingual sites\".\n\nCo-Authored-By: Claude Opus 5.5 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-10-18T23:11:18+07:00",
+          "tree_id": "8b7ca61c647772d71443bf448744e5f60fb57d1a",
+          "url": "https://github.com/getfugo/fugo/commit/30d937ae52d370f6dc9cac246870ea9aa19466af"
+        },
+        "date": 1792340533064,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "docs site: build time",
+            "value": 189.9,
+            "unit": "ms",
+            "extra": "334 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "docs site: peak memory",
+            "value": 176.3,
+            "unit": "MiB",
+            "extra": "334 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "1,000 generated pages: build time",
+            "value": 205.6,
+            "unit": "ms",
+            "extra": "1061 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "1,000 generated pages: peak memory",
+            "value": 153.5,
+            "unit": "MiB",
+            "extra": "1061 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "10,000 generated pages: build time",
+            "value": 2332.7,
+            "unit": "ms",
+            "extra": "10061 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "10,000 generated pages: peak memory",
+            "value": 609.1,
             "unit": "MiB",
             "extra": "10061 pages; median of 5 builds after a warm-up build"
           }
