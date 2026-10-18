@@ -203,7 +203,7 @@ impl Maker<'_> {
             .sites
             .iter()
             .any(|s| !s.disable_kinds.contains(PageKind::Sitemap));
-        let index = !cfg.multihost && (cfg.default_language_in_subdir || cfg.sites.len() > 1);
+        let index = has_sitemap_index(cfg);
         let pages = [
             (PageKind::NotFound, "404", "404", true),
             (
@@ -246,7 +246,20 @@ impl Maker<'_> {
     }
 }
 
-/// The base name of a standalone page's file (`404`; the sitemap's configured file name).
+/// Whether the site has a sitemap index, written once at the publish root: a multilingual site,
+/// or one whose default language is in a subdirectory, unless multihost.
+pub(crate) fn has_sitemap_index(cfg: &Config) -> bool {
+    !cfg.multihost && (cfg.default_language_in_subdir || cfg.sites.len() > 1)
+}
+
+/// Whether the sitemap of `lang` is at the publish root (`[sitemap] root`), not in its
+/// language's directory: only beside a sitemap index, which lists it.
+pub(crate) fn sitemap_at_root(cfg: &Config, lang: LangIdx) -> bool {
+    cfg.sites[lang].sitemap.root && has_sitemap_index(cfg)
+}
+
+/// The base name of a standalone page's file (`404`; the sitemap's configured file name, with
+/// its language's key for a sitemap at the root: `sitemap-en`).
 pub(crate) fn standalone_base_name(
     cfg: &Config,
     lang: LangIdx,
@@ -256,11 +269,16 @@ pub(crate) fn standalone_base_name(
     let f = cfg.output_formats.get(format);
     match kind {
         PageKind::Sitemap | PageKind::SitemapIndex => {
-            let name = &cfg.sites[lang].sitemap.filename;
-            if name.is_empty() {
-                f.base_name.clone()
+            let site = &cfg.sites[lang];
+            let name = if site.sitemap.filename.is_empty() {
+                f.base_name.as_str()
             } else {
-                ssg_base::paths::filename(name).to_owned()
+                ssg_base::paths::filename(&site.sitemap.filename)
+            };
+            if kind == PageKind::Sitemap && sitemap_at_root(cfg, lang) {
+                format!("{name}-{}", site.language.key)
+            } else {
+                name.to_owned()
             }
         }
         _ => f.base_name.clone(),
