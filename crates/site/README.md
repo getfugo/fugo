@@ -65,7 +65,9 @@ translations, bundle resources, page references).
    Cases*); the home page; the standalone pages, in the tree under Go's keys (`404`,
    `_robots`, `_sitemap`, `_sitemapindex`; `.Path` `/404`, `/_robots.txt`, …): 404 and a
    sitemap per language, robots.txt and the sitemap index once (default language) unless
-   multihost, the index only for multilingual or subdirectory sites. Made pages get the
+   multihost, the index only for multilingual or subdirectory sites. A language's sitemap is in
+   its language's directory, or at the root as `sitemap-<lang>.xml` with `[sitemap] root`
+   (fugo's own setting, beside an index only). Made pages get the
    cascade in force at their key and go through the filter.
 5. **Terms** (`taxonomy.rs`): every linked page in tree order, per taxonomy in plural order,
    names terms in front matter (a string is one term; numbers and booleans are written out;

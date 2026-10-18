@@ -238,6 +238,7 @@ pub fn meta_from_adapter(
         priority: 0.0,
         filename: String::new(),
         disable: false,
+        root: false,
     };
     let sitemap = decode_sitemap(fields.get("sitemap"), &zero_sitemap)?;
     let cjk = match fields.get("iscjklanguage").and_then(value::weak_bool) {

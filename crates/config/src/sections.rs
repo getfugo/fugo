@@ -355,6 +355,10 @@ pub struct SitemapConfig {
     pub priority: f64,
     pub filename: String,
     pub disable: bool,
+    /// The sitemaps of a site with a sitemap index at the publish root, named after their
+    /// language (`sitemap-en.xml`), not in their language's directory. A site setting (fugo's
+    /// own): a page's front matter does not change it.
+    pub root: bool,
 }
 
 impl Default for SitemapConfig {
@@ -364,6 +368,7 @@ impl Default for SitemapConfig {
             priority: -1.0,
             filename: "sitemap.xml".to_owned(),
             disable: false,
+            root: false,
         }
     }
 }

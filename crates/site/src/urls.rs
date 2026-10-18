@@ -17,7 +17,7 @@ use ssg_page::{
     SourcePath, TargetPaths, UrlInputs, links, target_paths,
 };
 
-use crate::nodes::standalone_base_name;
+use crate::nodes::{sitemap_at_root, standalone_base_name};
 use crate::tree::PageRole;
 use crate::{Model, ModelError, Page, PageUrl};
 
@@ -217,11 +217,13 @@ impl PageInputs {
                 PathCase::Preserve => p.path_info.original.name.clone(),
             }
         };
-        // Sitemaps of a multilingual site are always in their language's directory; multihost
-        // sites write every language's files to its own directory, with root-relative links.
-        let in_subdir = p.kind == PageKind::Sitemap;
+        // Sitemaps of a multilingual site are in their language's directory, even the default
+        // language's, or all at the root with `[sitemap] root`; multihost sites write every
+        // language's files to its own directory, with root-relative links.
+        let at_root = p.kind == PageKind::Sitemap && sitemap_at_root(cfg, p.lang);
+        let in_subdir = p.kind == PageKind::Sitemap && !at_root;
         let lang_key = site.language.key.as_str();
-        let prefix_link = if cfg.multihost {
+        let prefix_link = if cfg.multihost || at_root {
             ""
         } else if cfg.sites.len() > 1 && in_subdir {
             lang_key
