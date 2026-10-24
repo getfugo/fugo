@@ -13,6 +13,8 @@
 //!   status 404; `livereload.js` and the `livereload` WebSocket on the same port, below the
 //!   base URL's path; the API of the CMS editor of `[cms]` (`cms.rs`), answered from the local
 //!   git repository for this computer only.
+//! - **Proxies** (`proxy.rs`; `--proxy`, `[[server.proxies]]`, fugo's): the requests below a
+//!   path go to another HTTP server, such as the site's API, on the pages' own origin.
 //! - **Watching** (`watch.rs`, `rebuild.rs`): the mounts of the project and its themes and the
 //!   configuration files, through notify with a 1 s debounce (or polling). A change of the
 //!   site rebuilds it all, a static-only change copies the changed static files, a
@@ -27,6 +29,8 @@ mod address;
 mod cms;
 mod http;
 mod livereload;
+mod options;
+mod proxy;
 mod rebuild;
 mod tree;
 mod watch;
@@ -41,104 +45,17 @@ use std::time::Duration;
 
 use axum::Router;
 use ssg_base::url::UrlError;
-use ssg_build::{BuildError, BuildReport, BuildRequest};
+use ssg_build::{BuildError, BuildReport};
 use ssg_config::ConfigError;
 use ssg_vfs::VfsError;
 use tokio::sync::{broadcast, watch as signal};
 
+pub use options::*;
+pub use proxy::Proxy;
+
 use crate::rebuild::Rebuilder;
 use crate::tree::Served;
 use crate::watch::{Message, WatchSet, Watcher};
-
-/// Where the site is built to and served from.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
-pub enum Target {
-    /// Memory: each build goes into a new sink, served once the build succeeds.
-    #[default]
-    Memory,
-    /// The publish directory (`--render-to-disk`), written in place by each build.
-    Disk,
-}
-
-/// How changes are noticed.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
-pub enum Watch {
-    /// Not at all (`--watch=false`): the site is built once.
-    Off,
-    /// The operating system's file notifications.
-    #[default]
-    Native,
-    /// Polling at this interval (`--poll`), for file systems without notifications.
-    Poll(Duration),
-}
-
-/// The port to listen on.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum Port {
-    /// `--port`: this port, or fail (0: a free port the system picks).
-    Exact(u16),
-    /// The default (1313): a free port when it is taken.
-    Preferred(u16),
-}
-
-impl Default for Port {
-    fn default() -> Self {
-        Self::Preferred(1313)
-    }
-}
-
-/// HTTP caching of the served files.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
-pub enum HttpCache {
-    /// No caching headers.
-    #[default]
-    Default,
-    /// `--noHTTPCache`: `Cache-Control: no-store, no-cache, …` and `Pragma: no-cache`.
-    Disabled,
-}
-
-/// Live reloading (`None` in [`ServeOptions::live_reload`]: `--disableLiveReload`).
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
-pub struct LiveReloadOptions {
-    /// The port the browsers connect to instead of the server's (`--liveReloadPort`, e.g. 443
-    /// behind an HTTPS proxy).
-    pub port: Option<u16>,
-    /// Send the browsers to the page whose content changed (`--navigateToChanged`).
-    pub navigate_to_changed: bool,
-}
-
-/// What to serve and how.
-#[derive(Clone, Debug)]
-pub struct ServeOptions {
-    /// The project and its build flags. `sink`, `config` and `live_reload` are the server's;
-    /// `cli.base_url` is `--baseURL` (the server's address replaces the configured one when
-    /// it is not set); `cli.environment` should default to `development`.
-    pub build: BuildRequest,
-    /// The interface to listen on (`--bind`).
-    pub bind: String,
-    pub port: Port,
-    /// Put the port into the base URLs (`--appendPort`).
-    pub append_port: bool,
-    pub live_reload: Option<LiveReloadOptions>,
-    pub target: Target,
-    pub watch: Watch,
-    pub http_cache: HttpCache,
-}
-
-impl Default for ServeOptions {
-    fn default() -> Self {
-        Self {
-            build: BuildRequest::default(),
-            bind: "127.0.0.1".to_owned(),
-            port: Port::default(),
-            append_port: true,
-            live_reload: Some(LiveReloadOptions::default()),
-            target: Target::Memory,
-            watch: Watch::Native,
-            http_cache: HttpCache::Default,
-        }
-    }
-}
 
 /// What a batch of changes touched.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -189,9 +106,11 @@ pub enum Event<'a> {
     ConfigFailed { error: &'a ServeError },
     /// A listener is serving the site at `url`.
     Listening { url: &'a str, bind: &'a str },
+    /// The requests below `from` go to the server at `to` (after `Listening`, one per proxy).
+    Proxying { from: &'a str, to: &'a str },
     /// The LiveReload command sent to the browsers.
     Reload { command: &'a str },
-    /// A problem while watching or copying files.
+    /// A problem while watching or copying files, or a request a proxy could not forward.
     Error { message: &'a str },
 }
 
@@ -222,6 +141,9 @@ pub enum ServeError {
          restart the server"
     )]
     MultihostChanged,
+    /// A `[[server.proxies]]` entry that is wrong (`key`: `server.proxies[0].to`).
+    #[error("config: {key}: {message}")]
+    Proxy { key: String, message: String },
     #[error("watching: {0}")]
     Watch(#[from] notify::Error),
     #[error("starting the HTTP server: {0}")]
@@ -243,6 +165,8 @@ pub(crate) struct Shared {
     pub(crate) shutdown: signal::Receiver<bool>,
     pub(crate) live_reload: bool,
     pub(crate) http_cache: HttpCache,
+    /// For the requests the proxies could not forward.
+    pub(crate) reporter: Arc<dyn Reporter>,
 }
 
 impl Shared {
@@ -300,6 +224,7 @@ impl Server {
             shutdown: stopped.clone(),
             live_reload: opts.live_reload.is_some(),
             http_cache: opts.http_cache,
+            reporter: Arc::clone(reporter),
         });
         let mut rebuilder =
             Rebuilder::new(opts, cfg, ports, Arc::clone(&shared), Arc::clone(reporter))?;
@@ -351,6 +276,12 @@ impl Server {
             reporter.report(&Event::Listening {
                 url,
                 bind: &opts.bind,
+            });
+        }
+        for p in shared.served().proxies.iter() {
+            reporter.report(&Event::Proxying {
+                from: p.path(),
+                to: p.url(),
             });
         }
         // From here on, an error drops the server, which stops the HTTP thread.

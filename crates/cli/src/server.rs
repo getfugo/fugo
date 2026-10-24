@@ -52,6 +52,7 @@ pub(crate) fn options(a: &ServerArgs) -> anyhow::Result<Result<ServeOptions, Str
         } else {
             HttpCache::Default
         },
+        proxies: a.serving.proxy.clone(),
     }))
 }
 
@@ -152,6 +153,7 @@ impl Reporter for Printer {
             Event::Listening { url, bind } => {
                 println!("Web Server is available at {url} (bind address {bind})");
             }
+            Event::Proxying { from, to } => println!("Proxying {from} to {to}"),
             Event::Error { message } => eprintln!("ERROR {message}"),
             // Go logs the LiveReload commands at the info level only.
             _ => {}

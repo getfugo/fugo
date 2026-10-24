@@ -1,6 +1,6 @@
 //! The HTTP side (Go's `fileServer`): the files of the served tree, directory indexes and
 //! redirects as Go's `http.FileServer` does them, the 404 page, `livereload.js`, the
-//! LiveReload WebSocket and the CMS editor's API.
+//! LiveReload WebSocket, the CMS editor's API and the proxies.
 
 use std::sync::Arc;
 
@@ -14,7 +14,7 @@ use axum::response::{IntoResponse, Response};
 use ssg_base::url::{Component, unescape};
 
 use crate::tree::{Host, Served};
-use crate::{HttpCache, Shared, cms, livereload};
+use crate::{HttpCache, Shared, cms, livereload, proxy};
 
 #[derive(Clone)]
 struct HostState {
@@ -52,6 +52,9 @@ async fn handle(State(s): State<HostState>, req: Request) -> Response {
         if path.strip_prefix(base) == Some("livereload") {
             return websocket(&s.shared, &mut req).await;
         }
+    }
+    if let Some(p) = served.proxies.find(&path) {
+        return proxy::forward(p, &s.shared, Request::from_parts(req, body)).await;
     }
     let mut response = files(&served, host, &req, &path).await;
     if s.shared.http_cache == HttpCache::Disabled {

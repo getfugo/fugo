@@ -40,7 +40,8 @@ Goldmark `extras` and `cjk`
   handling.
 
 Server settings
-: `[server]` headers and redirects are not read; every change rebuilds the whole site (there is
+: `[server]` headers and redirects are not read (its proxies are fugo's:
+  [Development server](/configuration/server/)); every change rebuilds the whole site (there is
   no fast render); no TLS, `--openBrowser` or `--pprof`.
 
 Some flags

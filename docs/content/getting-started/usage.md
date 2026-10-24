@@ -60,7 +60,9 @@ Builds the site into memory and serves it at <http://localhost:1313/> with live 
 save a content file, a template, an asset or the configuration, fugo rebuilds and the browser
 reloads. A build error keeps the last good site and prints the error. `-p` changes the port,
 `--bind 0.0.0.0` serves your network, and `--render-to-disk` writes the site to the publish
-directory as it serves it. See [`fugo server`](/commands/fugo-server/).
+directory as it serves it. `--proxy /api/=http://127.0.0.1:3000` sends the requests of `/api/`
+to your site's API, so that the pages reach it on their own origin
+([Development server](/configuration/server/)). See [`fugo server`](/commands/fugo-server/).
 
 ## Check templates
 

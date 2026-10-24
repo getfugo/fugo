@@ -1,6 +1,6 @@
 //! What the server serves: the files of the last good build (memory, or the publish directory
-//! with `--render-to-disk`), where each listener's site starts, and the media types of the
-//! files.
+//! with `--render-to-disk`), where each listener's site starts, the media types of the files,
+//! and the proxies.
 
 use std::collections::HashMap;
 use std::fs;
@@ -14,6 +14,8 @@ use ssg_base::paths::OutputPath;
 use ssg_cms::Editor;
 use ssg_config::Config;
 use ssg_publish::{DiskSink, MemorySink};
+
+use crate::proxy::Proxies;
 
 /// The files being served.
 #[derive(Clone, Debug)]
@@ -105,6 +107,8 @@ pub(crate) struct Served {
     pub(crate) media_types: MediaTypes,
     /// The CMS editor of `[cms]`, whose API the server answers (`cms.rs`).
     pub(crate) cms: Option<Arc<Editor>>,
+    /// `--proxy` and the configuration's `[[server.proxies]]`.
+    pub(crate) proxies: Arc<Proxies>,
 }
 
 impl Served {
@@ -115,10 +119,16 @@ impl Served {
             hosts: Vec::new(),
             media_types: MediaTypes::default(),
             cms: None,
+            proxies: Arc::default(),
         }
     }
 
-    pub(crate) fn new(tree: Tree, cfg: &Config, cms: Option<Arc<Editor>>) -> Self {
+    pub(crate) fn new(
+        tree: Tree,
+        cfg: &Config,
+        cms: Option<Arc<Editor>>,
+        proxies: Arc<Proxies>,
+    ) -> Self {
         let languages = || {
             let mut dirs: Vec<String> = cfg
                 .sites
@@ -150,6 +160,7 @@ impl Served {
             hosts,
             media_types: MediaTypes::from_config(cfg),
             cms,
+            proxies,
         }
     }
 }

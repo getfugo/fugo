@@ -87,9 +87,9 @@ pub fn site(text: &str) -> tempfile::TempDir {
     dir
 }
 
-/// Serves `dir` on a free port of 127.0.0.1 in the development environment.
-pub fn serve(dir: &Path, tweak: impl FnOnce(&mut ServeOptions)) -> (Server, Arc<Recorder>) {
-    let mut o = ServeOptions {
+/// The options of serving `dir` on a free port of 127.0.0.1 in the development environment.
+pub fn options(dir: &Path) -> ServeOptions {
+    ServeOptions {
         build: BuildRequest {
             source: dir.to_owned(),
             cli: CliOverrides {
@@ -101,7 +101,12 @@ pub fn serve(dir: &Path, tweak: impl FnOnce(&mut ServeOptions)) -> (Server, Arc<
         },
         port: Port::Exact(0),
         ..ServeOptions::default()
-    };
+    }
+}
+
+/// Serves `dir` with [`options`], changed by `tweak`.
+pub fn serve(dir: &Path, tweak: impl FnOnce(&mut ServeOptions)) -> (Server, Arc<Recorder>) {
+    let mut o = options(dir);
     tweak(&mut o);
     let recorder = Arc::new(Recorder::default());
     let server = Server::start(&o, &(Arc::clone(&recorder) as Arc<dyn Reporter>))

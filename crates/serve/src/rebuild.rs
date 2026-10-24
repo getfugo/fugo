@@ -29,13 +29,13 @@ use std::time::{Duration, Instant};
 use notify::EventKind;
 use notify_debouncer_full::DebouncedEvent;
 use ssg_base::Clock;
-use ssg_base::url::{BaseUrl, UrlRef};
+use ssg_base::url::UrlRef;
 use ssg_build::{BuildError, BuildReport, BuildRequest, LiveReload, SinkKind};
-use ssg_config::{Config, LoadOptions};
+use ssg_config::Config;
 use ssg_publish::{MemorySink, StaticSyncOptions};
 use ssg_vfs::{Component, Vfs, VfsError};
 
-use crate::address::server_base_url;
+use crate::proxy::Proxies;
 use crate::tree::{Served, Tree, publish_dir};
 use crate::watch::{Changes, Classifier, ConfigPlaces, Message, WatchSet, Watcher};
 use crate::{
@@ -44,6 +44,9 @@ use crate::{
 };
 
 mod browser;
+mod config;
+
+pub(crate) use config::*;
 
 /// Owns the configuration and the site between builds; runs on the watch thread.
 pub(crate) struct Rebuilder {
@@ -61,6 +64,8 @@ pub(crate) struct Rebuilder {
     static_files: BTreeMap<String, PathBuf>,
     shared: Arc<Shared>,
     reporter: Arc<dyn Reporter>,
+    /// `--proxy` with the configuration's proxies.
+    proxies: Arc<Proxies>,
     /// The configuration does not load: only configuration changes are handled.
     paused: bool,
     /// Batches of changes handled so far.
@@ -82,6 +87,7 @@ impl Rebuilder {
             &ports,
             opts.append_port,
         )?;
+        let proxies = Arc::new(Proxies::new(&opts.proxies, &cfg)?);
         prepare(&opts.build, &cfg)?;
         let vfs = Vfs::new(&cfg)?;
         let (classifier, watch_set) = watching(&cfg, &vfs);
@@ -98,6 +104,7 @@ impl Rebuilder {
             static_files: BTreeMap::new(),
             shared,
             reporter,
+            proxies,
             paused: false,
             batches: 0,
         })
@@ -109,28 +116,6 @@ impl Rebuilder {
 
     pub(crate) fn watch_set(&self) -> &WatchSet {
         &self.watch_set
-    }
-
-    /// Loads the configuration again and points it at the server. The listeners stay, so a
-    /// site cannot become or stop being multihost, nor change its multihost languages.
-    fn reload_config(&mut self) -> Result<(), ServeError> {
-        let mut cfg = load(&self.request)?;
-        if cfg.multihost != self.cfg.multihost
-            || (cfg.multihost && cfg.sites.len() != self.cfg.sites.len())
-        {
-            return Err(ServeError::MultihostChanged);
-        }
-        point_at_server(
-            &mut cfg,
-            self.request.cli.base_url.as_deref(),
-            &self.ports,
-            self.append_port,
-        )?;
-        prepare(&self.request, &cfg)?;
-        self.vfs = Vfs::new(&cfg)?;
-        (self.classifier, self.watch_set) = watching(&cfg, &self.vfs);
-        self.cfg = Arc::new(cfg);
-        Ok(())
     }
 
     fn build(&self) -> Result<BuildReport, BuildError> {
@@ -157,7 +142,8 @@ impl Rebuilder {
             Tree::Disk(_) => None,
         };
         let cms = report.cms.clone();
-        self.shared.install(Served::new(tree, &self.cfg, cms));
+        self.shared
+            .install(Served::new(tree, &self.cfg, cms, Arc::clone(&self.proxies)));
         match static_files(&self.vfs, &self.sync_options()) {
             Ok(files) => self.static_files = files,
             Err(e) => self.error(&format!("listing the static files: {e}")),
@@ -378,61 +364,6 @@ fn watching(cfg: &Config, vfs: &Vfs) -> (Classifier, WatchSet) {
     let places = ConfigPlaces::new(cfg);
     let set = WatchSet::new(vfs, &places);
     (Classifier::new(vfs, places), set)
-}
-
-/// Every language's base URL becomes the server's (Go's `fixURL`): the language's listener
-/// on a multihost site, else the only one.
-fn point_at_server(
-    cfg: &mut Config,
-    flag: Option<&str>,
-    ports: &[u16],
-    append_port: bool,
-) -> Result<(), ServeError> {
-    let multihost = cfg.multihost;
-    for (i, site) in cfg.sites.iter_mut().enumerate() {
-        let port = if multihost {
-            ports.get(i)
-        } else {
-            ports.first()
-        }
-        .copied()
-        .ok_or(ServeError::MultihostChanged)?;
-        let url =
-            server_base_url(site.base_url.as_str(), flag, port, append_port).map_err(|source| {
-                ServeError::BaseUrl {
-                    url: site.base_url.as_str().to_owned(),
-                    source,
-                }
-            })?;
-        site.base_url = BaseUrl::parse(&url).map_err(|source| ServeError::BaseUrl {
-            url: url.clone(),
-            source,
-        })?;
-    }
-    Ok(())
-}
-
-/// The request's [`BuildRequest::prepare`], on a configuration the server loaded (at the
-/// start and when the configuration, `package.json` or `package-lock.json` changes).
-fn prepare(r: &BuildRequest, cfg: &Config) -> Result<(), ServeError> {
-    match &r.prepare {
-        Some(p) => p.prepare(cfg).map_err(|e| BuildError::Prepare(e).into()),
-        None => Ok(()),
-    }
-}
-
-/// The configuration of a request, as `ssg_build::build` would load it.
-pub(crate) fn load(r: &BuildRequest) -> Result<Config, ServeError> {
-    let mut cli = r.cli.clone();
-    if let Some(d) = &r.destination {
-        cli.destination = Some(d.clone());
-    }
-    Ok(ssg_config::load(&LoadOptions {
-        source: r.source.clone(),
-        config_file: r.config_file.clone(),
-        cli,
-        env: ssg_build::process_env(),
-    })?)
 }
 
 /// The static files of a site: publish path (no leading slash) → source file.

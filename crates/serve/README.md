@@ -8,12 +8,14 @@ with notify-debouncer-full 0.7 (1 s debounce), full rebuilds through `ssg_build:
 ```rust
 pub struct ServeOptions { pub build: BuildRequest /* project + build flags */, pub bind: String,
                           pub port: Port, pub append_port: bool, pub live_reload: Option<LiveReloadOptions>,
-                          pub target: Target, pub watch: Watch, pub http_cache: HttpCache }
+                          pub target: Target, pub watch: Watch, pub http_cache: HttpCache,
+                          pub proxies: Vec<Proxy> /* --proxy */ }
 pub enum Port { Exact(u16) /* --port; 0: any free port */, Preferred(u16) /* 1313, else a free one */ }
 pub enum Target { Memory /* default */, Disk /* --render-to-disk, fugo's flag */ }
 pub enum Watch { Off /* --watch=false */, Native, Poll(Duration) /* --poll */ }
 pub enum HttpCache { Default, Disabled /* --noHTTPCache */ }
 pub struct LiveReloadOptions { pub port: Option<u16> /* --liveReloadPort */, pub navigate_to_changed: bool }
+pub struct Proxy;   // FromStr: `PATH=URL` (--proxy /api/=http://127.0.0.1:3000); path(), url()
 pub trait Reporter: Send + Sync { fn report(&self, event: &Event<'_>); }   // the CLI prints the events
 pub struct Server;  // start(&ServeOptions, &Arc<dyn Reporter>) -> Result<Server, ServeError>,
                     // urls(), local_addrs(), wait(), shutdown()
@@ -43,6 +45,7 @@ pub struct Server;  // start(&ServeOptions, &Arc<dyn Reporter>) -> Result<Server
 |---|---|
 | `<base path>livereload.js` | the Go implementation's `livereload.min.js`, `text/javascript` |
 | `<base path>livereload` | the LiveReload WebSocket (Go's origin check: no `Origin`, the same host, or the same host name on another port; else 403) |
+| the path of a proxy, or below it | forwarded to the proxy's server (Proxies, below) |
 | a file of the last good build | the bytes; `Content-Type` from the site's media types (`text/*` with `charset=utf-8`, the later type wins a suffix, as the Go implementation registers them with Go's `mime`), else `mime_guess`, else sniffed text/binary; `Accept-Ranges: bytes` and one byte range (206/416) |
 | `…/` | `…/index.html` |
 | `…/dir` with `…/dir/index.html`, `…/index.html`, a file with a trailing `/` | Go's `http.FileServer` redirects (301 `dir/`, `./`, `../name`; query kept) |
@@ -57,6 +60,38 @@ build (swapped in whole: a failing build leaves it in place), or with `--render-
 the publish directory (written in place by each build, so a failing build can leave some
 files new). `--render-to-disk` is fugo's flag, not one of the Go build's: the Go server
 rendered to disk by default and into memory with `-M`/`--renderToMemory`.
+
+## Proxies (`src/proxy.rs`, `src/proxy/forward.rs`)
+
+fugo's, not the Go server's: `--proxy PATH=URL` (repeatable) and the configuration's
+`[[server.proxies]]` (`from`, `to`; the rest of `[server]` is not read) send the requests of a
+path to another HTTP server, such as the site's API, so that the pages reach it on their own
+origin, as they will once published next to it.
+
+- **Paths.** `from` is a clean path (`/api` and `/api/` are the same), not `/`; it covers
+  itself and the paths below it, by segments (`/api/` covers `/api` and `/api/x`, not
+  `/apix`). A request goes to the proxy of the longest path that covers it, after the CMS
+  editor's API and `livereload.js`/`livereload` and before the site's files, whatever the
+  base URL's path. A later `--proxy` replaces an earlier one of the same path, and both
+  replace the configuration's; the same path twice in the configuration is an error.
+- **Targets.** `to` is an `http://` URL with a host and no path, query or user info (no
+  `https`): the request keeps its path and query.
+- **Forwarding** (hyper's HTTP/1 client, one connection per request): the method, the path and
+  query as they came, the headers without the hop-by-hop ones (RFC 9110 §7.6.1: `Connection`
+  and those it names, `Proxy-Connection`, `Keep-Alive`, `TE`, `Transfer-Encoding`,
+  `Upgrade`), `Host` as the browser sent it (the proxy's host without one), with
+  `X-Forwarded-For` (appended to), `X-Forwarded-Host` and `X-Forwarded-Proto: http` (both
+  kept when set); the body streams to the server and the answer streams back in the server's
+  HTTP/1.1, without its hop-by-hop headers (server-sent events arrive as they are written). `--noHTTPCache` does
+  not touch the answers. An upgrade (a WebSocket) keeps `Upgrade` and `Connection: upgrade`,
+  and after the server's `101` the two connections are joined until one closes or the server
+  stops.
+- **Errors.** A wrong `[[server.proxies]]` entry is a configuration error
+  (`config: server.proxies[0].to: …`): the server does not start, or a reload pauses as with
+  any configuration that does not load. A request the server cannot answer (not listening, a
+  broken connection) is `502 Bad Gateway`, `text/plain`, with `proxy: <method> <path>: <url>:
+  <error>`, also reported (`Event::Error`). The proxies are printed at the start
+  (`Event::Proxying`) and follow the configuration from the next good build.
 
 ## Watching and rebuilding (`src/watch.rs`, `src/rebuild.rs`)
 
@@ -118,7 +153,7 @@ harmless for memory builds.
 - No error page in the browser (as with Go's `--disableBrowserError`): a failing
   build is printed and the browser keeps the last good page (no reload is sent).
 - `[server]` `headers` and `redirects` are not read; the default 404 redirect is built in, per
-  language.
+  language. `[[server.proxies]]` and `--proxy` are fugo's (Proxies, above).
 - The site's `404.html` is chosen per language directory (Go: `/404.html` unless configured).
 - No TLS (`--tlsCertFile`, `--tlsKeyFile`, `--tlsAuto`, `trust`), `--openBrowser`, `--pprof`,
   `--renderStaticToDisk`, `--forceSyncStatic`, `--disableFastRender` and
@@ -138,6 +173,7 @@ harmless for memory builds.
 | unit: `livereload::{messages,origins}` | reload/navigate JSON, Go's origin check |
 | unit: `http::{ranges,paths}` | byte ranges, path cleaning and decoding, navigation detection |
 | unit: `watch::ignored_names` | editors' temporary files |
+| unit: `proxy::tests::{flags, paths_are_covered_by_segments}`, `proxy::forward::tests::hop_by_hop_headers` | `--proxy` values and their errors, IPv6 and default ports; covering by segments, the longest path wins; the hop-by-hop headers of a request and of an upgrade |
 | unit: `watch::events_are_mapped_to_the_watched_paths`, `watch::events_on_gone_paths_are_removals_on_macos` | resolved paths mapped back (the most specific watched path), creations and writes of gone paths as removals on macOS |
 | `serve::serves_the_site` | pages with the script after `<head>`, directory and `index.html` redirects, an alias without the script, static and asset files and their types, the 404 page for navigations and the plain 404 otherwise, `livereload.js`, the WebSocket handshake, a foreign `Origin` refused, `HEAD`, byte ranges |
 | `serve::content_change_rebuilds_and_reloads` | edit → full reload → the new page; the removed alias is gone; 2 builds |
@@ -153,6 +189,11 @@ harmless for memory builds.
 | `serve::a_new_static_directory_is_watched` | a site without `static/`: the new directory's file is copied, and a second edit inside it is seen (no build) |
 | `serve::theme_and_new_config_files_are_watched` | a theme's layout (→ its one changed page) and its `config.toml` (→ reloaded configuration), then an edit of the project's `config.toml` (→ reloaded configuration) |
 | `serve::polling_watcher` | `--poll 100ms` picks up an edit |
+| `serve::proxy::forwards_the_requests_of_its_path` | `[[server.proxies]]` to an echo server: method, path and query, `Host`, `X-Forwarded-*` (an earlier `X-Forwarded-For` kept), hop-by-hop headers dropped both ways, the path itself, a POST body and its 201 (answered in HTTP/1.0, passed on in HTTP/1.1); `/apiary.txt`, `/` and `/apix/` stay the site's; the `Proxying` event |
+| `serve::proxy::streams_answers_and_upgrades` | a chunked answer's first part arrives before the server writes the second; a WebSocket through the proxy, two echoes |
+| `serve::proxy::flags_replace_the_configuration_s_proxy_and_a_server_down_is_a_bad_gateway` | the later of two `--proxy` of a path wins over the configuration's; a closed port → 502 with the message, reported once; the configuration's other proxy still forwards |
+| `serve::proxy::wrong_proxies_are_configuration_errors` | a path without `/`, `https`, the same path twice, an unknown key, a missing `to`: start errors with the entry's key; `[[server.headers]]` alone is not read |
+| `serve::proxy::a_reloaded_configuration_changes_the_proxies` | a broken entry pauses the reload, the fixed one forwards from the next build |
 | `serve::build_is_server_and_site_server_port` | `build.is_server` true and `site.server_port` the listener's port in the server (`BuildRequest::server`, T70); `false` and 0 in a `build` of the same site |
 | `testsite::testsite_is_served_and_reloads` | the testsite: pages of both languages and formats with the canonified server URLs, no script in JSON and aliases, static, types, both 404 pages, then edit → reload **measured**: 3 content edits, 1 layout edit, 1 static edit (no build) |
 

@@ -29,5 +29,6 @@ settings mostly carry over; see [Introduction](/configuration/introduction/) for
 | `[build]`, `[minify]` | [Build and minify](/configuration/build/) |
 | `[cms]` | [CMS editor](/configuration/cms/), [Editing in the browser](/content-management/cms/) |
 | `[fonts]` | [Font subsetting](/asset-pipelines/fonts/) |
+| `[server]` | [Development server](/configuration/server/) |
 
 `fugo config` prints the configuration as fugo resolved it, defaults included.

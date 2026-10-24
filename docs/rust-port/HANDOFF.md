@@ -383,7 +383,8 @@ tests read them, with counts):
 - **layouts**: v0.146 names only (`index.*` refused); a user template does not beat a more
   specific theme template (the Go implementation's rule); base variants only for the selections loaded.
 - **serve**: every change is a full rebuild (no fast render); no browser error page; `[server]`
-  headers/redirects not read; per-language 404 pages; no TLS, `--openBrowser`, `--pprof`.
+  headers/redirects not read (`[[server.proxies]]` and `--proxy` are fugo's); per-language 404
+  pages; no TLS, `--openBrowser`, `--pprof`.
 - **locale, nav**: `expected_diffs.toml` (CLDR 48 vs Go's x/text tables; pager and menu edge
   cases).
 

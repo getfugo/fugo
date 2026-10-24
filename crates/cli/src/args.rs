@@ -317,6 +317,11 @@ pub struct ServingArgs {
     /// Sends headers that keep browsers from caching (`Cache-Control: no-store`, …).
     #[arg(long, alias = "noHTTPCache")]
     pub no_http_cache: bool,
+    /// Forwards the requests of PATH and below it to the server at URL, keeping their path
+    /// (`/api/=http://127.0.0.1:3000`; repeatable). Replaces the `[[server.proxies]]` entry of
+    /// the same path.
+    #[arg(long, value_name = "PATH=URL")]
+    pub proxy: Vec<ssg_serve::Proxy>,
 }
 
 /// How changes are noticed.

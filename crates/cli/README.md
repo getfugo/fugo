@@ -88,6 +88,7 @@ same `BuildArgs`), the environment `development` unless `-e` says otherwise, and
 | `-N`, `--navigate-to-changed` | `--navigateToChanged` | the browsers go to the page whose content changed |
 | `--render-to-disk` | | build into the publish directory (`-d`, `publishDir`) and serve it from there; without it the site is built into memory and `-d` is a usage error (`-M` is the default and conflicts with it). A fugo flag, not one of the Go build's: its server rendered to disk by default and `-M`/`--renderToMemory` into memory (README.md, "Upgrading from the Go build") |
 | `--no-http-cache` | `--noHTTPCache` | `Cache-Control: no-store, …` and `Pragma: no-cache` |
+| `--proxy PATH=URL` | | forward the requests of PATH and below it to the `http://` server URL, keeping their path (`/api/=http://127.0.0.1:3000`); repeatable, the later of a path wins, and replaces the `[[server.proxies]]` entry of that path. A fugo flag (`ssg-serve`'s README, "Proxies"); a value that is not `PATH=URL`, a path that is not clean or `/`, and a URL that is not `http://host[:port]` are usage errors |
 | `-w`, `--watch[=BOOL]` | | watch and rebuild (default true; `--watch=false` builds once) |
 | `--poll INTERVAL` | | poll for changes (`700ms`, `1s`, or milliseconds) instead of file notifications |
 
@@ -97,11 +98,13 @@ rebuild is a full rebuild, and errors are printed, never shown in the browser.
 Output (stdout; errors and warnings on stderr as `build` prints them): `Environment:
 "development"`, `Serving pages from memory|disk`, `Watching for changes in <dirs>`, `Watching
 for config changes in <files>`, the build summary and `Built in N ms`, `Web Server is
-available at <url> (bind address <interface>)` per listener, `Press Ctrl+C to stop`; per
+available at <url> (bind address <interface>)` per listener, `Proxying <path> to <url>` per
+proxy, `Press Ctrl+C to stop`; per
 change `Change [of config file|of Static files] detected, rebuilding site (#N).`, the time,
 `Source changed <path>` lines, then `Total in N ms`, `Synced N static file(s) in N ms`, a
 build failure (`ERROR build failed: …`, the last good build is still served) or `ERROR Failed
-to reload config: …`. A first build that fails exits with 1 and the build's report; a port
+to reload config: …`; `ERROR proxy: <method> <path>: <url>: <error>` for a request a proxy
+could not forward. A first build that fails exits with 1 and the build's report; a port
 that cannot be opened or a configuration that does not load exits with 1.
 
 **Environment.** Settings and the environment never come from the process environment: only
@@ -131,7 +134,7 @@ message carries Tera's `--> <template>:<line>:<col>` snippet. A successful build
 | `noTimes noChmod` | the flags above |
 | `logLevel noBuildLock gc printPathWarnings printI18nWarnings printUnusedTemplates templateMetrics templateMetricsHints` | not supported (clap usage error, above) |
 | `contentDir/c layoutDir/l disableKinds enableGitInfo panicOnWarning` | configuration keys (file or `FUGO_*`), not flags |
-| `server`: `port/p bind appendPort disableLiveReload liveReloadPort navigateToChanged/N noHTTPCache watch/w poll renderToDisk` | the `server` flags above (T71; `renderToDisk` is `--render-to-disk`) |
+| `server`: `port/p bind appendPort disableLiveReload liveReloadPort navigateToChanged/N noHTTPCache watch/w poll renderToDisk` | the `server` flags above (T71; `renderToDisk` is `--render-to-disk`; `--proxy` is fugo's) |
 | `server`: `disableFastRender disableBrowserError` | not supported (clap usage error) |
 | `server`: `tlsCertFile tlsKeyFile tlsAuto openBrowser/O pprof renderStaticToDisk forceSyncStatic`, command `server trust` | not supported (clap usage error) |
 | `devMode forceSyncStatic ignoreVendorPaths renderSegments printMemoryUsage profile-* trace`, the build's `watch/w` | not supported (clap usage error) |
@@ -198,7 +201,7 @@ Output: a header line, the diagnostics, the coverage listing, `N error(s), M war
 | `cli::persistent_flags_anywhere` | the Go build's persistent flags before the command and on `config`, `templates check` and `version`; a flag the command does not take is still a usage error |
 | `server::server_starts_and_serves` | `serve -p 0` with camelCase flags: the start report (environment `development`, memory, watching, built), the page with the LiveReload script and `--noHTTPCache` headers, nothing on disk |
 | `server::server_renders_to_disk_without_live_reload` | `--render-to-disk --disable-live-reload --watch=false -e staging`: `public/` written and served, no script, no watching |
-| `server::server_start_errors` | a first build that fails exits 1 with the build's report; `-d` without `--render-to-disk`, `--render-to-disk -M`, bad `--poll`/`--port`/`--watch` exit 2; every server flag in `--help` |
+| `server::server_start_errors` | a first build that fails exits 1 with the build's report; `-d` without `--render-to-disk`, `--render-to-disk -M`, bad `--poll`/`--port`/`--watch`/`--proxy` exit 2; every server flag in `--help` |
 | `cli::config_prints_the_resolved_configuration` | JSON / TOML, config dir, flags; a variable named like a setting is not one |
 | `check::bad_layouts_report_every_rule` | `tests/it/bad-layouts.txtar`: each rule once at its position, nothing else, exit 1 |
 | `check::testsite_overlay_is_clean` | the testsite overlay: 0 errors, 0 warnings; 35 (page, format) rows with `--coverage full` |

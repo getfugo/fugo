@@ -168,6 +168,8 @@ fn server_start_errors() {
         &["server", "--poll", "soon"],
         &["server", "--port", "http"],
         &["server", "--watch", "maybe"],
+        &["server", "--proxy", "/api/"],
+        &["server", "--proxy", "/api/=https://example.org"],
     ] {
         let o = binary(s.path(), bad, &[]);
         assert_eq!(o.status.code(), Some(2), "{bad:?}: {}", stderr(&o));
@@ -184,6 +186,7 @@ fn server_start_errors() {
         "--navigate-to-changed",
         "--render-to-disk",
         "--no-http-cache",
+        "--proxy",
         "--poll",
         "--watch",
         "--build-drafts",
