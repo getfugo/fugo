@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1792901784662,
+  "lastUpdate": 1792901787609,
   "repoUrl": "https://github.com/getfugo/fugo",
   "entries": {
     "Benchmark": [
@@ -101929,6 +101929,105 @@ window.BENCHMARK_DATA = {
           {
             "name": "BenchmarkSummaryFromHTMLWithDivider",
             "value": 58.67,
+            "unit": "ns/op"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "blackb1rd.mov@gmail.com",
+            "name": "Prachya Saechua",
+            "username": "blackb1rd"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "f0e735ba37f6fde77a370a937b5d39036a7167eb",
+          "message": "related: Compare headings in fragments indices, and search by keywords (#220)\n\nAn index of type = \"fragments\" compared no headings: the site model gave\nevery page an empty list of heading ids, so it matched only front matter\nvalues, and the matched headings of applyFilter were dropped. related()\ncould not search keywords or heading ids of its own, nor without a page,\nand every call read its whole list of pages again to find its index:\n10,000 pages with related(pages=site.regular_pages) built in 7.3 s\ninstead of 1.1 s (debug).\n\n- Fragments indices read each candidate's headings from the render\n  session, once per list, in layouts and in shortcodes (a page's own\n  headings in its shortcodes come without them).\n- related(keywords=, fragments=, page=none): values by index name and\n  heading ids to search, besides the page's or alone. Index names are\n  read in lower case, as the configuration has them.\n- With applyFilter, each result's fragments holds only the matched\n  headings (as Go's), so a list can link to the sections.\n- The cache knows the last 32 lists by their allocation, and an index\n  keeps each candidate's publish date and name: the 10,000 pages build\n  in 1.4 s, with the same output. Layouts never reuse an index built in\n  the content phase, while a page expanded.\n- ssg-nav: WithFragments (a model with the heading ids of some pages);\n  the keywords of an index move to related/keywords.rs.\n- Docs: Content management → Related content (scores, every setting,\n  searching, headings); the template reference.\n\nCo-Authored-By: Claude Opus 5.5 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-10-25T11:01:30+07:00",
+          "tree_id": "7437d3be2557b2aa4cd2852b7633c8f804e2f755",
+          "url": "https://github.com/getfugo/fugo/commit/f0e735ba37f6fde77a370a937b5d39036a7167eb"
+        },
+        "date": 1792901786642,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "BenchmarkSanitizeAnchorName",
+            "value": 463.23,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSanitizeAnchorNameAsciiOnly",
+            "value": 1187.99,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSanitizeAnchorNameBlackfriday",
+            "value": 581.59,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSanitizeAnchorNameString",
+            "value": 462.69,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSanitize/All_allowed",
+            "value": 220.06,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSanitize/Spaces",
+            "value": 237.02,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkRelURL",
+            "value": 332.49,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkAbsURL/relurl",
+            "value": 615.4,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkAbsURL/absurl",
+            "value": 17.25,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkTotalWords",
+            "value": 4879.64,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkStripHTML",
+            "value": 1113.46,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkParse",
+            "value": 8889.27,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkDecodeYAMLToMap",
+            "value": 13637.56,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSummaryFromHTML",
+            "value": 65.25,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSummaryFromHTMLWithDivider",
+            "value": 67.45,
             "unit": "ns/op"
           }
         ]
