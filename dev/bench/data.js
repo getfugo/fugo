@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1792901787609,
+  "lastUpdate": 1792905540307,
   "repoUrl": "https://github.com/getfugo/fugo",
   "entries": {
     "Benchmark": [
@@ -98688,6 +98688,66 @@ window.BENCHMARK_DATA = {
           {
             "name": "10,000 generated pages: peak memory",
             "value": 577.2,
+            "unit": "MiB",
+            "extra": "10061 pages; median of 5 builds after a warm-up build"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "blackb1rd.mov@gmail.com",
+            "name": "blackb1rd",
+            "username": "blackb1rd"
+          },
+          "committer": {
+            "email": "blackb1rd.mov@gmail.com",
+            "name": "blackb1rd",
+            "username": "blackb1rd"
+          },
+          "distinct": true,
+          "id": "d079ae8982c23603e6d97f2c2652d77faac27d6f",
+          "message": "serve: Forward proxies to https:// servers\n\n`[[server.proxies]]` and `--proxy` take an `https://` server too, such as a site's published\nAPI, to work on the site with its real data. The connection is TLS (tokio-rustls with the\nring provider, the one new crate; rustls and webpki-roots were locked through ureq): the\nserver's certificate is checked for its name against Mozilla's roots, as GetRemote's are,\nand the authorities of the new `ServeOptions::proxy_roots`, and ALPN asks for HTTP/1.1, the\nonly version the forwarding speaks. The request carries the server's own name as `Host`,\nwhich TLS and a server of several sites need, and the browser's host in `X-Forwarded-Host`;\nan `http://` server still gets the browser's `Host`. A certificate that does not check is a\n502, as a server that does not answer is.\n\nThe tests run an https:// echo server with a certificate of a test authority\n(`tests/fixtures/tls/`, made with the commands of its README).\n\nCo-Authored-By: Claude Opus 5.5 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-10-25T12:03:32+07:00",
+          "tree_id": "87d2c19686471b640b1db64f3b579ba0ef7ae613",
+          "url": "https://github.com/getfugo/fugo/commit/d079ae8982c23603e6d97f2c2652d77faac27d6f"
+        },
+        "date": 1792905537115,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "docs site: build time",
+            "value": 188.4,
+            "unit": "ms",
+            "extra": "335 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "docs site: peak memory",
+            "value": 181.9,
+            "unit": "MiB",
+            "extra": "335 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "1,000 generated pages: build time",
+            "value": 213.4,
+            "unit": "ms",
+            "extra": "1061 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "1,000 generated pages: peak memory",
+            "value": 151.7,
+            "unit": "MiB",
+            "extra": "1061 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "10,000 generated pages: build time",
+            "value": 2145.5,
+            "unit": "ms",
+            "extra": "10061 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "10,000 generated pages: peak memory",
+            "value": 597.3,
             "unit": "MiB",
             "extra": "10061 pages; median of 5 builds after a warm-up build"
           }
