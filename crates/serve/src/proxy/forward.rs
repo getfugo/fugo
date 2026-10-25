@@ -1,20 +1,24 @@
-//! Forwarding a request to a proxy's server, over a new HTTP/1.1 connection (hyper's client):
-//! the method, the path and query as they came, the headers without the hop-by-hop ones (RFC
-//! 9110 §7.6.1) and with `X-Forwarded-For`, `-Host` and `-Proto`, `Host` kept, and the body as
-//! it arrives; the answer streams back the same way. An upgrade (a WebSocket) joins the two
-//! connections until one side closes or the server stops. A server that cannot be reached is a
-//! `502 Bad Gateway`, reported as an error.
+//! Forwarding a request to a proxy's server, over a new HTTP/1.1 connection (hyper's client),
+//! in TLS to an `https://` server: the method, the path and query as they came, the headers
+//! without the hop-by-hop ones (RFC 9110 §7.6.1) and with `X-Forwarded-For`, `-Host` and
+//! `-Proto`, `Host` kept (an `https://` server's own name instead), and the body as it arrives;
+//! the answer streams back the same way. An upgrade (a WebSocket) joins the two connections
+//! until one side closes or the server stops. A server that cannot be reached, or whose
+//! certificate does not check, is a `502 Bad Gateway`, reported as an error.
 
 use std::fmt::Display;
 use std::net::SocketAddr;
+use std::sync::Arc;
 
 use axum::body::Body;
 use axum::extract::{ConnectInfo, Request};
 use axum::http::{HeaderMap, HeaderValue, StatusCode, Uri, Version, header};
 use axum::response::Response;
+use hyper::body::Incoming;
 use hyper::upgrade::OnUpgrade;
 use hyper_util::rt::TokioIo;
 use tokio::net::TcpStream;
+use tokio_rustls::TlsConnector;
 
 use super::Proxy;
 use crate::{Event, Shared};
@@ -37,12 +41,20 @@ pub(crate) async fn forward(proxy: &Proxy, shared: &Shared, mut req: Request) ->
         };
         set(headers, "x-forwarded-for", &forwarded);
     }
-    let host = headers
-        .get(header::HOST)
-        .cloned()
-        .or_else(|| HeaderValue::from_str(&proxy.to.host).ok());
+    // The browser's `Host` goes on to a server on this computer, which may build its links
+    // from it. An https:// server is reached by its own name, which TLS and its virtual hosts
+    // need; the browser's is then in `X-Forwarded-Host` only.
+    let own = HeaderValue::from_str(&proxy.to.host).ok();
+    let browser = headers.get(header::HOST).cloned();
+    if let Some(forwarded) = browser.clone().or_else(|| own.clone()) {
+        headers.entry("x-forwarded-host").or_insert(forwarded);
+    }
+    let host = if proxy.to.tls.is_some() {
+        own
+    } else {
+        browser.or(own)
+    };
     if let Some(host) = host {
-        headers.entry("x-forwarded-host").or_insert(host.clone());
         headers.insert(header::HOST, host);
     }
     headers
@@ -59,16 +71,17 @@ pub(crate) async fn forward(proxy: &Proxy, shared: &Shared, mut req: Request) ->
         Ok(s) => s,
         Err(e) => return bad_gateway(shared, proxy, &what, e),
     };
-    let (mut sender, connection) =
-        match hyper::client::conn::http1::handshake(TokioIo::new(stream)).await {
-            Ok(h) => h,
-            Err(e) => return bad_gateway(shared, proxy, &what, e),
-        };
-    tokio::spawn(async move {
-        // Ends with the answer's body (or the upgraded connection).
-        let _ = connection.with_upgrades().await;
-    });
-    let mut response = match sender.send_request(req).await {
+    let sent = match &proxy.to.tls {
+        None => send(TokioIo::new(stream), req).await,
+        Some(name) => {
+            let tls = TlsConnector::from(Arc::clone(&shared.tls));
+            match tls.connect(name.clone(), stream).await {
+                Ok(stream) => send(TokioIo::new(stream), req).await,
+                Err(e) => return bad_gateway(shared, proxy, &what, e),
+            }
+        }
+    };
+    let mut response = match sent {
         Ok(r) => r,
         Err(e) => return bad_gateway(shared, proxy, &what, e),
     };
@@ -93,6 +106,20 @@ pub(crate) async fn forward(proxy: &Proxy, shared: &Shared, mut req: Request) ->
     // The server's own version, not the other server's (hyper answers a 1.0 client in 1.0).
     *response.version_mut() = Version::HTTP_11;
     response.map(Body::new)
+}
+
+/// `req` sent over a new HTTP/1.1 connection on `io`; the answer's head, with its body (or the
+/// upgraded connection) still coming over the connection.
+async fn send<T>(io: T, req: Request) -> hyper::Result<axum::http::Response<Incoming>>
+where
+    T: hyper::rt::Read + hyper::rt::Write + Unpin + Send + 'static,
+{
+    let (mut sender, connection) = hyper::client::conn::http1::handshake(io).await?;
+    tokio::spawn(async move {
+        // Ends with the answer's body (or the upgraded connection).
+        let _ = connection.with_upgrades().await;
+    });
+    sender.send_request(req).await
 }
 
 /// Removes the headers of one connection only: those `Connection` names, and RFC 9110's

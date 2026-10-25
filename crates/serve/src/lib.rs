@@ -52,6 +52,8 @@ use tokio::sync::{broadcast, watch as signal};
 
 pub use options::*;
 pub use proxy::Proxy;
+/// A certificate, as [`ServeOptions::proxy_roots`] takes them (rustls').
+pub use rustls::pki_types::CertificateDer;
 
 use crate::rebuild::Rebuilder;
 use crate::tree::Served;
@@ -167,6 +169,8 @@ pub(crate) struct Shared {
     pub(crate) http_cache: HttpCache,
     /// For the requests the proxies could not forward.
     pub(crate) reporter: Arc<dyn Reporter>,
+    /// The TLS client of the proxies to `https://` servers.
+    pub(crate) tls: Arc<rustls::ClientConfig>,
 }
 
 impl Shared {
@@ -225,6 +229,7 @@ impl Server {
             live_reload: opts.live_reload.is_some(),
             http_cache: opts.http_cache,
             reporter: Arc::clone(reporter),
+            tls: proxy::client_config(&opts.proxy_roots),
         });
         let mut rebuilder =
             Rebuilder::new(opts, cfg, ports, Arc::clone(&shared), Arc::clone(reporter))?;

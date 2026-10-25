@@ -169,7 +169,7 @@ fn server_start_errors() {
         &["server", "--port", "http"],
         &["server", "--watch", "maybe"],
         &["server", "--proxy", "/api/"],
-        &["server", "--proxy", "/api/=https://example.org"],
+        &["server", "--proxy", "/api/=https://-x.example"],
     ] {
         let o = binary(s.path(), bad, &[]);
         assert_eq!(o.status.code(), Some(2), "{bad:?}: {}", stderr(&o));

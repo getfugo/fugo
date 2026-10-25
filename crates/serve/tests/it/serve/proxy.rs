@@ -1,6 +1,7 @@
 //! The proxies of `--proxy` and `[[server.proxies]]`: the requests of a path go to another
 //! server (an echo server on a free port here) with their path, headers and body, its answers
 //! come back as they are written, a WebSocket goes through, and a server that is down is a 502.
+//! `https.rs`: a proxy to an `https://` server.
 
 use std::io::{BufRead, BufReader, Read, Write};
 use std::net::{SocketAddr, TcpListener, TcpStream};
@@ -13,6 +14,8 @@ use std::time::{Duration, Instant};
 use ssg_serve::{Reporter, Server};
 
 use crate::{PATIENCE, Recorder, get, options, serve, site, write};
+
+mod https;
 
 /// A site whose configuration ends with `extra`.
 fn proxied_site(extra: &str) -> tempfile::TempDir {
@@ -330,11 +333,8 @@ fn wrong_proxies_are_configuration_errors() {
             r#"config: server.proxies[0].from: "api" is not a path"#,
         ),
         (
-            proxies(&[
-                ("/a/", "http://127.0.0.1:1"),
-                ("/b/", "https://example.org"),
-            ]),
-            "config: server.proxies[1].to: \"https://example.org\": https is not supported",
+            proxies(&[("/a/", "http://127.0.0.1:1"), ("/b/", "ws://example.org")]),
+            "config: server.proxies[1].to: \"ws://example.org\" is not an http:// or https:// URL",
         ),
         (
             proxies(&[("/a/", "http://127.0.0.1:1"), ("/a", "http://127.0.0.1:2")]),

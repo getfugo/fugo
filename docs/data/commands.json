@@ -1082,7 +1082,7 @@
             "positional": false,
             "value_name": "PATH=URL",
             "takes_value": true,
-            "help": "Forwards the requests of PATH and below it to the server at URL, keeping their path (`/api/=http://127.0.0.1:3000`; repeatable). Replaces the `[[server.proxies]]` entry of the same path",
+            "help": "Forwards the requests of PATH and below it to the server at URL, keeping their path (`/api/=http://127.0.0.1:3000`, or an https:// server; repeatable). Replaces the `[[server.proxies]]` entry of the same path",
             "long_help": null,
             "default": [],
             "possible_values": [],

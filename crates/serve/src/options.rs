@@ -1,11 +1,12 @@
 //! What the server is asked to do ([`ServeOptions`]): where it builds to, how it notices
-//! changes, where it listens, live reloading, caching and the proxies of `--proxy`.
+//! changes, where it listens, live reloading, caching and the proxies of `--proxy`, with the
+//! certificates their `https://` servers may have.
 
 use std::time::Duration;
 
 use ssg_build::BuildRequest;
 
-use crate::Proxy;
+use crate::{CertificateDer, Proxy};
 
 /// Where the site is built to and served from.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -84,6 +85,9 @@ pub struct ServeOptions {
     /// earlier one of the same path, and both replace the configuration's
     /// (`[[server.proxies]]`).
     pub proxies: Vec<Proxy>,
+    /// The authorities an `https://` proxy's server may have its certificate from besides
+    /// Mozilla's (webpki-roots), such as a local one (mkcert's) or a test's.
+    pub proxy_roots: Vec<CertificateDer<'static>>,
 }
 
 impl Default for ServeOptions {
@@ -98,6 +102,7 @@ impl Default for ServeOptions {
             watch: Watch::Native,
             http_cache: HttpCache::Default,
             proxies: Vec::new(),
+            proxy_roots: Vec::new(),
         }
     }
 }

@@ -1,12 +1,13 @@
 //! The proxies of `--proxy` and `[[server.proxies]]` (fugo's, not the Go server's): the
 //! requests of a path and below it go to another HTTP server, such as the site's API running
-//! on this computer, so that the pages reach it on their own origin, as they will once the
-//! site and the API are published side by side. `forward.rs` forwards them.
+//! on this computer or published, so that the pages reach it on their own origin, as they will
+//! once the site and the API are published side by side. `forward.rs` forwards them, over TLS
+//! (`tls.rs`) to an `https://` server.
 //!
 //! ```toml
 //! [[server.proxies]]
 //! from = "/api/"                # a path of the site: /api and everything below it
-//! to = "http://127.0.0.1:3000"  # an http:// server; the requests keep their path
+//! to = "http://127.0.0.1:3000"  # an http:// or https:// server; the requests keep their path
 //! ```
 //!
 //! A request goes to the proxy of the longest path that covers it, after the server's own
@@ -16,14 +17,17 @@
 use std::str::FromStr;
 
 use axum::http::Uri;
+use rustls::pki_types::ServerName;
 use serde::Deserialize;
 use ssg_config::Config;
 
 use crate::ServeError;
 
 mod forward;
+mod tls;
 
 pub(crate) use forward::forward;
+pub(crate) use tls::client_config;
 
 /// One proxy: the requests of [`Proxy::path`] and below it go to [`Proxy::url`]. `FromStr`
 /// reads the value of `--proxy`, `PATH=URL` (`/api/=http://127.0.0.1:3000`).
@@ -37,12 +41,15 @@ pub struct Proxy {
 /// The server a proxy forwards to.
 #[derive(Clone, Debug, PartialEq, Eq)]
 struct Origin {
-    /// `http://127.0.0.1:3000`.
+    /// `http://127.0.0.1:3000`, `https://api.example.org`.
     url: String,
-    /// The `Host` of a request that has none (`127.0.0.1:3000`).
+    /// The `Host` of a request that has none (`127.0.0.1:3000`), and of every request to an
+    /// `https://` server.
     host: String,
-    /// What to connect to (`127.0.0.1:3000`, `localhost:80`).
+    /// What to connect to (`127.0.0.1:3000`, `localhost:80`, `api.example.org:443`).
     addr: String,
+    /// The name an `https://` server's certificate must have; `None` for `http://`.
+    tls: Option<ServerName<'static>>,
 }
 
 impl Proxy {
@@ -195,22 +202,22 @@ fn path(from: &str) -> Result<String, String> {
     Ok(format!("/{rest}/"))
 }
 
-/// `to` checked: an `http://` URL with a host and nothing after it, since requests keep their
-/// path.
+/// `to` checked: an `http://` or `https://` URL with a host and nothing after it, since
+/// requests keep their path.
 fn origin(to: &str) -> Result<Origin, String> {
     let example = "such as http://127.0.0.1:3000";
     let uri: Uri = to
         .parse()
         .map_err(|_| format!("{to:?} is not a URL ({example})"))?;
-    match uri.scheme_str() {
-        Some("http") => {}
-        Some("https") => {
+    let (scheme, port) = match uri.scheme_str() {
+        Some("http") => ("http", 80),
+        Some("https") => ("https", 443),
+        _ => {
             return Err(format!(
-                "{to:?}: https is not supported; the server is an http:// one ({example})"
+                "{to:?} is not an http:// or https:// URL ({example})"
             ));
         }
-        _ => return Err(format!("{to:?} is not an http:// URL ({example})")),
-    }
+    };
     let authority = match uri.authority() {
         Some(a) if !a.host().is_empty() && !a.as_str().contains('@') => a,
         _ => return Err(format!("{to:?} has no host, or has user info ({example})")),
@@ -220,14 +227,24 @@ fn origin(to: &str) -> Result<Origin, String> {
             "{to:?} has a path: name the server only ({example}); requests keep their path"
         ));
     }
+    let host = authority.host();
+    let tls = if scheme == "https" {
+        // An IPv6 address has brackets in a URL, not in a certificate.
+        let name = host
+            .strip_prefix('[')
+            .and_then(|h| h.strip_suffix(']'))
+            .unwrap_or(host);
+        let name = ServerName::try_from(name.to_owned())
+            .map_err(|_| format!("{to:?}: {name:?} is not a server name a certificate can have"))?;
+        Some(name)
+    } else {
+        None
+    };
     Ok(Origin {
-        url: format!("http://{authority}"),
+        url: format!("{scheme}://{authority}"),
         host: authority.as_str().to_owned(),
-        addr: format!(
-            "{}:{}",
-            authority.host(),
-            authority.port_u16().unwrap_or(80)
-        ),
+        addr: format!("{host}:{}", authority.port_u16().unwrap_or(port)),
+        tls,
     })
 }
 
@@ -256,6 +273,25 @@ mod tests {
         let p = proxy("/ws/=http://[::1]:8080");
         assert_eq!(p.to.addr, "[::1]:8080");
         assert!(p.to.addr.parse::<std::net::SocketAddr>().is_ok());
+        assert_eq!(p.to.tls, None);
+
+        // An https:// server: port 443 by default, and the name its certificate must have.
+        let p = proxy("/api/=https://api.example.org");
+        assert_eq!(p.url(), "https://api.example.org");
+        assert_eq!(
+            (p.to.host.as_str(), p.to.addr.as_str()),
+            ("api.example.org", "api.example.org:443")
+        );
+        assert_eq!(
+            p.to.tls,
+            Some(ServerName::try_from("api.example.org").unwrap())
+        );
+        let p = proxy("/api/=https://[::1]:8443/");
+        assert_eq!(
+            (p.url(), p.to.addr.as_str()),
+            ("https://[::1]:8443", "[::1]:8443")
+        );
+        assert!(matches!(p.to.tls, Some(ServerName::IpAddress(_))));
 
         for (bad, says) in [
             ("/api/", "is not PATH=URL"),
@@ -264,9 +300,12 @@ mod tests {
             ("/api/?x=http://h:1", "without a query"),
             ("/a//b/=http://h:1", "empty, . or .."),
             ("/a/../b/=http://h:1", "empty, . or .."),
-            ("/api/=https://h:1", "https is not supported"),
-            ("/api/=ftp://h:1", "not an http:// URL"),
-            ("/api/=127.0.0.1:3000", "not an http:// URL"),
+            (
+                "/api/=https://-h.example",
+                "not a server name a certificate can have",
+            ),
+            ("/api/=ftp://h:1", "not an http:// or https:// URL"),
+            ("/api/=127.0.0.1:3000", "not an http:// or https:// URL"),
             ("/api/=http://u@h:1", "user info"),
             ("/api/=http://h:1/api", "has a path"),
             ("/api/=http://h:1/?q", "has a path"),

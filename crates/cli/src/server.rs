@@ -53,6 +53,7 @@ pub(crate) fn options(a: &ServerArgs) -> anyhow::Result<Result<ServeOptions, Str
             HttpCache::Default
         },
         proxies: a.serving.proxy.clone(),
+        proxy_roots: Vec::new(),
     }))
 }
 

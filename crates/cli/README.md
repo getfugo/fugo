@@ -88,7 +88,7 @@ same `BuildArgs`), the environment `development` unless `-e` says otherwise, and
 | `-N`, `--navigate-to-changed` | `--navigateToChanged` | the browsers go to the page whose content changed |
 | `--render-to-disk` | | build into the publish directory (`-d`, `publishDir`) and serve it from there; without it the site is built into memory and `-d` is a usage error (`-M` is the default and conflicts with it). A fugo flag, not one of the Go build's: its server rendered to disk by default and `-M`/`--renderToMemory` into memory (README.md, "Upgrading from the Go build") |
 | `--no-http-cache` | `--noHTTPCache` | `Cache-Control: no-store, …` and `Pragma: no-cache` |
-| `--proxy PATH=URL` | | forward the requests of PATH and below it to the `http://` server URL, keeping their path (`/api/=http://127.0.0.1:3000`); repeatable, the later of a path wins, and replaces the `[[server.proxies]]` entry of that path. A fugo flag (`ssg-serve`'s README, "Proxies"); a value that is not `PATH=URL`, a path that is not clean or `/`, and a URL that is not `http://host[:port]` are usage errors |
+| `--proxy PATH=URL` | | forward the requests of PATH and below it to the `http://` or `https://` server URL, keeping their path (`/api/=http://127.0.0.1:3000`); repeatable, the later of a path wins, and replaces the `[[server.proxies]]` entry of that path. A fugo flag (`ssg-serve`'s README, "Proxies"); a value that is not `PATH=URL`, a path that is not clean or `/`, and a URL that is not `http://host[:port]` or `https://host[:port]` (a host a certificate can name) are usage errors |
 | `-w`, `--watch[=BOOL]` | | watch and rebuild (default true; `--watch=false` builds once) |
 | `--poll INTERVAL` | | poll for changes (`700ms`, `1s`, or milliseconds) instead of file notifications |
 
