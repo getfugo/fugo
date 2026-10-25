@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1792896593882,
+  "lastUpdate": 1792901784662,
   "repoUrl": "https://github.com/getfugo/fugo",
   "entries": {
     "Benchmark": [
@@ -98628,6 +98628,66 @@ window.BENCHMARK_DATA = {
           {
             "name": "10,000 generated pages: peak memory",
             "value": 615.6,
+            "unit": "MiB",
+            "extra": "10061 pages; median of 5 builds after a warm-up build"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "blackb1rd.mov@gmail.com",
+            "name": "Prachya Saechua",
+            "username": "blackb1rd"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "f0e735ba37f6fde77a370a937b5d39036a7167eb",
+          "message": "related: Compare headings in fragments indices, and search by keywords (#220)\n\nAn index of type = \"fragments\" compared no headings: the site model gave\nevery page an empty list of heading ids, so it matched only front matter\nvalues, and the matched headings of applyFilter were dropped. related()\ncould not search keywords or heading ids of its own, nor without a page,\nand every call read its whole list of pages again to find its index:\n10,000 pages with related(pages=site.regular_pages) built in 7.3 s\ninstead of 1.1 s (debug).\n\n- Fragments indices read each candidate's headings from the render\n  session, once per list, in layouts and in shortcodes (a page's own\n  headings in its shortcodes come without them).\n- related(keywords=, fragments=, page=none): values by index name and\n  heading ids to search, besides the page's or alone. Index names are\n  read in lower case, as the configuration has them.\n- With applyFilter, each result's fragments holds only the matched\n  headings (as Go's), so a list can link to the sections.\n- The cache knows the last 32 lists by their allocation, and an index\n  keeps each candidate's publish date and name: the 10,000 pages build\n  in 1.4 s, with the same output. Layouts never reuse an index built in\n  the content phase, while a page expanded.\n- ssg-nav: WithFragments (a model with the heading ids of some pages);\n  the keywords of an index move to related/keywords.rs.\n- Docs: Content management → Related content (scores, every setting,\n  searching, headings); the template reference.\n\nCo-Authored-By: Claude Opus 5.5 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-10-25T11:01:30+07:00",
+          "tree_id": "7437d3be2557b2aa4cd2852b7633c8f804e2f755",
+          "url": "https://github.com/getfugo/fugo/commit/f0e735ba37f6fde77a370a937b5d39036a7167eb"
+        },
+        "date": 1792901780820,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "docs site: build time",
+            "value": 195.5,
+            "unit": "ms",
+            "extra": "335 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "docs site: peak memory",
+            "value": 179.9,
+            "unit": "MiB",
+            "extra": "335 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "1,000 generated pages: build time",
+            "value": 214.8,
+            "unit": "ms",
+            "extra": "1061 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "1,000 generated pages: peak memory",
+            "value": 155.5,
+            "unit": "MiB",
+            "extra": "1061 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "10,000 generated pages: build time",
+            "value": 2197.5,
+            "unit": "ms",
+            "extra": "10061 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "10,000 generated pages: peak memory",
+            "value": 577.2,
             "unit": "MiB",
             "extra": "10061 pages; median of 5 builds after a warm-up build"
           }
