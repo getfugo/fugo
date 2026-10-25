@@ -1,17 +1,17 @@
-//! Pages: `get_page`, `deref`, `get_terms`, `related`, `param`, the page store, menus.
+//! Pages: `get_page`, `deref`, `get_terms`, `param`, the page store, menus.
 
 use std::sync::Arc;
 
 use ssg_base::PageId;
-use ssg_nav::{MenuEntry, Menus, RelatedQuery};
+use ssg_nav::{MenuEntry, Menus};
 use ssg_view::{PageStores, Phase, ViewCache};
 use tera::{Kwargs, State, TeraResult, Value};
 
 use crate::call::{
     Registrar, SiteFilter, SiteFunction, chain, field, generation, lang_by_key, list, msg, page_id,
-    page_ids, page_scope, scope, text, to_data,
+    page_scope, scope, to_data,
 };
-use crate::{ContentAdapters, Handles, RelatedCache};
+use crate::{ContentAdapters, Handles};
 
 pub(crate) fn register(r: &mut Registrar<'_>, h: &Handles) {
     r.function(
@@ -30,13 +30,6 @@ pub(crate) fn register(r: &mut Registrar<'_>, h: &Handles) {
         "get_terms",
         GetTerms {
             views: Arc::clone(&h.views),
-        },
-    );
-    r.function(
-        "related",
-        Related {
-            views: Arc::clone(&h.views),
-            cache: Arc::clone(&h.related),
         },
     );
     r.function(
@@ -145,54 +138,6 @@ impl SiteFunction for GetTerms {
         Ok(field(summary, "terms")
             .and_then(|t| field(t, &taxonomy.to_lowercase()).cloned())
             .unwrap_or_else(|| Value::from(Vec::<Value>::new())))
-    }
-}
-
-/// `related(pages=, page=?, indices=?, limit=?)`: the pages of `pages` related to `page`, best
-/// first (`[related]` of the page's language; one index per candidate list).
-struct Related {
-    views: Arc<ViewCache>,
-    cache: Arc<RelatedCache>,
-}
-
-impl SiteFunction for Related {
-    fn call(&self, kw: &Kwargs, st: &State) -> TeraResult<Value> {
-        let s = page_scope(&self.views, st, kw, "related")?;
-        let candidates = page_ids(
-            &self.views,
-            &kw.must_get::<Value>("pages")?,
-            "related(pages=)",
-        )?;
-        let g = generation(&self.views, Some(&s));
-        if candidates.is_empty() {
-            return Ok(g.list(&[]));
-        }
-        let indices: Vec<String> = match kw.get::<Value>("indices")? {
-            Some(v) if !v.is_none() => list(&v, "related(indices=)")?
-                .iter()
-                .map(|i| text(i, "related(indices=)"))
-                .collect::<TeraResult<_>>()?,
-            _ => Vec::new(),
-        };
-        let index = self
-            .cache
-            .index(&self.views, s.lang, &candidates)
-            .map_err(|e| chain("related", e))?;
-        let found = index
-            .search(
-                self.views.nav(),
-                &RelatedQuery {
-                    document: Some(s.page),
-                    indices: &indices,
-                    ..RelatedQuery::default()
-                },
-            )
-            .map_err(|e| chain("related", e))?;
-        let mut pages = found.pages;
-        if let Some(limit) = kw.get::<i64>("limit")? {
-            pages.truncate(usize::try_from(limit).unwrap_or(0));
-        }
-        Ok(g.list(&pages))
     }
 }
 

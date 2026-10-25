@@ -1,4 +1,4 @@
-//! `get_page`, `deref`, `get_terms`, `related`, `param`, the page store, menus; components via
+//! `get_page`, `deref`, `get_terms`, `param`, the page store, menus; components via
 //! `page=` and via `@__nh`.
 
 use ssg_base::PageKind;
@@ -154,41 +154,6 @@ fn get_terms_and_param() {
         ),
         "red"
     );
-}
-
-#[test]
-fn related_uses_an_index_per_candidate_list() {
-    let site = support::load();
-    let one = site.scope(site.page(PageKind::Page, "/posts/one", 0), None);
-    // one has tags a, b: two (a) and three (b) match; one itself never does.
-    let out = site.render(
-        "{{ [q.title for q in related(pages=site.regular_pages)] | join(sep=\",\") }}",
-        &one,
-    );
-    let mut got: Vec<&str> = out.split(',').collect();
-    got.sort_unstable();
-    assert_eq!(got, ["Three", "Two"]);
-    assert_eq!(
-        site.render(
-            "{{ related(pages=site.regular_pages, limit=1) | length }}",
-            &one
-        ),
-        "1"
-    );
-    assert_eq!(
-        site.render(
-            "{{ [q.title for q in related(pages=[get_page(path=\"/posts/two\")])] | join(sep=\",\") }}",
-            &one
-        ),
-        "Two"
-    );
-    let e = site
-        .try_render(
-            "{{ related(pages=site.regular_pages, indices=[\"nope\"]) }}",
-            &one,
-        )
-        .expect_err("unknown index");
-    assert!(e.to_string().contains("nope"), "{e}");
 }
 
 #[test]

@@ -170,6 +170,30 @@ impl FragmentsView {
             identifiers: f.identifiers.clone(),
         }
     }
+
+    /// The headings of `f` whose id `keep` accepts, in document order with their sub-headings
+    /// (a kept heading inside another is listed after it too), and their ids.
+    #[must_use]
+    pub fn filtered(f: &ssg_markup::Fragments, keep: impl Fn(&str) -> bool) -> Self {
+        fn walk(
+            hs: &[ssg_markup::Heading],
+            keep: &dyn Fn(&str) -> bool,
+            out: &mut Vec<HeadingView>,
+        ) {
+            for h in hs {
+                if keep(&h.id) {
+                    out.push(HeadingView::new(h));
+                }
+                walk(&h.children, keep, out);
+            }
+        }
+        let mut headings = Vec::new();
+        walk(&f.headings, &keep, &mut headings);
+        Self {
+            headings,
+            identifiers: f.identifiers.iter().filter(|i| keep(i)).cloned().collect(),
+        }
+    }
 }
 
 #[derive(Clone, Debug, Serialize)]

@@ -7,6 +7,7 @@ mod lists;
 mod pages;
 mod pagination;
 mod registration;
+mod related;
 mod resources;
 mod support;
 mod templates;

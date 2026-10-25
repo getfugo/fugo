@@ -23,7 +23,7 @@
 //! | `partial`, `return_value` | [`Frames`]: each `partial()` call allocates a frame, `return_value` writes it |
 //! | `partial_cached` | `Handles::partial_cache`, the whole [`PartialResult`] per (name, key) |
 //! | `defer` | [`ssg_view::DeferredRegistry`]; returns `__nh_defer_<key>__` |
-//! | `related` | [`RelatedCache`]: one index per candidate list |
+//! | `related` | [`RelatedCache`]: one index per candidate list, the lists searched last known by their allocation |
 //! | resources, images | `ResourceStore` (lazy transforms, post-process placeholders), `ImageQueue` |
 //! | `add_page`, `add_resource`, `enable_all_languages`, the adapter's store | [`ContentAdapters`]: the runs of content adapters (phase `Adapter`, the run in `__nh.adapter`) |
 //!
@@ -46,27 +46,28 @@ mod images;
 mod lists;
 mod pages;
 mod pagination;
+mod related;
 mod resources;
 mod templates;
 mod urls;
 
-use std::collections::HashMap;
 use std::sync::atomic::{AtomicU64, Ordering};
-use std::sync::{Arc, Mutex, OnceLock, PoisonError, Weak};
+use std::sync::{Arc, OnceLock, Weak};
 
 use dashmap::DashMap;
+use ssg_base::FrameId;
 use ssg_base::diag::Diagnostics;
-use ssg_base::{FrameId, LangIdx, PageId};
 use ssg_highlight::Highlight;
 use ssg_images::ImageQueue;
 use ssg_layouts::{TemplateName, Templates};
 use ssg_locale::Translations;
-use ssg_nav::{Menus, NavError, RelatedIndex};
+use ssg_nav::Menus;
 use ssg_resources::ResourceStore;
 use ssg_site::Model;
 use ssg_view::{ContentRenderer, DeferredRegistry, PageStores, PaginationRecorder, ViewCache};
 
 pub use adapters::{AdapterRun, ContentAdapters};
+pub use related::RelatedCache;
 
 /// A cached `partial_cached` result: the rendered text, or the partial's `return_value`.
 #[derive(Clone, Debug, PartialEq)]
@@ -106,49 +107,6 @@ impl Frames {
     /// The template `frame` renders.
     pub(crate) fn template(&self, frame: FrameId) -> Option<TemplateName> {
         self.templates.get(&frame).map(|t| t.clone())
-    }
-}
-
-/// A related-content index's key: the language and the candidate list.
-type RelatedKey = (LangIdx, Vec<PageId>);
-
-/// Related-content indices, one per (language, candidate list): `related(pages=site.pages)` and
-/// `related(pages=site.regular_pages)` search different indices (REWRITE_PLAN.md §4.6).
-#[derive(Debug, Default)]
-pub struct RelatedCache {
-    indices: Mutex<HashMap<RelatedKey, Arc<RelatedIndex>>>,
-}
-
-impl RelatedCache {
-    /// The index over `candidates`, built on first use with language `lang`'s `[related]`
-    /// configuration.
-    ///
-    /// # Errors
-    /// A candidate with a value that cannot be a keyword.
-    pub(crate) fn index(
-        &self,
-        views: &ViewCache,
-        lang: LangIdx,
-        candidates: &[PageId],
-    ) -> Result<Arc<RelatedIndex>, NavError> {
-        let key = (lang, candidates.to_vec());
-        if let Some(i) = self
-            .indices
-            .lock()
-            .unwrap_or_else(PoisonError::into_inner)
-            .get(&key)
-        {
-            return Ok(Arc::clone(i));
-        }
-        let cfg = &views.model().config.sites[lang].related;
-        let built = Arc::new(RelatedIndex::build(views.nav(), cfg, candidates)?);
-        Ok(Arc::clone(
-            self.indices
-                .lock()
-                .unwrap_or_else(PoisonError::into_inner)
-                .entry(key)
-                .or_insert(built),
-        ))
     }
 }
 
@@ -194,6 +152,7 @@ pub fn register(t: &mut tera::Tera, h: &Handles) {
     let mut r = call::Registrar::new(t);
     adapters::register(&mut r, h);
     pages::register(&mut r, h);
+    related::register(&mut r, h);
     lists::register(&mut r, h);
     pagination::register(&mut r, h);
     content::register(&mut r, h);
