@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1792905540307,
+  "lastUpdate": 1792905543031,
   "repoUrl": "https://github.com/getfugo/fugo",
   "entries": {
     "Benchmark": [
@@ -102088,6 +102088,105 @@ window.BENCHMARK_DATA = {
           {
             "name": "BenchmarkSummaryFromHTMLWithDivider",
             "value": 67.45,
+            "unit": "ns/op"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "blackb1rd.mov@gmail.com",
+            "name": "blackb1rd",
+            "username": "blackb1rd"
+          },
+          "committer": {
+            "email": "blackb1rd.mov@gmail.com",
+            "name": "blackb1rd",
+            "username": "blackb1rd"
+          },
+          "distinct": true,
+          "id": "d079ae8982c23603e6d97f2c2652d77faac27d6f",
+          "message": "serve: Forward proxies to https:// servers\n\n`[[server.proxies]]` and `--proxy` take an `https://` server too, such as a site's published\nAPI, to work on the site with its real data. The connection is TLS (tokio-rustls with the\nring provider, the one new crate; rustls and webpki-roots were locked through ureq): the\nserver's certificate is checked for its name against Mozilla's roots, as GetRemote's are,\nand the authorities of the new `ServeOptions::proxy_roots`, and ALPN asks for HTTP/1.1, the\nonly version the forwarding speaks. The request carries the server's own name as `Host`,\nwhich TLS and a server of several sites need, and the browser's host in `X-Forwarded-Host`;\nan `http://` server still gets the browser's `Host`. A certificate that does not check is a\n502, as a server that does not answer is.\n\nThe tests run an https:// echo server with a certificate of a test authority\n(`tests/fixtures/tls/`, made with the commands of its README).\n\nCo-Authored-By: Claude Opus 5.5 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-10-25T12:03:32+07:00",
+          "tree_id": "87d2c19686471b640b1db64f3b579ba0ef7ae613",
+          "url": "https://github.com/getfugo/fugo/commit/d079ae8982c23603e6d97f2c2652d77faac27d6f"
+        },
+        "date": 1792905542283,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "BenchmarkSanitizeAnchorName",
+            "value": 532.32,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSanitizeAnchorNameAsciiOnly",
+            "value": 1284.16,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSanitizeAnchorNameBlackfriday",
+            "value": 650.13,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSanitizeAnchorNameString",
+            "value": 528.55,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSanitize/All_allowed",
+            "value": 238.78,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSanitize/Spaces",
+            "value": 258.91,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkRelURL",
+            "value": 336.7,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkAbsURL/relurl",
+            "value": 624.76,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkAbsURL/absurl",
+            "value": 23.6,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkTotalWords",
+            "value": 5678.59,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkStripHTML",
+            "value": 1097.02,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkParse",
+            "value": 9871.97,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkDecodeYAMLToMap",
+            "value": 14925.24,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSummaryFromHTML",
+            "value": 75.97,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSummaryFromHTMLWithDivider",
+            "value": 78.23,
             "unit": "ns/op"
           }
         ]
