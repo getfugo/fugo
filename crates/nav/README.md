@@ -3,7 +3,7 @@
 Menus, pagination arithmetic and pager URLs, the related-content index and the alias plan
 (REWRITE_PLAN.md §2.4, §3.3). The crate holds no state: the render session records the first
 `paginator()`/`paginate()` call per (page, format) (`ssg-view`) and caches related indices
-per candidate list.
+per candidate list, with the heading ids of the candidates when an index matches headings.
 
 Everything reads the site through the `NavModel` trait (final titles, links, relations, the
 pages' output formats). The site `Model` implements it once T23b adds URLs and relations; the
@@ -11,7 +11,7 @@ oracle tests implement it over the Go fixtures' page dumps.
 
 | Piece | API |
 |---|---|
-| Seam | `trait NavModel { page(id) -> PageFacts, tree_pages(lang), resolve_page_ref(lang, ref), is_ancestor(a, p), pages(p), regular_pages(p), site_regular_pages(lang), home(lang) }`; `PageFacts` (kind, section, titles, weight, dates, keywords, params, front matter menus, rel permalink, fragments, outputs `[(FormatId, TargetPaths)]`, `Rendering`, `ListMode`) |
+| Seam | `trait NavModel { page(id) -> PageFacts, tree_pages(lang), resolve_page_ref(lang, ref), is_ancestor(a, p), pages(p), regular_pages(p), site_regular_pages(lang), home(lang) }`; `PageFacts` (kind, section, titles, weight, dates, keywords, params, front matter menus, rel permalink, fragments, outputs `[(FormatId, TargetPaths)]`, `Rendering`, `ListMode`); `WithFragments::new(&m, [(page, ids)])`, a model with the heading ids of some pages |
 | Menus | `build_menus(&m, &Config) -> (Menus, Vec<Diagnostic>)`, `build_site_menus(&m, lang, &MenuOptions { entries, section_pages_menu, urls })`; `Menus(IdVec<LangIdx, SiteMenus>)`; `SiteMenus { menus: BTreeMap<name, Vec<MenuEntry>>, page_menus }`, `menu(name)`, `is_menu_current(page, menu, &entry)`, `has_menu_current(&m, page, menu, &entry)`; `MenuEntry { identifier, name, title, url, page_ref, page, weight, parent, pre, post, params, children }`, `key_name()`, `has_children()`; `page_menu_entries(&PageFacts)`; `menu_order`, `compare_names`, `sort_by_name` |
 | Pagination | `Pagination::new(PaginationItems::{Pages, Groups}, size)`, `total_items`, `total_pages` (0 for an empty list), `pager_count` (≥ 1), `pager(n)`, `pagers()`, `pages_of(&Pager)`; `Pager { number, slice: PagerSlice::{Pages(Range), Groups(Vec<GroupSlice>)} }`; `pager_paths(&UrlInputs, &PaginationConfig, n) -> TargetPaths`; `pager_alias(&UrlInputs, &OutputFormat, &PaginationConfig) -> Option<OutputPath>`; `default_pagination_list(&m, page)`; `resolve_pager_size(&[Value], configured)` |
 | Related | `RelatedIndex::{new(&RelatedConfig), add(&m, page), finalize(), build(&m, &cfg, candidates), search(&m, &RelatedQuery { document, indices, fragments, named })} -> Related { pages, heading_filter }`; `related(&m, &cfg, candidates, page)` |
@@ -23,7 +23,8 @@ with the base path), then `sectionPagesMenu` entries, then the pages' own entrie
 (a key already in the menu is dropped with a warning); a missing parent is created with the
 parent's name; a parent cycle loses the closing edge. Related matches rank by summed index
 weight, then newest publish date, then name, then candidate order (Go leaves full ties random);
-the normalised score and threshold use exact integer arithmetic. `page/1` redirects come from
+the normalised score and threshold use exact integer arithmetic. An index keeps each candidate's
+publish date and name when it is added, so a search reads only the document from the model. `page/1` redirects come from
 `pager_alias`, because only the templates know what paginates.
 
 ## Acceptance (tests/it)

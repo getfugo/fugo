@@ -127,8 +127,8 @@ pub const FUNCS: &[FuncSpec] = &[
     filter(G::Pages, "deref", "", "The full value (with relations) of a listed summary page.").site(),
     func(G::Pages, "get_terms", ".GetTerms", "The term links of `page` for `taxonomy`; `[]` when it is not a taxonomy.")
         .args(&[req("taxonomy", A::String), PAGE_OPT]).site(),
-    func(G::Pages, "related", ".Related", "Pages related to `page` among `pages`, per the `related` config.")
-        .args(&[req("pages", A::Array), PAGE_OPT, opt("indices", A::Array), opt("limit", A::Int)]).site(),
+    func(G::Pages, "related", ".Related", "Pages related to `page` among `pages`, best first, per the `related` config: `indices` limits the search to some indices, `fragments` adds heading ids to the fragments indices, `keywords` adds keywords by index name (`{\"tags\": [\"rust\"]}`), `page=none` searches the `fragments` and `keywords` alone. When a fragments index with `applyFilter` matched, each result's `fragments` holds only the matched headings.")
+        .args(&[req("pages", A::Array), PAGE_OPT, opt("indices", A::Array), opt("fragments", A::Array), opt("keywords", A::Map), opt("limit", A::Int)]).site(),
     func(G::Pages, "param", ".Param", "The page param `key` (a dotted path), else the site param.").args(&[req("key", A::String), PAGE_OPT]).site(),
     func(G::Pages, "paginator", ".Paginator", "The pager of the current (page, format) over its default list. Recorded: the first call wins.")
         .site().only(P::Layout),

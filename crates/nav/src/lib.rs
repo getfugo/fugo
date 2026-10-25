@@ -11,7 +11,8 @@
 //!   [`default_pagination_list`] what `paginator()` paginates. The first call per page and
 //!   format is recorded by the render session (`ssg-view`), not here.
 //! - [`RelatedIndex`] is the inverted index of `[related]` over an explicit candidate list,
-//!   searched with a [`RelatedQuery`].
+//!   searched with a [`RelatedQuery`]; [`WithFragments`] gives a model the heading ids its
+//!   fragments indices read.
 //! - [`alias_plan`] lists the redirect files of front matter aliases and the main-language
 //!   redirect.
 
@@ -30,7 +31,7 @@ pub use menu::{
     MenuEntry, MenuOptions, Menus, SiteMenus, build_menus, build_site_menus, compare_names,
     menu_order, page_menu_entries, sort_by_name,
 };
-pub use model::{NavModel, PageFacts, Rendering};
+pub use model::{NavModel, PageFacts, Rendering, WithFragments};
 pub use pagination::{
     GroupSlice, PageGroup, Pager, PagerSlice, Pagination, PaginationItems, default_pagination_list,
     pager_alias, pager_paths, resolve_pager_size,

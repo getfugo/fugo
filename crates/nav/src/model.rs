@@ -4,6 +4,8 @@
 //! The site `Model` implements it once its URLs and relations exist (T23b); the oracle tests
 //! implement it over the page dumps of the Go fixtures.
 
+use std::collections::HashMap;
+
 use ssg_base::{FormatId, LangIdx, PageId, PageKind, Params};
 use ssg_page::{Dates, ListMode, PageMenuEntry, TargetPaths};
 
@@ -83,4 +85,60 @@ pub trait NavModel {
 
     /// The home page of language `lang`.
     fn home(&self, lang: LangIdx) -> Option<PageId>;
+}
+
+/// A model with the heading ids of some pages, which it does not have itself (the site model
+/// before the content phase): related content's fragments indices read them.
+#[derive(Clone, Debug)]
+pub struct WithFragments<'a, M> {
+    model: &'a M,
+    fragments: HashMap<PageId, &'a [String]>,
+}
+
+impl<'a, M: NavModel> WithFragments<'a, M> {
+    /// `model` with the heading ids of `fragments` (page → ids); other pages keep theirs.
+    pub fn new(model: &'a M, fragments: impl IntoIterator<Item = (PageId, &'a [String])>) -> Self {
+        Self {
+            model,
+            fragments: fragments.into_iter().collect(),
+        }
+    }
+}
+
+impl<M: NavModel> NavModel for WithFragments<'_, M> {
+    fn page(&self, id: PageId) -> PageFacts<'_> {
+        let mut p = self.model.page(id);
+        if let Some(f) = self.fragments.get(&id) {
+            p.fragments = f;
+        }
+        p
+    }
+
+    fn tree_pages(&self, lang: LangIdx) -> Vec<PageId> {
+        self.model.tree_pages(lang)
+    }
+
+    fn resolve_page_ref(&self, lang: LangIdx, reference: &str) -> Option<PageId> {
+        self.model.resolve_page_ref(lang, reference)
+    }
+
+    fn is_ancestor(&self, ancestor: PageId, page: PageId) -> bool {
+        self.model.is_ancestor(ancestor, page)
+    }
+
+    fn pages(&self, page: PageId) -> &[PageId] {
+        self.model.pages(page)
+    }
+
+    fn regular_pages(&self, page: PageId) -> &[PageId] {
+        self.model.regular_pages(page)
+    }
+
+    fn site_regular_pages(&self, lang: LangIdx) -> &[PageId] {
+        self.model.site_regular_pages(lang)
+    }
+
+    fn home(&self, lang: LangIdx) -> Option<PageId> {
+        self.model.home(lang)
+    }
 }

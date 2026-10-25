@@ -9,6 +9,7 @@ mod fonts;
 mod git_info;
 mod images;
 mod mini;
+mod related;
 mod sitemaps;
 mod skeleton;
 mod smoke;

@@ -5,152 +5,15 @@
 
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 
-use jiff::Zoned;
-use ssg_base::{PageId, Value, text};
-use ssg_config::sections::{RelatedConfig, RelatedIndex as IndexConfig, RelatedIndexKind};
+use ssg_base::{PageId, Value};
+use ssg_config::sections::{RelatedConfig, RelatedIndexKind};
 
 use crate::NavError;
-use crate::model::{NavModel, PageFacts};
+use crate::model::NavModel;
 
-/// A keyword of an index; heading ids (fragments) never match plain keywords.
-#[derive(Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
-enum Keyword {
-    Text(String),
-    Fragment(String),
-}
+mod keywords;
 
-/// The page value an index reads, by the index's name.
-enum MetaValue<'a> {
-    None,
-    Text(&'a str),
-    List(&'a [String]),
-    Date(Option<&'a Zoned>),
-    Value(&'a Value),
-    /// A value that cannot be a keyword (a boolean or a number field).
-    Unsupported(&'static str),
-}
-
-fn meta_value<'a>(p: &PageFacts<'a>, name: &str) -> MetaValue<'a> {
-    match name {
-        "keywords" => MetaValue::List(p.keywords),
-        "aliases" => MetaValue::List(p.aliases),
-        "kind" => MetaValue::Text(p.kind.as_str()),
-        "bundletype" => MetaValue::Text(p.bundle_type),
-        "section" => MetaValue::Text(p.section),
-        "lang" => MetaValue::Text(p.lang_key),
-        "name" => MetaValue::Text(p.name),
-        "description" => MetaValue::Text(p.description),
-        "title" => MetaValue::Text(p.title),
-        "linktitle" => MetaValue::Text(p.link_title),
-        "slug" => MetaValue::Text(p.slug),
-        "type" => MetaValue::Text(p.page_type),
-        "layout" => MetaValue::Text(p.layout),
-        "date" => MetaValue::Date(p.dates.date.as_ref()),
-        "publishdate" => MetaValue::Date(p.dates.publish_date.as_ref()),
-        "expirydate" => MetaValue::Date(p.dates.expiry_date.as_ref()),
-        "lastmod" => MetaValue::Date(p.dates.lastmod.as_ref()),
-        "draft" => MetaValue::Unsupported("bool"),
-        "weight" => MetaValue::Unsupported("int"),
-        "mediatype" => MetaValue::Unsupported("media type"),
-        _ => p
-            .params
-            .get(name)
-            .or_else(|| p.params.get_path(name))
-            .map_or(MetaValue::None, MetaValue::Value),
-    }
-}
-
-/// A date keyword: the date in the index's Go layout (`2006` by default); a page without the
-/// date has Go's zero date (year 1).
-fn date_keyword(d: Option<&Zoned>, pattern: &str) -> String {
-    let layout = if pattern.is_empty() { "2006" } else { pattern };
-    let zero;
-    let d = if let Some(d) = d {
-        d
-    } else {
-        zero = jiff::civil::date(1, 1, 1)
-            .at(0, 0, 0, 0)
-            .to_zoned(jiff::tz::TimeZone::UTC)
-            .expect("year 1 is in range");
-        &zero
-    };
-    ssg_page::format_go_layout(d, layout)
-}
-
-fn text_keyword(cfg: &IndexConfig, s: &str) -> Keyword {
-    let s = if cfg.to_lower {
-        text::to_lower(s)
-    } else {
-        s.to_owned()
-    };
-    match cfg.kind {
-        RelatedIndexKind::Basic => Keyword::Text(s),
-        RelatedIndexKind::Fragments => Keyword::Fragment(s),
-    }
-}
-
-/// A scalar as a list element keyword (Go `cast.ToString`: nested lists and maps are empty).
-fn scalar_string(v: &Value) -> String {
-    match v {
-        Value::String(s) => s.to_string(),
-        Value::Int(i) => i.to_string(),
-        Value::Float(f) => f.to_string(),
-        Value::Bool(b) => b.to_string(),
-        _ => String::new(),
-    }
-}
-
-fn value_keywords(cfg: &IndexConfig, v: &Value) -> Result<Vec<Keyword>, NavError> {
-    let unsupported = |kind: &'static str| NavError::UnsupportedKeyword {
-        index: cfg.name.clone(),
-        kind,
-    };
-    Ok(match v {
-        Value::Null => Vec::new(),
-        Value::String(s) => vec![text_keyword(cfg, s)],
-        Value::Array(items) => items
-            .iter()
-            .map(|i| text_keyword(cfg, &scalar_string(i)))
-            .collect(),
-        Value::Date(d) => {
-            let z = match d {
-                ssg_base::Date::Zoned(z) => z.clone(),
-                ssg_base::Date::Local(dt) => dt
-                    .to_zoned(jiff::tz::TimeZone::UTC)
-                    .map_err(|_| unsupported("date"))?,
-            };
-            vec![Keyword::Text(date_keyword(Some(&z), &cfg.pattern))]
-        }
-        Value::Bool(_) => return Err(unsupported("bool")),
-        Value::Int(_) => return Err(unsupported("int")),
-        Value::Float(_) => return Err(unsupported("float")),
-        Value::Map(_) => return Err(unsupported("map")),
-    })
-}
-
-/// The keywords page `p` has in index `cfg`.
-fn page_keywords(cfg: &IndexConfig, p: &PageFacts<'_>) -> Result<Vec<Keyword>, NavError> {
-    match meta_value(p, &cfg.name) {
-        MetaValue::None => Ok(Vec::new()),
-        MetaValue::Text(s) => Ok(vec![text_keyword(cfg, s)]),
-        MetaValue::List(l) => Ok(l.iter().map(|s| text_keyword(cfg, s)).collect()),
-        MetaValue::Date(d) => Ok(vec![Keyword::Text(date_keyword(d, &cfg.pattern))]),
-        MetaValue::Value(v) => value_keywords(cfg, v),
-        MetaValue::Unsupported(kind) => Err(NavError::UnsupportedKeyword {
-            index: cfg.name.clone(),
-            kind,
-        }),
-    }
-}
-
-/// Unix seconds and nanoseconds of a publish date (Go's zero date when absent).
-fn instant(d: Option<&Zoned>) -> (i64, i32) {
-    const ZERO: i64 = -62_135_596_800;
-    d.map_or((ZERO, 0), |z| {
-        let t = z.timestamp();
-        (t.as_second(), t.subsec_nanosecond())
-    })
-}
+use keywords::*;
 
 /// A search: what to find related pages for.
 #[derive(Clone, Debug, Default)]
@@ -176,16 +39,28 @@ pub struct Related {
     pub heading_filter: Option<Vec<String>>,
 }
 
+/// A candidate of an index, with what the order of results reads about it (kept when it is
+/// added, so that a search reads no page).
+#[derive(Clone, Debug)]
+struct Candidate {
+    page: PageId,
+    /// The publish date (Unix seconds and nanoseconds).
+    published: (i64, i32),
+    name: String,
+}
+
 /// An inverted index over a candidate list.
 #[derive(Clone, Debug)]
 pub struct RelatedIndex {
     cfg: RelatedConfig,
-    /// Per configured index: keyword → pages (candidate order).
-    postings: Vec<BTreeMap<Keyword, Vec<PageId>>>,
+    /// Per configured index: keyword → candidates (slots, in candidate order).
+    postings: Vec<BTreeMap<Keyword, Vec<usize>>>,
     /// Per configured index: how many pages have a keyword in it.
     doc_counts: Vec<usize>,
-    /// Position of each candidate (the tie-break of equal matches).
-    rank: HashMap<PageId, usize>,
+    /// The candidates by slot, in the order they were first added (the last tie-break of
+    /// equal matches).
+    candidates: Vec<Candidate>,
+    slots: HashMap<PageId, usize>,
     min_weight: i32,
     max_weight: i32,
 }
@@ -211,7 +86,8 @@ impl RelatedIndex {
         Self {
             postings: vec![BTreeMap::new(); cfg.indices.len()],
             doc_counts: vec![0; cfg.indices.len()],
-            rank: HashMap::new(),
+            candidates: Vec::new(),
+            slots: HashMap::new(),
             min_weight,
             max_weight,
             cfg: cfg.clone(),
@@ -242,9 +118,15 @@ impl RelatedIndex {
     /// # Errors
     /// A page value that cannot be a keyword.
     pub fn add(&mut self, m: &impl NavModel, page: PageId) -> Result<(), NavError> {
-        let n = self.rank.len();
-        self.rank.entry(page).or_insert(n);
         let p = m.page(page);
+        let slot = *self.slots.entry(page).or_insert_with(|| {
+            self.candidates.push(Candidate {
+                page,
+                published: instant(p.dates.publish_date.as_ref()),
+                name: p.name.to_owned(),
+            });
+            self.candidates.len() - 1
+        });
         let mut first_err = None;
         for (i, cfg) in self.cfg.indices.iter().enumerate() {
             if cfg.weight == 0 {
@@ -265,7 +147,7 @@ impl RelatedIndex {
             }
             self.doc_counts[i] += 1;
             for w in words {
-                self.postings[i].entry(w).or_default().push(page);
+                self.postings[i].entry(w).or_default().push(slot);
             }
         }
         first_err.map_or(Ok(()), Err)
@@ -282,7 +164,7 @@ impl RelatedIndex {
             if limit == 0 || docs == 0 {
                 continue;
             }
-            self.postings[i].retain(|_, pages| (pages.len() * 100).div_ceil(docs) <= limit);
+            self.postings[i].retain(|_, slots| (slots.len() * 100).div_ceil(docs) <= limit);
         }
     }
 
@@ -341,22 +223,24 @@ impl RelatedIndex {
             .and_then(|d| d.dates.publish_date.as_ref())
             .filter(|_| !self.cfg.include_newer)
             .map(|d| instant(Some(d)));
-        // Matches in first-match order: page → (summed weight, matches).
-        let mut ranks: Vec<(PageId, i64, i64)> = Vec::new();
-        let mut at: HashMap<PageId, usize> = HashMap::new();
+        let own = q.document.and_then(|d| self.slots.get(&d).copied());
+        // Matches in first-match order: (slot, summed weight, matches); `at` holds each
+        // matched slot's position in `ranks`.
+        let mut ranks: Vec<(usize, i64, i64)> = Vec::new();
+        let mut at = vec![usize::MAX; self.candidates.len()];
         let mut filter: BTreeSet<String> = BTreeSet::new();
         for (i, words) in &query {
             let cfg = &self.cfg.indices[*i];
             for w in words {
-                let Some(pages) = self.postings[*i].get(w) else {
+                let Some(slots) = self.postings[*i].get(w) else {
                     continue;
                 };
-                for &p in pages {
-                    if Some(p) == q.document {
+                for &p in slots {
+                    if Some(p) == own {
                         continue;
                     }
                     if let Some(upper) = upper
-                        && instant(m.page(p).dates.publish_date.as_ref()) > upper
+                        && self.candidates[p].published > upper
                     {
                         continue;
                     }
@@ -367,14 +251,14 @@ impl RelatedIndex {
                         filter.insert(f.clone());
                     }
                     let weight = i64::from(cfg.weight);
-                    match at.get(&p) {
-                        Some(&k) => {
+                    match at[p] {
+                        usize::MAX => {
+                            at[p] = ranks.len();
+                            ranks.push((p, weight, 1));
+                        }
+                        k => {
                             ranks[k].1 += weight;
                             ranks[k].2 += 1;
-                        }
-                        None => {
-                            at.insert(p, ranks.len());
-                            ranks.push((p, weight, 1));
                         }
                     }
                 }
@@ -383,28 +267,27 @@ impl RelatedIndex {
 
         let threshold = i64::from(self.cfg.threshold);
         let (min, max) = (i64::from(self.min_weight), i64::from(self.max_weight));
-        let mut hits: Vec<(PageId, i64)> = ranks
+        let mut hits: Vec<(usize, i64)> = ranks
             .into_iter()
             .filter(|&(_, weight, matches)| norm(weight / matches, min, max) >= threshold / matches)
             .map(|(p, weight, _)| (p, weight))
             .collect();
         hits.sort_by(|a, b| {
             b.1.cmp(&a.1).then_with(|| {
-                let (pa, pb) = (m.page(a.0), m.page(b.0));
-                instant(pb.dates.publish_date.as_ref())
-                    .cmp(&instant(pa.dates.publish_date.as_ref()))
-                    .then_with(|| pa.name.cmp(pb.name))
-                    .then_with(|| self.order(a.0).cmp(&self.order(b.0)))
+                let (ca, cb) = (&self.candidates[a.0], &self.candidates[b.0]);
+                cb.published
+                    .cmp(&ca.published)
+                    .then_with(|| ca.name.cmp(&cb.name))
+                    .then_with(|| a.0.cmp(&b.0))
             })
         });
         Ok(Related {
-            pages: hits.into_iter().map(|(p, _)| p).collect(),
+            pages: hits
+                .into_iter()
+                .map(|(p, _)| self.candidates[p].page)
+                .collect(),
             heading_filter: (!filter.is_empty()).then(|| filter.into_iter().collect()),
         })
-    }
-
-    fn order(&self, p: PageId) -> usize {
-        self.rank.get(&p).copied().unwrap_or(usize::MAX)
     }
 }
 
