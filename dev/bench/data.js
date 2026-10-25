@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1792896590913,
+  "lastUpdate": 1792896593882,
   "repoUrl": "https://github.com/getfugo/fugo",
   "entries": {
     "Benchmark": [
@@ -101770,6 +101770,105 @@ window.BENCHMARK_DATA = {
           {
             "name": "BenchmarkSummaryFromHTMLWithDivider",
             "value": 69.22,
+            "unit": "ns/op"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "blackb1rd.mov@gmail.com",
+            "name": "blackb1rd",
+            "username": "blackb1rd"
+          },
+          "committer": {
+            "email": "blackb1rd.mov@gmail.com",
+            "name": "blackb1rd",
+            "username": "blackb1rd"
+          },
+          "distinct": true,
+          "id": "f8921839b51547a20a2784a519efbf5f33268eca",
+          "message": "serve: Forward the requests of a path to another server with --proxy\n\n`fugo server --proxy /api/=http://127.0.0.1:3000` and the configuration's\n`[[server.proxies]]` (`from`, `to`) send the requests of a path and below it\nto another HTTP server, such as the site's API, so that the pages reach it on\ntheir own origin, as they will once published next to it: no CORS, the same\ncookies.\n\nA request goes to the proxy of the longest path that covers it (by segments:\n`/api/` covers `/api` and `/api/x`, not `/apix`), after the server's own\npaths and before the site's files. It keeps its method, path, query, body\nand `Host`, loses the hop-by-hop headers, and gains `X-Forwarded-For`,\n`-Host` and `-Proto`. Answers stream back (server-sent events work), and an\nupgrade joins the two connections (WebSockets work). A server that cannot be\nreached is a 502, also printed. A later `--proxy` replaces an earlier one of\nthe same path, and the flags replace the configuration's; a wrong entry is a\nconfiguration error. The rest of `[server]` is still not read.\n\nThe forwarding uses hyper's HTTP/1 client (already locked through axum; its\n`client` feature adds want and try-lock, MIT). The option types move from\nlib.rs to options.rs, and the configuration loading of rebuild.rs to\nrebuild/config.rs, which kept both files well under 500 lines.\n\nCo-Authored-By: Claude Opus 5.5 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-10-25T00:19:29+07:00",
+          "tree_id": "5640dec30a1ef04f31de50365efd4cd2c88ab08a",
+          "url": "https://github.com/getfugo/fugo/commit/f8921839b51547a20a2784a519efbf5f33268eca"
+        },
+        "date": 1792896592928,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "BenchmarkSanitizeAnchorName",
+            "value": 410.01,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSanitizeAnchorNameAsciiOnly",
+            "value": 1007.29,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSanitizeAnchorNameBlackfriday",
+            "value": 505.33,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSanitizeAnchorNameString",
+            "value": 410.43,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSanitize/All_allowed",
+            "value": 185.19,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSanitize/Spaces",
+            "value": 202.67,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkRelURL",
+            "value": 274.06,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkAbsURL/relurl",
+            "value": 542.99,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkAbsURL/absurl",
+            "value": 18.28,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkTotalWords",
+            "value": 4296.98,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkStripHTML",
+            "value": 903,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkParse",
+            "value": 7733.38,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkDecodeYAMLToMap",
+            "value": 11828.5,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSummaryFromHTML",
+            "value": 58.43,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSummaryFromHTMLWithDivider",
+            "value": 58.67,
             "unit": "ns/op"
           }
         ]
