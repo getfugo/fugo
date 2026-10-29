@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1792905543031,
+  "lastUpdate": 1793269663479,
   "repoUrl": "https://github.com/getfugo/fugo",
   "entries": {
     "Benchmark": [
@@ -98748,6 +98748,66 @@ window.BENCHMARK_DATA = {
           {
             "name": "10,000 generated pages: peak memory",
             "value": 597.3,
+            "unit": "MiB",
+            "extra": "10061 pages; median of 5 builds after a warm-up build"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "49699333+dependabot[bot]@users.noreply.github.com",
+            "name": "dependabot[bot]",
+            "username": "dependabot[bot]"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "846533a31950a27a18fb31e349044deea78ae648",
+          "message": "build(deps): bump happy-dom (#218)\n\nBumps the npm_and_yarn group with 1 update in the /tools/dev/node directory: [happy-dom](https://github.com/capricorn86/happy-dom).\n\n\nUpdates `happy-dom` from 20.14.5 to 21.0.4\n- [Release notes](https://github.com/capricorn86/happy-dom/releases)\n- [Commits](https://github.com/capricorn86/happy-dom/compare/v20.14.5...v21.0.4)\n\n---\nupdated-dependencies:\n- dependency-name: happy-dom\n  dependency-version: 21.0.4\n  dependency-type: direct:production\n  dependency-group: npm_and_yarn\n...\n\nSigned-off-by: dependabot[bot] <support@github.com>\nCo-authored-by: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>",
+          "timestamp": "2026-10-29T17:06:47+07:00",
+          "tree_id": "2c208700a03c472491e2ba979245fcc933bfa31b",
+          "url": "https://github.com/getfugo/fugo/commit/846533a31950a27a18fb31e349044deea78ae648"
+        },
+        "date": 1793269659098,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "docs site: build time",
+            "value": 216.3,
+            "unit": "ms",
+            "extra": "335 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "docs site: peak memory",
+            "value": 99.5,
+            "unit": "MiB",
+            "extra": "335 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "1,000 generated pages: build time",
+            "value": 254.7,
+            "unit": "ms",
+            "extra": "1061 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "1,000 generated pages: peak memory",
+            "value": 105.6,
+            "unit": "MiB",
+            "extra": "1061 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "10,000 generated pages: build time",
+            "value": 2354.2,
+            "unit": "ms",
+            "extra": "10061 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "10,000 generated pages: peak memory",
+            "value": 558.6,
             "unit": "MiB",
             "extra": "10061 pages; median of 5 builds after a warm-up build"
           }
