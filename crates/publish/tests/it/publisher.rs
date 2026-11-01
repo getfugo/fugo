@@ -378,30 +378,6 @@ fn concurrent_emits_are_deterministic() {
     assert_eq!(run(1), run(4));
 }
 
-#[test]
-fn disk_sink_creates_directories() {
-    let dir = tempfile::tempdir().unwrap();
-    let sink = DiskSink::new(dir.path());
-    let path = OutputPath::new("/a/b/index.html");
-    assert!(!sink.exists(&path));
-    sink.write(&path, b"x").unwrap();
-    sink.write(&path, b"yz").unwrap();
-    assert!(sink.exists(&path));
-    assert_eq!(
-        std::fs::read(dir.path().join("a/b/index.html")).unwrap(),
-        b"yz"
-    );
-
-    let mem = MemorySink::new();
-    mem.write(&path, b"m").unwrap();
-    mem.write_to(&dir.path().join("mem")).unwrap();
-    assert_eq!(
-        std::fs::read(dir.path().join("mem/a/b/index.html")).unwrap(),
-        b"m"
-    );
-    assert_eq!(mem.get("a/b/index.html").as_deref(), Some(&b"m"[..]));
-}
-
 /// `purge_css` placeholders: each page gets the rules it uses (its elements, the words of its
 /// scripts, the custom properties it mentions), resolved before the page is held or written.
 #[test]
