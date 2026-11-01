@@ -45,6 +45,10 @@ Overall 190,534 checks, 99.80 % exact, no unexplained difference.
 - **Attribute expansion.** Go replaces permalink attributes one by one with
   `strings.Replace(…, 1)` in the partially expanded pattern; here each attribute is expanded in
   place. They differ only when a title or slug contains text such as `:slug` (no fixture case).
+- **A title's `/` and `\`** become `-` in `:title` and `:slug` (an explicit slug keeps them),
+  except on taxonomy and term pages, whose terms may span segments: Go let them split the
+  segment (#227), as Hugo did before v0.166.0 (Hugo #3577). No fixture case: the fixtures'
+  titles with `/` are terms.
 - **`:term[<plural>]`** is fugo's own attribute: the last segment of the first term the page
   names in that taxonomy (Go has no such attribute; there, it is a Go layout that fails).
 - **Unix-second dates** are UTC, not the process's local zone.

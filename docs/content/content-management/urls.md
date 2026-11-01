@@ -34,7 +34,7 @@ Patterns per section and kind:
 |---|---|
 | `:year`, `:month`, `:monthname`, `:day`, `:weekday`, `:weekdayname`, `:yearday` | parts of the date |
 | `:section`, `:sections` | the top-level section, every section |
-| `:title`, `:slug` | the title, the slug (else the title) — made URL-safe |
+| `:title`, `:slug` | the title, the slug (else the title) — made URL-safe; a `/` or `\` in the title becomes `-`, except on taxonomy and term pages |
 | `:slugorfilename`, `:filename`, `:contentbasename` | the slug or file name, the file name, the page's name |
 | `:slugorcontentbasename` | the slug, else the page's name |
 | `:term[categories]` | the first term the page names in that taxonomy, by its last segment (`rust`); empty when it names none |

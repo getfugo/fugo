@@ -405,6 +405,7 @@ fn go_layouts_become_strftime() {
         .to_zoned(TimeZone::UTC)
         .expect("date");
     let ctx = PermalinkCtx {
+        kind: PageKind::Page,
         date: Some(&date),
         title: "A Title",
         slug: "",

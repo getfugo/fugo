@@ -1,10 +1,12 @@
 //! Oracle: permalink patterns expanded for every page of Go's builds of the reference sites,
 //! with the site's `[permalinks]`, a configuration using every token, and 55 patterns
-//! (`oracle/page/permalinks/*`); and the decoding of `[permalinks]` tables
-//! (`oracle/page/permalinks/decode.json.gz`).
+//! (`oracle/page/permalinks/*`); the decoding of `[permalinks]` tables
+//! (`oracle/page/permalinks/decode.json.gz`); and titles holding `/`, which Go let split a
+//! segment.
 
 use serde_json::{Value as J, json};
 use ssg_base::PageKind;
+use ssg_base::url::SiteUrls;
 use ssg_config::Permalinks;
 use ssg_config::sections::PERMALINK_KINDS;
 use ssg_page::{PermalinkCtx, PermalinkFile, PermalinkPattern, PermalinkPatterns};
@@ -72,7 +74,10 @@ fn permalinks_match_go() {
                 dir: s(&f["dir"]),
             });
             let path = &paths[idx(&c["pathInfo"])];
+            let kind = s(&c["kind"]);
+            let kind = PageKind::parse(kind).unwrap_or_else(|| panic!("kind {kind}"));
             let ctx = PermalinkCtx {
+                kind,
                 date: date.as_ref(),
                 title: s(&c["title"]),
                 slug: s(&c["slug"]),
@@ -83,8 +88,6 @@ fn permalinks_match_go() {
                 urls: &urls[idx(&c["ps"])],
                 terms: &[],
             };
-            let kind = s(&c["kind"]);
-            let kind = PageKind::parse(kind).unwrap_or_else(|| panic!("kind {kind}"));
             let expand = |table: &PermalinkPatterns| match table.get(kind, s(&c["section"])) {
                 None => Ok(String::new()),
                 Some(p) => p.expand(&ctx).map_err(|e| e.to_string()),
@@ -161,4 +164,52 @@ fn permalink_config_decodes_like_go() {
         }
     }
     t.finish("permalinks-decode");
+}
+
+/// A title fills one segment of `:title` and `:slug`: its `/` and `\` become `-` (Hugo #3577;
+/// fugo #227), so it cannot add segments or climb out of its section. The terms of taxonomy and
+/// term pages may span segments, and an explicit slug is the author's.
+#[test]
+fn title_fills_one_segment() {
+    let urls = SiteUrls::default();
+    let expand = |kind, title, slug, pattern: &str| {
+        let ctx = PermalinkCtx {
+            kind,
+            date: None,
+            title,
+            slug,
+            section: "blog",
+            sections: &["blog"],
+            file: None,
+            content_base_name: "",
+            urls: &urls,
+            terms: &[],
+        };
+        let p = PermalinkPattern::parse(pattern).expect(pattern);
+        p.expand(&ctx).expect(pattern)
+    };
+    let page = |title, pattern| expand(PageKind::Page, title, "", pattern);
+    assert_eq!(
+        page("Watch/listen to this", "/:slug/"),
+        "/watch-listen-to-this/"
+    );
+    assert_eq!(
+        page("Songs (one / two) lyrics", "/:section/:slug/"),
+        "/blog/songs-one-two-lyrics/"
+    );
+    assert_eq!(page(r"Up\down", "/:title/"), "/up-down/");
+    assert_eq!(
+        page("../../escaped", "/:section/:title/"),
+        "/blog/..-..-escaped/"
+    );
+    assert_eq!(
+        expand(PageKind::Page, "Title", "explicit/slug", "/:slug/"),
+        "/explicit/slug/"
+    );
+    for kind in [PageKind::Taxonomy, PageKind::Term] {
+        assert_eq!(
+            expand(kind, "country/region/city", "", "/:slug/"),
+            "/country/region/city/"
+        );
+    }
 }

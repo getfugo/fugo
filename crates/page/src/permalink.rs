@@ -82,6 +82,8 @@ pub struct PermalinkFile<'a> {
 /// What a pattern reads from a page.
 #[derive(Clone, Copy, Debug)]
 pub struct PermalinkCtx<'a> {
+    /// The page's kind: only the titles of taxonomy and term pages may fill several segments.
+    pub kind: PageKind,
     /// `.Date`; `None` is Go's zero date (`0001-01-01T00:00:00Z`).
     pub date: Option<&'a Zoned>,
     pub title: &'a str,
@@ -165,6 +167,15 @@ impl PermalinkPattern {
             &zero
         };
         let urlize = |s: &str| c.urls.urlize(s);
+        // A title fills one segment: its `/` and `\` become `-` (Hugo #3577). The term of a
+        // taxonomy or term page may span several (`country/region`).
+        let title = || {
+            if matches!(c.kind, PageKind::Taxonomy | PageKind::Term) {
+                urlize(c.title)
+            } else {
+                urlize(&c.title.replace(['/', '\\'], "-"))
+            }
+        };
         let slug_or = |other: String| {
             if c.slug.is_empty() {
                 other
@@ -191,8 +202,8 @@ impl PermalinkPattern {
                     })?;
                 ssg_base::paths::join(picked)
             }
-            Attr::Title => urlize(c.title),
-            Attr::Slug => slug_or(urlize(c.title)),
+            Attr::Title => title(),
+            Attr::Slug => slug_or(title()),
             Attr::SlugOrFilename => slug_or(filename(c)),
             Attr::Filename => filename(c),
             Attr::ContentBaseName => urlize(c.content_base_name),
