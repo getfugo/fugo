@@ -172,6 +172,7 @@ impl PageInputs {
             }
         }
         let pctx = PermalinkCtx {
+            kind: p.kind,
             date: p.meta.dates.date.as_ref(),
             title: &p.title,
             slug,
