@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793269666861,
+  "lastUpdate": 1793626750123,
   "repoUrl": "https://github.com/getfugo/fugo",
   "entries": {
     "Benchmark": [
@@ -98808,6 +98808,66 @@ window.BENCHMARK_DATA = {
           {
             "name": "10,000 generated pages: peak memory",
             "value": 558.6,
+            "unit": "MiB",
+            "extra": "10061 pages; median of 5 builds after a warm-up build"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "blackb1rd.mov@gmail.com",
+            "name": "Prachya Saechua",
+            "username": "blackb1rd"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "407cd916ce8eeb42f75a603aef7f4803adf18f38",
+          "message": "page: Don't let a title's / split a :title or :slug segment (#228)\n\nWith no slug in front matter, `:slug` takes the title, made URL-safe by the path sanitiser,\nwhich keeps `/` and `\\`: a title such as \"Watch/listen to this\" gave the page an extra\ndirectory, `/watch/listen-to-this/`, and a title of `../` segments could move it out of its\nsection.\n\nA title fills one segment now: its `/` and `\\` become `-` in `:title` and `:slug`, as Hugo\ndoes since v0.166.0 (Hugo #3577), so the page is at `/watch-listen-to-this/`. Taxonomy and\nterm pages keep them, for terms of several levels, and an explicit slug is kept as written.\n`PermalinkCtx` carries the page's kind for this.\n\nFixes #227\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-11-02T19:57:26+07:00",
+          "tree_id": "ef23471a970540c2ddb513702040f8d301e51da6",
+          "url": "https://github.com/getfugo/fugo/commit/407cd916ce8eeb42f75a603aef7f4803adf18f38"
+        },
+        "date": 1793626747268,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "docs site: build time",
+            "value": 223.5,
+            "unit": "ms",
+            "extra": "335 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "docs site: peak memory",
+            "value": 97.6,
+            "unit": "MiB",
+            "extra": "335 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "1,000 generated pages: build time",
+            "value": 255.5,
+            "unit": "ms",
+            "extra": "1061 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "1,000 generated pages: peak memory",
+            "value": 102.2,
+            "unit": "MiB",
+            "extra": "1061 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "10,000 generated pages: build time",
+            "value": 2691.4,
+            "unit": "ms",
+            "extra": "10061 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "10,000 generated pages: peak memory",
+            "value": 526.8,
             "unit": "MiB",
             "extra": "10061 pages; median of 5 builds after a warm-up build"
           }
