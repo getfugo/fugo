@@ -2,6 +2,7 @@
 
 mod corpus;
 mod css_tolerance;
+mod disabled;
 mod formats;
 mod options;
 mod targets;
