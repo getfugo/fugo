@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793626750123,
+  "lastUpdate": 1793626753151,
   "repoUrl": "https://github.com/getfugo/fugo",
   "entries": {
     "Benchmark": [
@@ -102406,6 +102406,105 @@ window.BENCHMARK_DATA = {
           {
             "name": "BenchmarkSummaryFromHTMLWithDivider",
             "value": 77.89,
+            "unit": "ns/op"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "blackb1rd.mov@gmail.com",
+            "name": "Prachya Saechua",
+            "username": "blackb1rd"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "407cd916ce8eeb42f75a603aef7f4803adf18f38",
+          "message": "page: Don't let a title's / split a :title or :slug segment (#228)\n\nWith no slug in front matter, `:slug` takes the title, made URL-safe by the path sanitiser,\nwhich keeps `/` and `\\`: a title such as \"Watch/listen to this\" gave the page an extra\ndirectory, `/watch/listen-to-this/`, and a title of `../` segments could move it out of its\nsection.\n\nA title fills one segment now: its `/` and `\\` become `-` in `:title` and `:slug`, as Hugo\ndoes since v0.166.0 (Hugo #3577), so the page is at `/watch-listen-to-this/`. Taxonomy and\nterm pages keep them, for terms of several levels, and an explicit slug is kept as written.\n`PermalinkCtx` carries the page's kind for this.\n\nFixes #227\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-11-02T19:57:26+07:00",
+          "tree_id": "ef23471a970540c2ddb513702040f8d301e51da6",
+          "url": "https://github.com/getfugo/fugo/commit/407cd916ce8eeb42f75a603aef7f4803adf18f38"
+        },
+        "date": 1793626752340,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "BenchmarkSanitizeAnchorName",
+            "value": 484.72,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSanitizeAnchorNameAsciiOnly",
+            "value": 1342.88,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSanitizeAnchorNameBlackfriday",
+            "value": 592.65,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSanitizeAnchorNameString",
+            "value": 484.53,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSanitize/All_allowed",
+            "value": 228.42,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSanitize/Spaces",
+            "value": 245.27,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkRelURL",
+            "value": 365.52,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkAbsURL/relurl",
+            "value": 680.12,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkAbsURL/absurl",
+            "value": 22.17,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkTotalWords",
+            "value": 5139.09,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkStripHTML",
+            "value": 1167.19,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkParse",
+            "value": 9503.38,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkDecodeYAMLToMap",
+            "value": 15432.2,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSummaryFromHTML",
+            "value": 70.85,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSummaryFromHTMLWithDivider",
+            "value": 76.02,
             "unit": "ns/op"
           }
         ]
