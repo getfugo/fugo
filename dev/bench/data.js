@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793776601951,
+  "lastUpdate": 1793776604845,
   "repoUrl": "https://github.com/getfugo/fugo",
   "entries": {
     "Benchmark": [
@@ -102565,6 +102565,105 @@ window.BENCHMARK_DATA = {
           {
             "name": "BenchmarkSummaryFromHTMLWithDivider",
             "value": 76.02,
+            "unit": "ns/op"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "blackb1rd.mov@gmail.com",
+            "name": "Prachya Saechua",
+            "username": "blackb1rd"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "787cbcbb8ebb9c46e7cd277045acb37f0a9336c7",
+          "message": "minify: Keep inline <svg> as written when SVG is disabled (#232)\n\n`disableSVG` left stand-alone SVG files unminified, but an `<svg>` element in an HTML page was\nstill minified by minify-html: its comments, whitespace, `<style>` and `style` attributes. The\nGo implementation's minifier hands an inline `<svg>` to the SVG minifier and writes it as it is\nwhen that is disabled. Now each outermost `<svg>` of a page is swapped for an empty placeholder\n`<svg>` before the page is minified and put back after, so the page around it is minified as\nbefore and the whitespace around it is handled as the element's.\n\nThe documentation of `[minify]` says what the `disable*` keys do: they turn off the minification\nof one type, in files, inline code and `minify`'d assets; the files are still written. To write\nno RSS feeds or sitemap, `disableKinds = [\"rss\", \"sitemap\"]`.\n\nThe tests of disabled types move from `formats.rs` to `disabled.rs`.\n\nFixes #226\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-11-04T14:06:52+07:00",
+          "tree_id": "70944aac3699215b74aec1e59f23258178494360",
+          "url": "https://github.com/getfugo/fugo/commit/787cbcbb8ebb9c46e7cd277045acb37f0a9336c7"
+        },
+        "date": 1793776603878,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "BenchmarkSanitizeAnchorName",
+            "value": 346.68,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSanitizeAnchorNameAsciiOnly",
+            "value": 874.69,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSanitizeAnchorNameBlackfriday",
+            "value": 434.39,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSanitizeAnchorNameString",
+            "value": 351.64,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSanitize/All_allowed",
+            "value": 155.86,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSanitize/Spaces",
+            "value": 165.22,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkRelURL",
+            "value": 237.91,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkAbsURL/relurl",
+            "value": 444.64,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkAbsURL/absurl",
+            "value": 13.72,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkTotalWords",
+            "value": 3864,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkStripHTML",
+            "value": 868.21,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkParse",
+            "value": 6769.53,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkDecodeYAMLToMap",
+            "value": 8832.05,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSummaryFromHTML",
+            "value": 53.55,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSummaryFromHTMLWithDivider",
+            "value": 47.51,
             "unit": "ns/op"
           }
         ]
