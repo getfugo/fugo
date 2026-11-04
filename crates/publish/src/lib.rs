@@ -31,7 +31,7 @@ pub use elements::HtmlElements;
 pub use publisher::{
     Emitted, Output, PLACEHOLDER_PREFIXES, PublishSettings, Publisher, SiteLinks, page_names,
 };
-pub use sink::{DiskSink, MemorySink};
+pub use sink::{DiskSink, MemorySink, disk_path};
 pub use static_sync::{StaticSyncOptions, sync_static, sync_static_dir};
 pub use tokens::UrlTokens;
 
