@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793626753151,
+  "lastUpdate": 1793776601951,
   "repoUrl": "https://github.com/getfugo/fugo",
   "entries": {
     "Benchmark": [
@@ -98868,6 +98868,66 @@ window.BENCHMARK_DATA = {
           {
             "name": "10,000 generated pages: peak memory",
             "value": 526.8,
+            "unit": "MiB",
+            "extra": "10061 pages; median of 5 builds after a warm-up build"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "blackb1rd.mov@gmail.com",
+            "name": "Prachya Saechua",
+            "username": "blackb1rd"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "787cbcbb8ebb9c46e7cd277045acb37f0a9336c7",
+          "message": "minify: Keep inline <svg> as written when SVG is disabled (#232)\n\n`disableSVG` left stand-alone SVG files unminified, but an `<svg>` element in an HTML page was\nstill minified by minify-html: its comments, whitespace, `<style>` and `style` attributes. The\nGo implementation's minifier hands an inline `<svg>` to the SVG minifier and writes it as it is\nwhen that is disabled. Now each outermost `<svg>` of a page is swapped for an empty placeholder\n`<svg>` before the page is minified and put back after, so the page around it is minified as\nbefore and the whitespace around it is handled as the element's.\n\nThe documentation of `[minify]` says what the `disable*` keys do: they turn off the minification\nof one type, in files, inline code and `minify`'d assets; the files are still written. To write\nno RSS feeds or sitemap, `disableKinds = [\"rss\", \"sitemap\"]`.\n\nThe tests of disabled types move from `formats.rs` to `disabled.rs`.\n\nFixes #226\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-11-04T14:06:52+07:00",
+          "tree_id": "70944aac3699215b74aec1e59f23258178494360",
+          "url": "https://github.com/getfugo/fugo/commit/787cbcbb8ebb9c46e7cd277045acb37f0a9336c7"
+        },
+        "date": 1793776599575,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "docs site: build time",
+            "value": 147.3,
+            "unit": "ms",
+            "extra": "335 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "docs site: peak memory",
+            "value": 99,
+            "unit": "MiB",
+            "extra": "335 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "1,000 generated pages: build time",
+            "value": 157.5,
+            "unit": "ms",
+            "extra": "1061 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "1,000 generated pages: peak memory",
+            "value": 104.9,
+            "unit": "MiB",
+            "extra": "1061 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "10,000 generated pages: build time",
+            "value": 1761.1,
+            "unit": "ms",
+            "extra": "10061 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "10,000 generated pages: peak memory",
+            "value": 543.7,
             "unit": "MiB",
             "extra": "10061 pages; median of 5 builds after a warm-up build"
           }
