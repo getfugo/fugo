@@ -1,9 +1,11 @@
 //! HTML through minify-html, then the code it embeds ([`minify_embedded`]): each `<style>` and
 //! `style` attribute through this crate's CSS minifier, with the project's browser targets
 //! ([`styles`]), and each inline `<script>` by its type: JavaScript through oxc, JSON through
-//! this crate's JSON minifier.
+//! this crate's JSON minifier. When SVG is disabled, each inline `<svg>` is kept as written
+//! ([`svg`]).
 
 mod styles;
+mod svg;
 
 use std::ops::Range;
 
@@ -13,6 +15,12 @@ use crate::options::{HtmlComments, TemplateSyntax};
 use crate::{Minifier, MinifyError, MinifyTarget, js, json, target_for};
 
 pub(crate) fn minify(m: &Minifier, input: &str) -> Result<String, MinifyError> {
+    let held = if m.is_enabled(MinifyTarget::Svg) {
+        None
+    } else {
+        svg::Held::new(input)
+    };
+    let input = held.as_ref().map_or(input, |h| h.html.as_str());
     let o = &m.options.html;
     let cfg = minify_html::Cfg {
         keep_comments: o.comments == HtmlComments::KeepAll,
@@ -41,7 +49,11 @@ pub(crate) fn minify(m: &Minifier, input: &str) -> Result<String, MinifyError> {
     if dropped_comments || !o.keep_end_tags || attributes {
         out = utf8(minify_html::minify(out.as_bytes(), &cfg))?;
     }
-    Ok(collapse_titles(&out))
+    let out = collapse_titles(&out);
+    Ok(match &held {
+        Some(h) => h.restore(&out),
+        None => out,
+    })
 }
 
 /// Elements whose content is text, not markup: a `<script>` there is not an element.

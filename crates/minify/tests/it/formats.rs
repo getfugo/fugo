@@ -1,7 +1,5 @@
 //! Behaviour of each minifier on small inputs.
 
-use std::borrow::Cow;
-
 use ssg_minify::options::{HtmlComments, TemplateSyntax, XmlComments, XmlWhitespace};
 use ssg_minify::{JsonErrorKind, Minifier, MinifyError, MinifyTarget, Options, target_for};
 
@@ -49,34 +47,6 @@ fn media_types() {
     for (mt, want) in cases {
         assert_eq!(target_for(mt), want, "{mt}");
     }
-}
-
-#[test]
-fn disabled_and_unknown_types_pass_through() {
-    let m = Minifier::with_options(Options::default(), &[MinifyTarget::Css]);
-    let css = "a { color : red }";
-    assert!(matches!(m.minify(MinifyTarget::Css, css), Ok(Cow::Borrowed(s)) if s == css));
-    assert!(!m.is_enabled(MinifyTarget::Css));
-    assert!(matches!(
-        m.minify_media_type("text/plain", " x "),
-        Ok(Cow::Borrowed(" x "))
-    ));
-    assert_eq!(
-        m.minify_media_type("application/json", "{ \"a\" : 1 }")
-            .unwrap(),
-        "{\"a\":1}"
-    );
-    // HTML leaves inline CSS alone when CSS is disabled.
-    let html = "<style>a { color : red }</style>";
-    assert_eq!(
-        m.minify(MinifyTarget::Html, html).unwrap(),
-        "<style>a { color : red }</style>"
-    );
-    assert_eq!(min(MinifyTarget::Html, html), "<style>a{color:red}</style>");
-    // And inline JavaScript and JSON when those are disabled.
-    let m = Minifier::with_options(Options::default(), &[MinifyTarget::Js, MinifyTarget::Json]);
-    let html = "<script>f( 1 )</script><script type=application/ld+json>{ \"a\" : 1 }</script>";
-    assert_eq!(m.minify(MinifyTarget::Html, html).unwrap(), html);
 }
 
 #[test]

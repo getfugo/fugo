@@ -29,7 +29,8 @@
 //!
 //! `disableCSS`, `disableHTML`, `disableJS`, `disableJSON`, `disableSVG` and `disableXML` are
 //! decoded by `ssg-config` ([`ssg_config::MinifyConfig::disabled`]); a disabled type is
-//! passed through untouched, and HTML then also leaves its inline `<style>`/`<script>` alone.
+//! passed through untouched, and HTML then also leaves its inline `<style>`/`<script>`/`<svg>`
+//! alone.
 
 use ssg_base::{Map, Value};
 

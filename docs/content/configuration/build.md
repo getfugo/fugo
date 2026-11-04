@@ -19,12 +19,22 @@ your layouts.
 
 `fugo build --minify`, or `minifyOutput`, minifies every HTML, CSS, JavaScript, JSON, SVG and
 XML file fugo writes. `disableHTML`, `disableCSS`, `disableJS`, `disableJSON`, `disableSVG` and
-`disableXML` turn off one type:
+`disableXML` turn off the minification of one type:
 
 {{< code-toggle file=config >}}
 [minify]
   minifyOutput = true
   disableXML = true
+{{< /code-toggle >}}
+
+The files of a disabled type are still written, as their templates write them; so is that type's
+code in a page: `<style>` elements and `style` attributes (CSS), `<script>` elements (JavaScript
+and JSON) and `<svg>` elements (SVG). The [`minify`](/asset-pipelines/fingerprint-minify/#minify)
+filter, too, leaves an asset of a disabled type as it is. To write no RSS feeds or sitemap at all,
+leave their kinds out with `disableKinds` (see [site configuration](/configuration/site/#pages)):
+
+{{< code-toggle file=config >}}
+disableKinds = ["rss", "sitemap"]
 {{< /code-toggle >}}
 
 fugo's minifiers are lightningcss (CSS), oxc (JavaScript) and minify-html (HTML). A table per
