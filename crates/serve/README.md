@@ -60,8 +60,9 @@ A multihost site's listener serves its language's directory (`en/`), with that l
 max-age=0` and `Pragma: no-cache`. Files come from the memory sink of the last successful
 build (swapped in whole: a failing build leaves it in place), or with `--render-to-disk` from
 the publish directory (written in place by each build, so a failing build can leave some
-files new). `--render-to-disk` is fugo's flag, not one of the Go build's: the Go server
-rendered to disk by default and into memory with `-M`/`--renderToMemory`.
+files new; a request path that the system reads as outside it, such as `/..%5Cx` or `/C:/x`
+on Windows, is not found). `--render-to-disk` is fugo's flag, not one of the Go build's: the
+Go server rendered to disk by default and into memory with `-M`/`--renderToMemory`.
 
 ## Proxies (`src/proxy.rs`, `src/proxy/forward.rs`, `src/proxy/tls.rs`)
 
