@@ -4,5 +4,6 @@ mod canonify;
 mod collector;
 mod livereload;
 mod publisher;
+mod sink;
 mod staticcopy;
 mod support;

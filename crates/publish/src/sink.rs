@@ -3,7 +3,7 @@
 
 use std::fs;
 use std::io;
-use std::path::{Path, PathBuf};
+use std::path::{Component, Path, PathBuf};
 use std::sync::Arc;
 
 use dashmap::DashMap;
@@ -15,6 +15,22 @@ use ssg_base::paths::OutputPath;
 /// directories only wait for each other in the file system (a 10,000-page build writes ~20%
 /// faster on Linux and ~25% on macOS with 3 than with 12 at once).
 const WRITERS: usize = 3;
+
+/// `path` as a file below `root`, or `None` when this system reads one of its segments as more
+/// than a name: on Windows `\` separates too and `C:` is a drive, so `/a/..\..\x` and `/C:/x`
+/// would leave `root` ([`OutputPath`] resolves only the `..` of `/`-separated segments).
+#[must_use]
+pub fn disk_path(root: &Path, path: &OutputPath) -> Option<PathBuf> {
+    let mut file = root.to_owned();
+    for segment in path.relative().split('/').filter(|s| !s.is_empty()) {
+        let mut parts = Path::new(segment).components();
+        match (parts.next(), parts.next()) {
+            (Some(Component::Normal(name)), None) if name == segment => file.push(name),
+            _ => return None,
+        }
+    }
+    Some(file)
+}
 
 /// Writes files below a directory, creating parent directories as needed. A file is always
 /// truncated and rewritten (modes follow the process umask).
@@ -45,9 +61,16 @@ impl DiskSink {
     }
 
     /// The file system path of `path`.
-    #[must_use]
-    pub fn file_path(&self, path: &OutputPath) -> PathBuf {
-        self.root.join(path.relative())
+    ///
+    /// # Errors
+    /// [`io::ErrorKind::InvalidInput`] when it would not be below the root ([`disk_path`]).
+    pub fn file_path(&self, path: &OutputPath) -> io::Result<PathBuf> {
+        disk_path(&self.root, path).ok_or_else(|| {
+            io::Error::new(
+                io::ErrorKind::InvalidInput,
+                "the path leaves the publish directory on this system",
+            )
+        })
     }
 
     /// Creates `dir` and its missing parents, remembering the ones it created.
@@ -81,7 +104,7 @@ impl DiskSink {
 impl Sink for DiskSink {
     fn write(&self, path: &OutputPath, bytes: &[u8]) -> io::Result<()> {
         let _pass = self.gate.enter();
-        let file = self.file_path(path);
+        let file = self.file_path(path)?;
         let Some(dir) = file.parent() else {
             return fs::write(&file, bytes);
         };
@@ -110,11 +133,11 @@ impl Sink for DiskSink {
     }
 
     fn exists(&self, path: &OutputPath) -> bool {
-        self.file_path(path).is_file()
+        self.file_path(path).is_ok_and(|f| f.is_file())
     }
 
     fn read(&self, path: &OutputPath) -> io::Result<Vec<u8>> {
-        fs::read(self.file_path(path))
+        fs::read(self.file_path(path)?)
     }
 }
 

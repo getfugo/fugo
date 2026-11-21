@@ -5,7 +5,7 @@
 use std::collections::HashMap;
 use std::fs;
 use std::io;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 use axum::body::Bytes;
@@ -13,7 +13,7 @@ use ssg_base::Sink;
 use ssg_base::paths::OutputPath;
 use ssg_cms::Editor;
 use ssg_config::Config;
-use ssg_publish::{DiskSink, MemorySink};
+use ssg_publish::{DiskSink, MemorySink, disk_path};
 
 use crate::proxy::Proxies;
 
@@ -33,7 +33,7 @@ impl Tree {
         match self {
             Self::Memory(m) => m.get(rel).map(Bytes::from_owner),
             Self::Disk(root) => {
-                let path = root.join(rel);
+                let path = on_disk(root, rel)?;
                 match tokio::fs::metadata(&path).await {
                     Ok(meta) if meta.is_file() => {
                         tokio::fs::read(&path).await.ok().map(Bytes::from)
@@ -48,9 +48,10 @@ impl Tree {
     pub(crate) async fn is_file(&self, rel: &str) -> bool {
         match self {
             Self::Memory(m) => m.files.contains_key(&OutputPath::new(rel)),
-            Self::Disk(root) => tokio::fs::metadata(root.join(rel))
-                .await
-                .is_ok_and(|m| m.is_file()),
+            Self::Disk(root) => match on_disk(root, rel) {
+                Some(path) => tokio::fs::metadata(path).await.is_ok_and(|m| m.is_file()),
+                None => false,
+            },
         }
     }
 
@@ -58,7 +59,7 @@ impl Tree {
     pub(crate) fn read_now(&self, rel: &str) -> Option<Vec<u8>> {
         match self {
             Self::Memory(m) => m.get(rel).map(|b| b.to_vec()),
-            Self::Disk(root) => fs::read(root.join(OutputPath::new(rel).relative())).ok(),
+            Self::Disk(root) => fs::read(on_disk(root, rel)?).ok(),
         }
     }
 
@@ -78,12 +79,18 @@ impl Tree {
                 m.files.remove(&OutputPath::new(rel));
                 Ok(())
             }
-            Self::Disk(root) => match fs::remove_file(root.join(OutputPath::new(rel).relative())) {
-                Err(e) if e.kind() != io::ErrorKind::NotFound => Err(e),
+            Self::Disk(root) => match on_disk(root, rel).map(fs::remove_file) {
+                Some(Err(e)) if e.kind() != io::ErrorKind::NotFound => Err(e),
                 _ => Ok(()),
             },
         }
     }
+}
+
+/// The file of `rel` in the publish directory; `None` for a request path that this system
+/// would read as one outside it (`..\x`, `C:/x` on Windows).
+fn on_disk(root: &Path, rel: &str) -> Option<PathBuf> {
+    disk_path(root, &OutputPath::new(rel))
 }
 
 /// One listener's site: all languages, or one language of a multihost site.

@@ -14,6 +14,10 @@ fn render_to_disk() {
     let on_disk = fs::read_to_string(public.join("about/index.html")).expect("about");
     assert!(on_disk.contains("livereload.js"), "{on_disk}");
     assert_eq!(get(addr, "/about/", &[]).text(), on_disk);
+    // Paths that Windows reads as outside the publish directory (`site/config.toml`, a drive).
+    for path in ["/..%5Cconfig.toml", "/C:/Windows/win.ini"] {
+        assert_eq!(get(addr, path, &[]).status, 404, "{path}");
+    }
     let mut lr = LiveReload::connect(addr, "/livereload");
     write(&dir.path().join("static/css/a.css"), "a { color: teal }\n");
     assert!(lr.expect().contains(r#""path":"/css/a.css""#));

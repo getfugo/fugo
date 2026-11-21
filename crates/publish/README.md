@@ -5,7 +5,7 @@ Sinks, canonify, minify dispatch, URL-token extraction, held outputs and the sta
 
 | API | What |
 |---|---|
-| `DiskSink { root }`, `MemorySink { files: DashMap<OutputPath, Arc<[u8]>> }` | `base::Sink` (`write`, `exists`, `read`); the disk sink creates parent directories and truncates; the memory sink has `get`, `text`, `paths` (sorted) and `write_to(dir)` |
+| `DiskSink { root }`, `MemorySink { files: DashMap<OutputPath, Arc<[u8]>> }` | `base::Sink` (`write`, `exists`, `read`); the disk sink creates parent directories and truncates, and refuses a path that the system reads as outside its root (`disk_path`: on Windows a segment holding `\` or a drive such as `C:`, which `OutputPath` does not treat as separators); the memory sink has `get`, `text`, `paths` (sorted) and `write_to(dir)` |
 | `PublishSettings::from_config(&Config)` | per-language `SiteLinks` (base URL, `canonifyURLs`, `relativeURLs`, LiveReload URL: `None` here, set by `ssg-build` for `serve`), output formats and media types, the `Minifier` when `minifyOutput` is set |
 | `Publisher::new(settings, Arc<dyn Sink>, Arc<Diagnostics>)` | shared by the render workers (`Send + Sync`) |
 | `Publisher::with_css_purges(Arc<CssPurges>)`, `page_names(html)` | `purge_css` placeholders (`__nh_purge_<n>__`) are replaced first in `emit` (and in `patch_held`) by the CSS the output uses: `page_names` gives the tags, classes and ids of its elements, the words of its `<script>` elements and every `--name` it mentions |
