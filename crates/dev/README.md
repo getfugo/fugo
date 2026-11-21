@@ -35,7 +35,7 @@ written with Rust libraries rather than translated from them:
 | `src/manifest.rs` | the manifest of a build, as serde types | serde, image (image headers), toml (base URLs) |
 | `src/structdiff.rs`, `src/ratchet.rs` | the comparison, A7, the ratchet and its baselines | serde, similar (word hunks), globset (the changes files' key patterns) |
 | `src/json.rs` | the JSON text of the harness's files: sorted keys, `, ` and `: `, one entry per line, gzip without name or time | serde_json, flate2 |
-| `src/sites.rs` | the sites; `patches.json` as serde types | serde, filetime |
+| `src/sites.rs` | the sites; `patches.json` as serde types | serde |
 | `src/licence.rs`, `src/notices.rs`, `src/metadata.rs` | the licence check and the release notices; `cargo metadata`'s output as serde types (not the cargo_metadata crate, which turns on serde_json's `unbounded_depth`: `cargo dev` would build a second serde_json) | spdx (lax: `A/B` is `A OR B`), serde, semver |
 | `src/package.rs` | the release archives | tar, flate2, zip, jiff |
 

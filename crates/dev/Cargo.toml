@@ -49,7 +49,6 @@ sha2.workspace = true
 spdx.workspace = true
 semver.workspace = true
 jiff.workspace = true
-filetime.workspace = true
 walkdir.workspace = true
 tempfile.workspace = true
 

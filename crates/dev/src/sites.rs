@@ -112,12 +112,10 @@ fn copy_file(src: &Path, dst: &Path) -> Result<(), Fail> {
 fn copy_stat(src: &Path, dst: &Path) -> Result<(), Fail> {
     let meta = std::fs::metadata(src).map_err(io(src))?;
     std::fs::set_permissions(dst, meta.permissions()).map_err(io(dst))?;
-    filetime::set_file_times(
-        dst,
-        filetime::FileTime::from_last_access_time(&meta),
-        filetime::FileTime::from_last_modification_time(&meta),
-    )
-    .map_err(io(dst))
+    let times = std::fs::FileTimes::new()
+        .set_accessed(meta.accessed().map_err(io(src))?)
+        .set_modified(meta.modified().map_err(io(src))?);
+    std::fs::set_times(dst, times).map_err(io(dst))
 }
 
 /// Copies the tree `src` into `dst` (created if missing), following symbolic links.
