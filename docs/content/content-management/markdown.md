@@ -4,8 +4,8 @@ description: The Markdown fugo renders — CommonMark with GitHub's extensions, 
 weight: 105
 ---
 
-fugo renders Markdown the way goldmark, the Go implementation's default renderer, does:
-CommonMark, plus these extensions, all on by default.
+fugo has its own Markdown renderer, built on comrak, that follows goldmark, the Go
+implementation's default renderer: CommonMark, plus these extensions, all on by default.
 
 Tables
 : GitHub's pipe tables, with alignment.
@@ -26,7 +26,8 @@ Linkify
 : Bare URLs become links.
 
 Typographer
-: `"quotes"`, `--` and `...` become typographic quotes, dashes and an ellipsis.
+: `"quotes"`, `--` and `...` become typographic quotes, dashes and an ellipsis (see
+  [Typographer](#typographer) below).
 
 ## Attributes
 
@@ -50,6 +51,23 @@ GitHub's alert syntax renders through the blockquote [render hook](/templates/re
 
 The hook receives `alert_type` (`note`, `tip`, `important`, `warning`, `caution`) and can draw
 the alert as it likes; this documentation draws them as callouts.
+
+## Typographer
+
+`[markup.goldmark.extensions.typographer] disable = true` turns the typographer off: quotes,
+dashes and ellipses are left as written. A `"` in text is still escaped as `&quot;`, as
+goldmark does, and browsers show it as `"`.
+
+To change what a construct becomes instead, set its replacement: `leftSingleQuote`,
+`rightSingleQuote`, `leftDoubleQuote`, `rightDoubleQuote`, `apostrophe`, `enDash`, `emDash`,
+`ellipsis`, `leftAngleQuote` and `rightAngleQuote`. Each is HTML and is written as is, so
+`leftDoubleQuote = '"'` writes a bare `"`.
+
+{{< code-toggle file=config >}}
+[markup.goldmark.extensions.typographer]
+  leftDoubleQuote = '&laquo;'
+  rightDoubleQuote = '&raquo;'
+{{< /code-toggle >}}
 
 ## Raw HTML
 
@@ -78,6 +96,9 @@ ending in `.html` are HTML and are not converted.
   hardWraps = false
   unsafe = false
 {{< /code-toggle >}}
+
+The settings keep goldmark's names, under `[markup.goldmark]`, so an existing site's
+configuration works unchanged.
 
 `markup.goldmark.extensions.passthrough` keeps [math](/content-management/mathematics/) intact
 for a render hook. `enableEmoji = true` turns `:smile:` into emoji.
