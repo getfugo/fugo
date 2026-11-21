@@ -304,7 +304,7 @@ fn archives() {
     let mut zip_names = Vec::new();
     for i in 0..zip.len() {
         let mut f = zip.by_index(i).expect("an entry");
-        let name = f.name().to_owned();
+        let name = f.name().expect("a UTF-8 name").into_owned();
         let mode = f.unix_mode().expect("a Unix mode");
         assert_eq!(
             mode & 0o170_000,
