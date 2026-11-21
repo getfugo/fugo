@@ -6916,7 +6916,6 @@ name = "ssg-dev"
 version = "0.0.0-DEV"
 dependencies = [
  "clap 4.6.9",
- "filetime",
  "flate2",
  "globset",
  "html5gum",
@@ -7244,7 +7243,6 @@ version = "0.0.0-DEV"
 dependencies = [
  "aho-corasick",
  "dashmap 6.2.1",
- "filetime",
  "html5gum",
  "memchr",
  "rayon",

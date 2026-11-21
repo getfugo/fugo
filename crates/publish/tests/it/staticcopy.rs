@@ -7,6 +7,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
 use std::os::unix::fs::PermissionsExt;
 use std::path::Path;
+use std::time::{Duration, SystemTime};
 
 use serde::Deserialize;
 use ssg_base::Clock;
@@ -73,12 +74,8 @@ fn hex(b: &[u8]) -> String {
 }
 
 fn set_mtime(p: &Path, t: i64) {
-    filetime::set_symlink_file_times(
-        p,
-        filetime::FileTime::from_unix_time(t, 0),
-        filetime::FileTime::from_unix_time(t, 0),
-    )
-    .unwrap();
+    let t = SystemTime::UNIX_EPOCH + Duration::from_secs(t.try_into().unwrap());
+    fs::set_times_nofollow(p, fs::FileTimes::new().set_accessed(t).set_modified(t)).unwrap();
 }
 
 /// Writes the case's entries below `site`; every entry gets the base time unless it has its
@@ -152,9 +149,12 @@ fn walk(root: &Path, dir: &Path, out: &mut Vec<Node>, with_mode: bool, with_mtim
         let meta = fs::metadata(&p).unwrap();
         let rel = p.strip_prefix(root).unwrap().to_str().unwrap().to_owned();
         let mtime = with_mtime.then(|| {
-            serde_json::Value::from(
-                filetime::FileTime::from_last_modification_time(&meta).unix_seconds(),
-            )
+            let mtime = meta.modified().unwrap();
+            let secs = mtime
+                .duration_since(SystemTime::UNIX_EPOCH)
+                .unwrap()
+                .as_secs();
+            serde_json::Value::from(secs)
         });
         if meta.is_dir() {
             out.push(Node {

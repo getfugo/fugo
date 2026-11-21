@@ -148,7 +148,6 @@ icu_datetime = "2.3"
 walkdir = "2.5"
 globset = "0.4.20"
 mime_guess = "2"
-filetime = "0.2"
 
 # ── css / js / html output ──
 # fugo-sass: grass, forked by the fugo project (github.com/getfugo/fugo-sass); its API is grass's.

@@ -27,7 +27,6 @@ ssg-minify.workspace = true
 ssg-vfs.workspace = true
 aho-corasick.workspace = true
 dashmap.workspace = true
-filetime.workspace = true
 html5gum.workspace = true
 memchr.workspace = true
 rayon.workspace = true

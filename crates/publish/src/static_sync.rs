@@ -245,8 +245,9 @@ fn sync_file(src: &Path, dest: &Path, o: &StaticSyncOptions) -> Result<(), Publi
 
 fn copy_mtime(src: &Path, dest: &Path) -> Result<(), PublishError> {
     let meta = fs::metadata(src).map_err(|e| PublishError::io(src, e))?;
-    let mtime = filetime::FileTime::from_last_modification_time(&meta);
-    filetime::set_file_mtime(dest, mtime).map_err(|e| PublishError::io(dest, e))
+    let mtime = meta.modified().map_err(|e| PublishError::io(src, e))?;
+    fs::set_times(dest, fs::FileTimes::new().set_modified(mtime))
+        .map_err(|e| PublishError::io(dest, e))
 }
 
 /// Removes what is below `root/os_rel` and not in `keep` (paths relative to `root`, with the
