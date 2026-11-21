@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1795277638830,
+  "lastUpdate": 1795286974434,
   "repoUrl": "https://github.com/getfugo/fugo",
   "entries": {
     "Benchmark": [
@@ -98988,6 +98988,66 @@ window.BENCHMARK_DATA = {
           {
             "name": "10,000 generated pages: peak memory",
             "value": 557.8,
+            "unit": "MiB",
+            "extra": "10061 pages; median of 5 builds after a warm-up build"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "49699333+dependabot[bot]@users.noreply.github.com",
+            "name": "dependabot[bot]",
+            "username": "dependabot[bot]"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "7ca61b459e40ee81f3ca690dc78c5e50cd8521d5",
+          "message": "deps: comrak 0.56 and emojis 0.9 (#204)\n\ncomrak 0.56 moves to emojis 0.9, so emojify's emojis moves with it: one copy, the one comrak's\n`shortcodes` locks.\n\nCo-authored-by: blackb1rd <blackb1rd.mov@gmail.com>\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-11-22T01:27:33+07:00",
+          "tree_id": "1a8d0ae4f93128e2200be249c98c96be126fafd2",
+          "url": "https://github.com/getfugo/fugo/commit/7ca61b459e40ee81f3ca690dc78c5e50cd8521d5"
+        },
+        "date": 1795286971848,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "docs site: build time",
+            "value": 146.6,
+            "unit": "ms",
+            "extra": "335 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "docs site: peak memory",
+            "value": 99.5,
+            "unit": "MiB",
+            "extra": "335 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "1,000 generated pages: build time",
+            "value": 158.6,
+            "unit": "ms",
+            "extra": "1061 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "1,000 generated pages: peak memory",
+            "value": 105.4,
+            "unit": "MiB",
+            "extra": "1061 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "10,000 generated pages: build time",
+            "value": 1391.4,
+            "unit": "ms",
+            "extra": "10061 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "10,000 generated pages: peak memory",
+            "value": 547.5,
             "unit": "MiB",
             "extra": "10061 pages; median of 5 builds after a warm-up build"
           }
