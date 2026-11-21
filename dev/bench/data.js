@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793776604845,
+  "lastUpdate": 1795277636026,
   "repoUrl": "https://github.com/getfugo/fugo",
   "entries": {
     "Benchmark": [
@@ -98928,6 +98928,66 @@ window.BENCHMARK_DATA = {
           {
             "name": "10,000 generated pages: peak memory",
             "value": 543.7,
+            "unit": "MiB",
+            "extra": "10061 pages; median of 5 builds after a warm-up build"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "blackb1rd.mov@gmail.com",
+            "name": "Prachya Saechua",
+            "username": "blackb1rd"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "b150b2d4311a1e19d499f2a2afe97d6452644b4f",
+          "message": "docs: Say what turning the typographer off leaves, and that fugo follows goldmark (#233)\n\nThe Markdown page now says that fugo's renderer is its own, built on comrak, and that\nits settings keep goldmark's names under [markup.goldmark]. A new Typographer section\nsays that disable = true leaves quotes, dashes and ellipses as written, with a \" in\ntext still escaped as &quot; (as goldmark does), and that each replacement is HTML\nwritten as is.\n\nSee #231\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-11-21T22:28:57+07:00",
+          "tree_id": "b3950b0484bf5bc2fb9a1fe7e802a791704b2d2b",
+          "url": "https://github.com/getfugo/fugo/commit/b150b2d4311a1e19d499f2a2afe97d6452644b4f"
+        },
+        "date": 1795277633582,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "docs site: build time",
+            "value": 225.2,
+            "unit": "ms",
+            "extra": "335 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "docs site: peak memory",
+            "value": 98.8,
+            "unit": "MiB",
+            "extra": "335 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "1,000 generated pages: build time",
+            "value": 264.1,
+            "unit": "ms",
+            "extra": "1061 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "1,000 generated pages: peak memory",
+            "value": 105.2,
+            "unit": "MiB",
+            "extra": "1061 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "10,000 generated pages: build time",
+            "value": 2719.3,
+            "unit": "ms",
+            "extra": "10061 pages; median of 5 builds after a warm-up build"
+          },
+          {
+            "name": "10,000 generated pages: peak memory",
+            "value": 557.8,
             "unit": "MiB",
             "extra": "10061 pages; median of 5 builds after a warm-up build"
           }
