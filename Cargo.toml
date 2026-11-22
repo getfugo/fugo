@@ -189,7 +189,7 @@ kmeans_colors = "0.7.1"
 allsorts = { version = "0.17", default-features = false, features = ["flate2_rust"] } # reads WOFF and WOFF2
 fontcull-klippa = "0.1.2"     # the subsetter: Google's klippa (HarfBuzz's hb-subset in Rust), published by fontcull
 fontcull-read-fonts = "0.38"  # the font types klippa's API takes
-ttf2woff2 = { version = "0.13", default-features = false } # WOFF2 output
+ttf2woff2 = { version = "0.14", default-features = false } # WOFF2 output
 
 # ── hashing ──
 sha2 = "0.11"
