@@ -326,7 +326,9 @@ in two grouped pull requests (any other cargo update one each), and every GitHub
 one. `automerge.yml` squash-merges a cargo patch or minor update once CI passes: the `main`
 ruleset requires Lint, Test and the five Build jobs (repository admins bypass it, so a direct
 push still works). It leaves for review majors, a pull request someone other than dependabot
-pushed to, the GitHub Actions group (the workflow's token cannot change workflow files), and an
+pushed to (the auto-merge that dependabot's push turned on stays on through later pushes, so
+its job `hold` turns it off and says so on the pull request), the GitHub Actions group (the
+workflow's token cannot change workflow files), and an
 update after which `Cargo.lock` holds more versions of a crate than before (it comments on the
 pull request): that is what a requirement that has to follow another crate's version does, the
 workspace-hack entries and the crates locked through another (`ignore` in dependabot.yml). A
