@@ -123,7 +123,7 @@ tera-contrib = { version = "0.3", default-features = false, features = ["regex",
 comrak = { version = "0.56", default-features = false, features = ["attributes", "shortcodes"] }
 regex = "1.13"
 aho-corasick = "1.1"
-html5gum = "0.8.4"
+html5gum = "0.9.2"
 unicode-normalization = "0.1.25"
 unicode-segmentation = "1.12"
 unicode-properties = { version = "0.1", features = ["general-category"] }
