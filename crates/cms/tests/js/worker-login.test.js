@@ -143,10 +143,14 @@ test("the way back is refused without the browser's sign-in, with another state,
   const state = new URL(go).searchParams.get("state");
   const code = () => w.oauth.issue("github", go, GITHUB);
   const again = /started in another browser, or took too long/;
+  // The cookie with one character of its MAC changed, in the middle: the last character of the
+  // base64url MAC holds 4 of its bits and 2 that decoding drops, so a change there can leave the
+  // MAC as it was (about once in a thousand runs).
+  const changed = `${login.slice(0, -9)}${login.at(-9) === "A" ? "B" : "A"}${login.slice(-8)}`;
   const cases = [
     // Someone else's sign-in, sent to this browser (login CSRF): no cookie of its own.
     [await back("github", { code: code(), state }), 400, again],
-    [await back("github", { code: code(), state }, `${login.slice(0, -2)}xx`), 400, again],
+    [await back("github", { code: code(), state }, changed), 400, again],
     [await back("github", { code: code(), state: "other" }, login), 400, again],
     [await back("google", { code: code(), state }, login), 400, again],
     [await back("github", { error: "access_denied", state }, login), 403, /GitHub sign-in cancelled/],
