@@ -181,7 +181,7 @@ webp = { version = "0.3.1", default-features = false } # lossy q, preset, sharp 
 kamadak-exif = "0.6.1"
 imageproc = { version = "0.27", default-features = false }
 ab_glyph = "0.2.32" # images.Text (T72a)
-qrcode = { version = "0.14", default-features = false } # images.QR (T72a)
+qrcode = { version = "0.15", default-features = false } # images.QR (T72a)
 color_quant = "2"
 kmeans_colors = "0.7.1"
 
