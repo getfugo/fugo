@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1795314562165,
+  "lastUpdate": 1795314564712,
   "repoUrl": "https://github.com/getfugo/fugo",
   "entries": {
     "Benchmark": [
@@ -103042,6 +103042,105 @@ window.BENCHMARK_DATA = {
           {
             "name": "BenchmarkSummaryFromHTMLWithDivider",
             "value": 47.28,
+            "unit": "ns/op"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "blackb1rd.mov@gmail.com",
+            "name": "Prachya Saechua",
+            "username": "blackb1rd"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "bfc54de61dbe80f4a0cbcb7db4f3faa4afb14f91",
+          "message": "legacy-docs: Install the site's runtime modules only, with Turbo 8.0.23 (#243)\n\ntools/legacy-docs/package-lock.json held the docs site's devDependencies\n(Tailwind and Prettier, 80 packages), which build.sh installed and never\nran: this port has no Tailwind pipeline (sites/docs records the\nstylesheet). They carried 12 of the repository's open security alerts\n(tar, picomatch, source-map-js, postcss-selector-parser, the last pinned\nexactly by every @tailwindcss/typography 0.5). build.sh now installs the\npackage.json's dependencies only, and the lock file holds those: Alpine.js\nand Turbo at the versions of tools/dev/node, with which the gates build\nthe site. Turbo moves from 8.0.18 to 8.0.23, past the 13th alert; gate\nA-D3 checks that the bundles are published and referenced, not their\nbytes. build.sh is executable, like the other scripts of tools/.\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-11-22T09:17:48+07:00",
+          "tree_id": "f6bf70c41c88469af3cafee973b6d4956777aafe",
+          "url": "https://github.com/getfugo/fugo/commit/bfc54de61dbe80f4a0cbcb7db4f3faa4afb14f91"
+        },
+        "date": 1795314564045,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "BenchmarkSanitizeAnchorName",
+            "value": 482.13,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSanitizeAnchorNameAsciiOnly",
+            "value": 1329.41,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSanitizeAnchorNameBlackfriday",
+            "value": 593.45,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSanitizeAnchorNameString",
+            "value": 482.04,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSanitize/All_allowed",
+            "value": 218.8,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSanitize/Spaces",
+            "value": 235.52,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkRelURL",
+            "value": 357.21,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkAbsURL/relurl",
+            "value": 666.29,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkAbsURL/absurl",
+            "value": 21.83,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkTotalWords",
+            "value": 5069.77,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkStripHTML",
+            "value": 1039.54,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkParse",
+            "value": 9359.24,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkDecodeYAMLToMap",
+            "value": 15334.44,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSummaryFromHTML",
+            "value": 72.45,
+            "unit": "ns/op"
+          },
+          {
+            "name": "BenchmarkSummaryFromHTMLWithDivider",
+            "value": 75.23,
             "unit": "ns/op"
           }
         ]
