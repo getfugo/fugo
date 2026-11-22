@@ -135,7 +135,7 @@ rquickjs = { version = "0.14", default-features = false, features = ["std", "par
 emojis = "0.9"         # emojify (T31); already locked through comrak `shortcodes`
 
 # ── time & locale (ICU4X, Unicode-3.0) ──
-jiff = { version = "0.2.37", features = ["serde"] }
+jiff = { version = "1.0.1", features = ["serde"] }
 icu_collator = "2.3"
 icu_plurals = "2.3"
 icu_decimal = "2.3"
