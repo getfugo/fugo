@@ -2,11 +2,16 @@
 # Builds the legacy docs site (testdata/legacy-docs, the test fixture that was docs/ until fugo
 # got its own documentation) with the binary, as https://getfugo.github.io/ published it:
 # the Tera overlay sites/docs (`cargo dev sites make docs-live`, no patches) and the site's own
-# node modules (`npm ci` of testdata/legacy-docs/package.json with
-# tools/legacy-docs/package-lock.json, which resolves to the versions the published site was
-# built with), the way the Go release
-# workflow built it (`npm install`, then the Go version's build: no --minify, the production
-# environment, network access for GetRemote: GitHub stars and releases, X posts, a font).
+# node modules, the way the Go release workflow built it (`npm install`, then the Go version's
+# build: no --minify, the production environment, network access for GetRemote: GitHub stars and
+# releases, X posts, a font). The node modules are the `dependencies` of
+# testdata/legacy-docs/package.json, installed with `npm ci` from
+# tools/legacy-docs/package-lock.json: Alpine.js and Turbo, which js_build bundles, at the
+# versions of tools/dev/node, with which the gates build the site (Turbo 8.0.23, where the
+# published site had 8.0.18: gate A-D3 checks that the bundles are published and referenced, not
+# their bytes, which js_build does not share with esbuild). Its `devDependencies`, Tailwind and
+# Prettier, are not installed: this port has no Tailwind pipeline (sites/docs records the
+# stylesheet) and does not run Prettier.
 # Gate A-D3 (crates/cli/tests/it/docs.rs) compares this site with the published one. fugo's
 # own documentation, docs/, is built by tools/docs/build.sh.
 #
@@ -79,7 +84,12 @@ if [ ! -d "$npm_dir/node_modules" ]; then
 	log "installing the docs node modules (npm ci, tools/legacy-docs/package-lock.json)"
 	rm -rf "$npm_dir.tmp"
 	mkdir -p "$npm_dir.tmp"
-	cp "$ROOT/testdata/legacy-docs/package.json" "$lock" "$npm_dir.tmp/"
+	# The site's package.json without its devDependencies, which the lock file leaves out.
+	node -e 'const p = JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"));
+		delete p.devDependencies;
+		process.stdout.write(JSON.stringify(p, null, 2) + "\n");' \
+		"$ROOT/testdata/legacy-docs/package.json" >"$npm_dir.tmp/package.json"
+	cp "$lock" "$npm_dir.tmp/"
 	(cd "$npm_dir.tmp" && npm ci --no-audit --no-fund --loglevel=error >&2)
 	rm -rf "$npm_dir"
 	mv "$npm_dir.tmp" "$npm_dir"
